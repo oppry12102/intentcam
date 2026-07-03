@@ -106,12 +106,24 @@ def extract_assistant_text(response: dict) -> str:
 
 
 def parse_json_from_response(text: str) -> dict | None:
-    s = text.find("{")
-    e = text.rfind("}")
+    if not text:
+        return None
+    # Strip markdown code fences the model sometimes wraps JSON in:
+    #   ```json\n{...}\n```  or ```{...}```
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        first_nl = stripped.find("\n")
+        if first_nl > 0:
+            stripped = stripped[first_nl + 1:]
+        if stripped.endswith("```"):
+            stripped = stripped[:-3]
+        stripped = stripped.strip()
+    s = stripped.find("{")
+    e = stripped.rfind("}")
     if s < 0 or e <= s:
         return None
     try:
-        return json.loads(text[s:e + 1])
+        return json.loads(stripped[s:e + 1])
     except json.JSONDecodeError:
         return None
 
@@ -119,18 +131,35 @@ def parse_json_from_response(text: str) -> dict | None:
 def score(scene_gt: dict, parsed: dict | None) -> dict:
     """Score the model output against ground truth.  Returns dict of booleans/metrics."""
     if not parsed:
-        return {"ok": False, "reason": "no_json", "score": 0}
+        return {
+            "ok": False,
+            "reason": "no_json",
+            "score": 0,
+            "composite": 0.0,
+            "type_match": False,
+            "title_match": False,
+            "matched_keyword_group": None,
+            "must_have_pct": 0.0,
+            "top_intent": None,
+            "confidence": None,
+        }
 
     intents = parsed.get("intents") or []
     observation = parsed.get("observation", "")
     scene = parsed.get("scene", "")
     haystack_text = (observation + "\n" + scene).lower()
 
-    # 1) Top-1 type matches expected?
+    # 1) Top-1 type matches any of the expected types.  Accepting a list
+    #    here matters because e.g. a street sign could plausibly be
+    #    "info" (what street am I on?) or "location" (navigate me there).
+    expected_types = scene_gt["expected_top_intent_type"]
+    if isinstance(expected_types, str):
+        expected_types = [expected_types]
     top = intents[0] if intents else None
-    type_match = bool(top and top.get("type") == scene_gt["expected_top_intent_type"])
+    type_match = bool(top and top.get("type") in expected_types)
 
-    # 2) Top-1 title contains any acceptable keyword group
+    # 2) Top-1 title / detail contains any keyword group.  Each group is a
+    #    list of alternatives (OR-within, AND-across groups).
     title_match = False
     matched_group = None
     if top:
@@ -142,15 +171,33 @@ def score(scene_gt: dict, parsed: dict | None) -> dict:
                 matched_group = i
                 break
 
-    # 3) Must-have keywords appear somewhere in observation/scene
-    must_have = scene_gt.get("must_have_in_scene_or_observation", [])
-    must_have_hits = [kw for kw in must_have if kw.lower() in haystack_text]
-    must_have_pct = (len(must_have_hits) / len(must_have)) if must_have else 1.0
+    # 3) Must-have keywords appear in observation/scene.  Each entry can
+    #    be either a single string or a list of aliases (OR-within, AND-
+    #    across groups).  Models that translate English→Chinese count as
+    #    matches: e.g. ["Calories", "卡路里"] accepts either form.
+    raw_must_have = scene_gt.get("must_have_in_scene_or_observation", [])
+    groups = []
+    for entry in raw_must_have:
+        if isinstance(entry, str):
+            groups.append([entry])
+        else:
+            groups.append(list(entry))
+    if groups:
+        hits = sum(
+            1 for g in groups
+            if any(alias.lower() in haystack_text for alias in g)
+        )
+        must_have_pct = hits / len(groups)
+        must_have_hits = [
+            str(g) for g in groups
+            if any(alias.lower() in haystack_text for alias in g)
+        ]
+    else:
+        must_have_pct = 1.0
+        must_have_hits = []
 
-    # 4) Confidence calibration note
     confidence = top.get("confidence") if top else None
 
-    # Composite score: weighted sum; weighted heavier on type & title match.
     composite = (
         (0.45 if type_match else 0.0)
         + (0.35 if title_match else 0.0)
@@ -209,8 +256,13 @@ def main():
             continue
         img_path = ROOT / scene_gt["image"]
         if not img_path.exists():
-            print(f"missing: {img_path}")
-            continue
+            # Fall back to profiling/ (synthetic fixtures live there).
+            alt = Path(__file__).resolve().parent / scene_gt["image"]
+            if alt.exists():
+                img_path = alt
+            else:
+                print(f"missing: {img_path} (also tried {alt})")
+                continue
 
         print(f"\n[ {scene_gt['id']} ]  {scene_gt['image']}  — {scene_gt['what_is_pictured']}")
         img_bytes = img_path.read_bytes()

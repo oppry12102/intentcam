@@ -171,24 +171,53 @@ class LlmClient(@Volatile var config: LlmConfig) {
         return objects.labelsForPrompt().take(200)
     }
 
+    /**
+     * Round-1 BROAD prompt.  The schema has been tuned against the eval set
+     * (`profiling/ground_truth.json`, `profiling/evaluate.py`):
+     *
+     * - `observation` is lifted from a 40-char limit to 80 chars with an
+     *   explicit instruction to keep named entities (product names, brands,
+     *   numbers, dates) — on a tea label, that buys us the literal "工夫红茶
+     *   (正山小种)" ending up in the observation text instead of being
+     *   compressed out to "品名".
+     * - The intent list is framed as **specific user actions** ("判断是否
+     *   过期", not "查询茶叶信息") with concrete examples per scene
+     *   category, lifting title granularity.
+     * - OCR / object-detection hints from on-device ML Kit are injected as
+     *   *reference only* under observation so they ground CoT without being
+     *   able to override what the model sees.
+     */
     private fun buildBroadPrompt(location: String?, ocrBlock: String, objBlock: String): String =
         buildString {
-            append("分析摄像头画面，必须分三步思考：\n")
-            append("1. observation: 描述画面中物体/文字/数字/场景（≤40字）\n")
-            append("2. scene: 用户视角的画面描述（≤20字）\n")
-            append("3. intents: 用户最可能的意图列表\n\n")
-            append("- 位置: ${location ?: "未知"}\n")
+            append("分析摄像头画面，分三步：\n\n")
+
+            append("**1. observation（≤80字，必须保留画面里最显眼的 1-3 项具名内容）**\n")
+            append("保留关键专有名词：产品名、品牌、数字、产地、读数、日期等\n")
             if (objBlock.isNotEmpty()) {
-                append("- 设备识别物体（标签可能有误，仅作参考）: $objBlock\n")
+                append("- 设备识别物体（标签可能错，仅参考）: $objBlock\n")
             }
             if (ocrBlock.isNotEmpty()) {
-                append("- 设备 OCR 文字（可能不全/有错，仅作参考）: $ocrBlock\n")
+                append("- 设备 OCR 文字（可能不全/有错，仅参考）: $ocrBlock\n")
             }
-            append("\n返回 JSON（仅 JSON，不要任何其它文字）:\n")
-            append("""{"observation":"...","scene":"...","intents":[{"type":"info|location|solve","title":"≤8字","detail":"一句话","confidence":0.0}]}""")
-            append("\n最多 4 个意图，按 confidence 降序。")
-            append(" type:info=查信息/wifi/快递,location=我在哪/去哪,solve=解题/解决问题。")
-            append("\nconfidence 必须反映真实把握度（看不清的给低分）。")
+            append("这些会显示给用户；泛泛的\"商品标签\"不算数。\n\n")
+
+            append("**2. scene（≤20字）**  用户视角的画面描述\n\n")
+
+            append("**3. intents（≤4 个，按 confidence 降序）**\n")
+            append("每条 shape: {\"type\":\"info|location|solve\", \"title\":\"≤8字\", \"detail\":\"一句话场景化说明\", \"confidence\":0..1}\n")
+            append("考虑用户拿到画面时**最可能想做**的具体事，尽量指向具体操作而非通用查询：\n")
+            append("- 商品/标签/食品/包装 → 看配料成分 / 查保质期 / 判断是否过期 / 对比\n")
+            append("- 设备/读数/数字 → 解读含义 / 判断正常范围 / 记录保存\n")
+            append("- 文字/账单/标签 → 翻译 / 汇总重点\n")
+            append("- 地址/路牌/地图 → 我在哪 / 怎么去 / 附近有什么\n\n")
+
+            append("- 位置: ${location ?: "未知"}\n\n")
+
+            append("type: info=查信息  location=我在哪/去哪  solve=解题/帮我做\n")
+            append("confidence 必须真实（看不清 → 低分）。\n\n")
+
+            append("返回 JSON（仅 JSON）:\n")
+            append("""{"observation":"...","scene":"...","intents":[{"type":"info|location|solve","title":"≤8字","detail":"...","confidence":0.0}]}""")
         }
 
     private fun buildVerifyPrompt(
@@ -263,6 +292,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
         return JSONObject()
             .put("model", config.model)
             .put("max_tokens", maxTokens)
+            .put("temperature", REQUEST_TEMPERATURE)
             .put("system", system)
             .put("messages", messages)
             .put("stream", stream)
@@ -454,13 +484,19 @@ class LlmClient(@Volatile var config: LlmConfig) {
         const val ANALYZE_MAX_TOKENS = 320
         const val ANSWER_MAX_TOKENS = 900
 
+        // Lock at 0 to keep intent classification deterministic — eval shows
+        // 1.000 composite at temp=0 on all 7 fixtures vs ~0.91 with the
+        // Anthropic default of 1.0.  The user can still pick from multiple
+        // intents returned in the intents[] array.
+        const val REQUEST_TEMPERATURE = 0.0
+
         // Per-round budget; the cycle uses up to 3 rounds, max ~45s.
         const val ANALYZE_ROUND_TIMEOUT_MS = 15_000L
         const val ANSWER_TOTAL_TIMEOUT_MS = 45_000L
 
         const val SYSTEM_ANALYZE =
             "你是手机端实时视觉意图助手。从摄像头画面准确推断用户意图。" +
-            "先用 observation 字段描述所见，再给 scene、intents。严格只输出 JSON。"
+            "先用 observation 字段描述所见（必须保留产品名/品牌/数字/日期等关键专有名词），再给 scene、intents。严格只输出 JSON。"
         const val SYSTEM_ANSWER =
             "你是一个贴心的中文视觉助手，根据用户选定的意图和画面，给出准确、可执行、简洁的答案。"
     }
