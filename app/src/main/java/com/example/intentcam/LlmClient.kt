@@ -87,12 +87,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
         val tag = "analyze.${level.name.lowercase()}"
         val raw = streamText(body, tag, ANALYZE_ROUND_TIMEOUT_MS, onDelta)
         val parsed = extractJson(raw)
-        if (parsed == null) {
-            throw IllegalStateException(
-                "模型未返回可解析的 JSON（首 200 字：${raw.take(200)}）"
-            )
-        }
-        parseAnalysis(parsed.first)
+        if (parsed != null) parseAnalysis(parsed.first) else makeParseFailureFallback(raw, tag)
     }
 
     suspend fun answerStream(
@@ -108,8 +103,37 @@ class LlmClient(@Volatile var config: LlmConfig) {
             text = buildAnswerPrompt(intent, location),
             stream = true
         )
-        streamText(body, "answer", ANSWER_TOTAL_TIMEOUT_MS, onDelta)
-            .ifBlank { "（模型未返回内容）" }
+        val raw = streamText(body, "answer", ANSWER_TOTAL_TIMEOUT_MS, onDelta)
+        raw.ifBlank { "（模型未返回内容）" }
+    }
+
+    /**
+     * Build a single-intent fallback [AnalysisResult] when the model
+     * returns something we can't parse as JSON.  Exposes the raw response
+     * in the intent's `detail` so the user (or us, via screenshot) can see
+     * what the server actually said.
+     */
+    private fun makeParseFailureFallback(raw: String, tag: String): AnalysisResult {
+        val snippet = raw.trim().take(280).ifBlank { "<空响应>" }
+        val diagnosis = when {
+            raw.isBlank() -> "模型返回了空响应"
+            "rate limit" in raw.lowercase() -> "触发了速率限制"
+            "{" !in raw -> "模型未返回 JSON（可能为 prose 文本 / 错误 / 安全过滤）"
+            else -> "模型返回了非标准 JSON"
+        }
+        return AnalysisResult(
+            observation = "（识别失败）$diagnosis",
+            scene = "—",
+            intents = listOf(
+                IntentItem(
+                    id = "fallback-parse-fail",
+                    type = "info",
+                    title = "识别失败，请重试",
+                    detail = "$tag: $snippet",
+                    confidence = 0.1f
+                )
+            )
+        )
     }
 
     // ---- prompt builders ---------------------------------------------------
