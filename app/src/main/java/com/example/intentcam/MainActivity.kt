@@ -328,17 +328,27 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(
-                    bubble.title,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
-                )
+                // When the model returned no parseable action, the bubble's
+                // title is empty and only the detail (the image description)
+                // is shown — no "未识别" / "无意图" prefix.
+                if (bubble.title.isNotBlank()) {
+                    Text(
+                        bubble.title,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 if (bubble.detail.isNotBlank()) {
                     Text(
                         bubble.detail,
-                        color = Color(0xFFB9C4DE),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2
+                        color = if (bubble.title.isBlank()) Color.White
+                               else Color(0xFFB9C4DE),
+                        fontWeight = if (bubble.title.isBlank()) FontWeight.Normal
+                                     else FontWeight.Normal,
+                        style = if (bubble.title.isBlank())
+                                    MaterialTheme.typography.bodyMedium
+                                 else MaterialTheme.typography.bodySmall,
+                        maxLines = if (bubble.title.isBlank()) 4 else 2
                     )
                 }
             }
@@ -394,25 +404,31 @@ private fun DetailScreen(
                         .background(accent, RoundedCornerShape(5.dp))
                 )
                 Spacer(Modifier.width(10.dp))
-                Text(
-                    bubble.title,
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    "${(bubble.confidence * 100).toInt()}%",
-                    color = accent,
-                    style = MaterialTheme.typography.labelMedium
-                )
+                // Same as BubbleCard: when the title is empty (the
+                // no-intent / parse-failure fallback), show only the
+                // image description, no "未识别" / "无意图" / "图片描述"
+                // prefix.
+                if (bubble.title.isNotBlank()) {
+                    Text(
+                        bubble.title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        "${(bubble.confidence * 100).toInt()}%",
+                        color = accent,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
             }
             if (bubble.detail.isNotBlank()) {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     bubble.detail,
-                    color = Color(0xFFB9C4DE),
-                    style = MaterialTheme.typography.bodyMedium
+                    color = Color(0xFFE7ECF7),
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
         }
