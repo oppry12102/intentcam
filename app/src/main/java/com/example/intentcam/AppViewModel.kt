@@ -316,12 +316,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     )
 
     /**
-     * Synthesize a single "无意图" [Bubble] when the model produced no
-     * intents at all.  Title is "无意图" so the user understands the
-     * classifier didn't pick an action; the detail is the model's
-     * observation + scene as a free-form description of what's on
-     * screen.  Confidence is reported as 0 since this is a
-     * classification failure, not a real signal.
+     * Synthesize a single fallback [Bubble] when the model produced no
+     * intents at all.  Per the user contract, the bubble's text content
+     * is just the image description (the model's `observation` + `scene`)
+     * — no "无意图" / "未识别" / "图片描述" prefix.  When the model
+     * also failed to describe the image, the detail is empty and the
+     * bubble card renders as just the thumbnail.
      */
     private fun makeNoIntentBubble(result: AnalysisResult, imageBytes: ByteArray): Bubble {
         val desc = buildList {
@@ -331,8 +331,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return Bubble(
             id = "bubble-no-intent-${System.currentTimeMillis()}",
             type = "info",
-            title = "无意图",
-            detail = desc.ifBlank { "（模型未返回任何描述）" },
+            title = "",
+            detail = desc,
             confidence = 0f,
             imageBytes = imageBytes,
             createdAtMs = System.currentTimeMillis(),

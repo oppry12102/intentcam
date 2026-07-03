@@ -436,11 +436,12 @@ class LlmClient(@Volatile var config: LlmConfig) {
             )
         }
         // Defensive fallback: if the model produced no parseable intents, the
-        // bubble would otherwise be empty.  Per the user contract, "未识别"
-        // is acceptable — but the detail must carry the model's own
-        // description of the image (the `observation` field), NOT a generic
-        // "请尝试重新对准" message that tells the user nothing about what
-        // they were pointing at.
+        // bubble would otherwise be empty.  Per the user contract, the
+        // detail must carry the model's own description of the image
+        // (the `observation` field), NOT a generic "请尝试重新对准" message
+        // that tells the user nothing about what they were pointing at.
+        // The title stays empty so the bubble shows just the description
+        // with no "未识别" / "无意图" / "图片描述" prefix.
         if (intents.isEmpty()) {
             val desc = buildList {
                 if (observation.isNotBlank()) add(observation)
@@ -449,8 +450,8 @@ class LlmClient(@Volatile var config: LlmConfig) {
             intents += IntentItem(
                 id = "0-fallback",
                 type = "info",
-                title = "未识别",
-                detail = desc.ifBlank { "（模型未返回任何描述）" },
+                title = "",
+                detail = desc,
                 confidence = 0.1f
             )
         }
