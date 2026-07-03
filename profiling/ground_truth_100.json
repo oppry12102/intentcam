@@ -1,0 +1,4035 @@
+{
+  "version": 1,
+  "scenes": [
+    {
+      "id": "food_label_001",
+      "file": "food_label_001.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Whole Wheat Crackers",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_002",
+      "file": "food_label_002.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Salted Almonds 250g",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_003",
+      "file": "food_label_003.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Greek Yogurt 150g",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_004",
+      "file": "food_label_004.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sparkling Water 500ml",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_005",
+      "file": "food_label_005.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Tofu 300g",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_006",
+      "file": "food_label_006.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Tomato Soup 400g",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_007",
+      "file": "food_label_007.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Dark Chocolate 70% 80g",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_008",
+      "file": "food_label_008.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Roasted Cashews 200g",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_009",
+      "file": "food_label_009.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sparkling Lemonade 330ml",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "food_label_010",
+      "file": "food_label_010.png",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配",
+          "营养",
+          "成分",
+          "热量",
+          "脂肪",
+          "钠",
+          "Nutrition",
+          "calorie",
+          "fat",
+          "sodium"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Olive Oil 250ml",
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_001",
+      "file": "device_reading_001.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "BP",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_002",
+      "file": "device_reading_002.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "BP",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_003",
+      "file": "device_reading_003.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "BP",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_004",
+      "file": "device_reading_004.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Scale",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_005",
+      "file": "device_reading_005.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Scale",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_006",
+      "file": "device_reading_006.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Clock",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_007",
+      "file": "device_reading_007.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Therm",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_008",
+      "file": "device_reading_008.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Therm",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_009",
+      "file": "device_reading_009.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Glucose",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "device_reading_010",
+      "file": "device_reading_010.png",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "读数",
+          "血压",
+          "重量",
+          "数值",
+          "含义",
+          "温度",
+          "血糖",
+          "度数",
+          "value",
+          "read"
+        ],
+        [
+          "正常",
+          "范围",
+          "判断",
+          "是否",
+          "低",
+          "高",
+          "超",
+          "偏",
+          "正常范围"
+        ],
+        [
+          "BP",
+          "temperature",
+          "weight",
+          "glucose"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "SmartMeter",
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "math_001",
+      "file": "math_001.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 1",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_002",
+      "file": "math_002.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 2",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_003",
+      "file": "math_003.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 3",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_004",
+      "file": "math_004.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Q",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_005",
+      "file": "math_005.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Q",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_006",
+      "file": "math_006.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 4",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_007",
+      "file": "math_007.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 5",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_008",
+      "file": "math_008.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 6",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_009",
+      "file": "math_009.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 7",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "math_010",
+      "file": "math_010.png",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "解",
+          "方程",
+          "求根",
+          "因式",
+          "分解",
+          "配方"
+        ],
+        [
+          "solve",
+          "factor",
+          "equation",
+          "x",
+          "root",
+          "polynomial"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Problem 8",
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_001",
+      "file": "receipt_001.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "MARKET 24",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_002",
+      "file": "receipt_002.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "CAFE NOVA",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_003",
+      "file": "receipt_003.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "BISTRO LUNA",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_004",
+      "file": "receipt_004.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "PHARMACY PLUS",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_005",
+      "file": "receipt_005.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "BOOKHAVEN",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_006",
+      "file": "receipt_006.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "BAGEL CO",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_007",
+      "file": "receipt_007.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "SUSHI RYU",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_008",
+      "file": "receipt_008.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "GELATO BAR",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_009",
+      "file": "receipt_009.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "GREEN MART",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "receipt_010",
+      "file": "receipt_010.png",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "总计",
+          "总额",
+          "多少钱",
+          "费",
+          "单价",
+          "合计",
+          "小计",
+          "税",
+          "价目"
+        ],
+        [
+          "对账",
+          "核算",
+          "求和",
+          "加总",
+          "合计",
+          "验算"
+        ],
+        [
+          "total",
+          "subtotal",
+          "tax",
+          "amount",
+          "sum",
+          "verify"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "DELI 5TH",
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_001",
+      "file": "street_sign_001.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Main Street",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_002",
+      "file": "street_sign_002.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Oak Avenue",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_003",
+      "file": "street_sign_003.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Pine Road",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_004",
+      "file": "street_sign_004.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Elm Street",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_005",
+      "file": "street_sign_005.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Cedar Lane",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_006",
+      "file": "street_sign_006.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Birch Way",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_007",
+      "file": "street_sign_007.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Maple Drive",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_008",
+      "file": "street_sign_008.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Walnut Court",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_009",
+      "file": "street_sign_009.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Chestnut Pl",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "street_sign_010",
+      "file": "street_sign_010.png",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "info",
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "街道",
+          "地址",
+          "路名",
+          "在哪",
+          "哪条",
+          "这是"
+        ],
+        [
+          "导航",
+          "怎么去",
+          "去",
+          "center",
+          "downtown",
+          "到",
+          "navigate",
+          "directions"
+        ],
+        [
+          "street",
+          "Main",
+          "Avenue",
+          "Road",
+          "Lane",
+          "Drive"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Aspen Loop",
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "menu_001",
+      "file": "menu_001.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Margherita Pizza",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_002",
+      "file": "menu_002.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Caesar Salad",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_003",
+      "file": "menu_003.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Margherita Pizza",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_004",
+      "file": "menu_004.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Spaghetti Bolognese",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_005",
+      "file": "menu_005.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Tiramisu",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_006",
+      "file": "menu_006.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Espresso",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_007",
+      "file": "menu_007.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Latte",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_008",
+      "file": "menu_008.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "House Red Wine",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_009",
+      "file": "menu_009.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Garlic Bread",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "menu_010",
+      "file": "menu_010.png",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜",
+          "价格",
+          "菜单",
+          "推荐",
+          "招牌",
+          "点什么",
+          "点哪道",
+          "哪道好吃"
+        ],
+        [
+          "dish",
+          "price",
+          "menu",
+          "order",
+          "recommend"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Tomato Bruschetta",
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_001",
+      "file": "qr_code_001.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Scan QR for menu",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_002",
+      "file": "qr_code_002.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Verify product origin",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_003",
+      "file": "qr_code_003.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Scan to pay the bill",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_004",
+      "file": "qr_code_004.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Wi-Fi network QR code",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_005",
+      "file": "qr_code_005.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Add contact via QR",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_006",
+      "file": "qr_code_006.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Get app download link",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_007",
+      "file": "qr_code_007.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Scan for ticket gate",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_008",
+      "file": "qr_code_008.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Track package with QR",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_009",
+      "file": "qr_code_009.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Bus route QR scan",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "qr_code_010",
+      "file": "qr_code_010.png",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "扫",
+          "QR",
+          "二维码",
+          "验证",
+          "来源",
+          "扫码",
+          "扫一下"
+        ],
+        [
+          "execute",
+          "do",
+          "save",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "QR code at museum entry",
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "map_001",
+      "file": "map_001.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 1",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_002",
+      "file": "map_002.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 2",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_003",
+      "file": "map_003.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 3",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_004",
+      "file": "map_004.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 4",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_005",
+      "file": "map_005.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 5",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_006",
+      "file": "map_006.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 6",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_007",
+      "file": "map_007.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 7",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_008",
+      "file": "map_008.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 8",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_009",
+      "file": "map_009.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 9",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "map_010",
+      "file": "map_010.png",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "去",
+          "怎么走",
+          "导航",
+          "park",
+          "downtown",
+          "我在哪"
+        ],
+        [
+          "map",
+          "route",
+          "directions",
+          "location"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Sheet 10",
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_001",
+      "file": "english_text_001.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "USER MANUAL",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_002",
+      "file": "english_text_002.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "INSTRUCTIONS",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_003",
+      "file": "english_text_003.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "QUICK START",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_004",
+      "file": "english_text_004.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "SAFETY",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_005",
+      "file": "english_text_005.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "PRESCRIPTION",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_006",
+      "file": "english_text_006.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "WARRANTY",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_007",
+      "file": "english_text_007.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "FAQ",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_008",
+      "file": "english_text_008.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "RETURN POLICY",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_009",
+      "file": "english_text_009.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "RECIPE CARD",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "english_text_010",
+      "file": "english_text_010.png",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翻译",
+          "看懂",
+          "解释",
+          "含义",
+          "内容",
+          "意思",
+          "是啥",
+          "写的是",
+          "解读",
+          "阅读",
+          "读一下",
+          "理解",
+          "看清楚",
+          "写什么",
+          "对照",
+          "操作",
+          "了解",
+          "使用",
+          "看说明",
+          "如何",
+          "怎么用",
+          "怎么办",
+          "步骤",
+          "方法",
+          "执行",
+          "完成",
+          "怎么办"
+        ],
+        [
+          "translate",
+          "explain",
+          "what does",
+          "how to",
+          "instructions",
+          "read"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "TEMPERATURE LOG",
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_001",
+      "file": "screen_capture_001.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Weather",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_002",
+      "file": "screen_capture_002.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Calendar",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_003",
+      "file": "screen_capture_003.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Music",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_004",
+      "file": "screen_capture_004.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Mail",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_005",
+      "file": "screen_capture_005.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Maps",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_006",
+      "file": "screen_capture_006.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Notes",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_007",
+      "file": "screen_capture_007.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Banking",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_008",
+      "file": "screen_capture_008.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Health",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_009",
+      "file": "screen_capture_009.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Settings",
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "screen_capture_010",
+      "file": "screen_capture_010.png",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info",
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "打开",
+          "点",
+          "切",
+          "进",
+          "进入",
+          "操作",
+          "查",
+          "看",
+          "设",
+          "编辑",
+          "发",
+          "回复",
+          "扫",
+          "登录",
+          "登出",
+          "翻译",
+          "查看",
+          "切换",
+          "取消",
+          "确认",
+          "解锁",
+          "关掉"
+        ],
+        [
+          "open",
+          "tap",
+          "click",
+          "switch",
+          "go",
+          "to",
+          "navigate",
+          "how",
+          "view",
+          "see",
+          "check",
+          "set",
+          "edit",
+          "send",
+          "reply",
+          "scan"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Translate",
+          "screen capture"
+        ]
+      ]
+    }
+  ]
+}
