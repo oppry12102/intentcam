@@ -242,9 +242,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // Convert the model output into up to BUBBLE_MAX bubbles,
             // appending to the existing queue.  New bubbles are pushed to
             // the end; if the queue would exceed BUBBLE_MAX, the oldest
-            // (head) is dropped.  The "new replaces old" behavior is what
-            // the product spec calls for ("新出顶掉老的").
-            val newBubbles = final.intents.take(UiState.BUBBLE_MAX).map { it.toBubble(answerJpeg) }
+            // (head) is dropped.  The "新出顶掉老的" behavior is what the
+            // product spec calls for.
+            //
+            // When the model returns no intents at all (or only a single
+            // low-quality fallback), we synthesize one "无意图" bubble
+            // carrying the model's `observation` + `scene` so the user
+            // still sees a meaningful summary of what was on screen.
+            val newBubbles: List<Bubble> = if (final.intents.isEmpty()) {
+                listOf(makeNoIntentBubble(final, answerJpeg))
+            } else {
+                final.intents.take(UiState.BUBBLE_MAX).map { it.toBubble(answerJpeg) }
+            }
             val merged = (_state.value.bubbles + newBubbles)
                 .takeLast(UiState.BUBBLE_MAX)
 
@@ -294,6 +303,30 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         imageBytes = imageBytes,
         createdAtMs = System.currentTimeMillis(),
     )
+
+    /**
+     * Synthesize a single "无意图" [Bubble] when the model produced no
+     * intents at all.  Title is "无意图" so the user understands the
+     * classifier didn't pick an action; the detail is the model's
+     * observation + scene as a free-form description of what's on
+     * screen.  Confidence is reported as 0 since this is a
+     * classification failure, not a real signal.
+     */
+    private fun makeNoIntentBubble(result: AnalysisResult, imageBytes: ByteArray): Bubble {
+        val desc = buildList {
+            if (result.observation.isNotBlank()) add(result.observation)
+            if (result.scene.isNotBlank() && result.scene !in this) add(result.scene)
+        }.joinToString(" · ")
+        return Bubble(
+            id = "bubble-no-intent-${System.currentTimeMillis()}",
+            type = "info",
+            title = "无意图",
+            detail = desc.ifBlank { "（模型未返回任何描述）" },
+            confidence = 0f,
+            imageBytes = imageBytes,
+            createdAtMs = System.currentTimeMillis(),
+        )
+    }
 
     private enum class CycleVerdict { STOP, CONTINUE, FORCED }
 
