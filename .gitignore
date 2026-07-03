@@ -1,0 +1,35 @@
+# --- Gradle ---
+.gradle/
+build/
+
+# --- Android ---
+*.iml
+.idea/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+app/build/
+
+# --- Build artifacts kept on disk but not in version control ---
+# The dev APK is copied to ./intentcam.apk after each build (per project memory).
+# It is large (~107 MB) and rebuilt often, so exclude it from the repo and
+# document the build steps in README instead.
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# --- Logs / temp ---
+*.log
+*.hprof
+.kotlin/
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+
+# --- Tool-specific state ---
+# Claude session state — contains user preferences and history, not part of
+# the project.  Recreated automatically per session.
+.claude/
