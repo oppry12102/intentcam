@@ -98,16 +98,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val now = SystemClock.elapsedRealtime()
         if (stableSinceMs == -1L) {
             stableSinceMs = now
+            // Publish the initial "stability accumulating" state so the UI
+            // can show a progress bar; 0 = just started.
+            _state.value = _state.value.copy(stabilityProgress = 0f)
             return
         }
-        if (now - stableSinceMs < CAPTURE_AFTER_MS) {
-            // still accumulating; this emit proves the camera is still steady
+        val elapsed = now - stableSinceMs
+        if (elapsed < CAPTURE_AFTER_MS) {
+            // still accumulating; surface live progress so the user sees the
+            // system is working instead of thinking it hung.
+            _state.value = _state.value.copy(
+                stabilityProgress = (elapsed.toFloat() / CAPTURE_AFTER_MS).coerceIn(0f, 1f)
+            )
             return
         }
 
-        // Past 1 s of stable observations — capture and dispatch the
-        // recognition cycle.  Live UI keeps showing the camera; the JPEG
-        // bytes are only for the model + the bubble's eventual thumbnail.
+        // Threshold reached — capture and dispatch.  Live UI keeps showing
+        // the camera; the JPEG bytes are only for the model + the bubble's
+        // eventual thumbnail.
         stableSinceMs = -1L
         lastFrame = jpegs
 
@@ -116,6 +124,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // user has a continuous bubble history.
         _state.value = _state.value.copy(
             analyzing = true,
+            stabilityProgress = null,
             partialScene = null,
         )
 
@@ -134,12 +143,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (lastFrame != null) return
 
         // Pre-capture: blow away the partial stability count so we have to
-        // accumulate a fresh 1 s before we capture.
+        // accumulate a fresh CAPTURE_AFTER_MS before we capture.
         analyzeCycleId.incrementAndGet()
         currentAnalyzeJob?.cancel()
         currentAnalyzeJob = null
         analyzing.set(false)
         stableSinceMs = -1L
+        _state.value = _state.value.copy(stabilityProgress = null)
 
         _state.value = _state.value.copy(
             lastSceneChangeMs = SystemClock.elapsedRealtime(),
@@ -264,6 +274,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 location = loc,
                 roundCount = _state.value.roundCount + 1,
                 analyzing = false,
+                stabilityProgress = null,
             )
             // Camera + FrameAnalyzer continue running; the next stable
             // frame will fire runAnalysisCycle again.  No need to wait
@@ -275,7 +286,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
         } catch (e: CancellationException) {
             if (myCycle == analyzeCycleId.get() && _state.value.phase == Phase.SCANNING) {
-                _state.value = _state.value.copy(analyzing = false, partialScene = null)
+                _state.value = _state.value.copy(analyzing = false, partialScene = null, stabilityProgress = null)
             }
         } catch (e: Exception) {
             // Model returned unparseable output, timed out, or otherwise
@@ -582,7 +593,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private companion object {
         // How long the scene must stay still before we capture a still.
-        // Tuned for typical "hold camera on subject for ~1 s" interaction.
-        const val CAPTURE_AFTER_MS: Long = 1000L
+        // Tuned for snappy cycling — the user spec says "稳定时间不用刻意
+        // 1 s".  Combined with the FrameAnalyzer's 500 ms emit throttle,
+        // a typical capture fires ~500–1000 ms after the user stabilizes.
+        const val CAPTURE_AFTER_MS: Long = 500L
     }
 }
