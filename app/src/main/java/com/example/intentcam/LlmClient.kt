@@ -189,7 +189,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
      */
     private fun buildBroadPrompt(location: String?, ocrBlock: String, objBlock: String): String =
         buildString {
-            append("分析摄像头画面，分三步：\n\n")
+            append("分析摄像头画面，分三步。\n\n")
 
             append("**1. observation（≤80字，必须保留画面里最显眼的 1-3 项具名内容）**\n")
             append("保留关键专有名词：产品名、品牌、数字、产地、读数、日期等\n")
@@ -204,20 +204,33 @@ class LlmClient(@Volatile var config: LlmConfig) {
             append("**2. scene（≤20字）**  用户视角的画面描述\n\n")
 
             append("**3. intents（≤4 个，按 confidence 降序）**\n")
-            append("每条 shape: {\"type\":\"info|location|solve\", \"title\":\"≤8字\", \"detail\":\"一句话场景化说明\", \"confidence\":0..1}\n")
+            append("shape: {\"type\":\"info|location|solve\", \"title\":\"...\", \"detail\":\"...\", \"confidence\":0..1}\n")
+            append("title 必须是**动作短语（≤6 字）**，动词开头：\n")
+            append("- 查看 / 打开 / 保存 / 记录 / 校对 / 翻译 / 解释 / 阅读 / 解读 / 扫码 / 拨号 / 联系 / 调出 / 设置 / 切换\n")
+            append("- 判断 / 对比 / 查 / 核 / 算 / 拆解 / 拼读 / 拨出 / 打印 / 复制\n")
+            append("- 避免'查询''了解''相关信息'这类泛词\n\n")
             append("考虑用户拿到画面时**最可能想做**的具体事，尽量指向具体操作而非通用查询：\n")
-            append("- 商品/标签/食品/包装 → 看配料成分 / 查保质期 / 判断是否过期 / 对比\n")
-            append("- 设备/读数/数字 → 解读含义 / 判断正常范围 / 记录保存\n")
-            append("- 文字/账单/标签 → 翻译 / 汇总重点\n")
-            append("- 地址/路牌/地图 → 我在哪 / 怎么去 / 附近有什么\n\n")
+            append("- 商品/标签/食品/包装 → 查看配料 / 查保质期 / 判断是否过期 / 对比同类 / 找购买链接\n")
+            append("- 设备/屏幕/读数/数字 → 解读含义 / 判断正常范围 / 记录保存 / 解释为什么要测\n")
+            append("- 文字/账单/标签 → 翻译 / 解释术语 / 汇总重点 / 朗读\n")
+            append("- 地址/路牌/导航/地图 → 我在哪 / 怎么去 / 附近有什么 / 找此刻位置\n")
+            append("- 数学/公式 → 解 / 化简 / 因式分解 / 验证\n")
+            append("- 二维码 → 扫码 / 解读二维码 / 执行二维码指向的操作\n")
+            append("- 屏幕（手机/电脑截屏）→ 打开 App / 调出日期 / 切换设置 / 翻译 / 读邮件 / 发送\n")
+            append("- 说明书/手册 → 阅读 / 翻译 / 查操作步骤 / 查询用法\n\n")
 
             append("- 位置: ${location ?: "未知"}\n\n")
 
             append("type: info=查信息  location=我在哪/去哪  solve=解题/帮我做\n")
             append("confidence 必须真实（看不清 → 低分）。\n\n")
 
+            append("**严格只输出 JSON，注意转义**：\n")
+            append("- observation / scene 字符串中如果出现英文双引号 `\"` 或换行，")
+            append("必须写成 `\\\"` 和 `\\n`\n")
+            append("- intents 数组最多 4 个对象，整齐闭合\n\n")
+
             append("返回 JSON（仅 JSON）:\n")
-            append("""{"observation":"...","scene":"...","intents":[{"type":"info|location|solve","title":"≤8字","detail":"...","confidence":0.0}]}""")
+            append("""{"observation":"...","scene":"...","intents":[{"type":"info|location|solve","title":"≤6字","detail":"...","confidence":0.0}]}""")
         }
 
     private fun buildVerifyPrompt(
