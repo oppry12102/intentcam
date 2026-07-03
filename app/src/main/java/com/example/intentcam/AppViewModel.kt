@@ -36,7 +36,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val analyzing = AtomicBoolean(false)
 
     private var currentAnalyzeJob: Job? = null
-    private var currentAnswerJob: Job? = null
 
     // Last error string from a failed analyze cycle, captured for adb logcat
     // debugging.  Not surfaced to UI (per product contract: parse failures
@@ -60,7 +59,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // -1L = no stability observation yet this SCANNING phase.
     @Volatile private var stableSinceMs: Long = -1L
 
-    fun isBusy(): Boolean = analyzing.get() || _state.value.phase != Phase.SCANNING
+    fun isBusy(): Boolean {
+        if (analyzing.get()) return true
+        if (_state.value.phase != Phase.SCANNING) return true
+        // When the user is looking at a bubble's detail view, the camera
+        // pipeline must stay quiet so the displayed image doesn't go stale.
+        if (_state.value.selectedBubble != null) return true
+        return false
+    }
 
     fun onPermissionsGranted() {
         if (_state.value.phase == Phase.NEED_PERMISSION) {
@@ -79,9 +85,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun onStableFrame(jpegs: FrameJpegs) {
         if (_state.value.phase != Phase.SCANNING) return
+        // Don't accept new captures while the user is reading a bubble's
+        // detail view — the displayed image would otherwise be replaced by
+        // a stale bubble with new image.  The detail view forces rearm
+        // back to SCANNING.
+        if (_state.value.selectedBubble != null) return
         // `lastFrame` doubles as "have we captured this cycle" — once a
-        // capture is in flight, ignore subsequent emits until the user hits
-        // 重新扫描.
+        // capture is in flight, ignore subsequent emits until a fresh
+        // rearm (which happens when the new bubble lands).
         if (lastFrame != null) return
 
         val now = SystemClock.elapsedRealtime()
@@ -96,21 +107,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
         // Past 1 s of stable observations — capture and dispatch the
         // recognition cycle.  Live UI keeps showing the camera; the JPEG
-        // bytes are only for the model.
+        // bytes are only for the model + the bubble's eventual thumbnail.
         stableSinceMs = -1L
         lastFrame = jpegs
 
-        // Clear the previous round's intents + scene + selected bubbles:
-        // any bubble left on screen at this point was based on a *different*
-        // captured JPEG, and clicking it would feed the new image to answer
-        // against a stale intent.  Hide them until the new cycle lands.
+        // Clear only the in-flight analysis status.  Bubbles from prior
+        // captures are kept on screen until the new round lands, so the
+        // user has a continuous bubble history.
         _state.value = _state.value.copy(
             analyzing = true,
             partialScene = null,
-            scene = "",
-            intents = emptyList(),
-            selected = null,
-            error = null,
         )
 
         if (!analyzing.compareAndSet(false, true)) return
@@ -232,16 +238,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
             if (myCycle != analyzeCycleId.get()) return
             val final = current ?: return
+
+            // Convert the model output into up to BUBBLE_MAX bubbles,
+            // appending to the existing queue.  New bubbles are pushed to
+            // the end; if the queue would exceed BUBBLE_MAX, the oldest
+            // (head) is dropped.  The "new replaces old" behavior is what
+            // the product spec calls for ("新出顶掉老的").
+            val newBubbles = final.intents.take(UiState.BUBBLE_MAX).map { it.toBubble(answerJpeg) }
+            val merged = (_state.value.bubbles + newBubbles)
+                .takeLast(UiState.BUBBLE_MAX)
+
             _state.value = _state.value.copy(
                 scene = final.scene,
-                intents = final.intents,
+                bubbles = merged,
                 partialScene = null,
                 location = loc,
                 roundCount = _state.value.roundCount + 1,
-                analyzing = false
+                analyzing = false,
             )
-            // Auto-proceed is intentionally disabled.  Per the contract the
-            // user picks a bubble; we never call [selectIntent] for them.
+            // Camera + FrameAnalyzer continue running; the next stable
+            // frame will fire runAnalysisCycle again.  No need to wait
+            // for user input — the new capture replaces `lastFrame` only
+            // if the user has not selected a bubble (see isBusy()).
+            if (myCycle == analyzeCycleId.get()) {
+                lastFrame = null
+                stableSinceMs = -1L
+            }
         } catch (e: CancellationException) {
             if (myCycle == analyzeCycleId.get() && _state.value.phase == Phase.SCANNING) {
                 _state.value = _state.value.copy(analyzing = false, partialScene = null)
@@ -261,6 +283,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (myCycle == analyzeCycleId.get()) currentAnalyzeJob = null
         }
     }
+
+    /** Build a [Bubble] from a model-returned [IntentItem] plus the captured JPEG. */
+    private fun IntentItem.toBubble(imageBytes: ByteArray): Bubble = Bubble(
+        id = "bubble-${System.currentTimeMillis()}-${title.hashCode()}",
+        type = type,
+        title = title,
+        detail = detail,
+        confidence = confidence,
+        imageBytes = imageBytes,
+        createdAtMs = System.currentTimeMillis(),
+    )
 
     private enum class CycleVerdict { STOP, CONTINUE, FORCED }
 
@@ -292,63 +325,46 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * User picked one of the intent bubbles.  Guard against double-clicks and
-     * against a race with [onSceneChange] clearing the cycle mid-call: if
-     * [state.selected] is already set, silently no-op — a previous tap (or
-     * a stale flow from before the restart) is in flight, so don't double-spend
-     * on a second LLM call.
+     * User tapped a bubble.  Show its detail (full image + title + detail).
+     * The camera pipeline stays quiet until [clearBubbleSelection] runs.
      */
-    fun selectIntent(intent: IntentItem) {
-        if (_state.value.selected != null) return
-        val frame = lastFrame ?: run {
-            _state.value = _state.value.copy(error = "还没有捕获到画面，请稍候")
-            return
-        }
+    fun selectBubble(bubble: Bubble) {
+        if (_state.value.selectedBubble?.id == bubble.id) return
         _state.value = _state.value.copy(
-            phase = Phase.ANSWERING,
-            selected = intent,
-            answer = "",
-            error = null
+            phase = Phase.SHOWING_DETAIL,
+            selectedBubble = bubble,
         )
-        currentAnswerJob = viewModelScope.launch {
-            try {
-                val loc = _state.value.location ?: resolveLocation()
-                val finalAnswer = client.answerStream(intent, frame.answer, loc) { partial ->
-                    if (_state.value.phase != Phase.ANSWER) return@answerStream
-                    _state.value = _state.value.copy(answer = partial)
-                }
-                _state.value = _state.value.copy(phase = Phase.ANSWER, answer = finalAnswer)
-            } catch (e: CancellationException) {
-                if (_state.value.phase == Phase.ANSWERING) {
-                    _state.value = _state.value.copy(
-                        phase = Phase.ANSWER,
-                        answer = _state.value.answer.ifBlank { "（已取消）" }
-                    )
-                }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    phase = Phase.ANSWER,
-                    answer = _state.value.answer,
-                    error = e.message ?: "获取答案失败"
-                )
-            }
-        }
     }
 
+    /** User dismissed the detail view; rearm the capture pipeline. */
+    fun clearBubbleSelection() {
+        if (_state.value.selectedBubble == null) return
+        _state.value = _state.value.copy(
+            phase = Phase.SCANNING,
+            selectedBubble = null,
+        )
+        // Bump the cycle id so any in-flight runAnalysisCycle that started
+        // before the user opened the detail is invalidated.  Then rearm the
+        // stability counter so a fresh capture cycle can begin immediately.
+        analyzeCycleId.incrementAndGet()
+        currentAnalyzeJob = null
+        analyzing.set(false)
+        lastFrame = null
+        stableSinceMs = -1L
+    }
+
+    /** User explicitly tapped "重新扫描" — full reset including bubble history. */
     fun restartScanning() {
         currentAnalyzeJob?.cancel()
-        currentAnswerJob?.cancel()
         currentAnalyzeJob = null
-        currentAnswerJob = null
         analyzeCycleId.incrementAndGet()  // invalidate any in-flight coroutine
         lastFrame = null  // allow the next capture to fire
         analyzing.set(false)
         stableSinceMs = -1L  // ready to start accumulating stability again
         _state.value = _state.value.copy(
             phase = Phase.SCANNING,
-            intents = emptyList(),
-            selected = null,
-            answer = "",
+            bubbles = emptyList(),
+            selectedBubble = null,
             scene = "",
             partialScene = null,
             lastSceneChangeMs = 0L,
@@ -359,10 +375,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Quiet recovery from a failed analyze cycle (parse error, timeout,
-     * etc).  Same as [restartScanning] but doesn't touch the answer job
-     * or any answer-related state, and intentionally does NOT surface an
-     * error to the user.  Used when the model returns unparseable output
-     * and we want to immediately start the next capture without UI noise.
+     * etc).  Same as [clearBubbleSelection] but doesn't touch the selected
+     * bubble field.  Used when the model returns unparseable output and
+     * we want to immediately start the next capture without UI noise.
      */
     private fun rearmScanning() {
         currentAnalyzeJob?.cancel()
@@ -372,8 +387,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         analyzing.set(false)
         stableSinceMs = -1L
         _state.value = _state.value.copy(
-            intents = emptyList(),
-            selected = null,
+            bubbles = _state.value.bubbles,
+            selectedBubble = null,
             scene = "",
             partialScene = null,
             error = null,
