@@ -255,12 +255,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // (head) is dropped.  The "新出顶掉老的" behavior is what the
             // product spec calls for.
             //
-            // When the model returns no intents at all (or only a single
-            // low-quality fallback), we synthesize one "无意图" bubble
-            // carrying the model's `observation` + `scene` so the user
-            // still sees a meaningful summary of what was on screen.
+            // When the model returns no intents at all, we synthesize one
+            // fallback bubble carrying the model's `observation` + `scene`
+            // so the user still sees a meaningful summary of what was on
+            // screen.  If the model also failed to describe the image (both
+            // fields blank), makeNoIntentBubble returns null and we add
+            // nothing this round — a thumbnail-only bubble with no text
+            // would just be noise.
             val newBubbles: List<Bubble> = if (final.intents.isEmpty()) {
-                listOf(makeNoIntentBubble(final, answerJpeg))
+                val fallback = makeNoIntentBubble(final, answerJpeg)
+                if (fallback != null) listOf(fallback) else emptyList()
             } else {
                 final.intents.take(UiState.BUBBLE_MAX).map { it.toBubble(answerJpeg) }
             }
@@ -320,14 +324,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * intents at all.  Per the user contract, the bubble's text content
      * is just the image description (the model's `observation` + `scene`)
      * — no "无意图" / "未识别" / "图片描述" prefix.  When the model
-     * also failed to describe the image, the detail is empty and the
-     * bubble card renders as just the thumbnail.
+     * also failed to describe the image (both fields blank), we skip
+     * the bubble entirely — there's nothing to show the user, and a
+     * thumbnail-only bubble with 0% confidence is just noise.
      */
-    private fun makeNoIntentBubble(result: AnalysisResult, imageBytes: ByteArray): Bubble {
+    private fun makeNoIntentBubble(result: AnalysisResult, imageBytes: ByteArray): Bubble? {
         val desc = buildList {
             if (result.observation.isNotBlank()) add(result.observation)
             if (result.scene.isNotBlank() && result.scene !in this) add(result.scene)
         }.joinToString(" · ")
+        if (desc.isBlank()) return null
         return Bubble(
             id = "bubble-no-intent-${System.currentTimeMillis()}",
             type = "info",
