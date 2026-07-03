@@ -2,6 +2,7 @@ package com.example.intentcam
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,6 +14,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,7 +26,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -111,33 +116,28 @@ private fun PermissionScreen(onRequest: () -> Unit) {
 @Composable
 private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
     Box(Modifier.fillMaxSize()) {
-        // Live preview is ALWAYS on screen.  When the camera analyzer sees
-        // ≥ 1 s of stability, the captured JPEG is sent through OCR + object
-        // detection + multi-round LLM as a background pipeline; the UI never
-        // freezes.  Result bubbles slide in at the bottom when the cycle
-        // completes.
-        CameraPreview(viewModel)
-
-        // Top bar: scene text + analysing indicator + settings.
-        TopOverlay(state = state, onSettings = viewModel::openSettings)
-
-        // Bottom content depends on phase.
-        when (state.phase) {
-            Phase.SCANNING -> IntentBubbles(
+        if (state.phase == Phase.SHOWING_DETAIL && state.selectedBubble != null) {
+            // Detail view: show the captured image full-bleed, with a header
+            // overlay and a 重新扫描 button to dismiss.  The camera preview
+            // is hidden here so the user sees the still image they tapped on,
+            // not a live feed.
+            DetailScreen(
+                bubble = state.selectedBubble,
+                onRestart = viewModel::clearBubbleSelection,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            // Live preview is ALWAYS on screen.  When the camera analyzer sees
+            // ≥ 1 s of stability, the captured JPEG is sent through OCR +
+            // object detection + multi-round LLM as a background pipeline;
+            // the UI never freezes.  Bubble results slide in at the bottom.
+            CameraPreview(viewModel)
+            TopOverlay(state = state, onSettings = viewModel::openSettings)
+            IntentBubbles(
                 state = state,
-                onPick = viewModel::selectIntent,
+                onPick = viewModel::selectBubble,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
-            Phase.ANSWERING -> AnsweringPanel(
-                state.selected?.title ?: "",
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-            Phase.ANSWER -> AnswerPanel(
-                state = state,
-                onRestart = viewModel::restartScanning,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-            else -> Unit
         }
     }
 }
@@ -236,7 +236,7 @@ private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
 }
 
 @Composable
-private fun IntentBubbles(state: UiState, onPick: (IntentItem) -> Unit, modifier: Modifier) {
+private fun IntentBubbles(state: UiState, onPick: (Bubble) -> Unit, modifier: Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -244,52 +244,74 @@ private fun IntentBubbles(state: UiState, onPick: (IntentItem) -> Unit, modifier
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        state.error?.let {
-            Text("⚠ $it", color = Color(0xFFFFB4A9), style = MaterialTheme.typography.labelSmall)
-        }
-        if (state.intents.isNotEmpty()) {
+        if (state.bubbles.isNotEmpty()) {
             Text(
-                "识别到的意图（点击选择）",
+                "识别到的意图（点击查看详情）",
                 color = Color.White,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
         }
-        // Top few intents as tappable bubbles.
-        state.intents.take(4).forEach { intent ->
-            IntentBubble(intent, onPick)
+        // Rendered newest-last so the most recent is closest to the camera
+        // preview / bottom edge.  The bubble list is a FIFO queue capped at
+        // UiState.BUBBLE_MAX; older bubbles have already been evicted.
+        state.bubbles.forEach { bubble ->
+            BubbleCard(bubble = bubble, onPick = onPick)
         }
     }
 }
 
 @Composable
-private fun IntentBubble(intent: IntentItem, onPick: (IntentItem) -> Unit) {
-    val accent = when (intent.type) {
+private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
+    val accent = when (bubble.type) {
         "location" -> Color(0xFF37D399)
         "solve" -> Color(0xFFFFAF54)
         else -> Color(0xFF4F8CFF)
+    }
+    val thumbnail = remember(bubble.imageBytes) {
+        // Decode on a worker thread; the result bitmap is cached for the
+        // composition's lifetime so re-emits are cheap.
+        runCatching {
+            BitmapFactory.decodeByteArray(bubble.imageBytes, 0, bubble.imageBytes.size)
+        }.getOrNull()
     }
     Surface(
         color = Color(0xE6161C2E),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
-        onClick = { onPick(intent) }
+        onClick = { onPick(bubble) }
     ) {
         Row(
-            Modifier.padding(14.dp),
+            Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                Modifier
-                    .size(10.dp)
-                    .background(accent, RoundedCornerShape(5.dp))
-            )
-            Spacer(Modifier.width(12.dp))
+            if (thumbnail != null) {
+                Image(
+                    bitmap = thumbnail.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+                Spacer(Modifier.width(12.dp))
+            } else {
+                Box(
+                    Modifier
+                        .size(10.dp)
+                        .background(accent, RoundedCornerShape(5.dp))
+                )
+                Spacer(Modifier.width(12.dp))
+            }
             Column(Modifier.weight(1f)) {
-                Text(intent.title, color = Color.White, fontWeight = FontWeight.SemiBold)
-                if (intent.detail.isNotBlank()) {
+                Text(
+                    bubble.title,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (bubble.detail.isNotBlank()) {
                     Text(
-                        intent.detail,
+                        bubble.detail,
                         color = Color(0xFFB9C4DE),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 2
@@ -297,7 +319,7 @@ private fun IntentBubble(intent: IntentItem, onPick: (IntentItem) -> Unit) {
                 }
             }
             Text(
-                "${(intent.confidence * 100).toInt()}%",
+                "${(bubble.confidence * 100).toInt()}%",
                 color = accent,
                 style = MaterialTheme.typography.labelMedium
             )
@@ -306,60 +328,85 @@ private fun IntentBubble(intent: IntentItem, onPick: (IntentItem) -> Unit) {
 }
 
 @Composable
-private fun AnsweringPanel(title: String, modifier: Modifier) {
-    Surface(
-        color = Color(0xE6161C2E),
-        shape = RoundedCornerShape(20.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .navigationBarsPadding()
+private fun DetailScreen(
+    bubble: Bubble,
+    onRestart: () -> Unit,
+    modifier: Modifier
+) {
+    val fullImage = remember(bubble.imageBytes) {
+        runCatching {
+            BitmapFactory.decodeByteArray(bubble.imageBytes, 0, bubble.imageBytes.size)
+        }.getOrNull()
+    }
+    val accent = when (bubble.type) {
+        "location" -> Color(0xFF37D399)
+        "solve" -> Color(0xFFFFAF54)
+        else -> Color(0xFF4F8CFF)
+    }
+    Box(
+        modifier
+            .background(Color(0xFF000000))
     ) {
-        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            Spacer(Modifier.width(16.dp))
-            Text("正在处理：$title", color = Color.White)
+        if (fullImage != null) {
+            Image(
+                bitmap = fullImage.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        // Header strip with title and confidence
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(Color(0xCC000000))
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(10.dp)
+                        .background(accent, RoundedCornerShape(5.dp))
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    bubble.title,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "${(bubble.confidence * 100).toInt()}%",
+                    color = accent,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+            if (bubble.detail.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    bubble.detail,
+                    color = Color(0xFFB9C4DE),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        // 重新扫描 button at the bottom
+        Button(
+            onClick = onRestart,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(20.dp)
+                .fillMaxWidth()
+        ) {
+            Text("重新扫描")
         }
     }
 }
 
-@Composable
-private fun AnswerPanel(state: UiState, onRestart: () -> Unit, modifier: Modifier) {
-    Surface(
-        color = Color(0xF2161C2E),
-        shape = RoundedCornerShape(20.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(max = 420.dp)
-            .padding(16.dp)
-            .navigationBarsPadding()
-    ) {
-        Column(Modifier.padding(18.dp)) {
-            Text(
-                state.selected?.title ?: "结果",
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(10.dp))
-            Column(
-                Modifier
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                state.error?.let {
-                    Text("⚠ $it", color = Color(0xFFFFB4A9))
-                    Spacer(Modifier.height(8.dp))
-                }
-                Text(
-                    state.answer.ifBlank { if (state.error == null) "（无内容）" else "" },
-                    color = Color(0xFFE7ECF7)
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-            Button(onClick = onRestart, modifier = Modifier.fillMaxWidth()) {
-                Text("重新扫描")
-            }
-        }
-    }
-}
+// Legacy answer/answering composables removed: the new flow is
+// BubbleCard (thumbnail + title + detail) and DetailScreen (full image
+// + title + detail + 重新扫描 button).  The answer-flow composables
+// that lived here are gone.
