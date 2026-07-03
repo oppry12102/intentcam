@@ -33,3 +33,10 @@ Thumbs.db
 # Claude session state — contains user preferences and history, not part of
 # the project.  Recreated automatically per session.
 .claude/
+
+# --- Auth tokens (per user request) ---
+# Models.kt has the LLM API token baked in so the debug APK runs out of
+# the box.  The file is gitignored so the token never lands in the public
+# GitHub repository.  The previous version of Models.kt (with the token
+# scrubbed) is still in git history.
+app/src/main/java/com/example/intentcam/Models.kt
