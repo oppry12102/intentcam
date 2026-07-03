@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Manual ground-truth labels for the test fixtures. Used by profiling/evaluate.py to score LLM intents against human-labeled expectations.",
+  "version": 2,
+  "description": "Manual ground-truth labels for the test fixtures used by profiling/evaluate.py.",
   "scenes": [
     {
       "id": "IMG1",
@@ -42,6 +42,95 @@
         ["配料", "成分", "原料"],
         ["产地", "来源", "武夷山", "安溪"],
         ["保质期", "过期", "还能"]
+      ]
+    },
+    {
+      "id": "F_STREET_SIGN",
+      "image": "F_STREET_SIGN.png",
+      "source": "synthetic — Pillow render of an English road sign",
+      "what_is_pictured": "道路名牌：'Main Street'，门牌号 24，方向指示 'Center 4 km →'。英文路牌。",
+      "must_have_in_scene_or_observation": ["Main Street"],
+      "expected_top_intent_type": ["info", "location"],
+      "expected_intent_titles": [
+        "确认当前地址",
+        "导航去 Main Street",
+        "怎么去市中心"
+      ],
+      "acceptable_intent_keywords": [
+        ["街道", "地址", "路名"],
+        ["导航", "怎么去", "Main"],
+        ["中心", "去中心", "Center"]
+      ]
+    },
+    {
+      "id": "F_MATH_PROBLEM",
+      "image": "F_MATH_PROBLEM.png",
+      "source": "synthetic — handwritten-style math",
+      "what_is_pictured": "一道二次方程：x² + 5x + 6 = 0。标题 'Problem 1'。",
+      "must_have_in_scene_or_observation": ["x"],
+      "expected_top_intent_type": "solve",
+      "expected_intent_titles": [
+        "解这个方程",
+        "求根",
+        "帮我因式分解"
+      ],
+      "acceptable_intent_keywords": [
+        ["解", "方程", "求根"],
+        ["因式", "分解"],
+        ["x", "5x", "+6"]
+      ]
+    },
+    {
+      "id": "F_NUTRITION",
+      "image": "F_NUTRITION.png",
+      "source": "synthetic — Nutrition Facts panel",
+      "what_is_pictured": "英文 Nutrition Facts panel：Serving size 5 crackers, Calories 120, Total Fat 4g, Sodium 200mg, Carbohydrate 22g, Fiber 3g, Protein 3g。",
+      "must_have_in_scene_or_observation": [["Calories", "卡路里"]],
+      "expected_top_intent_type": "info",
+      "expected_intent_titles": [
+        "查看营养成分",
+        "这个零食健康吗",
+        "每份含多少热量"
+      ],
+      "acceptable_intent_keywords": [
+        ["营养", "热量", "脂肪"],
+        ["健康", "是否健康", "低脂"],
+        ["配料", "成分"]
+      ]
+    },
+    {
+      "id": "F_RX_LABEL",
+      "image": "F_RX_LABEL.png",
+      "source": "synthetic — prescription drug label",
+      "what_is_pictured": "Rx 处方标签：ACETAMINOPHEN 500 mg Tablets。用法 Take 1-2 tablets every 4-6 hours, Do not exceed 8 tablets in 24 hours。警告：Liver warning, Allergy alert。",
+      "must_have_in_scene_or_observation": ["ACETAMINOPHEN"],
+      "expected_top_intent_type": "info",
+      "expected_intent_titles": [
+        "看用法用量",
+        "这个药怎么吃",
+        "查保质期"
+      ],
+      "acceptable_intent_keywords": [
+        ["用法", "用量", "怎么吃", "剂量", "吃法"],
+        ["风险", "警告", "副作用", "过敏"],
+        ["保质期", "有效期", "到期", "过期"]
+      ]
+    },
+    {
+      "id": "F_QR_CAPTION",
+      "image": "F_QR_CAPTION.png",
+      "source": "synthetic — QR code + caption",
+      "what_is_pictured": "二维码 + 标题 'Scan QR for origin verification' + 副标 'Product: Premium Tieguanyin 250g'。",
+      "must_have_in_scene_or_observation": ["QR"],
+      "expected_top_intent_type": ["info", "solve"],
+      "expected_intent_titles": [
+        "扫描二维码",
+        "扫码溯源验证",
+        "查询产品来源"
+      ],
+      "acceptable_intent_keywords": [
+        ["扫", "QR", "二维码"],
+        ["验证", "来源", "真伪", "正品"]
       ]
     }
   ]
