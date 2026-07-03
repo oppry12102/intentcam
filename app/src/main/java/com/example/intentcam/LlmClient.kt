@@ -86,8 +86,13 @@ class LlmClient(@Volatile var config: LlmConfig) {
         )
         val tag = "analyze.${level.name.lowercase()}"
         val raw = streamText(body, tag, ANALYZE_ROUND_TIMEOUT_MS, onDelta)
-        val json = extractJson(raw) ?: throw IllegalStateException("模型未返回可解析的 JSON:\n$raw")
-        parseAnalysis(json)
+        val parsed = extractJson(raw)
+        if (parsed == null) {
+            throw IllegalStateException(
+                "模型未返回可解析的 JSON（首 200 字：${raw.take(200)}）"
+            )
+        }
+        parseAnalysis(parsed.first)
     }
 
     suspend fun answerStream(
@@ -369,9 +374,14 @@ class LlmClient(@Volatile var config: LlmConfig) {
                         ) {
                             if (resolved.compareAndSet(false, true)) {
                                 if (cont.isCancelled) return
+                                // Body has often been consumed/closed when the
+                                // connection drops; guard the read so it
+                                // doesn't throw a secondary exception while
+                                // we're already handling one.
+                                val body = runCatching { response?.body?.string()?.take(300) }
+                                    .getOrNull().orEmpty()
                                 val ex = t ?: IllegalStateException(
-                                    "HTTP ${response?.code}: " +
-                                            (response?.body?.string()?.take(300).orEmpty())
+                                    "HTTP ${response?.code}: $body"
                                 )
                                 cont.resumeWithException(ex)
                             }
@@ -445,14 +455,12 @@ class LlmClient(@Volatile var config: LlmConfig) {
         )
     }
 
-    private fun extractJson(responseText: String): JSONObject? {
+    private fun extractJson(responseText: String): Pair<JSONObject, String>? {
         val raw = responseText.trim()
         if (raw.isEmpty()) return null
 
-        // Fast path: the entire response IS the JSON object.  Some models
-        // wrap responses in markdown fences like `` ```json\n{...}\n``` ``,
-        // and some prefix it with prose ("下面是JSON: { ... }").  Both cases
-        // are handled below.
+        // 1. Try the whole string as JSON.  Strip markdown fences first;
+        //    the model commonly wraps responses in ```json ... ```.
         val stripped = raw
             .removePrefix("```json")
             .removePrefix("```JSON")
@@ -460,23 +468,42 @@ class LlmClient(@Volatile var config: LlmConfig) {
             .removeSuffix("```")
             .trim()
 
-        // Try the whole stripped text first.
-        runCatching { JSONObject(stripped) }.getOrNull()?.let(::returnIfLooksValid)
-
-        // Fall back: take the substring from the first `{` to the last `}`.
-        // This is best-effort and may capture stray braces in string values,
-        // but [JSONObject] only accepts a balanced subtree, so when the
-        // substring itself is unbalanced the constructor throws and we
-        // return null — which the caller treats as "unparseable" and
-        // surfaces to the user.
-        val start = stripped.indexOf('{')
-        if (start < 0) return null
-        val end = stripped.lastIndexOf('}')
-        if (end <= start) return null
-        val candidate = stripped.substring(start, end + 1)
-        return runCatching { JSONObject(candidate) }
+        runCatching { JSONObject(stripped) }
             .getOrNull()
             ?.let(::returnIfLooksValid)
+            ?.let { return it to raw }
+
+        // 2. The model may emit a partial stream (truncated mid-JSON) or
+        //    wrap the JSON in prose ("下面是意图: {...} 请继续...").
+        //    Take the substring from the first `{` to the last `}`.  The
+        //    substring may not be balanced; we then attempt to repair
+        //    truncated JSON by progressively trimming from the end until
+        //    org.json can parse it.
+        val first = stripped.indexOf('{')
+        val last  = stripped.lastIndexOf('}')
+        if (first >= 0 && last > first) {
+            val candidate = stripped.substring(first, last + 1)
+            runCatching { JSONObject(candidate) }
+                .getOrNull()
+                ?.let(::returnIfLooksValid)
+                ?.let { return it to raw }
+
+            // 3. Repair: scan from the end for the last balanced `}` that
+            //    org.json can parse, and recover what's there.  This rescues
+            //    truncated streams.
+            for (e in last downTo first + 1) {
+                if (stripped[e] != '}') continue
+                val sub = stripped.substring(first, e + 1)
+                val parsed = runCatching { JSONObject(sub) }.getOrNull() ?: continue
+                val valid = returnIfLooksValid(parsed) ?: continue
+                return valid to raw
+            }
+        }
+
+        // 4. The model emitted no JSON at all.  We can't recover anything
+        //    structured; return null and let the caller surface a friendlier
+        //    error including a snippet of the raw text.
+        return null
     }
 
     /**
