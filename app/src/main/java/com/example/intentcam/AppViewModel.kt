@@ -320,6 +320,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     )
 
     /**
+     * Inverse of [toBubble]:  build a synthetic [IntentItem] from a [Bubble]
+     * so we can hand it to [LlmClient.actionStream] (which is keyed on
+     * [IntentItem] for the answer-prompt builder).  Used when the user
+     * triggers a follow-up action on a bubble that originated from a
+     * non-empty [AnalysisResult].
+     */
+    private fun Bubble.toIntentItem(): IntentItem = IntentItem(
+        id = id,
+        type = type,
+        title = title,
+        detail = detail,
+        confidence = confidence,
+    )
+
+    /**
      * Synthesize a single fallback [Bubble] when the model produced no
      * intents at all.  Per the user contract, the bubble's text content
      * is just the image description (the model's `observation` + `scene`)
@@ -383,6 +398,138 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(
             phase = Phase.SHOWING_DETAIL,
             selectedBubble = bubble,
+            // Clear any previous action results — they belonged to the
+            // previous bubble's detail view.
+            actionResults = emptyMap(),
+            activeActionId = null,
+            partialActionText = null,
+        )
+    }
+
+    /**
+     * User tapped one of the [Action] chips in the detail view.  Streams
+     * a tailored LLM response based on the captured image + the action's
+     * [Action.systemPrompt] instruction.
+     */
+    fun triggerAction(bubble: Bubble, action: Action) {
+        val key = "${bubble.id}-${action.id}"
+        // Toggle: if the same action is already running, do nothing.
+        if (_state.value.activeActionId == key) return
+        // Mark this as active + clear partial text.
+        _state.value = _state.value.copy(
+            activeActionId = key,
+            partialActionText = "",
+        )
+        viewModelScope.launch {
+            try {
+                val loc = _state.value.location ?: resolveLocation()
+                val intent = bubble.toIntentItem()
+                val result = client.actionStream(
+                    intent = intent,
+                    jpeg = bubble.imageBytes,
+                    location = loc,
+                    action = action,
+                ) { partial ->
+                    // Only the most recent activeActionId's partial
+                    // text is shown; ignore stale updates.
+                    if (_state.value.activeActionId == key) {
+                        _state.value = _state.value.copy(partialActionText = partial)
+                    }
+                }
+                if (_state.value.activeActionId == key) {
+                    _state.value = _state.value.copy(
+                        activeActionId = null,
+                        partialActionText = null,
+                        actionResults = _state.value.actionResults + (key to result),
+                    )
+                }
+            } catch (e: CancellationException) {
+                if (_state.value.activeActionId == key) {
+                    _state.value = _state.value.copy(
+                        activeActionId = null,
+                        partialActionText = null,
+                    )
+                }
+            } catch (e: Exception) {
+                if (_state.value.activeActionId == key) {
+                    _state.value = _state.value.copy(
+                        activeActionId = null,
+                        partialActionText = "（出错：${e.message ?: "未知"}）",
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Build the contextual list of [Action] chips the user can tap from a
+     * bubble's detail view.  Different intent types surface different
+     * follow-up actions; "无意图" / parse-fallback bubbles fall back to a
+     * generic "explanation" set.
+     */
+    fun actionsFor(bubble: Bubble): List<Action> = when (bubble.type) {
+        "info" -> listOf(
+            Action(
+                id = "info-translate",
+                label = "翻译成中文",
+                systemPrompt = "请将图中所有可识别的文字翻译成中文，保留数字、专有名词和原始格式。"
+            ),
+            Action(
+                id = "info-list",
+                label = "列出关键信息",
+                systemPrompt = "请列出图中所有可识别的关键信息：人名、地名、数字、日期、产品名、规格、价格、有效期等。"
+            ),
+            Action(
+                id = "info-evaluate",
+                label = "判断是否正常",
+                systemPrompt = "如果图中有数字读数或测量值（血压、体重、温度、血糖、保质期等），请基于医学/常识判断是否在正常范围，并给出建议。"
+            ),
+        )
+        "location" -> listOf(
+            Action(
+                id = "loc-where",
+                label = "查询地点信息",
+                systemPrompt = "请告诉用户这是什么地方（可能的国家/城市/地标），以及这块路牌或地图上显示的位置含义。"
+            ),
+            Action(
+                id = "loc-navigate",
+                label = "给我导航路线",
+                systemPrompt = "如果图中有方向/距离信息（路牌、地图），告诉我从这里怎么去目的地，给出大致的方向和距离。"
+            ),
+            Action(
+                id = "loc-nearby",
+                label = "附近还有什么",
+                systemPrompt = "基于图中的位置信息，告诉我附近通常会有什么（常见地标、设施等）。"
+            ),
+        )
+        "solve" -> listOf(
+            Action(
+                id = "solve-steps",
+                label = "详细解题步骤",
+                systemPrompt = "请展示完整的解题步骤，每步说明用的是什么定理或方法。如果有多种解法，给出其中一种并说明为什么选这个。"
+            ),
+            Action(
+                id = "solve-verify",
+                label = "验证答案",
+                systemPrompt = "如果题中有数字或答案，请验证或反向验算。"
+            ),
+            Action(
+                id = "solve-similar",
+                label = "给我类似题",
+                systemPrompt = "给我一道类似的题目让我练习，附上答案。"
+            ),
+        )
+        else -> listOf(
+            Action(
+                id = "other-explain",
+                label = "再解释一下",
+                systemPrompt = "用更简单的话重新解释图中内容。"
+            ),
+            Action(
+                id = "other-detail",
+                label = "看更多细节",
+                systemPrompt = "聚焦图中某个区域，给出更详细的内容。"
+            ),
         )
     }
 
@@ -392,6 +539,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(
             phase = Phase.SCANNING,
             selectedBubble = null,
+            actionResults = emptyMap(),
+            activeActionId = null,
+            partialActionText = null,
         )
         // Bump the cycle id so any in-flight runAnalysisCycle that started
         // before the user opened the detail is invalidated.  Then rearm the
