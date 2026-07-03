@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "description": "Manual ground-truth labels for the test fixtures. Used by profiling/evaluate.py to score LLM intents against human-labeled expectations.",
+  "scenes": [
+    {
+      "id": "IMG1",
+      "image": "IMG1.jpg",
+      "what_is_pictured": "Omron HEM-7211 上臂式血压计，屏幕亮着，显示 98(高压) / 62(低压) mmHg, 脉搏 86 搏/分, 时间 上午 11:21, 有 OK 指示灯。",
+      "key_text_visible": ["OMRON", "HEM-7211", "Intelli sense", "Dual. Check System", "98", "62", "86", "mmHg", "高压", "低压", "脉搏", "搏/分", "上午", "11:21", "OK"],
+      "must_have_in_scene_or_observation": ["98", "62", "86"],
+      "expected_top_intent_type": "info",
+      "expected_intent_titles": [
+        "看血压读数",
+        "判断血压正常范围",
+        "记录这次血压"
+      ],
+      "acceptable_intent_keywords": [
+        ["血压", "读数"],
+        ["血压", "判断", "正常"],
+        ["血压", "记录", "保存"]
+      ]
+    },
+    {
+      "id": "IMG2",
+      "image": "IMG2.jpg",
+      "what_is_pictured": "茶叶包装盒背面标签。品名=工夫红茶(正山小种)，配料相同, 原料产地=福建省南平市武夷山, 产地=福建省泉州市安溪县, 净含量=250g, 保质期=36个月, 等级=特级, 生产日期=2020年12月1日, GB/T13738.2 标准号, SC11435052402834 生产许可证, 安溪东坑共赢茶叶专业合作社, 太平洋保险 CPIC 100万, EAN-13 条码。",
+      "key_text_visible": [
+        "工夫红茶", "正山小种", "福建省", "南平市", "武夷山", "泉州市", "安溪县",
+        "250g", "36个月", "特级", "2020年12月1日", "GB/T13738.2", "SC11435052402834",
+        "配料", "原料产地", "产地", "净含量", "保质期", "等级", "生产日期", "保存方法"
+      ],
+      "must_have_in_scene_or_observation": ["红茶", "正山小种"],
+      "expected_top_intent_type": "info",
+      "expected_intent_titles": [
+        "告诉我这是什么茶",
+        "查配料成分",
+        "查看产地来源",
+        "判断保质期还剩多久"
+      ],
+      "acceptable_intent_keywords": [
+        ["茶", "品种", "什么"],
+        ["配料", "成分", "原料"],
+        ["产地", "来源", "武夷山", "安溪"],
+        ["保质期", "过期", "还能"]
+      ]
+    }
+  ]
+}
