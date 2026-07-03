@@ -324,6 +324,9 @@ def main():
             Path(__file__).resolve().parent / img_name,
             Path(__file__).resolve().parent.parent / "img" / Path(img_name).name,
             ROOT / "img" / Path(img_name).name,
+            # "img/real/<filename>" for real-photo fixtures
+            ROOT / "img" / "real" / Path(img_name).name,
+            Path(__file__).resolve().parent.parent / "img" / "real" / Path(img_name).name,
         ]
         img_path = next((p for p in candidates if p.exists()), None)
         if img_path is None:

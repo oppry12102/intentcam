@@ -1,0 +1,585 @@
+======================================================================
+model:  MiniMax-M3
+base:   https://api.minimaxi.com/anthropic
+temp:   0.0
+system: (164 chars)
+user:   (1251 chars)
+======================================================================
+
+[ real_food_label_01 ]  real_food_label_01.jpg  — food_label
+  observation: 画面上方文字标注 Barilla Penne Rigate 500g，净重 500g (1.1 lb)。下方为木桌上有人手持手机的场景。
+  scene:       室内木桌前手持手机
+  top intent:  type=info title='查意面配料' confidence=0.85 detail='查看 Barilla Penne Rigate 500g 的成分表、产地等具体信息'
+  full intents (4):
+    - [0.85] info '查意面配料' — '查看 Barilla Penne Rigate 500g 的成分表、产地等具体信息'
+    - [0.72] info '查食用方法' — '查询这款通心粉的烹饪时间和做法'
+    - [0.60] info '找购买链接' — '在线搜索 Barilla Penne Rigate 500g 的购买渠道'
+    - [0.55] info '对比价格' — '对比不同平台或规格的 Barilla 通心粉价格'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_food_label_02 ]  real_food_label_02.jpg  — food_label
+  observation: 黑色横幅写白色文字"Aged Parmigiano Reggiano"和"Nutrition Facts per 28g"，下方为海面与导航标的黑白海景图。
+  scene:       海面黑白照片与顶部奶酪营养标签叠加
+  top intent:  type=info title='查营养成分' confidence=0.92 detail='查看每28g帕玛森干酪的具体营养数据（热量、钠、蛋白质等）'
+  full intents (3):
+    - [0.92] info '查营养成分' — '查看每28g帕玛森干酪的具体营养数据（热量、钠、蛋白质等）'
+    - [0.55] info '查配比与用途' — '了解28g对应的食用量及适合的搭配场景'
+    - [0.30] info '对比同类产品' — '与Grana Padano等硬质奶酪的营养差异'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_food_label_03 ]  real_food_label_03.jpg  — food_label
+  observation: 画面顶部黑色横幅写有 "Whole Grain Oats 1kg" 和 "Best by 12 / 2025"，下方是一张蓝黑色调的欧美城市街道照片，高楼林立，
+  scene:       用户视角拍摄一张城市街景照片，顶端叠加文字。
+  top intent:  type=info title='读顶部文字' confidence=0.82 detail='横幅写着 "Whole Grain Oats 1kg, Best by 12 / 2025"，疑似食品标签或图卡文案，可'
+  full intents (4):
+    - [0.82] info '读顶部文字' — '横幅写着 "Whole Grain Oats 1kg, Best by 12 / 2025"，疑似食品标签或图卡文案，可解读为全谷物燕麦1公斤、保质期至2025年12月。'
+    - [0.65] info '解读画面含义' — '上方是产品/标签文字，下方是街景配图，询问这张图在表达什么。'
+    - [0.60] info '判断是否过期' — '保质期 12 / 2025 与当前日期对比，判断 Whole Grain Oats 1kg 是否仍在保质期内。'
+    - [0.55] info '翻译英文文字' — '将 "Whole Grain Oats 1kg" 和 "Best by 12 / 2025" 翻译成中文。'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_food_label_04 ]  real_food_label_04.jpg  — food_label
+  observation: 顶部黑色横幅显示"Sourdough Loaf"和"Net Wt 800g"字样，下方是一架停靠在登机桥旁的白色客机，地面标有"906"编号，地勤人员正在作业。
+  scene:       机场停机坪俯拍一架待飞客机
+  top intent:  type=info title='读取标题' confidence=0.75 detail='查看顶部"Sourdough Loaf 800g"文字含义（似为产品标签叠加在机场照片上）'
+  full intents (3):
+    - [0.75] info '读取标题' — '查看顶部"Sourdough Loaf 800g"文字含义（似为产品标签叠加在机场照片上）'
+    - [0.70] info '识别飞机型号' — '辨认这架客机的航空公司与机型'
+    - [0.50] location '判断机场位置' — '根据机坪编号906和登机桥判断具体机场或航站楼'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_food_label_05 ]  real_food_label_05.jpg  — food_label
+  observation: 黑色横幅上写有"Fresh Orange Juice 1L"和"100% Pure Squeezed"，下方为仙人掌的橙色刺特写照片。
+  scene:       橙汁产品宣传图，顶部文字下方是仙人掌刺特写。
+  top intent:  type=info title='查看规格' confidence=0.78 detail='确认 1L 装鲜橙汁是否为 100% 纯榨'
+  full intents (4):
+    - [0.78] info '查看规格' — '确认 1L 装鲜橙汁是否为 100% 纯榨'
+    - [0.55] info '查保质期' — '查看 Fresh Orange Juice 1L 的生产日期与保质期'
+    - [0.42] info '对比同类' — '对比其他品牌 100% 纯榨橙汁的规格与价格'
+    - [0.35] info '找购买链接' — '查找 Fresh Orange Juice 1L 的购买渠道'
+  score:        composite=1.0  type=Y  title=Y(group=2)  must_have=1.00
+
+[ real_device_reading_01 ]  real_device_reading_01.jpg  — device_reading
+  observation: 画面顶部黑底白字显示"Blood Pressure 128 / 82"和"Pulse 71"；下方为旧金山天际线城市风光，含泛美金字塔等地标建筑。
+  scene:       手机App血压测量结果叠加在城市航拍画面上
+  top intent:  type=info title='解读血压值' confidence=0.92 detail='128/82 mmHg 属于正常高值，解读收缩压/舒张压含义及是否需要关注'
+  full intents (4):
+    - [0.92] info '解读血压值' — '128/82 mmHg 属于正常高值，解读收缩压/舒张压含义及是否需要关注'
+    - [0.88] info '解读脉搏数' — 'Pulse 71 次/分是否在静息心率正常范围内（60-100）'
+    - [0.75] info '记录测量结果' — '把 128/82、脉搏 71 这组数据保存到健康记录或笔记中'
+    - [0.70] info '查看健康建议' — '基于本次读数给出饮食、运动或复测时间的建议'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_device_reading_02 ]  real_device_reading_02.jpg  — device_reading
+  observation: 屏幕顶部黑色横幅显示"Blood Pressure 145 / 92"和"Pulse 88"，下方为蓝灰色山峦云海风景图。
+  scene:       血压App测量结果页面
+  top intent:  type=info title='解读血压值' confidence=0.95 detail='145/92 属于高血压范围（2级），需进一步了解医学建议'
+  full intents (4):
+    - [0.95] info '解读血压值' — '145/92 属于高血压范围（2级），需进一步了解医学建议'
+    - [0.85] info '记录测量结果' — '将血压 145/92、心率 88 保存到健康记录'
+    - [0.78] info '判断是否正常' — '对照血压分级标准判断当前读数是否在安全范围'
+    - [0.60] info '查看历史记录' — '在 App 中查看历次血压测量趋势'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_device_reading_03 ]  real_device_reading_03.jpg  — device_reading
+  observation: 画面顶部黑底白字显示"Body Weight 73.4 kg"和"BMI 22.1"，下方是星空与树影的夜景。
+  scene:       健康测量结果叠加在星空夜景上
+  top intent:  type=info title='解读数值' confidence=0.92 detail='了解当前体重 73.4 kg 与 BMI 22.1 是否在健康范围内'
+  full intents (4):
+    - [0.92] info '解读数值' — '了解当前体重 73.4 kg 与 BMI 22.1 是否在健康范围内'
+    - [0.82] info '记录体重' — '将今日体重 73.4 kg 保存到健康记录'
+    - [0.70] info '查看趋势' — '查看近期体重和 BMI 的变化曲线'
+    - [0.60] info '了解BMI' — '解释 BMI 22.1 的计算方式与含义'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_device_reading_04 ]  real_device_reading_04.jpg  — device_reading
+  observation: 画面顶部显示时间"10:42 Mon 14 Apr"和室内温度"24 C"；主体是布鲁克林大桥的钢索桥塔，两侧红砖建筑夹道，前景有"ONE WAY"单向交通标志
+  scene:       仰拍曼哈顿桥下街景
+  top intent:  type=location title='看我在哪' confidence=0.72 detail='根据桥塔和 ONE WAY 标志判断所在街道位置'
+  full intents (4):
+    - [0.72] location '看我在哪' — '根据桥塔和 ONE WAY 标志判断所在街道位置'
+    - [0.68] info '识别桥梁' — '确认画面中铁桥是否为布鲁克林大桥或曼哈顿大桥'
+    - [0.55] info '解读时间温度' — '顶部叠加的 10:42 / 24 C 含义说明'
+    - [0.45] location '查附近街景' — '找桥下可通行方向与 ONE WAY 限行信息'
+  score:        composite=0.55  type=N  title=Y(group=1)  must_have=1.00
+
+[ real_device_reading_05 ]  real_device_reading_05.jpg  — device_reading
+  observation: 画面顶部黑色横幅显示白色文字"Forehead Temp 36.8 C"与"Normal Range"；下方为日出时分的海边沙滩，远处有山丘轮廓与薄雾，近处沙地
+  scene:       额头测温结果叠加在日落海滩画面上
+  top intent:  type=info title='解读测温读数' confidence=0.88 detail='额头温度 36.8°C 标注为 Normal Range，确认是否在正常体温区间'
+  full intents (3):
+    - [0.88] info '解读测温读数' — '额头温度 36.8°C 标注为 Normal Range，确认是否在正常体温区间'
+    - [0.62] info '记录温度数据' — '保存当前 36.8°C 的测温结果到笔记或健康记录'
+    - [0.55] info '查看正常范围' — '了解额头测温的正常体温范围与判定标准'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_math_01 ]  real_math_01.jpg  — math
+  observation: 顶部黑色横幅显示"Problem 1. 2x + 5 = 13"，下方标注"x = ?"；下半部分为户外带刺铁丝网与木桩围栏、秋草丛生的照片背景。
+  scene:       叠加在乡村围栏照片上的数学题
+  top intent:  type=solve title='解方程' confidence=0.95 detail='解 2x + 5 = 13，求 x 的值'
+  full intents (3):
+    - [0.95] solve '解方程' — '解 2x + 5 = 13，求 x 的值'
+    - [0.70] solve '验算结果' — '验证 x=4 是否满足原方程'
+    - [0.60] solve '演示步骤' — '展示移项与系数化 1 的完整解法'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_math_02 ]  real_math_02.jpg  — math
+  observation: 画面顶部黑色横幅显示白色文字"Q2. x^2 - 5x + 6 = 0"和"Find roots"，下方为三角形玻璃网格穹顶建筑的黑白照片。
+  scene:       数学题叠加在建筑穹顶照片上
+  top intent:  type=solve title='解一元二次方程' confidence=0.95 detail='用因式分解求 x^2 - 5x + 6 = 0 的两个根'
+  full intents (3):
+    - [0.95] solve '解一元二次方程' — '用因式分解求 x^2 - 5x + 6 = 0 的两个根'
+    - [0.85] solve '因式分解' — '把 x^2 - 5x + 6 拆为 (x-2)(x-3)'
+    - [0.70] solve '验证根' — '把求出的根代回原方程检查'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_math_03 ]  real_math_03.jpg  — math
+  observation: 画面上方黑色横幅显示文字"Q3. sin(30) = ?"和"Show work"；下方为木桌上的 MacBook 笔记本电脑、网格笔记本（内有手写笔记与草图）
+  scene:       数学题叠加在办公桌面场景上
+  top intent:  type=solve title='求解sin(30)' confidence=0.95 detail='求 sin(30°) 的值并展示推导过程'
+  full intents (3):
+    - [0.95] solve '求解sin(30)' — '求 sin(30°) 的值并展示推导过程'
+    - [0.40] solve '换弧度计算' — '若 30 为弧度则计算 sin(30 rad) 的近似值'
+    - [0.55] info '出题意图解读' — '解释 "Show work" 提示及常见考点（30°/π/6 的三角函数值）'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_math_04 ]  real_math_04.jpg  — math
+  observation: 顶部黑底白字显示 "Q4. dr/dt = 4t - 2" 和 "Solve ODE"，下方为雾气笼罩的森林画面。
+  scene:       数学题截图，下方为雾林背景
+  top intent:  type=solve title='解此ODE' confidence=0.95 detail='求解常微分方程 dr/dt = 4t - 2，对 t 积分得 r = 2t² - 2t + C'
+  full intents (3):
+    - [0.95] solve '解此ODE' — '求解常微分方程 dr/dt = 4t - 2，对 t 积分得 r = 2t² - 2t + C'
+    - [0.85] solve '写出通解' — '分离变量并积分，给出含常数 C 的通解形式'
+    - [0.70] info '解释题意' — '说明这是一道基础积分题，要求求原函数 r(t)'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_math_05 ]  real_math_05.jpg  — math
+  observation: 画面顶部黑底白字显示数学题目"Q5. Area = pi * r^2"及条件"r = 4"；下方为登山者沿岩坡下降的风景照，云海覆盖山间。
+  scene:       数学题叠加在登山云海照片上
+  top intent:  type=solve title='算出面积' confidence=0.95 detail='已知 r=4，代入公式 Area = π × r² 求圆面积，结果约为 50.27'
+  full intents (3):
+    - [0.95] solve '算出面积' — '已知 r=4，代入公式 Area = π × r² 求圆面积，结果约为 50.27'
+    - [0.90] solve '代入计算' — '将 r=4 代入 Area = pi * r^2，逐步计算'
+    - [0.60] info '解释公式' — '说明圆面积公式 Area = πr² 中各符号含义'
+  score:        composite=0.65  type=Y  title=N(group=None)  must_have=1.00
+
+[ real_receipt_01 ]  real_receipt_01.jpg  — receipt
+  observation: 黑色顶栏显示白色文字"MARKET 24"和"Total $ 12.84"，下方是通往海滩的木质栈道。
+  scene:       超市收据叠加在海滩栈道照片上
+  top intent:  type=info title='核对金额' confidence=0.92 detail='查看 MARKET 24 的 Total $12.84 账单明细'
+  full intents (4):
+    - [0.92] info '核对金额' — '查看 MARKET 24 的 Total $12.84 账单明细'
+    - [0.78] info '保存收据' — '拍下或保存这张 MARKET 24 的小票截图'
+    - [0.65] info '核对消费' — '核对在 MARKET 24 的消费记录是否正确'
+    - [0.40] info '翻译店名' — 'MARKET 24 是否为某连锁超市'
+  score:        composite=1.0  type=Y  title=Y(group=2)  must_have=1.00
+
+[ real_receipt_02 ]  real_receipt_02.jpg  — receipt
+  observation: 顶部黑底白字显示"CAFE NOVA"，下方"Total $ 5.20"。主体为城市天际线，疑似旧金山，有跨海大桥、水面及一架飞机尾迹。
+  scene:       港湾前的城市天际线照片叠加账单文字
+  top intent:  type=info title='解读账单' confidence=0.62 detail='解读"CAFE NOVA Total $ 5.20"是消费小票还是水印'
+  full intents (4):
+    - [0.62] info '解读账单' — '解读"CAFE NOVA Total $ 5.20"是消费小票还是水印'
+    - [0.78] info '识别地标' — '判断画面中的城市天际线和大桥是否为旧金山'
+    - [0.55] location '定位城市' — '我目前所在或拍摄地是否为旧金山湾区'
+    - [0.60] info '识别大桥' — '识别画面左侧跨海大桥的具体名称'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_receipt_03 ]  real_receipt_03.jpg  — receipt
+  observation: 顶部黑条显示"GREEN MART"与"Total $ 8.75"，下方为橙色水母在深蓝海水中游动的照片。
+  scene:       超市收据叠加在水母照片上
+  top intent:  type=info title='确认总额' confidence=0.92 detail='查看 GREEN MART 的 Total $ 8.75 是否为最终付款金额'
+  full intents (4):
+    - [0.92] info '确认总额' — '查看 GREEN MART 的 Total $ 8.75 是否为最终付款金额'
+    - [0.88] info '核对小票' — '核对 GREEN MART 收据上的消费金额 8.75 美元'
+    - [0.75] info '记录消费' — '记录今日在 GREEN MART 花费 8.75 美元'
+    - [0.45] info '解释画面' — '解释这张水母照片叠加 GREEN MART 收据的含义'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_receipt_04 ]  real_receipt_04.jpg  — receipt
+  observation: 黑底白字标题"DELI 5TH"，下方显示"Total $ 17.40"；下半部分为黑白火车站台照片，可见列车、铁轨与信号灯。
+  scene:       购物小票叠加在火车站台照片上
+  top intent:  type=info title='翻译标题' confidence=0.6 detail='DELI 5TH 可能是"第五熟食店"，Total $17.40 表示合计 17.40 美元'
+  full intents (3):
+    - [0.60] info '翻译标题' — 'DELI 5TH 可能是"第五熟食店"，Total $17.40 表示合计 17.40 美元'
+    - [0.50] info '朗读小票' — '朗读"DELI 5TH / Total $17.40"内容'
+    - [0.40] info '解读金额' — '说明 17.40 美元的可能来源与换算'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_receipt_05 ]  real_receipt_05.jpg  — receipt
+  observation: 画面顶部黑条显示「PHARMACY PLUS」及「Total $ 23.10」,下方为一辆白色厢式货车在日落土路上行驶扬尘的远景
+  scene:       日落荒野土路货车行驶场景,叠加药房小票总价
+  top intent:  type=info title='记录总价' confidence=0.85 detail='记录 Pharmacy Plus 消费 $23.10'
+  full intents (3):
+    - [0.85] info '记录总价' — '记录 Pharmacy Plus 消费 $23.10'
+    - [0.70] info '拆分明细' — '查看 PHARMACY PLUS 23.10 美元对应的药品明细'
+    - [0.45] info '拆分价格' — '确认 $23.10 是否含税,换算人民币'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_street_sign_01 ]  real_street_sign_01.jpg  — street_sign
+  observation: 画面顶部黑色横幅显示白色文字"Main Street"和"Center 4 km"，主体是一双穿着运动鞋和牛仔裤的脚踩在带黄黑警示条纹的水泥台阶上。
+  scene:       俯视脚踩楼梯台阶
+  top intent:  type=location title='定位主街' confidence=0.85 detail='显示距离市中心 4 km 的 Main Street，结合图像判断当前步行位置'
+  full intents (3):
+    - [0.85] location '定位主街' — '显示距离市中心 4 km 的 Main Street，结合图像判断当前步行位置'
+    - [0.75] info '导航前往' — '前往画面中标注的 Main Street 中心区域，步行约 4 km'
+    - [0.50] info '保存位置' — '收藏 Main Street 这个地标以便后续查找'
+  score:        composite=1.0  type=Y  title=Y(group=2)  must_have=1.00
+
+[ real_street_sign_02 ]  real_street_sign_02.jpg  — street_sign
+  observation: 黑色横幅显示 "Oak Avenue 117" 与 "Library 800 m"，下方为雾气笼罩的橡树林草地照片。
+  scene:       雾中林地导航信息卡
+  top intent:  type=location title='去图书馆' confidence=0.9 detail='显示距 Library 800 m，沿 Oak Avenue 117 方向前进'
+  full intents (4):
+    - [0.90] location '去图书馆' — '显示距 Library 800 m，沿 Oak Avenue 117 方向前进'
+    - [0.85] info '查看距离' — '确认到 Library 的剩余距离 800 m'
+    - [0.70] location '找当前位置' — '定位当前所在 Oak Avenue 117 附近'
+    - [0.60] info '继续导航' — '在雾中按指引继续沿街道直行'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_street_sign_03 ]  real_street_sign_03.jpg  — street_sign
+  observation: 画面顶部黑底白字标题"Pine Road 5"，副标题"Park 1.2 km"；下方为沿海岩石山崖与深蓝海水相间的海湾风景照。
+  scene:       海边导航提示卡片配海湾实景
+  top intent:  type=location title='查看距离' confidence=0.95 detail='公园距离1.2公里，了解剩余路程'
+  full intents (4):
+    - [0.95] location '查看距离' — '公园距离1.2公里，了解剩余路程'
+    - [0.85] info '查看地点' — 'Pine Road 5是哪条路/哪个入口'
+    - [0.75] location '导航前往' — '步行或驾车导航到Pine Road 5的Park入口'
+    - [0.50] info '保存路径' — '收藏这条路线方便下次使用'
+  score:        composite=0.65  type=Y  title=N(group=None)  must_have=1.00
+
+[ real_street_sign_04 ]  real_street_sign_04.jpg  — street_sign
+  observation: 画面上方标题为"Elm Street B2"，下方写有"Downtown 3 km"，主图是中央车站（Grand Central Terminal）主大厅——金
+  scene:       中央车站主大厅俯瞰
+  top intent:  type=info title='认路看方位' confidence=0.85 detail='确认所在位置是中央车站，前往 Downtown 还有 3 km'
+  full intents (4):
+    - [0.85] info '认路看方位' — '确认所在位置是中央车站，前往 Downtown 还有 3 km'
+    - [0.78] info '查交通方式' — '查从 Grand Central 到 Downtown 最快的地铁/步行路线'
+    - [0.72] location '看当前位置' — '显示位置为 Elm Street B2，定位并导航到市中心'
+    - [0.55] info '了解景点' — '了解 Grand Central 中央大厅的著名地标如金色时钟'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_street_sign_05 ]  real_street_sign_05.jpg  — street_sign
+  observation: 画面顶部黑底白字标注"Cedar Lane 9"及副标题"School 500 m"，下方为黄褐色雾霾笼罩下的城市天际线与河流
+  scene:       雾霾城市航拍全景，前景为河流
+  top intent:  type=location title='我在哪' confidence=0.72 detail='根据画面顶部文字"Cedar Lane 9"判断当前所在街道或位置'
+  full intents (4):
+    - [0.72] location '我在哪' — '根据画面顶部文字"Cedar Lane 9"判断当前所在街道或位置'
+    - [0.81] info '查学校位置' — '解读"School 500 m"，500米范围内查找学校'
+    - [0.74] location '前往学校' — '基于"Cedar Lane 9"和"School 500 m"规划到附近学校的路线'
+    - [0.55] info '解释雾霾成因' — '画面能见度低、呈黄褐色，可能与空气污染或沙尘有关，询问原因'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_menu_01 ]  real_menu_01.jpg  — menu
+  observation: 画面顶部黑底白字写着"MENU"，下方列出"Margherita Pizza $12"。下半部分是一张紫色矮牵牛花的特写照片，花瓣有水珠，背景是深色模糊绿叶。
+  scene:       菜单与花卉的合成图
+  top intent:  type=info title='看菜单内容' confidence=0.85 detail='菜单仅显示 Margherita Pizza $12 一项，可能是不完整的菜单或样例'
+  full intents (3):
+    - [0.85] info '看菜单内容' — '菜单仅显示 Margherita Pizza $12 一项，可能是不完整的菜单或样例'
+    - [0.55] info '查玛格丽特披萨' — '了解这款披萨的配料、口味或价格信息'
+    - [0.35] info '保存菜单截图' — '保存或分享当前看到的菜单内容'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_menu_02 ]  real_menu_02.jpg  — menu
+  observation: 画面顶部黑底白字标注 MENU，菜品 Spaghetti Bologese 售价 $13；下方是德国新天鹅堡航拍图，白墙塔楼立于山林与湖光之上。
+  scene:       餐厅菜单叠加城堡风景画
+  top intent:  type=info title='查看菜品价格' confidence=0.85 detail='菜单显示 Spaghetti Bologese 售价 $13，确认价格与菜品名称。'
+  full intents (4):
+    - [0.85] info '查看菜品价格' — '菜单显示 Spaghetti Bologese 售价 $13，确认价格与菜品名称。'
+    - [0.90] info '认出城堡名称' — '下方城堡为新天鹅堡 Neuschwanstein Castle，位于德国巴伐利亚。'
+    - [0.70] location '查找城堡位置' — '查询新天鹅堡所在地与怎么去。'
+    - [0.75] info '翻译菜单英文' — '把 Spaghetti Bologese 译为意式肉酱面。'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_menu_03 ]  real_menu_03.jpg  — menu
+  observation: 黑色顶部条写有 "MENU"、"Tiramisu  $6.00"；下方是黄昏城市剪影中一个穿红衣的人物背影。
+  scene:       游戏/电影风格的黄昏城市场景配菜单文字
+  top intent:  type=info title='解读菜单项' confidence=0.62 detail='解读画面顶部菜单条目 Tiramisu $6.00 的含义和价格'
+  full intents (3):
+    - [0.62] info '解读菜单项' — '解读画面顶部菜单条目 Tiramisu $6.00 的含义和价格'
+    - [0.55] info '翻译文字' — '将 "MENU / Tiramisu $6.00" 翻译或解释成中文'
+    - [0.40] info '识别场景出处' — '判断这张黄昏剪影+菜单的画面属于哪部游戏或电影'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_menu_04 ]  real_menu_04.jpg  — menu
+  observation: 画面顶部黑色条幅写有白色大字"MENU"，下方一行小字"Latte $3.50"。下半部分为大片绿色草原，乌云压顶，远处有约6头牛在吃草，远处有雨柱。
+  scene:       草原牧场远景，上方叠加菜单文字
+  top intent:  type=info title='读取菜单价格' confidence=0.88 detail='查看 MENU 文字下方的 Latte 拿铁价格 $3.50'
+  full intents (3):
+    - [0.88] info '读取菜单价格' — '查看 MENU 文字下方的 Latte 拿铁价格 $3.50'
+    - [0.55] info '查看菜品品类' — '了解这份菜单里还有哪些饮品或商品'
+    - [0.45] info '解读画面布局' — '理解为何草原风景图上叠加了咖啡店菜单文字'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_menu_05 ]  real_menu_05.jpg  — menu
+  observation: 画面上方黑底白字标题 MENU，副标 House Red Wine $8；下方是一条黑色柏油路向远方延伸，路面湿润，两侧被白雪覆盖，路边有黄色标桩
+  scene:       菜单图片与雪景公路的拼贴
+  top intent:  type=info title='查看酒单' confidence=0.78 detail='读取菜单上的 House Red Wine $8 红酒价格信息'
+  full intents (3):
+    - [0.78] info '查看酒单' — '读取菜单上的 House Red Wine $8 红酒价格信息'
+    - [0.45] info '翻译菜单' — '把英文菜单内容翻译为中文'
+    - [0.35] info '解读画面' — '解释上方黑色菜单与下方雪景公路图片组合的含义'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_qr_code_01 ]  real_qr_code_01.jpg  — qr_code
+  observation: 黑白森林照片，顶部黑色横幅写着 "Scan QR for menu"，画面中有雾气和倒下的树枝。
+  scene:       森林黑白照片叠加菜单提示文字
+  top intent:  type=info title='扫码点菜单' confidence=0.88 detail='扫描顶部 'Scan QR for menu' 中的二维码以查看菜单'
+  full intents (2):
+    - [0.88] info '扫码点菜单' — '扫描顶部 'Scan QR for menu' 中的二维码以查看菜单'
+    - [0.70] info '翻译提示文字' — '将 'Scan QR for menu' 翻译为中文（扫码查看菜单）'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_qr_code_02 ]  real_qr_code_02.jpg  — qr_code
+  observation: 画面顶部黑条显示白色文字 "Verify product origin"，下方为雾林徒步场景：一名穿红外套的人物站在石径上，周围是高大的针叶树。
+  scene:       雾林徒步中的产品溯源宣传图
+  top intent:  type=info title='查产品来源' confidence=0.85 detail='点击 "Verify product origin" 文字，查询该产品产地与溯源信息'
+  full intents (3):
+    - [0.85] info '查产品来源' — '点击 "Verify product origin" 文字，查询该产品产地与溯源信息'
+    - [0.45] info '翻译标语' — '翻译顶部英文 "Verify product origin" 为中文'
+    - [0.25] info '记录活动' — '记录此次雾林徒步路线与时间'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_qr_code_03 ]  real_qr_code_03.jpg  — qr_code
+  observation: 画面顶部黑色横幅写着"Scan to pay the bill"，下方是巴黎城市全景，远处可见埃菲尔铁塔，街道被夕阳照亮。
+  scene:       巴黎城市俯瞰全景配付款提示
+  top intent:  type=info title='翻译提示语' confidence=0.85 detail='将顶部"Scan to pay the bill"翻译成中文或其他语言'
+  full intents (3):
+    - [0.85] info '翻译提示语' — '将顶部"Scan to pay the bill"翻译成中文或其他语言'
+    - [0.75] info '识别城市地标' — '确认图中地标是否为埃菲尔铁塔并介绍周边景点'
+    - [0.50] solve '执行扫码付款' — '画面提示扫码支付账单，但实际未显示二维码，需提示用户对准二维码'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_qr_code_04 ]  real_qr_code_04.jpg  — qr_code
+  observation: 黑色顶部条带显示白色文字"Add contact via QR"，下方为阳台场景：玻璃花瓶插着绿植枝条，桌上有笔记本电脑一角，背景是铁栏杆和绿树。
+  scene:       室内桌前，笔记本与花瓶窗边
+  top intent:  type=info title='打开扫码' confidence=0.72 detail='点击顶部"Add contact via QR"进入二维码添加联系人界面'
+  full intents (3):
+    - [0.72] info '打开扫码' — '点击顶部"Add contact via QR"进入二维码添加联系人界面'
+    - [0.65] info '查看提示' — '阅读当前画面上方的"Add contact via QR"操作指引'
+    - [0.35] info '切换场景' — '当前画面像是教程或说明截图，确认是否需要继续操作'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_qr_code_05 ]  real_qr_code_05.jpg  — qr_code
+  observation: 标题文字"Wi-Fi network QR code"，下方为云雾笼罩的森林山脉草甸风景图，未见实际二维码图案
+  scene:       标题为Wi-Fi二维码的风景封面图
+  top intent:  type=info title='扫码连Wi-Fi' confidence=0.45 detail='标题提示为Wi-Fi网络二维码，但画面中未见二维码，可能需切换到含二维码的画面后再扫'
+  full intents (3):
+    - [0.45] info '扫码连Wi-Fi' — '标题提示为Wi-Fi网络二维码，但画面中未见二维码，可能需切换到含二维码的画面后再扫'
+    - [0.40] info '重新对准二维码' — '当前画面只有标题和风景背景，需将摄像头对准实际的Wi-Fi二维码再扫描'
+    - [0.35] info '检查画面' — '画面中可能未正确捕获二维码区域，请确认取景是否对准二维码'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_map_01 ]  real_map_01.jpg  — map
+  observation: 画面顶部黑色横幅写着"MAP SHEET 1"，下方注明"Scale 1:10000"。主体是一片日落时分的海面，天空从浅蓝渐变到淡橙，海面平静如镜。
+  scene:       黄昏海边，空旷水面，顶部带地图标注横幅
+  top intent:  type=info title='查看地图比例尺' confidence=0.55 detail='画面顶部标注 MAP SHEET 1，比例尺 1:10000，可能是地图分幅说明'
+  full intents (3):
+    - [0.55] info '查看地图比例尺' — '画面顶部标注 MAP SHEET 1，比例尺 1:10000，可能是地图分幅说明'
+    - [0.45] info '解读画面含义' — '判断是地图标注页还是摄影作品，上方为标题、比例尺文字'
+    - [0.30] info '保存该地图页' — '如为地图分幅图，保存以备后续使用'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_map_02 ]  real_map_02.jpg  — map
+  observation: 黑色顶栏写着"MAP SHEET 2"和"Scale 1:10000"；下方为海面中一座带绿植小岛的长曝光照片。
+  scene:       地图图例页与海岛实景
+  top intent:  type=info title='查看比例尺' confidence=0.78 detail='理解 1:10000 比例尺代表的实际距离'
+  full intents (4):
+    - [0.78] info '查看比例尺' — '理解 1:10000 比例尺代表的实际距离'
+    - [0.72] info '识别地名' — '确认 Map Sheet 2 对应的岛屿名称和位置'
+    - [0.55] location '定位岛屿' — '在地图上找出该小岛所在位置'
+    - [0.48] info '解读图例' — '阅读 Map Sheet 2 的图例和坐标信息'
+  score:        composite=0.65  type=Y  title=N(group=None)  must_have=1.00
+
+[ real_map_03 ]  real_map_03.jpg  — map
+  observation: 黑色标题栏写着"MAP SHEET 3"，下方标注"Scale 1:10000"。主体是海边的公寓楼群、棕榈树、防波堤碎石和一名抱着冲浪板走过的人，强逆光
+  scene:       海边高层建筑群的逆光照片
+  top intent:  type=info title='查看比例尺' confidence=0.55 detail='画面顶部显示地图标注 MAP SHEET 3 / Scale 1:10000，需要确认比例尺含义'
+  full intents (3):
+    - [0.55] info '查看比例尺' — '画面顶部显示地图标注 MAP SHEET 3 / Scale 1:10000，需要确认比例尺含义'
+    - [0.50] location '识别地点' — '通过高层海滨公寓和棕榈树判断这是哪片海滩或城市'
+    - [0.40] info '理解标题含义' — '解释"MAP SHEET 3"在这张图中的用途'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_map_04 ]  real_map_04.jpg  — map
+  observation: 画面顶部黑底白字标题"MAP SHEET 4"，副标"Scale 1:10000"；下方是蓝天与大片积云、右侧可见月亮的景观照。
+  scene:       地图图幅标题页配风景照
+  top intent:  type=info title='查看比例尺' confidence=0.85 detail='了解 Map Sheet 4 的比例尺 1:10000 对应的实际距离与图面距离换算'
+  full intents (4):
+    - [0.85] info '查看比例尺' — '了解 Map Sheet 4 的比例尺 1:10000 对应的实际距离与图面距离换算'
+    - [0.70] location '定位图幅' — '确认 Map Sheet 4 在地图集/系列中对应的覆盖区域和编号'
+    - [0.50] info '阅读图例' — '询问该图幅包含的要素（等高线、注记等）'
+    - [0.30] info '导出图幅' — '把 Map Sheet 4 保存或下载为图片/PDF'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_map_05 ]  real_map_05.jpg  — map
+  observation: 画面顶部黑底白字显示"MAP SHEET 5"和"Scale 1:10000"，下方为比萨斜塔特写，可见多层拱廊结构，天空为黄昏色调。
+  scene:       比萨斜塔近景照片，顶部含地图图例文字
+  top intent:  type=info title='翻译标题' confidence=0.92 detail='将画面顶部"MAP SHEET 5"和"Scale 1:10000"翻译为中文并解释比例尺含义'
+  full intents (4):
+    - [0.92] info '翻译标题' — '将画面顶部"MAP SHEET 5"和"Scale 1:10000"翻译为中文并解释比例尺含义'
+    - [0.88] info '识别建筑' — '确认画面中建筑是否为意大利比萨斜塔，并介绍其历史'
+    - [0.75] location '判断地点' — '确认拍摄地是否为意大利比萨 Piazza dei Miracoli 奇迹广场'
+    - [0.70] info '解释比例' — '解释地图比例尺 1:10000 代表实际距离与图上距离的换算关系'
+  score:        composite=1.0  type=Y  title=Y(group=1)  must_have=1.00
+
+[ real_english_text_01 ]  real_english_text_01.jpg  — english_text
+  observation: 画面顶部黑色横幅显示白色大字"USER MANUAL"及副标题"Safety Information"，下方为阳光透过树林照射在草地上的暖色调风景图。
+  scene:       用户手册封面页
+  top intent:  type=info title='阅读安全须知' confidence=0.95 detail='阅读本设备用户手册中的安全信息章节'
+  full intents (3):
+    - [0.95] info '阅读安全须知' — '阅读本设备用户手册中的安全信息章节'
+    - [0.72] info '翻看完整手册' — '继续翻阅此用户手册的其他章节内容'
+    - [0.45] solve '翻译安全条款' — '将英文 Safety Information 翻译为中文'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_english_text_02 ]  real_english_text_02.jpg  — english_text
+  observation: 顶部黑底白字标题 INSTRUCTIONS，副标题 Step 1: Unplug device；下方是经典汽车内饰，可见方向盘、仪表台和带多个旋钮与喇叭形扬声器
+  scene:       汽车内饰仪表盘特写，顶部叠加操作指引。
+  top intent:  type=info title='阅读操作步骤' confidence=0.9 detail='屏幕上显示 Step 1: Unplug device，用户希望先确认/阅读当前步骤的完整操作说明。'
+  full intents (4):
+    - [0.90] info '阅读操作步骤' — '屏幕上显示 Step 1: Unplug device，用户希望先确认/阅读当前步骤的完整操作说明。'
+    - [0.75] solve '查看下一步' — '可能想了解整个拆卸或维修流程的后续步骤，如拔线、拆面板等。'
+    - [0.60] info '识别车型部件' — '画面是老式汽车仪表盘，用户可能想识别这是哪款车或具体哪个部件。'
+    - [0.50] solve '翻译说明' — '英文指令 Step 1: Unplug device 可能需要翻译为中文以便照做。'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_english_text_03 ]  real_english_text_03.jpg  — english_text
+  observation: 屏幕顶部黑底显示"QUICK START"标题和"Press and hold power"提示语，背景为青绿色天空，多只飞鸟剪影。
+  scene:       设备开机引导界面
+  top intent:  type=info title='长按开机' confidence=0.92 detail='按提示长按电源键完成开机'
+  full intents (3):
+    - [0.92] info '长按开机' — '按提示长按电源键完成开机'
+    - [0.75] info '查看引导' — '阅读快速开始引导步骤'
+    - [0.45] info '翻译提示' — '将"Press and hold power"翻译为中文'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_english_text_04 ]  real_english_text_04.jpg  — english_text
+  observation: 顶部黑底白字标题"SAFETY"，下方副标题"Warning: lithium"，主图为仰拍女性长发剪影与夕阳云层，腕戴电子表，背景含镜头光晕
+  scene:       产品安全警示页面叠加人物逆光照片
+  top intent:  type=info title='查锂警告' confidence=0.72 detail='想了解"Warning: lithium"的含义及对应安全处理方式'
+  full intents (3):
+    - [0.72] info '查锂警告' — '想了解"Warning: lithium"的含义及对应安全处理方式'
+    - [0.58] info '读警示页' — '查看页面顶部"SAFETY"板块的全部内容'
+    - [0.51] info '翻译提示' — '把"Warning: lithium"翻译成中文确认含义'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_english_text_05 ]  real_english_text_05.jpg  — english_text
+  observation: 画面上方黑色横幅标注 "WARRANTY Limited 1-year"，下方为日出/日落时云层透光的山丘草原景观。
+  scene:       手机屏幕上的产品保修信息与自然风光图。
+  top intent:  type=info title='查保修期' confidence=0.9 detail='确认产品保修为1年有限保修，了解覆盖范围与期限。'
+  full intents (4):
+    - [0.90] info '查保修期' — '确认产品保修为1年有限保修，了解覆盖范围与期限。'
+    - [0.70] info '查看完整条款' — '查找WARRANTY下方是否有更详细的保修条款或链接。'
+    - [0.60] info '截图保存保修凭证' — '将保修信息截图保存，以备售后时出示。'
+    - [0.40] info '联系客服咨询' — '就保修细节联系品牌客服或拨打售后电话。'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_screen_capture_01 ]  real_screen_capture_01.jpg  — screen_capture
+  observation: 画面顶部黑条显示"Weather Sunny 23 C Humidity 64%"，下方为雾中松林仰拍图，阳光从云雾中透出。
+  scene:       户外仰拍雾林逆光画面
+  top intent:  type=info title='查看天气' confidence=0.9 detail='读取 Sunny 23°C 湿度64% 的天气数据'
+  full intents (3):
+    - [0.90] info '查看天气' — '读取 Sunny 23°C 湿度64% 的天气数据'
+    - [0.75] info '判断是否出门' — '根据23°C、湿度64%决定穿着与活动'
+    - [0.60] info '保存天气' — '记录当前晴朗23°C湿度64%作为参考'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_screen_capture_02 ]  real_screen_capture_02.jpg  — screen_capture
+  observation: 屏幕顶部显示Calendar应用，标题"Calendar"，下方条目"Mar 22  Standup 10:00"。背景为夜晚城市道路的车流虚化灯光。
+  scene:       手机锁屏通知与夜景
+  top intent:  type=info title='查看日程' confidence=0.95 detail='查看3月22日10:00的Standup会议日程详情'
+  full intents (3):
+    - [0.95] info '查看日程' — '查看3月22日10:00的Standup会议日程详情'
+    - [0.85] info '打开日历' — '解锁并进入Calendar应用查看当天议程'
+    - [0.60] info '提醒会议' — '设置Standup 10:00的提前提醒'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_screen_capture_03 ]  real_screen_capture_03.jpg  — screen_capture
+  observation: 黑色顶栏显示"Music"，副标题"Now Playing - Song Title"；下半部分为秋日落叶特写，枯黄褐色叶片散落在地面上，暖色逆光。
+  scene:       音乐播放界面配秋季落叶背景图
+  top intent:  type=info title='查看歌曲' confidence=0.85 detail='查看当前正在播放的歌曲标题与曲目信息'
+  full intents (4):
+    - [0.85] info '查看歌曲' — '查看当前正在播放的歌曲标题与曲目信息'
+    - [0.70] info '保存图片' — '将这张带"Music"文字与落叶背景的播放画面保存为壁纸或图片'
+    - [0.50] info '切换歌曲' — '在音乐播放界面中切换上一首/下一首或更换曲目'
+    - [0.45] info '编辑文字' — '将顶栏"Music"或"Now Playing - Song Title"文字修改为自定义内容'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_screen_capture_04 ]  real_screen_capture_04.jpg  — screen_capture
+  observation: 屏幕顶部显示"Mail"标题，副标题为"Inbox 12 new  Alice: Project"，下方为山峦云海日落壁纸
+  scene:       macOS 通知横幅界面，邮件提醒
+  top intent:  type=info title='打开邮件' confidence=0.92 detail='点击查看来自 Alice 的 Project 邮件，收件箱有 12 封未读'
+  full intents (3):
+    - [0.92] info '打开邮件' — '点击查看来自 Alice 的 Project 邮件，收件箱有 12 封未读'
+    - [0.78] info '查看收件箱' — '查看所有 12 封未读邮件列表'
+    - [0.35] info '查看通知中心' — '查看其他未处理的系统通知'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+[ real_screen_capture_05 ]  real_screen_capture_05.jpg  — screen_capture
+  observation: 屏幕顶部显示"Settings"标题，下方有 General、Display、Sound 三个选项；背景为阳光照射下的绿色草丛与模糊树林
+  scene:       系统设置主界面截图
+  top intent:  type=info title='打开设置' confidence=0.95 detail='已进入设置主界面，可选择 General、Display 或 Sound 子项'
+  full intents (4):
+    - [0.95] info '打开设置' — '已进入设置主界面，可选择 General、Display 或 Sound 子项'
+    - [0.90] info '切换显示设置' — '点击 Display 调整显示相关选项'
+    - [0.90] info '切换声音设置' — '点击 Sound 调整声音相关选项'
+    - [0.88] info '切换通用设置' — '点击 General 查看通用设置'
+  score:        composite=1.0  type=Y  title=Y(group=0)  must_have=1.00
+
+======================================================================
+Summary
+----------------------------------------------------------------------
+scene    composite   type  title   must   conf  top_title
+real_food_label_01     1.000      Y      Y   1.00   0.85  查意面配料
+real_food_label_02     1.000      Y      Y   1.00   0.92  查营养成分
+real_food_label_03     1.000      Y      Y   1.00   0.82  读顶部文字
+real_food_label_04     1.000      Y      Y   1.00   0.75  读取标题
+real_food_label_05     1.000      Y      Y   1.00   0.78  查看规格
+real_device_reading_01     1.000      Y      Y   1.00   0.92  解读血压值
+real_device_reading_02     1.000      Y      Y   1.00   0.95  解读血压值
+real_device_reading_03     1.000      Y      Y   1.00   0.92  解读数值
+real_device_reading_04     0.550      N      Y   1.00   0.72  看我在哪
+real_device_reading_05     1.000      Y      Y   1.00   0.88  解读测温读数
+real_math_01     1.000      Y      Y   1.00   0.95  解方程
+real_math_02     1.000      Y      Y   1.00   0.95  解一元二次方程
+real_math_03     1.000      Y      Y   1.00   0.95  求解sin(30)
+real_math_04     1.000      Y      Y   1.00   0.95  解此ODE
+real_math_05     0.650      Y      N   1.00   0.95  算出面积
+real_receipt_01     1.000      Y      Y   1.00   0.92  核对金额
+real_receipt_02     1.000      Y      Y   1.00   0.62  解读账单
+real_receipt_03     1.000      Y      Y   1.00   0.92  确认总额
+real_receipt_04     1.000      Y      Y   1.00   0.60  翻译标题
+real_receipt_05     1.000      Y      Y   1.00   0.85  记录总价
+real_street_sign_01     1.000      Y      Y   1.00   0.85  定位主街
+real_street_sign_02     1.000      Y      Y   1.00   0.90  去图书馆
+real_street_sign_03     0.650      Y      N   1.00   0.95  查看距离
+real_street_sign_04     1.000      Y      Y   1.00   0.85  认路看方位
+real_street_sign_05     1.000      Y      Y   1.00   0.72  我在哪
+real_menu_01     1.000      Y      Y   1.00   0.85  看菜单内容
+real_menu_02     1.000      Y      Y   1.00   0.85  查看菜品价格
+real_menu_03     1.000      Y      Y   1.00   0.62  解读菜单项
+real_menu_04     1.000      Y      Y   1.00   0.88  读取菜单价格
+real_menu_05     1.000      Y      Y   1.00   0.78  查看酒单
+real_qr_code_01     1.000      Y      Y   1.00   0.88  扫码点菜单
+real_qr_code_02     1.000      Y      Y   1.00   0.85  查产品来源
+real_qr_code_03     1.000      Y      Y   1.00   0.85  翻译提示语
+real_qr_code_04     1.000      Y      Y   1.00   0.72  打开扫码
+real_qr_code_05     1.000      Y      Y   1.00   0.45  扫码连Wi-Fi
+real_map_01     1.000      Y      Y   1.00   0.55  查看地图比例尺
+real_map_02     0.650      Y      N   1.00   0.78  查看比例尺
+real_map_03     1.000      Y      Y   1.00   0.55  查看比例尺
+real_map_04     1.000      Y      Y   1.00   0.85  查看比例尺
+real_map_05     1.000      Y      Y   1.00   0.92  翻译标题
+real_english_text_01     1.000      Y      Y   1.00   0.95  阅读安全须知
+real_english_text_02     1.000      Y      Y   1.00   0.90  阅读操作步骤
+real_english_text_03     1.000      Y      Y   1.00   0.92  长按开机
+real_english_text_04     1.000      Y      Y   1.00   0.72  查锂警告
+real_english_text_05     1.000      Y      Y   1.00   0.90  查保修期
+real_screen_capture_01     1.000      Y      Y   1.00   0.90  查看天气
+real_screen_capture_02     1.000      Y      Y   1.00   0.95  查看日程
+real_screen_capture_03     1.000      Y      Y   1.00   0.85  查看歌曲
+real_screen_capture_04     1.000      Y      Y   1.00   0.92  打开邮件
+real_screen_capture_05     1.000      Y      Y   1.00   0.95  打开设置
+
+Average composite: 0.970
