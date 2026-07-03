@@ -106,10 +106,14 @@ def extract_assistant_text(response: dict) -> str:
 
 
 def parse_json_from_response(text: str) -> dict | None:
+    """Parse model JSON tolerating common mistakes:
+    - markdown fences (```json ... ```)
+    - bare " inside string values (model occasionally forgets to escape
+      quotes when the observation mentions quoted text)
+    Returns the parsed dict, or a partial dict, or None on total failure.
+    """
     if not text:
         return None
-    # Strip markdown code fences the model sometimes wraps JSON in:
-    #   ```json\n{...}\n```  or ```{...}```
     stripped = text.strip()
     if stripped.startswith("```"):
         first_nl = stripped.find("\n")
@@ -118,12 +122,69 @@ def parse_json_from_response(text: str) -> dict | None:
         if stripped.endswith("```"):
             stripped = stripped[:-3]
         stripped = stripped.strip()
+
+    # Pass 1: try strict parsing of the JSON object substring.
     s = stripped.find("{")
     e = stripped.rfind("}")
     if s < 0 or e <= s:
         return None
+    candidate = stripped[s:e + 1]
     try:
-        return json.loads(stripped[s:e + 1])
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        pass
+
+    # Pass 2: lenient walk - auto-escape bare " encountered inside a string
+    # value.  A " is treated as a real end-of-string only when the next
+    # non-whitespace char is one of ,]}: (structural).  Otherwise we assume
+    # the model forgot to escape it and inject a backslash.
+    out = []
+    in_string = False
+    i = 0
+    while i < len(candidate):
+        c = candidate[i]
+        if not in_string:
+            out.append(c)
+            if c == '"':
+                in_string = True
+        else:
+            if c == "\\" and i + 1 < len(candidate):
+                out.append(c)
+                out.append(candidate[i + 1])
+                i += 2
+                continue
+            if c == '"':
+                j = i + 1
+                while j < len(candidate) and candidate[j] in " \t":
+                    j += 1
+                nxt = candidate[j] if j < len(candidate) else ""
+                if nxt in ",]}{:":
+                    out.append(c)
+                    in_string = False
+                else:
+                    # mid-string quote — escape it
+                    out.append('\\"')
+            else:
+                out.append(c)
+        i += 1
+    repaired = "".join(out)
+
+    # Try the repaired string.  If it still fails, try truncating at the
+    # last balanced position.
+    try:
+        return json.loads(repaired)
+    except json.JSONDecodeError:
+        pass
+    opens = repaired.count("{")
+    closes = repaired.count("}")
+    if opens > closes:
+        repaired += "}" * (opens - closes)
+    opens_a = repaired.count("[")
+    closes_a = repaired.count("]")
+    if opens_a > closes_a:
+        repaired += "]" * (opens_a - closes_a)
+    try:
+        return json.loads(repaired)
     except json.JSONDecodeError:
         return None
 
@@ -252,26 +313,41 @@ def main():
 
     rows = []
     for scene_gt in scenes:
-        if args.images and scene_gt["image"] not in [Path(i).name for i in args.images]:
+        # Accept either {"image": "..."} or {"file": "..."}
+        img_name = scene_gt.get("file") or scene_gt.get("image") or ""
+        scene_id = scene_gt.get("id") or Path(img_name).stem
+        if args.images and Path(img_name).name not in [Path(i).name for i in args.images]:
             continue
-        img_path = ROOT / scene_gt["image"]
-        if not img_path.exists():
-            # Fall back to profiling/ (synthetic fixtures live there).
-            alt = Path(__file__).resolve().parent / scene_gt["image"]
-            if alt.exists():
-                img_path = alt
-            else:
-                print(f"missing: {img_path} (also tried {alt})")
-                continue
+        # Try a handful of plausible locations for the image:
+        candidates = [
+            ROOT / img_name,
+            Path(__file__).resolve().parent / img_name,
+            Path(__file__).resolve().parent.parent / "img" / Path(img_name).name,
+            ROOT / "img" / Path(img_name).name,
+        ]
+        img_path = next((p for p in candidates if p.exists()), None)
+        if img_path is None:
+            print(f"missing: {img_name} (tried {[str(p) for p in candidates]})")
+            continue
 
-        print(f"\n[ {scene_gt['id']} ]  {scene_gt['image']}  — {scene_gt['what_is_pictured']}")
+        what = scene_gt.get("what_is_pictured") or scene_gt.get("description") or scene_gt.get("category", "")
+        print(f"\n[ {scene_id} ]  {img_name}  — {what}")
         img_bytes = img_path.read_bytes()
         resp = call_model(img_bytes, system, user, temperature=args.temperature)
 
         if "_error" in resp:
             print(f"  HTTP error: {resp['_error']}")
             print(f"  body: {resp['_body'][:300]}")
-            rows.append({"scene": scene_gt["id"], "composite": 0.0, "type_match": False, "title_match": False})
+            rows.append({
+                "scene": scene_id,
+                "category": scene_gt.get("category", "?"),
+                "composite": 0.0,
+                "type_match": False,
+                "title_match": False,
+                "must_have_pct": 0.0,
+                "confidence": None,
+                "top_title": "—",
+            })
             continue
 
         text = extract_assistant_text(resp)
@@ -298,7 +374,8 @@ def main():
               f"title={'Y' if result['title_match'] else 'N'}(group={result.get('matched_keyword_group')})  "
               f"must_have={result.get('must_have_pct', 0):.2f}")
         rows.append({
-            "scene": scene_gt["id"],
+            "scene": scene_id,
+            "category": scene_gt.get("category", "?"),
             "composite": result["composite"],
             "type_match": result["type_match"],
             "title_match": result["title_match"],
