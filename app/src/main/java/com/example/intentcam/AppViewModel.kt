@@ -38,6 +38,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var currentAnalyzeJob: Job? = null
     private var currentAnswerJob: Job? = null
 
+    // Last error string from a failed analyze cycle, captured for adb logcat
+    // debugging.  Not surfaced to UI (per product contract: parse failures
+    // must not show as bubbles or toasts).  Read via:
+    //   adb logcat | grep IntentCam | grep "intent err="
+    @Volatile private var lastError: String? = null
+
     // Incremented on every cycle boundary (new capture, scene change,
     // restart).  Running coroutines compare against this to know their
     // results are still relevant.  AtomicLong gives a true atomic ++ across
@@ -241,12 +247,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 _state.value = _state.value.copy(analyzing = false, partialScene = null)
             }
         } catch (e: Exception) {
+            // Model returned unparseable output, timed out, or otherwise
+            // failed.  Per the user contract, parse failures do NOT surface
+            // as bubbles or error toasts — silently re-arm the camera so
+            // the next stable frame kicks off a fresh cycle.  The raw error
+            // is captured in [lastError] for adb logcat inspection.
             if (myCycle == analyzeCycleId.get()) {
-                _state.value = _state.value.copy(
-                    analyzing = false,
-                    partialScene = null,
-                    error = e.message ?: "分析失败"
-                )
+                lastError = e.message
+                rearmScanning()
             }
         } finally {
             analyzing.set(false)
@@ -347,6 +355,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             error = null,
             ocrOverlay = emptyList(),
         )
+    }
+
+    /**
+     * Quiet recovery from a failed analyze cycle (parse error, timeout,
+     * etc).  Same as [restartScanning] but doesn't touch the answer job
+     * or any answer-related state, and intentionally does NOT surface an
+     * error to the user.  Used when the model returns unparseable output
+     * and we want to immediately start the next capture without UI noise.
+     */
+    private fun rearmScanning() {
+        currentAnalyzeJob?.cancel()
+        currentAnalyzeJob = null
+        analyzeCycleId.incrementAndGet()
+        lastFrame = null
+        analyzing.set(false)
+        stableSinceMs = -1L
+        _state.value = _state.value.copy(
+            intents = emptyList(),
+            selected = null,
+            scene = "",
+            partialScene = null,
+            error = null,
+            ocrOverlay = emptyList(),
+        )
+        // phase stays as-is; the user is still in SCANNING during the
+        // failed analyze cycle.
     }
 
     fun openSettings() {
