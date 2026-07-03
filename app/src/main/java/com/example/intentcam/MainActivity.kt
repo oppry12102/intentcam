@@ -16,6 +16,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -118,11 +119,14 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
     Box(Modifier.fillMaxSize()) {
         if (state.phase == Phase.SHOWING_DETAIL && state.selectedBubble != null) {
             // Detail view: show the captured image full-bleed, with a header
-            // overlay and an 退出 button to dismiss.  The camera preview
-            // is hidden here so the user sees the still image they tapped on,
+            // overlay, an action chip row that drives LLM-powered follow-ups,
+            // and an 退出 button to dismiss.  The camera preview is
+            // hidden here so the user sees the still image they tapped on,
             // not a live feed.
             DetailScreen(
                 bubble = state.selectedBubble,
+                state = state,
+                onAction = { viewModel.triggerAction(state.selectedBubble, it) },
                 onRestart = viewModel::clearBubbleSelection,
                 modifier = Modifier.fillMaxSize()
             )
@@ -364,6 +368,8 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
 @Composable
 private fun DetailScreen(
     bubble: Bubble,
+    state: UiState,
+    onAction: (Action) -> Unit,
     onRestart: () -> Unit,
     modifier: Modifier
 ) {
@@ -432,6 +438,32 @@ private fun DetailScreen(
                 )
             }
         }
+        // Action chip row + streaming-result panel
+        val actions = remember(bubble.type, bubble.id) {
+            appViewModelActions(bubble.type)
+        }
+        val activeKey = state.activeActionId
+        val isThisBubbleActive = activeKey?.startsWith("${bubble.id}-") == true
+        if (actions.isNotEmpty()) {
+            val bubbleIdForResult = activeKey?.substringBeforeLast('-')
+            val activeActionIdOnly = activeKey?.substringAfterLast('-')
+            val completedForThis = if (activeKey == null) {
+                state.actionResults.entries
+                    .firstOrNull { it.key.startsWith("${bubble.id}-") }
+            } else null
+            ActionPanel(
+                actions = actions,
+                activeKey = activeActionIdOnly,
+                completedEntry = completedForThis,
+                activeText = if (isThisBubbleActive) state.partialActionText else null,
+                onAction = onAction,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 88.dp)
+                    .fillMaxWidth()
+            )
+        }
         // 退出 button at the bottom — dismisses the detail view; the
         // main loop restarts from step 1 and starts a fresh stability
         // counter.
@@ -440,7 +472,7 @@ private fun DetailScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(20.dp)
+                .padding(horizontal = 20.dp, vertical = 20.dp)
                 .fillMaxWidth()
         ) {
             Text("退出")
@@ -448,7 +480,109 @@ private fun DetailScreen(
     }
 }
 
-// Legacy answer/answering composables removed: the new flow is
-// BubbleCard (thumbnail + title + detail) and DetailScreen (full image
-// + title + detail + 退出 button).  The answer-flow composables that
-// lived here are gone.
+/**
+ * Static action catalogue.  Pulled out so [DetailScreen] can render the
+ * chip row without owning an [AppViewModel] (the function is a pure
+ * mapping from intent type to action list, with action ids stable enough
+ * for analytics).  The actual streaming call lives in
+ * [AppViewModel.triggerAction].
+ */
+private fun appViewModelActions(type: String): List<Action> = when (type) {
+    "info" -> listOf(
+        Action("info-translate", "翻译成中文", ""),
+        Action("info-list",     "列出关键信息", ""),
+        Action("info-evaluate", "判断是否正常", ""),
+    )
+    "location" -> listOf(
+        Action("loc-where",   "查询地点信息", ""),
+        Action("loc-navigate","给我导航路线", ""),
+        Action("loc-nearby",  "附近还有什么", ""),
+    )
+    "solve" -> listOf(
+        Action("solve-steps",  "详细解题步骤", ""),
+        Action("solve-verify", "验证答案", ""),
+        Action("solve-similar","给我类似题", ""),
+    )
+    else -> listOf(
+        Action("other-explain", "再解释一下", ""),
+        Action("other-detail",  "看更多细节", ""),
+    )
+}
+
+@Composable
+private fun ActionPanel(
+    actions: List<Action>,
+    activeKey: String?,
+    completedEntry: Map.Entry<String, String>?,
+    activeText: String?,
+    onAction: (Action) -> Unit,
+    modifier: Modifier
+) {
+    Column(modifier) {
+        // Action chip row (horizontally scrollable; chips overflow on
+        // narrow screens).
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            actions.forEach { action ->
+                val isActive = activeKey == action.id
+                val isDone = completedEntry != null &&
+                    completedEntry.key.substringAfterLast('-') == action.id
+                FilterChip(
+                    selected = isActive || isDone,
+                    onClick = { onAction(action) },
+                    label = { Text(action.label) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF4F8CFF).copy(alpha = 0.3f),
+                        selectedLabelColor = Color.White,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isActive || isDone,
+                        borderColor = Color(0xFFB9C4DE),
+                        selectedBorderColor = Color(0xFF4F8CFF),
+                        borderWidth = 1.dp,
+                    )
+                )
+            }
+        }
+        // Streaming text panel (only when active)
+        if (activeText != null) {
+            Spacer(Modifier.height(8.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xCC0B1228),
+                    contentColor = Color(0xFFE7ECF7)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = activeText,
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        } else if (completedEntry != null) {
+            // Show the last completed action result for this bubble,
+            // even when no streaming is in progress.  Each new tap on a
+            // chip overwrites the previous result.
+            Spacer(Modifier.height(8.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xCC0B1228),
+                    contentColor = Color(0xFFE7ECF7)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = completedEntry.value,
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
+}

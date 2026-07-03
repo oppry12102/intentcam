@@ -110,6 +110,33 @@ class LlmClient(@Volatile var config: LlmConfig) {
         raw.ifBlank { "（模型未返回内容）" }
     }
 
+    /**
+     * Stream a follow-up "next-step" answer to a [com.example.intentcam.Action]
+     * the user picked from the detail view.  Reuses the same Anthropic
+     * streaming pipeline as [answerStream] but builds a tighter prompt
+     * that names the chosen action and reuses the bubble's existing
+     * intent description as context — the model answers the user's
+     * follow-up against the same captured image.
+     */
+    suspend fun actionStream(
+        intent: IntentItem,
+        jpeg: ByteArray,
+        location: String?,
+        action: com.example.intentcam.Action,
+        onDelta: (String) -> Unit
+    ): String = withContext(Dispatchers.IO) {
+        val body = messagesBody(
+            system = SYSTEM_ANSWER,
+            maxTokens = ANSWER_MAX_TOKENS,
+            jpeg = jpeg,
+            text = buildActionPrompt(intent, location, action),
+            stream = true
+        )
+        val tag = "action-${action.id}"
+        val raw = streamText(body, tag, ANSWER_TOTAL_TIMEOUT_MS, onDelta)
+        raw.ifBlank { "（模型未返回内容）" }
+    }
+
     // ---- prompt builders ---------------------------------------------------
 
     /**
@@ -284,6 +311,26 @@ class LlmClient(@Volatile var config: LlmConfig) {
         append("位置: ${location ?: "未知"}\n")
         append("结合画面，给出准确、可执行、简洁的中文答案。解题请给步骤；信息请提取关键点；")
         append("位置请说明所在地点与建议方向。")
+    }
+
+    /**
+     * Build the user-side prompt for [actionStream].  We re-frame the
+     * intent and prepend the action's [com.example.intentcam.Action.systemPrompt]
+     * as the actual ask — that's the only delta from the regular
+     * answer prompt.  The system prompt (SYSTEM_ANSWER) still tells the
+     * model to keep the response in Chinese and stay grounded in the
+     * image.
+     */
+    private fun buildActionPrompt(
+        intent: IntentItem,
+        location: String?,
+        action: com.example.intentcam.Action
+    ): String = buildString {
+        append("用户触发了「${action.label}」动作。\n")
+        append("原意图: 【${intent.title}】(${intent.type}) - ${intent.detail}\n")
+        append("位置: ${location ?: "未知"}\n\n")
+        append("请基于图片完成这个动作:\n")
+        append(action.systemPrompt)
     }
 
     // ---- HTTP / SSE plumbing -----------------------------------------------
