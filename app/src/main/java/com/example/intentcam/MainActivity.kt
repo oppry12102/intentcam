@@ -118,7 +118,7 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
     Box(Modifier.fillMaxSize()) {
         if (state.phase == Phase.SHOWING_DETAIL && state.selectedBubble != null) {
             // Detail view: show the captured image full-bleed, with a header
-            // overlay and a 重新扫描 button to dismiss.  The camera preview
+            // overlay and an 退出 button to dismiss.  The camera preview
             // is hidden here so the user sees the still image they tapped on,
             // not a live feed.
             DetailScreen(
@@ -201,6 +201,10 @@ private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
+            // Three states, in priority order:
+            //   1. analyzing: spinner + streamed scene text
+            //   2. stabilityProgress non-null: thin progress bar (system alive)
+            //   3. otherwise: last completed scene, or "对准物体…"
             if (state.analyzing) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(
@@ -218,12 +222,32 @@ private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
                     )
                 }
             } else {
-                Text(
-                    text = state.scene.ifBlank { "对准物体，正在识别你的意图…" },
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 2
-                )
+                val sp = state.stabilityProgress
+                if (sp != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        LinearProgressIndicator(
+                            progress = { sp.coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(3.dp),
+                            color = Color(0xFF4F8CFF),
+                            trackColor = Color(0x33FFFFFF)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "稳定中 ${(sp * 100).toInt()}%",
+                            color = Color(0xFFB9C4DE),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                } else {
+                    Text(
+                        text = state.scene.ifBlank { "对准物体，正在识别你的意图…" },
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 2
+                    )
+                }
             }
             state.location?.let {
                 Text("📍 $it", color = Color(0xFFB9C4DE), style = MaterialTheme.typography.labelSmall, maxLines = 1)
@@ -392,7 +416,9 @@ private fun DetailScreen(
                 )
             }
         }
-        // 重新扫描 button at the bottom
+        // 退出 button at the bottom — dismisses the detail view; the
+        // main loop restarts from step 1 and starts a fresh stability
+        // counter.
         Button(
             onClick = onRestart,
             modifier = Modifier
@@ -401,12 +427,12 @@ private fun DetailScreen(
                 .padding(20.dp)
                 .fillMaxWidth()
         ) {
-            Text("重新扫描")
+            Text("退出")
         }
     }
 }
 
 // Legacy answer/answering composables removed: the new flow is
 // BubbleCard (thumbnail + title + detail) and DetailScreen (full image
-// + title + detail + 重新扫描 button).  The answer-flow composables
-// that lived here are gone.
+// + title + detail + 退出 button).  The answer-flow composables that
+// lived here are gone.
