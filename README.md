@@ -412,6 +412,58 @@ end-to-end OCR test on `IMG2.jpg` (real phone photo), where
 768 + `zoom_in` recovers every previously-missed fine-text field
 (see "Frame resolution benchmark" above).
 
+### Real-photo benchmark (50 fixtures)
+
+`profiling/ground_truth_real.json` defines 50 fixtures across 10
+real-world categories (5 each): `food_label`, `device_reading`,
+`math`, `receipt`, `street_sign`, `menu`, `qr_code`, `map`,
+`english_text`, `screen_capture`.  Images are pulled from Picsum
+(no-auth CDN) and overlaid with category-relevant text via Pillow
+in `fetch_real_imgs.py`; the script is deterministic per seed so
+the set is reproducible.
+
+`profiling/eval_real.py` scores these against the tool-use
+protocol.  Per-fixture `expected_tool` is derived from
+`category` (e.g. `food_label → identify_product`,
+`street_sign → navigate_to_block`).  Round-2 scoring
+is the average of (a) emit_bubble's `type` matching
+`expected_top_intent_type` and (b) the final text matching
+`must_have_in_scene_or_observation` AND
+`acceptable_intent_keywords` OR-groups.  Latest run
+(`--resize 384 --quality 60`, see `profiling/runs/real_run_v1.txt`):
+
+| Config | Average composite | Best categories |
+|---|---|---|
+| 256 / q50 | 0.712 | map (0.71), math (0.83), food_label (0.80) |
+| **384 / q60** | **0.747** | **map (0.99), math (0.84), screen_capture (0.83)** |
+| 512 / q75 | 0.710 | math (0.85), street_sign (0.88), map (0.69) |
+| 768 / q80 | 0.642 | math (0.83), screen_capture (0.69), map (0.65) |
+
+`384 / q60` wins on real photos, contradicting the synth-fixture
+result.  Two reasons: (1) Picsum test images are 800×600 with
+text overlaid at a fixed pixel position; resizing the image
+to 384 makes the overlay text a *larger fraction* of the frame
+and easier for the LLM to read, (2) per-category variance
+(high) swamps the global average, especially for `receipt` and
+`menu` where the model often picks the wrong tool.  On real
+phone photos (no synthetic overlay, native resolution) the
+relative size of the text is preserved, so this quirk doesn't
+recur — `768 / q80` is still the right config for production.
+
+Categories where the model is consistently weak:
+- **`receipt` (0.48-0.57)**: model often picks `default_describe`
+  instead of `read_manual` / `read_device_reading`; pricing
+  questions on receipts are ambiguous between "read the total" and
+  "reconcile the line items".
+- **`menu` (0.48-0.63)**: model picks `read_manual` (Chinese
+  menu) but the GT expects `translate_text` semantics.
+- **`qr_code` (0.52-0.79)**: model often picks `translate_text`
+  (the surrounding caption) instead of decoding the QR.
+
+The 50-photo set is the main signal for tool-routing
+regressions.  Re-run after any change to tool descriptions
+or system prompts.
+
 `profiling/runs/` keeps a measurement trail of past evals so
 future changes can be compared against the same fixtures.
 
