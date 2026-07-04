@@ -1,0 +1,51 @@
+--- T_BP_METER ---
+  picked=read_device_reading (want read_device_reading) input_ok=True text_score=1.00 composite=1.00 chips=['ask_user', 'ask_user']
+  text: 这是欧姆龙 HEM-7211 上臂式电子血压计的读数，时间为上午 11:21。
+
+📊 **测量结果**
+- **高压（收缩压）：98 mmHg**
+- **低压（舒张压）：62 mmHg**
+- **...
+--- T_TEA_LABEL ---
+  picked=emit_bubble (want identify_product) input_ok=True text_score=1.00 composite=0.65 chips=-
+  text: 画面里是一罐「工夫红茶（正山小种）」的背面标签，关键信息如下：
+
+- **品名**：工夫红茶（正山小种）
+- **配料**：工夫红茶（正山小种）
+- **原料产地**：福建省南平市武夷山
+- **产地...
+--- T_STREET_SIGN ---
+  picked=navigate_to_block (want navigate_to_block) input_ok=True text_score=0.75 composite=0.88 chips=['navigate_to_block', 'navigate_to_block']
+--- T_MATH ---
+  picked=solve_problem (want solve_problem) input_ok=True text_score=1.00 composite=1.00 chips=['solve_problem', 'solve_problem']
+  text: # 解答：分解 $x^2 + 5x + 6$
+
+## 解题步骤
+
+**第一步：找两个数**
+需要找两个数，满足：
+- 相乘 = 常数项 **6**
+- 相加 = 一次项系数 **5**
+
+**第二步：...
+--- T_NUTRITION ---
+  picked=translate_text (want translate_text) input_ok=True text_score=0.25 composite=0.62 chips=['read_manual', 'ask_user']
+--- T_RX_LABEL ---
+  picked=read_manual (want read_manual) input_ok=True text_score=0.25 composite=0.62 chips=['translate_text', 'read_manual', 'read_manual']
+--- T_QR ---
+  picked=scan_qr_code (want scan_qr_code) input_ok=True text_score=0.50 composite=0.75 chips=['identify_product', 'ask_user']
+--- T_ASK_NAV ---
+  picked=navigate_to_block (want ask_user) input_ok=False text_score=1.00 composite=0.85 chips=['navigate_to_block', 'navigate_to_block', 'translate_text']
+--- T_CHIPS_PRODUCT ---
+  picked=identify_product (want identify_product) input_ok=True text_score=1.00 composite=1.00 chips=['ask_user']
+  text: 根据画面中的标签信息，这是一款**工夫红茶（正山小种）**，以下是关键信息：
+
+**📦 产品信息**
+- 品名：工夫红茶（正山小种）
+- 净含量：250g
+- 原料产地：福建省南平市武夷山
+- 产地：...
+
+============================================================
+fixtures: 9
+average composite: 0.819

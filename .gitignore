@@ -40,3 +40,4 @@ Thumbs.db
 # GitHub repository.  The previous version of Models.kt (with the token
 # scrubbed) is still in git history.
 app/src/main/java/com/example/intentcam/Models.kt
+__pycache__/
