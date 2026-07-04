@@ -5,10 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,7 +34,7 @@ fun SettingsScreen(
                 title = { Text("模型设置") },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 }
             )
@@ -88,7 +87,13 @@ fun SettingsScreen(
                     // untouched.  An empty string is still acceptable to the
                     // [AppViewModel] (which falls back to the default).
                     val effectiveToken = if (token.isBlank()) current.authToken else token
-                    onSave(LlmConfig(baseUrl, effectiveToken, model))
+                    onSave(
+                        LlmConfig(
+                            baseUrl = baseUrl,
+                            authToken = effectiveToken,
+                            model = model,
+                        )
+                    )
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("保存") }

@@ -22,21 +22,18 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * Thin client for an Anthropic-compatible /v1/messages endpoint (MiniMax by
- * default).  Streams model output so the UI can update token-by-token.
+ * Thin client for an Anthropic-compatible `/v1/messages` endpoint
+ * (default MiniMax-M3).
  *
- * Intent accuracy: instead of one-shot classification, the analyzer runs
- * [analyzeRefined] through up to three rounds (BROAD → VERIFY → DECIDE) with
- * progressive prompts and observed history.  Most frames resolve after the
- * first round; genuinely ambiguous frames pay the extra latency in exchange
- * for significantly higher confidence.
+ * One public entry point: [streamToolUse].  Returns the accumulated
+ * text + the list of `tool_use` blocks the model emitted.  The
+ * orchestrator ([ToolUseLoop]) calls this in a loop.
  *
  * Cancellation
  * ------------
- * Both [analyzeRefined] and [answerStream] are `suspend` functions: cancelling
- * the calling coroutine aborts the in-flight SSE connection via OkHttp's
- * [EventSource.cancel].  This is the only cancellation mechanism — there is
- * no imperative equivalent (callers cooperate via coroutines).
+ * [streamToolUse] is a `suspend` function: cancelling the calling
+ * coroutine aborts the in-flight SSE connection via OkHttp's
+ * `EventSource.cancel`.
  */
 class LlmClient(@Volatile var config: LlmConfig) {
 
@@ -49,299 +46,51 @@ class LlmClient(@Volatile var config: LlmConfig) {
 
     private val sseFactory = EventSources.createFactory(http)
 
-    /** Progressive refinement levels for [analyzeRefined]. */
-    enum class AnalysisLevel { BROAD, VERIFY, DECIDE }
+    // ── tool-use path ─────────────────────────────────────────────────
 
-    // ---- public API ---------------------------------------------------------
+    // ── tool-use path ─────────────────────────────────────────────────
 
     /**
-     * Run one round of the intent-identification cycle.  See class doc for the
-     * full 3-round protocol.  [history] contains the prior rounds' results so
-     * the prompt can reference them; pass an empty list on the first round.
-     * [zoomJpeg] is used only at [AnalysisLevel.DECIDE] — typically a
-     * center-cropped re-encode of the larger answer JPEG so the model can re-
-     * inspect the most informative region.
+     * Send a tool-aware request and accumulate both text and tool_use
+     * blocks.  Returns [ToolUseResponse] on success.
      *
-     * [ocr] is on-device OCR text (ML Kit, Latin + Chinese).  [objects] is
-     * on-device object detection labels (ImageNet-style).  Both are used as
-     * ground-truth hints — the model is told they may be incomplete / wrong.
+     * @param system the system prompt
+     * @param messages full message history (the orchestrator builds this
+     *   round by round).  Last message MUST be role=user.
+     * @param toolsJson the Anthropic `tools[]` array, as produced by
+     *   `ToolRegistry.toAnthropicToolsJson()`.
      */
-    suspend fun analyzeRefined(
-        level: AnalysisLevel,
-        jpeg: ByteArray,
-        zoomJpeg: ByteArray?,
-        location: String?,
-        history: List<AnalysisResult>,
-        ocr: OcrResult,
-        objects: ObjectResult,
-        onDelta: (String) -> Unit
-    ): AnalysisResult = withContext(Dispatchers.IO) {
-        val payload = if (level == AnalysisLevel.DECIDE && zoomJpeg != null) zoomJpeg else jpeg
-        val body = messagesBody(
-            system = SYSTEM_ANALYZE,
-            maxTokens = ANALYZE_MAX_TOKENS,
-            jpeg = payload,
-            text = buildAnalyzePrompt(level, location, history, ocr, objects),
-            stream = true
-        )
-        val tag = "analyze.${level.name.lowercase()}"
-        val raw = streamText(body, tag, ANALYZE_ROUND_TIMEOUT_MS, onDelta)
-        val parsed = extractJson(raw)
-            ?: throw IllegalStateException(
-                "模型未返回可解析的 JSON（tag=$tag，首 200 字：${raw.take(200)}）"
-            )
-        parseAnalysis(parsed.first)
-    }
-
-    suspend fun answerStream(
-        intent: IntentItem,
-        jpeg: ByteArray,
-        location: String?,
-        onDelta: (String) -> Unit
-    ): String = withContext(Dispatchers.IO) {
-        val body = messagesBody(
-            system = SYSTEM_ANSWER,
-            maxTokens = ANSWER_MAX_TOKENS,
-            jpeg = jpeg,
-            text = buildAnswerPrompt(intent, location),
-            stream = true
-        )
-        val raw = streamText(body, "answer", ANSWER_TOTAL_TIMEOUT_MS, onDelta)
-        raw.ifBlank { "（模型未返回内容）" }
-    }
-
-    /**
-     * Stream a follow-up "next-step" answer to a [com.example.intentcam.Action]
-     * the user picked from the detail view.  Reuses the same Anthropic
-     * streaming pipeline as [answerStream] but builds a tighter prompt
-     * that names the chosen action and reuses the bubble's existing
-     * intent description as context — the model answers the user's
-     * follow-up against the same captured image.
-     */
-    suspend fun actionStream(
-        intent: IntentItem,
-        jpeg: ByteArray,
-        location: String?,
-        action: com.example.intentcam.Action,
-        onDelta: (String) -> Unit
-    ): String = withContext(Dispatchers.IO) {
-        val body = messagesBody(
-            system = SYSTEM_ANSWER,
-            maxTokens = ANSWER_MAX_TOKENS,
-            jpeg = jpeg,
-            text = buildActionPrompt(intent, location, action),
-            stream = true
-        )
-        val tag = "action-${action.id}"
-        val raw = streamText(body, tag, ANSWER_TOTAL_TIMEOUT_MS, onDelta)
-        raw.ifBlank { "（模型未返回内容）" }
-    }
-
-    // ---- prompt builders ---------------------------------------------------
-
-    /**
-     * Build the BROAD / VERIFY / DECIDE round prompt.
-     *
-     * - BROAD: forced chain-of-thought.  The model must describe the image in
-     *   an `observation` field before producing `scene` / `intents`.  This
-     *   decouples "perceive" from "classify" and is the single biggest accuracy
-     *   lever.
-     * - VERIFY: given the BROAD observation + scene + intents, the model is
-     *   asked to re-ground and either confirm or revise (with explanations).
-     * - DECIDE: forced final answer with a 1-2 intent limit.  The model must
-     *   pick even if its confidence is low.
-     *
-     * The on-device [ocr] text is injected in every round as a ground-truth
-     * hint.  The model is told the OCR may be incomplete or wrong and must
-     * verify against the image.
-     */
-    private fun buildAnalyzePrompt(
-        level: AnalysisLevel,
-        location: String?,
-        history: List<AnalysisResult>,
-        ocr: OcrResult,
-        objects: ObjectResult
-    ): String {
-        val ocrBlock = formatOcrForPrompt(ocr)
-        val objBlock = formatObjectsForPrompt(objects)
-        return when (level) {
-            AnalysisLevel.BROAD -> buildBroadPrompt(location, ocrBlock, objBlock)
-            AnalysisLevel.VERIFY -> buildVerifyPrompt(location, history, ocrBlock, objBlock)
-            AnalysisLevel.DECIDE -> buildDecidePrompt(location, history, ocrBlock, objBlock)
-        }
-    }
-
-    /**
-     * Truncate aggressively and clean up before the OCR text is fed to the
-     * model.  Vision APIs occasionally emit control characters (esp. the
-     * Chinese recognizer on noisy labels) — those confuse the LLM in a way
-     * that the model's existing JSON parser then re-escapes, producing
-     * garbage like `` in the response.  We:
-     *
-     *  - drop every line that ends up empty after control-char stripping,
-     *  - drop anything shorter than 2 chars (almost always detector noise),
-     *  - cap each line at 40 chars and the joined output at 400 chars.
-     */
-    private fun formatOcrForPrompt(ocr: OcrResult): String {
-        if (ocr.isBlank()) return ""
-        val controlChars = Regex("[\\p{Cntrl}\\p{So}\\uFEFF]")
-        val kept = ocr.lines
-            .asSequence()
-            .map { it.text.replace(controlChars, "").trim() }
-            .filter { it.length >= 2 }
-            .take(20)
-            .map { it.take(40) }
-            .toList()
-        if (kept.isEmpty()) return ""
-        return kept.joinToString(" / ").take(400)
-    }
-
-    private fun formatObjectsForPrompt(objects: ObjectResult): String {
-        if (objects.isBlank()) return ""
-        return objects.labelsForPrompt().take(200)
-    }
-
-    /**
-     * Round-1 BROAD prompt.  The schema has been tuned against the eval set
-     * (`profiling/ground_truth.json`, `profiling/evaluate.py`):
-     *
-     * - `observation` is lifted from a 40-char limit to 80 chars with an
-     *   explicit instruction to keep named entities (product names, brands,
-     *   numbers, dates) — on a tea label, that buys us the literal "工夫红茶
-     *   (正山小种)" ending up in the observation text instead of being
-     *   compressed out to "品名".
-     * - The intent list is framed as **specific user actions** ("判断是否
-     *   过期", not "查询茶叶信息") with concrete examples per scene
-     *   category, lifting title granularity.
-     * - OCR / object-detection hints from on-device ML Kit are injected as
-     *   *reference only* under observation so they ground CoT without being
-     *   able to override what the model sees.
-     */
-    private fun buildBroadPrompt(location: String?, ocrBlock: String, objBlock: String): String =
-        buildString {
-            append("分析摄像头画面，分三步。\n\n")
-
-            append("**1. observation（≤80字，必须保留画面里最显眼的 1-3 项具名内容）**\n")
-            append("保留关键专有名词：产品名、品牌、数字、产地、读数、日期等\n")
-            if (objBlock.isNotEmpty()) {
-                append("- 设备识别物体（标签可能错，仅参考）: $objBlock\n")
-            }
-            if (ocrBlock.isNotEmpty()) {
-                append("- 设备 OCR 文字（可能不全/有错，仅参考）: $ocrBlock\n")
-            }
-            append("这些会显示给用户；泛泛的\"商品标签\"不算数。\n\n")
-
-            append("**2. scene（≤20字）**  用户视角的画面描述\n\n")
-
-            append("**3. intents（≤4 个，按 confidence 降序）**\n")
-            append("shape: {\"type\":\"info|location|solve\", \"title\":\"...\", \"detail\":\"...\", \"confidence\":0..1}\n")
-            append("title 必须是**动作短语（≤6 字）**，动词开头：\n")
-            append("- 查看 / 打开 / 保存 / 记录 / 校对 / 翻译 / 解释 / 阅读 / 解读 / 扫码 / 拨号 / 联系 / 调出 / 设置 / 切换\n")
-            append("- 判断 / 对比 / 查 / 核 / 算 / 拆解 / 拼读 / 拨出 / 打印 / 复制\n")
-            append("- 避免'查询''了解''相关信息'这类泛词\n\n")
-            append("考虑用户拿到画面时**最可能想做**的具体事，尽量指向具体操作而非通用查询：\n")
-            append("- 商品/标签/食品/包装 → 查看配料 / 查保质期 / 判断是否过期 / 对比同类 / 找购买链接\n")
-            append("- 设备/屏幕/读数/数字 → 解读含义 / 判断正常范围 / 记录保存 / 解释为什么要测\n")
-            append("- 文字/账单/标签 → 翻译 / 解释术语 / 汇总重点 / 朗读\n")
-            append("- 地址/路牌/导航/地图 → 我在哪 / 怎么去 / 附近有什么 / 找此刻位置\n")
-            append("- 数学/公式 → 解 / 化简 / 因式分解 / 验证\n")
-            append("- 二维码 → 扫码 / 解读二维码 / 执行二维码指向的操作\n")
-            append("- 屏幕（手机/电脑截屏）→ 打开 App / 调出日期 / 切换设置 / 翻译 / 读邮件 / 发送\n")
-            append("- 说明书/手册 → 阅读 / 翻译 / 查操作步骤 / 查询用法\n\n")
-
-            append("- 位置: ${location ?: "未知"}\n\n")
-
-            append("type: info=查信息  location=我在哪/去哪  solve=解题/帮我做\n")
-            append("confidence 必须真实（看不清 → 低分）。\n\n")
-
-            append("**严格只输出 JSON，注意转义**：\n")
-            append("- observation / scene 字符串中如果出现英文双引号 `\"` 或换行，")
-            append("必须写成 `\\\"` 和 `\\n`\n")
-            append("- intents 数组最多 4 个对象，整齐闭合\n\n")
-
-            append("返回 JSON（仅 JSON）:\n")
-            append("""{"observation":"...","scene":"...","intents":[{"type":"info|location|solve","title":"≤6字","detail":"...","confidence":0.0}]}""")
-        }
-
-    private fun buildVerifyPrompt(
-        location: String?, history: List<AnalysisResult>,
-        ocrBlock: String, objBlock: String
-    ): String {
-        require(history.isNotEmpty())
-        val last = history.last()
-        val intents = last.intents.take(3).joinToString("; ") {
-            "${it.title}(${it.type},${(it.confidence * 100).toInt()}%)"
-        }
-        return buildString {
-            append("重看同一张图，基于上一轮判断做修正。\n")
-            append("- 上一轮 observation: ${last.observation.ifBlank { "（无）" }}\n")
-            append("- 上一轮 scene: ${last.scene}\n")
-            append("- 上一轮 intents: $intents\n\n")
-            append("- 位置: ${location ?: "未知"}\n")
-            if (objBlock.isNotEmpty()) append("- 设备识别物体: $objBlock\n")
-            if (ocrBlock.isNotEmpty()) append("- 设备 OCR: $ocrBlock\n")
-            append("\n步骤：\n")
-            append("1. 重写 observation（如有物体/文字遗漏、读错）\n")
-            append("2. 重写 scene\n")
-            append("3. 重写 intents：保留仍合理的;信心不足的降 confidence 或替换;加入上一轮没考虑到的\n")
-            append("\n返回 JSON 同 BROAD 格式。confidence 重新校准。")
-        }
-    }
-
-    private fun buildDecidePrompt(
-        location: String?, history: List<AnalysisResult>,
-        ocrBlock: String, objBlock: String
-    ): String = buildString {
-        append("最后一轮决策。从最近 ${history.size} 轮判断中提取共识，给最终答案。\n\n")
-        history.forEachIndexed { i, r ->
-            val top = r.intents.firstOrNull()?.title ?: "（无）"
-            val alt = r.intents.getOrNull(1)?.title?.let { " / $it" } ?: ""
-            append("- 轮${i + 1}: obs=\"${r.observation.take(40)}\"; ")
-            append("scene=\"${r.scene.take(30)}\"; top=$top$alt\n")
-        }
-        append("\n- 位置: ${location ?: "未知"}\n")
-        if (objBlock.isNotEmpty()) append("- 设备识别物体: $objBlock\n")
-        if (ocrBlock.isNotEmpty()) append("- 设备 OCR: $ocrBlock\n")
-        append("\n必须给出 1-2 个最合理的意图；都不对就给信心最低的（≤0.5）。\n")
-        append("返回 JSON 同 BROAD 格式，但 intents 长度 1-2。")
-    }
-
-    private fun buildAnswerPrompt(intent: IntentItem, location: String?): String = buildString {
-        append("用户选的意图: 【${intent.title}】(${intent.type}) - ${intent.detail}\n")
-        append("位置: ${location ?: "未知"}\n")
-        append("结合画面，给出准确、可执行、简洁的中文答案。解题请给步骤；信息请提取关键点；")
-        append("位置请说明所在地点与建议方向。")
-    }
-
-    /**
-     * Build the user-side prompt for [actionStream].  We re-frame the
-     * intent and prepend the action's [com.example.intentcam.Action.systemPrompt]
-     * as the actual ask — that's the only delta from the regular
-     * answer prompt.  The system prompt (SYSTEM_ANSWER) still tells the
-     * model to keep the response in Chinese and stay grounded in the
-     * image.
-     */
-    private fun buildActionPrompt(
-        intent: IntentItem,
-        location: String?,
-        action: com.example.intentcam.Action
-    ): String = buildString {
-        append("用户触发了「${action.label}」动作。\n")
-        append("原意图: 【${intent.title}】(${intent.type}) - ${intent.detail}\n")
-        append("位置: ${location ?: "未知"}\n\n")
-        append("请基于图片完成这个动作:\n")
-        append(action.systemPrompt)
-    }
-
-    // ---- HTTP / SSE plumbing -----------------------------------------------
-
-    private fun messagesBody(
+    suspend fun streamToolUse(
         system: String,
-        maxTokens: Int,
-        jpeg: ByteArray,
-        text: String,
-        stream: Boolean
+        messages: JSONArray,
+        toolsJson: JSONArray,
+        totalTimeoutMs: Long = TOTAL_TIMEOUT_MS,
+    ): ToolUseResponse = withContext(Dispatchers.IO) {
+        val body = messagesBodyWithTools(system, messages, toolsJson)
+        streamToolUseBody(body, totalTimeoutMs)
+    }
+
+    private fun messagesBodyWithTools(
+        system: String,
+        messages: JSONArray,
+        toolsJson: JSONArray,
     ): String {
+        val root = JSONObject()
+            .put("model", config.model)
+            .put("max_tokens", MAX_TOKENS)
+            .put("temperature", REQUEST_TEMPERATURE)
+            .put("system", system)
+            .put("messages", messages)
+            .put("tools", toolsJson)
+            .put("stream", true)
+        return root.toString()
+    }
+
+    /**
+     * Append a user-role message carrying a single JPEG plus optional
+     * text.  Used by [ToolUseLoop] to seed round 1.
+     */
+    fun userImageMessage(jpeg: ByteArray, text: String = ""): JSONObject {
         val b64 = Base64.encodeToString(jpeg, Base64.NO_WRAP)
         val imageSource = JSONObject()
             .put("type", "base64")
@@ -349,28 +98,26 @@ class LlmClient(@Volatile var config: LlmConfig) {
             .put("data", b64)
         val content = JSONArray()
             .put(JSONObject().put("type", "image").put("source", imageSource))
-            .put(JSONObject().put("type", "text").put("text", text))
-        val messages = JSONArray()
-            .put(JSONObject().put("role", "user").put("content", content))
-        return JSONObject()
-            .put("model", config.model)
-            .put("max_tokens", maxTokens)
-            .put("temperature", REQUEST_TEMPERATURE)
-            .put("system", system)
-            .put("messages", messages)
-            .put("stream", stream)
-            .toString()
+        if (text.isNotBlank()) {
+            content.put(JSONObject().put("type", "text").put("text", text))
+        }
+        return JSONObject().put("role", "user").put("content", content)
     }
 
-    private suspend fun streamText(
+    // ── SSE parsers ───────────────────────────────────────────────────
+
+    /**
+     * Stream an SSE response and accumulate both text deltas and
+     * tool_use blocks.  Mirrors the structure of [streamText] but
+     * tracks per-content-block state to reassemble tool input JSON.
+     */
+    private suspend fun streamToolUseBody(
         jsonBody: String,
-        tag: String,
         totalTimeoutMs: Long,
-        onDelta: (String) -> Unit
-    ): String {
+    ): ToolUseResponse {
         return try {
             withTimeout(totalTimeoutMs) {
-                suspendCancellableCoroutine<String> { cont ->
+                suspendCancellableCoroutine<ToolUseResponse> { cont ->
                     val url = config.baseUrl.trimEnd('/') + "/v1/messages"
                     val request = Request.Builder()
                         .url(url)
@@ -382,219 +129,191 @@ class LlmClient(@Volatile var config: LlmConfig) {
                         .post(jsonBody.toRequestBody(JSON_MEDIA))
                         .build()
 
-                    val accumulator = StringBuilder()
+                    val textAccumulator = StringBuilder()
+                    val toolBlocks = mutableListOf<ToolUseBlock>()
+                    // Index-by-content-index so we can route deltas to
+                    // the right block.  Anthropic emits
+                    // `content_block_start` with `index` per block.
+                    val pendingByIndex = mutableMapOf<Int, PendingTool>()
+                    val stopReason = StringBuilder()
                     val resolved = AtomicBoolean(false)
+
+                    val fail: (Throwable) -> Unit = { t ->
+                        if (resolved.compareAndSet(false, true)) {
+                            if (!cont.isCancelled) cont.resumeWithException(t)
+                        }
+                    }
+                    val done: () -> Unit = finish@{
+                        if (resolved.compareAndSet(false, true)) {
+                            if (cont.isCancelled) return@finish
+                            // Close any still-open pending blocks.
+                            for ((_, pending) in pendingByIndex) {
+                                toolBlocks.add(pending.finalize())
+                            }
+                            pendingByIndex.clear()
+                            cont.resume(
+                                ToolUseResponse(
+                                    text = synchronized(textAccumulator) { textAccumulator.toString() },
+                                    toolBlocks = toolBlocks.toList(),
+                                    stopReason = stopReason.toString().ifBlank { "end_turn" },
+                                )
+                            )
+                        }
+                    }
 
                     val listener = object : EventSourceListener() {
                         override fun onEvent(
                             eventSource: EventSource, id: String?, type: String?, data: String
                         ) {
                             if (resolved.get()) return
-                            when (type) {
-                                "content_block_delta", "message_delta" -> {
-                                    val delta = extractTextDelta(data) ?: return
-                                    if (delta.isEmpty()) return
-                                    val snapshot: String = synchronized(accumulator) {
-                                        accumulator.append(delta)
-                                        accumulator.toString()
+                            try {
+                                when (type) {
+                                    "message_start" -> { /* model info; ignore */ }
+                                    "content_block_start" -> {
+                                        val obj = runCatching { JSONObject(data) }.getOrNull() ?: return
+                                        val block = obj.optJSONObject("content_block") ?: return
+                                        val blockType = block.optString("type")
+                                        val index = obj.optInt("index", -1)
+                                        if (blockType == "tool_use" && index >= 0) {
+                                            pendingByIndex[index] = PendingTool(
+                                                id = block.optString("id"),
+                                                name = block.optString("name"),
+                                                inputJson = StringBuilder(),
+                                            )
+                                        }
                                     }
-                                    onDelta(snapshot)
-                                }
-                                "error" -> {
-                                    if (resolved.compareAndSet(false, true)) {
-                                        // Don't resume a cancelled coroutine —
-                                        // [invokeOnCancellation] has already
-                                        // fired and the parent is gone.
-                                        if (cont.isCancelled) return
-                                        cont.resumeWithException(
-                                            IllegalStateException("SSE error: $data")
-                                        )
+                                    "content_block_delta" -> {
+                                        val obj = runCatching { JSONObject(data) }.getOrNull() ?: return
+                                        val index = obj.optInt("index", -1)
+                                        val delta = obj.optJSONObject("delta") ?: return
+                                        when (delta.optString("type")) {
+                                            "text_delta" -> {
+                                                val piece = delta.optString("text")
+                                                if (piece.isNotEmpty()) {
+                                                    synchronized(textAccumulator) {
+                                                        textAccumulator.append(piece)
+                                                    }
+                                                }
+                                            }
+                                            "input_json_delta" -> {
+                                                val pending = pendingByIndex[index] ?: return
+                                                val piece = delta.optString("partial_json")
+                                                if (piece.isNotEmpty()) {
+                                                    pending.inputJson.append(piece)
+                                                }
+                                            }
+                                        }
                                     }
+                                    "content_block_stop" -> {
+                                        val obj = runCatching { JSONObject(data) }.getOrNull() ?: return
+                                        val index = obj.optInt("index", -1)
+                                        val pending = pendingByIndex.remove(index) ?: return
+                                        toolBlocks.add(pending.finalize())
+                                    }
+                                    "message_delta" -> {
+                                        val obj = runCatching { JSONObject(data) }.getOrNull()
+                                        val reason = obj?.optJSONObject("delta")?.optString("stop_reason")
+                                        if (!reason.isNullOrBlank()) {
+                                            stopReason.setLength(0)
+                                            stopReason.append(reason)
+                                        }
+                                    }
+                                    "message_stop" -> { /* done() fires on onClosed */ }
+                                    "error" -> fail(IllegalStateException("SSE error: $data"))
                                 }
+                            } catch (e: Throwable) {
+                                fail(
+                                    IllegalStateException(
+                                        "SSE onEvent swallowed: " +
+                                            "${e.javaClass.simpleName}: " +
+                                            (e.message?.take(200) ?: "")
+                                    )
+                                )
                             }
                         }
 
                         override fun onFailure(
                             eventSource: EventSource, t: Throwable?, response: Response?
                         ) {
-                            if (resolved.compareAndSet(false, true)) {
-                                if (cont.isCancelled) return
-                                // Body has often been consumed/closed when the
-                                // connection drops; guard the read so it
-                                // doesn't throw a secondary exception while
-                                // we're already handling one.
-                                val body = runCatching { response?.body?.string()?.take(300) }
-                                    .getOrNull().orEmpty()
-                                val ex = t ?: IllegalStateException(
-                                    "HTTP ${response?.code}: $body"
-                                )
-                                cont.resumeWithException(ex)
-                            }
+                            val body = runCatching { response?.body?.string()?.take(300) }
+                                .getOrNull().orEmpty()
+                            fail(t ?: IllegalStateException("HTTP ${response?.code}: $body"))
                         }
 
                         override fun onClosed(eventSource: EventSource) {
-                            if (resolved.compareAndSet(false, true)) {
-                                if (cont.isCancelled) return
-                                cont.resume(synchronized(accumulator) { accumulator.toString() })
-                            }
+                            done()
                         }
                     }
 
-                    val source: EventSource = sseFactory.newEventSource(request, listener)
-                    cont.invokeOnCancellation {
-                        source.cancel()
-                    }
+                    val source = sseFactory.newEventSource(request, listener)
+                    cont.invokeOnCancellation { source.cancel() }
                 }
             }
         } catch (e: TimeoutCancellationException) {
-            throw IllegalStateException("$tag: 模型在 ${totalTimeoutMs}ms 内未完成")
+            throw IllegalStateException("tooluse: 模型在 ${totalTimeoutMs}ms 内未完成")
         }
     }
 
-    private fun extractTextDelta(data: String): String? {
-        if (data.isBlank() || data == "[DONE]") return ""
-        return try {
-            val obj = JSONObject(data)
-            val delta = obj.optJSONObject("delta") ?: return ""
-            if (delta.optString("type") != "text_delta") return ""
-            delta.optString("text")
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    private fun parseAnalysis(obj: JSONObject): AnalysisResult {
-        val observation = obj.optString("observation")
-        val scene = obj.optString("scene")
-        val arr = obj.optJSONArray("intents") ?: JSONArray()
-        val intents = ArrayList<IntentItem>()
-        for (i in 0 until arr.length()) {
-            val it = arr.optJSONObject(i) ?: continue
-            val title = it.optString("title").trim()
-            if (title.isEmpty()) continue
-            intents.add(
-                IntentItem(
-                    id = "$i-${title.hashCode()}",
-                    type = it.optString("type", "info").ifBlank { "info" },
-                    title = title,
-                    detail = it.optString("detail"),
-                    confidence = it.optDouble("confidence", 0.0).toFloat().coerceIn(0f, 1f)
-                )
-            )
-        }
-        // Defensive fallback: if the model produced no parseable intents, the
-        // bubble would otherwise be empty.  Per the user contract, the
-        // detail must carry the model's own description of the image
-        // (the `observation` field).  The title stays empty so the bubble
-        // shows just the description with no "未识别" / "无意图" prefix.
-        // If the model also failed to describe the image (both fields
-        // blank), no fallback intent is injected — an empty bubble would
-        // just be a thumbnail with no text, which is noise.
-        if (intents.isEmpty()) {
-            val desc = buildList {
-                if (observation.isNotBlank()) add(observation)
-                if (scene.isNotBlank() && scene !in this) add(scene)
-            }.joinToString(" · ")
-            if (desc.isNotBlank()) {
-                intents += IntentItem(
-                    id = "0-fallback",
-                    type = "info",
-                    title = "",
-                    detail = desc,
-                    confidence = 0.1f
-                )
-            }
-        }
-        return AnalysisResult(
-            observation = observation,
-            scene = scene,
-            intents = intents.sortedByDescending { it.confidence }
+    /** In-flight state for a `tool_use` content block.  Tracks the
+     *  accumulated `input_json` partial stream until `content_block_stop`
+     *  closes it. */
+    private class PendingTool(
+        val id: String,
+        val name: String,
+        val inputJson: StringBuilder,
+    ) {
+        fun finalize(): ToolUseBlock = ToolUseBlock(
+            id = id,
+            name = name,
+            inputJson = inputJson.toString(),
         )
     }
 
-    private fun extractJson(responseText: String): Pair<JSONObject, String>? {
-        val raw = responseText.trim()
-        if (raw.isEmpty()) return null
-
-        // 1. Try the whole string as JSON.  Strip markdown fences first;
-        //    the model commonly wraps responses in ```json ... ```.
-        val stripped = raw
-            .removePrefix("```json")
-            .removePrefix("```JSON")
-            .removePrefix("```")
-            .removeSuffix("```")
-            .trim()
-
-        runCatching { JSONObject(stripped) }
-            .getOrNull()
-            ?.let(::returnIfLooksValid)
-            ?.let { return it to raw }
-
-        // 2. The model may emit a partial stream (truncated mid-JSON) or
-        //    wrap the JSON in prose ("下面是意图: {...} 请继续...").
-        //    Take the substring from the first `{` to the last `}`.  The
-        //    substring may not be balanced; we then attempt to repair
-        //    truncated JSON by progressively trimming from the end until
-        //    org.json can parse it.
-        val first = stripped.indexOf('{')
-        val last  = stripped.lastIndexOf('}')
-        if (first >= 0 && last > first) {
-            val candidate = stripped.substring(first, last + 1)
-            runCatching { JSONObject(candidate) }
-                .getOrNull()
-                ?.let(::returnIfLooksValid)
-                ?.let { return it to raw }
-
-            // 3. Repair: scan from the end for the last balanced `}` that
-            //    org.json can parse, and recover what's there.  This rescues
-            //    truncated streams.
-            for (e in last downTo first + 1) {
-                if (stripped[e] != '}') continue
-                val sub = stripped.substring(first, e + 1)
-                val parsed = runCatching { JSONObject(sub) }.getOrNull() ?: continue
-                val valid = returnIfLooksValid(parsed) ?: continue
-                return valid to raw
-            }
-        }
-
-        // 4. The model emitted no JSON at all.  We can't recover anything
-        //    structured; return null and let the caller surface a friendlier
-        //    error including a snippet of the raw text.
-        return null
-    }
-
-    /**
-     * Heuristic sanity check on a decoded [JSONObject]: it must look like
-     * an analysis response (have at least the `scene` or `intents` key).
-     * Pure `{"foo":"bar"}` would otherwise be misidentified as a payload.
-     */
-    private fun returnIfLooksValid(obj: JSONObject): JSONObject? {
-        if (!obj.has("scene") && !obj.has("intents") && !obj.has("observation")) {
-            return null
-        }
-        return obj
-    }
-
-    private companion object {
+    companion object {
         val JSON_MEDIA = "application/json; charset=utf-8".toMediaType()
 
-        const val ANALYZE_MAX_TOKENS = 320
-        const val ANSWER_MAX_TOKENS = 900
+        /** Hard cap on output tokens per call.  Recognition answers are
+         *  short JSON blobs; 256 is plenty. */
+        const val MAX_TOKENS = 256
 
-        // Lock at 0 to keep intent classification deterministic — eval shows
-        // 1.000 composite at temp=0 on all 7 fixtures vs ~0.91 with the
-        // Anthropic default of 1.0.  The user can still pick from multiple
-        // intents returned in the intents[] array.
+        /** Lock at 0 to keep intent classification deterministic. */
         const val REQUEST_TEMPERATURE = 0.0
 
-        // Per-round budget; the cycle uses up to 3 rounds, max ~45s.
-        const val ANALYZE_ROUND_TIMEOUT_MS = 15_000L
-        const val ANSWER_TOTAL_TIMEOUT_MS = 45_000L
+        /** Hard ceiling for one recognition round-trip. */
+        const val TOTAL_TIMEOUT_MS = 20_000L
 
-        const val SYSTEM_ANALYZE =
-            "你是手机端实时视觉意图助手。从摄像头画面准确推断用户意图。" +
-            "先用 observation 字段描述所见（必须保留产品名/品牌/数字/日期等关键专有名词），再给 scene、intents。严格只输出 JSON。"
-        const val SYSTEM_ANSWER =
-            "你是一个贴心的中文视觉助手，根据用户选定的意图和画面，给出准确、可执行、简洁的答案。"
+        /** System prompt for the tool-use path.  Tells the model it
+         *  MUST emit a `tool_use` block on round 1 — the orchestrator
+         *  won't proceed otherwise. */
+        const val TOOL_USE_SYSTEM =
+            "你是 IntentCam 的工具调用助手。看到画面后，你必须调用一个工具来处理它。" +
+                    "不要直接用文字描述画面内容（那是 default_describe 的工作）。" +
+                    "如果拿不准选哪个工具，就调 default_describe 让旧逻辑接管。" +
+                    "回复必须是中文。纯文本和 tool_use 可同回合出现，但第一回合必须调用工具。"
+
+        /** System prompt for the final round (after tool results). */
+        const val FINAL_ANSWER_SYSTEM =
+            "你是 IntentCam 的视觉意图助手。系统已经替你跑过选定的工具，并返回了工具结果摘要。" +
+                    "请用一段简短的中文 JSON 总结：scene（看到了什么，一句话）, intent（用户最可能的意图，动宾短语≤12字），" +
+                    "type（info|location|solve）, confidence（0-1）。不要 markdown 围栏，不要多余解释。"
     }
 }
+
+/** Parsed tool_use content block from one SSE round. */
+data class ToolUseBlock(
+    val id: String,
+    val name: String,
+    /** Accumulated JSON string for the `input` field.  May be empty
+     *  if the model emitted no input. */
+    val inputJson: String,
+)
+
+/** Full result of one tool-aware LLM round. */
+data class ToolUseResponse(
+    /** Concatenated text content blocks (excluding tool_use blocks). */
+    val text: String,
+    /** All tool_use blocks the model emitted, in stream order. */
+    val toolBlocks: List<ToolUseBlock>,
+    /** Anthropic `stop_reason`.  "end_turn", "tool_use", "max_tokens", etc. */
+    val stopReason: String,
+)
