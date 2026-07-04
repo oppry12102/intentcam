@@ -16,12 +16,16 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,10 +37,15 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
@@ -61,9 +70,9 @@ private fun AppRoot(viewModel: AppViewModel) {
     val state by viewModel.state.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result ->
-        if (result[Manifest.permission.CAMERA] == true) viewModel.onPermissionsGranted()
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) viewModel.onPermissionsGranted()
     }
 
     LaunchedEffect(Unit) {
@@ -73,13 +82,7 @@ private fun AppRoot(viewModel: AppViewModel) {
         if (cameraGranted) {
             viewModel.onPermissionsGranted()
         } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -91,13 +94,7 @@ private fun AppRoot(viewModel: AppViewModel) {
             onClose = viewModel::closeSettings
         )
         Phase.NEED_PERMISSION -> PermissionScreen {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            permissionLauncher.launch(Manifest.permission.CAMERA)
         }
         else -> CameraScreen(viewModel, state)
     }
@@ -119,29 +116,104 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
     Box(Modifier.fillMaxSize()) {
         if (state.phase == Phase.SHOWING_DETAIL && state.selectedBubble != null) {
             // Detail view: show the captured image full-bleed, with a header
-            // overlay, an action chip row that drives LLM-powered follow-ups,
-            // and an 退出 button to dismiss.  The camera preview is
-            // hidden here so the user sees the still image they tapped on,
+            // overlay carrying title + scene description + confidence, and
+            // a 退出 button to dismiss.  The camera preview is hidden
+            // here so the user sees the still image they tapped on,
             // not a live feed.
             DetailScreen(
                 bubble = state.selectedBubble,
-                state = state,
-                onAction = { viewModel.triggerAction(state.selectedBubble, it) },
                 onRestart = viewModel::clearBubbleSelection,
+                onChip = { chip ->
+                    val jpeg = state.selectedBubble.imageBytes
+                    viewModel.runChip(jpeg, chip)
+                },
                 modifier = Modifier.fillMaxSize()
             )
         } else {
-            // Live preview is ALWAYS on screen.  When the camera analyzer sees
-            // ≥ 1 s of stability, the captured JPEG is sent through OCR +
-            // object detection + multi-round LLM as a background pipeline;
-            // the UI never freezes.  Bubble results slide in at the bottom.
+            // Live preview + translucent top overlay + bubbles + the
+            // shutter button.  No motion-sensor trigger — recognition
+            // fires when the user taps the shutter.
             CameraPreview(viewModel)
-            TopOverlay(state = state, onSettings = viewModel::openSettings)
-            IntentBubbles(
+            TopOverlay(
                 state = state,
-                onPick = viewModel::selectBubble,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                debugEnabled = state.debugEnabled,
+                onToggleDebug = { viewModel.setDebugEnabled(!state.debugEnabled) },
+                onSettings = viewModel::openSettings,
             )
+            Column(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+            ) {
+                if (state.debugEnabled && state.phase == Phase.SCANNING) {
+                    DebugLogPanel(
+                        logs = state.debugLogs,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                ShutterButton(
+                    enabled = !state.analyzing && state.phase == Phase.SCANNING,
+                    onClick = { viewModel.captureLatestFrame() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                )
+                IntentBubbles(state = state, onPick = viewModel::selectBubble)
+            }
+        }
+
+        // User-input dialog overlays everything when a tool needs a
+        // free-form follow-up (e.g. navigate_to_block's destination).
+        state.userInputRequest?.let { req ->
+            UserInputDialog(
+                request = req,
+                onSubmit = viewModel::submitUserInput,
+                onCancel = viewModel::cancelUserInput,
+            )
+        }
+    }
+}
+
+/**
+ * Large round shutter button.  Disabled while a recognition cycle is
+ * in flight (the spinner inside shows that work is happening).  Disabled
+ * outside of SCANNING so we don't dispatch while the user is reading
+ * a bubble detail.
+ */
+@Composable
+private fun ShutterButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            onClick = onClick,
+            enabled = enabled,
+            shape = CircleShape,
+            color = if (enabled) Color(0xFF4F8CFF) else Color(0xFF4F8CFF).copy(alpha = 0.35f),
+            modifier = Modifier.size(72.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                if (enabled) {
+                    Text(
+                        "识别",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 3.dp,
+                        color = Color.White,
+                    )
+                }
+            }
         }
     }
 }
@@ -172,9 +244,8 @@ private fun CameraPreview(viewModel: AppViewModel) {
                         it.setAnalyzer(
                             executor,
                             FrameAnalyzer(
-                                isBusy = viewModel::isBusy,
-                                onStableFrame = viewModel::onStableFrame,
-                                onSceneChange = viewModel::onSceneChange
+                                isArmed = viewModel::tryArmCapture,
+                                onFrame = { frame -> viewModel.onFrame(frame) },
                             )
                         )
                     }
@@ -195,7 +266,12 @@ private fun CameraPreview(viewModel: AppViewModel) {
 }
 
 @Composable
-private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
+private fun TopOverlay(
+    state: UiState,
+    debugEnabled: Boolean,
+    onToggleDebug: () -> Unit,
+    onSettings: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -205,10 +281,9 @@ private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            // Three states, in priority order:
-            //   1. analyzing: spinner + streamed scene text
-            //   2. stabilityProgress non-null: thin progress bar (system alive)
-            //   3. otherwise: last completed scene, or "对准物体…"
+            // Two states in priority order:
+            //   1. analyzing: spinner + scene text (or "识别中…")
+            //   2. otherwise: last completed scene, or "对准物体…"
             if (state.analyzing) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(
@@ -217,45 +292,30 @@ private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
                         color = Color.White
                     )
                     Spacer(Modifier.width(8.dp))
-                    val live = state.partialScene
                     Text(
-                        text = if (!live.isNullOrBlank()) live else "识别中…",
+                        text = "识别中…",
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium,
-                        maxLines = 2
                     )
                 }
             } else {
-                val sp = state.stabilityProgress
-                if (sp != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        LinearProgressIndicator(
-                            progress = { sp.coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(3.dp),
-                            color = Color(0xFF4F8CFF),
-                            trackColor = Color(0x33FFFFFF)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "稳定中 ${(sp * 100).toInt()}%",
-                            color = Color(0xFFB9C4DE),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                } else {
-                    Text(
-                        text = state.scene.ifBlank { "对准物体，正在识别你的意图…" },
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 2
-                    )
-                }
+                Text(
+                    text = state.scene.ifBlank { "对准物体，点击下方按钮识别…" },
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 2
+                )
             }
-            state.location?.let {
-                Text("📍 $it", color = Color(0xFFB9C4DE), style = MaterialTheme.typography.labelSmall, maxLines = 1)
-            }
+        }
+        // Debug toggle.  Bug icon is green when the scrolling log overlay
+        // is active (default), gray when it's muted.  Tap to flip; the
+        // preference persists across launches via SettingsStore.
+        IconButton(onClick = onToggleDebug) {
+            Icon(
+                Icons.Filled.Build,
+                contentDescription = if (debugEnabled) "关闭调试输出" else "开启调试输出",
+                tint = if (debugEnabled) Color(0xFF37D399) else Color(0xFF6E7891),
+            )
         }
         IconButton(onClick = onSettings) {
             Icon(Icons.Filled.Settings, contentDescription = "设置", tint = Color.White)
@@ -264,9 +324,9 @@ private fun TopOverlay(state: UiState, onSettings: () -> Unit) {
 }
 
 @Composable
-private fun IntentBubbles(state: UiState, onPick: (Bubble) -> Unit, modifier: Modifier) {
+private fun IntentBubbles(state: UiState, onPick: (Bubble) -> Unit) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
             .navigationBarsPadding(),
@@ -332,15 +392,19 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f)) {
-                // When the model returned no parseable action, the bubble's
-                // title is empty and only the detail (the image description)
-                // is shown — no "未识别" / "无意图" prefix.
-                if (bubble.title.isNotBlank()) {
-                    Text(
-                        bubble.title,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (bubble.title.isNotBlank()) {
+                        Text(
+                            bubble.title,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                    }
+                    if (bubble.toolName != null) {
+                        Spacer(Modifier.width(6.dp))
+                        ToolChip(toolName = bubble.toolName)
+                    }
                 }
                 if (bubble.detail.isNotBlank()) {
                     Text(
@@ -355,6 +419,13 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
                         maxLines = if (bubble.title.isBlank()) 4 else 2
                     )
                 }
+                if (bubble.needsUserInput) {
+                    Text(
+                        "需要补充信息",
+                        color = Color(0xFFFFAF54),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
             Text(
                 "${(bubble.confidence * 100).toInt()}%",
@@ -365,12 +436,30 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
     }
 }
 
+/** Small green pill naming the tool that produced this bubble
+ *  (e.g. "via identify_product").  Helps the user tell which path
+ *  the model took. */
+@Composable
+private fun ToolChip(toolName: String) {
+    Box(
+        Modifier
+            .background(Color(0x3337D399), RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            "via $toolName",
+            color = Color(0xFF37D399),
+            style = MaterialTheme.typography.labelSmall,
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DetailScreen(
     bubble: Bubble,
-    state: UiState,
-    onAction: (Action) -> Unit,
     onRestart: () -> Unit,
+    onChip: (ActionChip) -> Unit,
     modifier: Modifier
 ) {
     val fullImage = remember(bubble.imageBytes) {
@@ -410,10 +499,6 @@ private fun DetailScreen(
                         .background(accent, RoundedCornerShape(5.dp))
                 )
                 Spacer(Modifier.width(10.dp))
-                // Same as BubbleCard: when the title is empty (the
-                // no-intent / parse-failure fallback), show only the
-                // image description, no "未识别" / "无意图" / "图片描述"
-                // prefix.
                 if (bubble.title.isNotBlank()) {
                     Text(
                         bubble.title,
@@ -429,6 +514,10 @@ private fun DetailScreen(
                     )
                 }
             }
+            bubble.toolName?.let { name ->
+                Spacer(Modifier.height(6.dp))
+                ToolChip(toolName = name)
+            }
             if (bubble.detail.isNotBlank()) {
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -437,32 +526,34 @@ private fun DetailScreen(
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
-        }
-        // Action chip row + streaming-result panel
-        val actions = remember(bubble.type, bubble.id) {
-            appViewModelActions(bubble.type)
-        }
-        val activeKey = state.activeActionId
-        val isThisBubbleActive = activeKey?.startsWith("${bubble.id}-") == true
-        if (actions.isNotEmpty()) {
-            val bubbleIdForResult = activeKey?.substringBeforeLast('-')
-            val activeActionIdOnly = activeKey?.substringAfterLast('-')
-            val completedForThis = if (activeKey == null) {
-                state.actionResults.entries
-                    .firstOrNull { it.key.startsWith("${bubble.id}-") }
-            } else null
-            ActionPanel(
-                actions = actions,
-                activeKey = activeActionIdOnly,
-                completedEntry = completedForThis,
-                activeText = if (isThisBubbleActive) state.partialActionText else null,
-                onAction = onAction,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 88.dp)
-                    .fillMaxWidth()
-            )
+            if (bubble.needsUserInput) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "需要补充信息（点击下方退出后重拍画面）",
+                    color = Color(0xFFFFAF54),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            // Action chips: LLM-suggested follow-up actions.  Rendered
+            // as a horizontal row of buttons; tapping one dispatches
+            // the saved tool+input as a chip-direct cycle.
+            if (bubble.chips.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "下一步",
+                    color = Color(0xFFB9C4DE),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+                Spacer(Modifier.height(6.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    bubble.chips.forEach { chip ->
+                        ActionChipButton(chip = chip, accent = accent, onClick = { onChip(chip) })
+                    }
+                }
+            }
         }
         // 退出 button at the bottom — dismisses the detail view; the
         // main loop restarts from step 1 and starts a fresh stability
@@ -480,109 +571,139 @@ private fun DetailScreen(
     }
 }
 
-/**
- * Static action catalogue.  Pulled out so [DetailScreen] can render the
- * chip row without owning an [AppViewModel] (the function is a pure
- * mapping from intent type to action list, with action ids stable enough
- * for analytics).  The actual streaming call lives in
- * [AppViewModel.triggerAction].
- */
-private fun appViewModelActions(type: String): List<Action> = when (type) {
-    "info" -> listOf(
-        Action("info-translate", "翻译成中文", ""),
-        Action("info-list",     "列出关键信息", ""),
-        Action("info-evaluate", "判断是否正常", ""),
-    )
-    "location" -> listOf(
-        Action("loc-where",   "查询地点信息", ""),
-        Action("loc-navigate","给我导航路线", ""),
-        Action("loc-nearby",  "附近还有什么", ""),
-    )
-    "solve" -> listOf(
-        Action("solve-steps",  "详细解题步骤", ""),
-        Action("solve-verify", "验证答案", ""),
-        Action("solve-similar","给我类似题", ""),
-    )
-    else -> listOf(
-        Action("other-explain", "再解释一下", ""),
-        Action("other-detail",  "看更多细节", ""),
-    )
+/** Pill-shaped action button.  Distinct from [ToolChip] (which is a
+ *  passive label) — this is a tappable button. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ActionChipButton(chip: ActionChip, accent: Color, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        color = accent.copy(alpha = 0.18f),
+        contentColor = Color.White,
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Text(
+            chip.label,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
 }
 
+/**
+ * Translucent scrolling panel that shows the recognition-pipeline log.
+ * One row per [DebugLogEntry]; the list auto-scrolls to the newest entry
+ * whenever [logs] grows.  Each row is capped at 3 lines so a runaway
+ * long message can't blow past the visible area — the developer sees
+ * the full message at the top, and the tail gets truncated with "…".
+ *
+ * Sits above the bubble list (camera preview stays partially visible
+ * below the top overlay) with a thin dark background so the text stays
+ * legible against any camera frame.
+ */
 @Composable
-private fun ActionPanel(
-    actions: List<Action>,
-    activeKey: String?,
-    completedEntry: Map.Entry<String, String>?,
-    activeText: String?,
-    onAction: (Action) -> Unit,
-    modifier: Modifier
+private fun DebugLogPanel(
+    logs: List<DebugLogEntry>,
+    modifier: Modifier = Modifier,
 ) {
-    Column(modifier) {
-        // Action chip row (horizontally scrollable; chips overflow on
-        // narrow screens).
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            actions.forEach { action ->
-                val isActive = activeKey == action.id
-                val isDone = completedEntry != null &&
-                    completedEntry.key.substringAfterLast('-') == action.id
-                FilterChip(
-                    selected = isActive || isDone,
-                    onClick = { onAction(action) },
-                    label = { Text(action.label) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF4F8CFF).copy(alpha = 0.3f),
-                        selectedLabelColor = Color.White,
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = isActive || isDone,
-                        borderColor = Color(0xFFB9C4DE),
-                        selectedBorderColor = Color(0xFF4F8CFF),
-                        borderWidth = 1.dp,
-                    )
-                )
-            }
-        }
-        // Streaming text panel (only when active)
-        if (activeText != null) {
-            Spacer(Modifier.height(8.dp))
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xCC0B1228),
-                    contentColor = Color(0xFFE7ECF7)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = activeText,
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        } else if (completedEntry != null) {
-            // Show the last completed action result for this bubble,
-            // even when no streaming is in progress.  Each new tap on a
-            // chip overwrites the previous result.
-            Spacer(Modifier.height(8.dp))
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xCC0B1228),
-                    contentColor = Color(0xFFE7ECF7)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = completedEntry.value,
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+    val listState = rememberLazyListState()
+    LaunchedEffect(logs.size) {
+        if (logs.isNotEmpty()) {
+            // Skip the animation when the panel is first composed or
+            // when the user has scrolled up to read history; only snap
+            // forward when we're already at the bottom.
+            if (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 >= logs.size - 2) {
+                listState.scrollToItem(logs.size - 1)
             }
         }
     }
+    LazyColumn(
+        state = listState,
+        modifier = modifier
+            .heightIn(max = 200.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xCC0B1021))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    ) {
+        items(logs, key = { it.seq }) { entry ->
+            DebugLogRow(entry)
+        }
+    }
+}
+
+@Composable
+private fun DebugLogRow(entry: DebugLogEntry) {
+    val time = remember(entry.timestampMs) {
+        TIME_FORMAT.get()!!.format(Date(entry.timestampMs))
+    }
+    Text(
+        text = "$time  [${entry.tag}] ${entry.message}",
+        color = Color(0xFFB9C4DE),
+        style = MaterialTheme.typography.labelSmall,
+        fontFamily = FontFamily.Monospace,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(vertical = 1.dp),
+    )
+}
+
+// ThreadLocal because SimpleDateFormat isn't thread-safe and the lazy
+// scroll-to-bottom can fire from any coroutine.  Allocating per call
+// would be wasteful for a panel that re-renders on every new entry.
+private val TIME_FORMAT: java.lang.ThreadLocal<SimpleDateFormat> =
+    java.lang.ThreadLocal.withInitial {
+        SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+    }
+
+/**
+ * Modal dialog asking the user for a free-form follow-up.  Surfaces
+ * when a tool body returned `needsUserInput = true` (e.g. the
+ * navigate_to_block tool waiting for a destination).
+ *
+ * The placeholder bubble remains in the queue until the user submits
+ * or cancels; submitting re-runs the recognition cycle with the typed
+ * text, cancelling drops the placeholder and returns to scanning.
+ */
+@Composable
+private fun UserInputDialog(
+    request: UserInputRequest,
+    onSubmit: (String) -> Unit,
+    onCancel: () -> Unit,
+) {
+    var text by remember(request) { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("补充信息")
+                Spacer(Modifier.width(8.dp))
+                ToolChip(toolName = request.toolName)
+            }
+        },
+        text = {
+            Column {
+                Text(request.prompt, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text("在这里输入…") },
+                    singleLine = false,
+                    minLines = 2,
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (text.isNotBlank()) onSubmit(text.trim()) },
+                enabled = text.isNotBlank(),
+            ) { Text("发送") }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) { Text("取消") }
+        },
+    )
 }
