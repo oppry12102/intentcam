@@ -1,67 +1,55 @@
 package com.example.intentcam
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.BitmapRegionDecoder
 import android.graphics.Matrix
+import android.graphics.Rect
 import android.os.SystemClock
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
 
 /**
- * CameraX analyzer that detects a "stable" frame (low motion vs the previous
- * tick) and emits two JPEGs only for those frames:
+ * One captured frame, in two encodings:
+ *  - [thumbnail] is sized for the LLM (768 max-dim, q80).  Sent as
+ *    the round-1 image so the model can pick a tool + scan the scene.
+ *  - [fullRes] is the original photo at high quality.  Stays in
+ *    memory in case the model's `zoom_in` tool needs to crop a
+ *    region at native resolution.
  *
- * - a small one (~512 px, q70) for the analyze request, which carries the
- *   lowest payload to the model server and saves image-preprocessing time;
- * - a larger one (~768 px, q75) for the answer request, which needs detail
- *   for tasks like extracting small text from labels.
+ * Keeping both lets the LLM trade off bandwidth (small thumbnail by
+ * default) for detail (a 1/4-region crop at full native pixels on
+ * demand) without re-shooting the photo.
+ */
+data class CapturedFrame(
+    val thumbnail: ByteArray,
+    val fullRes: ByteArray,
+)
+
+/**
+ * CameraX analyzer that emits a captured frame at a fixed cadence.
+ * Each emission carries two encodings (see [CapturedFrame]).
  *
- * Performance notes
- * -----------------
- * - **Stability check** samples luma directly out of the RGBA_8888
- *   [ByteBuffer] using stride-aware pointer math.  No Bitmap allocation.
+ * Cadence: gated by the caller's [isArmed] callback — the analyzer
+ * only encodes when a capture is in flight, so the common case
+ * (user just looking at the screen) costs ~nothing.
  *
- * - **JPEG emit** only happens on a stable frame, after the throttle and the
- *   busy-check.  The Bitmap is built once, rotated, then scaled twice — the
- *   second [Bitmap.createScaledBitmap] is much cheaper than the first because
- *   the source is already at 768 px.  Intermediates are recycled aggressively.
- *
- * Stable-frame emit is throttled by [minIntervalMs] (500 ms default) so the
- * ~2x encode cost is amortized over the much larger LLM round-trip time.
+ * Busy handling: same as the consumer side — drop frames when nobody
+ * is listening.
  */
 class FrameAnalyzer(
-    private val minIntervalMs: Long = 500L,
-    private val stableThreshold: Float = 8f,
-    /** Mean abs luma diff above this counts as a "dramatic scene change". */
-    private val motionThreshold: Float = 40f,
-    /** Min interval between two [onSceneChange] firings, in ms. */
-    private val motionDebounceMs: Long = 1500L,
-    /** How many pixels to skip between samples. 8 -> ~32x32 grid on 256x256 frames. */
-    private val sampleStride: Int = 8,
-    private val isBusy: () -> Boolean,
-    private val onStableFrame: (FrameJpegs) -> Unit,
-    /** Fired when motion spikes — the user has moved to a different scene. */
-    private val onSceneChange: () -> Unit = {}
+    private val isArmed: () -> Boolean,
+    private val onFrame: (CapturedFrame) -> Unit,
 ) : ImageAnalysis.Analyzer {
-
-    private var prevSig: IntArray? = null
-    private var lastSampleMs = 0L
-    private var lastEmitMs = 0L
-    private var lastSceneChangeMs = 0L
 
     override fun analyze(image: ImageProxy) {
         try {
-            val now = SystemClock.elapsedRealtime()
-            if (now - lastSampleMs < SAMPLE_INTERVAL_MS) return
-            lastSampleMs = now
-
-            // Cheap gate: when the consuming side is busy (analyze round in
-            // flight, user reading the answer, settings open), skip the
-            // sampleLuma + diff math entirely.  This keeps the analyzer thread
-            // quiet on the analyzer.kt executor and avoids firing
-            // [onSceneChange] callbacks that would no-op anyway.
-            if (isBusy()) return
+            // Critical: when the user is just looking at the screen (no
+            // capture in flight) we skip the encoder entirely.  ImageProxy
+            // is closed unconditionally in `finally`; no bitmap allocation,
+            // no JPEG compression, no memory pressure.
+            if (!isArmed()) return
 
             val plane = image.planes.firstOrNull() ?: return
             val width = image.width
@@ -72,96 +60,40 @@ class FrameAnalyzer(
             val rowStride = plane.rowStride
             val pixelStride = plane.pixelStride
 
-            val sig = sampleLuma(buffer, width, height, rowStride, pixelStride, sampleStride)
-            val prev = prevSig
-            prevSig = sig
-            val diff = if (prev == null) 0f else meanAbsDiff(prev, sig)
-
-            // Dramatic motion → user has switched scenes.  Reset prevSig inside
-            // [onSceneChange] will eventually re-baseline as the camera settles,
-            // and the next stable frame will drive a fresh analysis.
-            if (diff > motionThreshold && now - lastSceneChangeMs > motionDebounceMs) {
-                lastSceneChangeMs = now
-                lastEmitMs = 0L  // next stable frame may emit immediately
-                onSceneChange()
-                return  // don't try to emit this very frame; the camera isn't still
-            }
-
-            val stable = diff < stableThreshold
-            if (!stable) return
-            if (now - lastEmitMs < minIntervalMs) return
-            lastEmitMs = now
-
             buffer.rewind()
-            val jpegs = bufferToDualJpeg(
+            val frame = bufferToFrame(
                 buffer, width, height, rowStride, pixelStride,
-                rotationDegrees = image.imageInfo.rotationDegrees
+                rotationDegrees = image.imageInfo.rotationDegrees,
             )
-            if (jpegs != null) onStableFrame(jpegs)
-        } catch (_: Exception) {
-            // Never let a bad frame crash the analyzer pipeline.
+            if (frame != null) onFrame(frame)
+        } catch (e: Throwable) {
+            android.util.Log.w(
+                "IntentCam",
+                "analyze() swallowed: ${e.javaClass.simpleName}: ${e.message?.take(200) ?: ""}",
+                e
+            )
         } finally {
             image.close()
         }
     }
 
-    // ---- per-frame helpers ---------------------------------------------------
-
-    private fun sampleLuma(
-        buf: ByteBuffer,
-        w: Int, h: Int,
-        rowStride: Int, pixelStride: Int,
-        step: Int
-    ): IntArray {
-        val effectiveStep = maxOf(step, maxOf(w, h) / SIG_GRID_LIMIT)
-        val cols = (w + effectiveStep - 1) / effectiveStep
-        val rows = (h + effectiveStep - 1) / effectiveStep
-        val out = IntArray(cols * rows)
-
-        var idx = 0
-        var y = 0
-        while (y < h) {
-            val rowBase = y * rowStride
-            var x = 0
-            while (x < w) {
-                val off = rowBase + x * pixelStride
-                val r = buf.get(off).toInt() and 0xFF
-                val g = buf.get(off + 1).toInt() and 0xFF
-                val b = buf.get(off + 2).toInt() and 0xFF
-                out[idx++] = (r * 299 + g * 587 + b * 114) / 1000
-                x += effectiveStep
-            }
-            y += effectiveStep
-        }
-        return out
-    }
-
-    private fun meanAbsDiff(a: IntArray, b: IntArray): Float {
-        val n = minOf(a.size, b.size)
-        if (n == 0) return Float.MAX_VALUE
-        var sum = 0L
-        for (i in 0 until n) sum += kotlin.math.abs(a[i] - b[i])
-        return sum.toFloat() / n
-    }
-
     /**
-     * Decode the camera buffer into a [Bitmap] once, rotate to upright, then
-     * scale-down + JPEG-encode twice: once small for analyze, once larger
-     * for answer.
+     * Decode the camera buffer into a [Bitmap], rotate to upright,
+     * and emit TWO JPEGs:
+     *  - thumbnail: scaled to [MAX_DIM], quality [QUALITY] — for LLM.
+     *  - fullRes:   at native resolution, quality [FULL_QUALITY] —
+     *    kept in memory so zoom_in can crop from it.
      */
-    private fun bufferToDualJpeg(
-        buffer: ByteBuffer,
+    private fun bufferToFrame(
+        buffer: java.nio.ByteBuffer,
         width: Int, height: Int,
         rowStride: Int, pixelStride: Int,
-        rotationDegrees: Int
-    ): FrameJpegs? {
+        rotationDegrees: Int,
+    ): CapturedFrame? {
         val rowPaddingPx = (rowStride - pixelStride * width) / pixelStride
         val paddedWidth = width + rowPaddingPx
 
         val padded = Bitmap.createBitmap(paddedWidth, height, Bitmap.Config.ARGB_8888)
-        // The caller has already rewound the buffer; [copyPixelsFromBuffer]
-        // reads from the current position so the position must be 0 before
-        // this call.
         padded.copyPixelsFromBuffer(buffer)
 
         var work: Bitmap = if (rowPaddingPx > 0) {
@@ -177,50 +109,97 @@ class FrameAnalyzer(
             }
         }
 
-        // Build the larger (answer) JPEG first, then downscale that to build
-        // the smaller (analyze) JPEG.  Saves one full-sized createScaledBitmap.
-        val answerJpeg = encodeScaled(work, ANSWER_MAX_DIM, ANSWER_QUALITY) ?: run {
-            work.recycle()
-            return null
-        }
-        val analyzeJpeg = encodeScaled(work, ANALYZE_MAX_DIM, ANALYZE_QUALITY)
+        // Full-resolution JPEG first (the more expensive encode), then
+        // the downscaled thumbnail.  We can keep the full-res bitmap
+        // referenced for any zoom_in calls that follow; the thumbnail
+        // is the small payload that ships to the LLM.
+        val fullRes = encodeBitmap(work, quality = FULL_QUALITY, maxDim = MAX_FULL_DIM)
+        val thumbnail = encodeBitmap(work, quality = QUALITY, maxDim = MAX_DIM)
         work.recycle()
-        if (analyzeJpeg == null) return null
-
-        return FrameJpegs(
-            analyze = analyzeJpeg,
-            answer = answerJpeg,
-            width = work.width,
-            height = work.height
-        )
+        if (fullRes == null || thumbnail == null) return null
+        return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes)
     }
 
-    private fun encodeScaled(src: Bitmap, maxDim: Int, quality: Int): ByteArray? {
+    private fun encodeBitmap(src: Bitmap, quality: Int, maxDim: Int): ByteArray? {
         val scale = maxDim.toFloat() / maxOf(src.width, src.height)
         val bitmap: Bitmap = if (scale < 1f) {
             val scaledW = (src.width * scale).toInt().coerceAtLeast(1)
             val scaledH = (src.height * scale).toInt().coerceAtLeast(1)
             Bitmap.createScaledBitmap(src, scaledW, scaledH, true)
         } else src
-
         val out = ByteArrayOutputStream()
         val ok = bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
-        // Only recycle when we created a new bitmap; src is reused by the caller.
         if (bitmap !== src) bitmap.recycle()
         return if (ok) out.toByteArray() else null
     }
 
     private companion object {
-        const val SIG_GRID_LIMIT = 96
+        // Thumbnail (initial LLM image): 768 px max-dim, q80.  Picked
+        // after benchmarking — see eval-history note in
+        // profiling/eval_resize.py.
+        const val MAX_DIM = 768
+        const val QUALITY = 80
+        // Full-res kept in memory for zoom_in crops.  No downscale;
+        // the JPEG is at native phone-photo size (e.g. 1920x1440 for
+        // a 4:3 sensor).  q95 is "visually lossless" so each
+        // subsequent crop is also visually lossless.
+        const val MAX_FULL_DIM = 4096
+        const val FULL_QUALITY = 95
+    }
+}
 
-        // analyze: small + cheap.  Server-side image work drops with pixel area.
-        const val ANALYZE_MAX_DIM = 512
-        const val ANALYZE_QUALITY = 70
-
-        // answer: still need detail (e.g. small product-label text).
-        const val ANSWER_MAX_DIM = 768
-        const val ANSWER_QUALITY = 75
-
-        const val SAMPLE_INTERVAL_MS = 120L
+/**
+ * Crop a normalized rectangle out of a JPEG and re-encode it as a
+ * thumbnail-sized JPEG.  Used by the `zoom_in` tool body so the model
+ * can ask for a region of interest at near-native pixel density.
+ *
+ * @param fullResJpeg the high-quality JPEG the analyzer kept
+ * @param x left edge in [0, 1] (image-width normalized)
+ * @param y top edge in [0, 1]
+ * @param w width in [0, 1]
+ * @param h height in [0, 1]
+ * @return cropped + resized JPEG, or null if the JPEG is unreadable
+ */
+fun cropJpegRegion(
+    fullResJpeg: ByteArray,
+    x: Float, y: Float, w: Float, h: Float,
+): ByteArray? {
+    return try {
+        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(fullResJpeg, 0, fullResJpeg.size, opts)
+        val fullW = opts.outWidth
+        val fullH = opts.outHeight
+        if (fullW <= 0 || fullH <= 0) return null
+        val left = (x.coerceIn(0f, 1f) * fullW).toInt().coerceAtLeast(0)
+        val top = (y.coerceIn(0f, 1f) * fullH).toInt().coerceAtLeast(0)
+        val right = ((x + w).coerceIn(0f, 1f) * fullW).toInt()
+            .coerceAtMost(fullW)
+        val bot = ((y + h).coerceIn(0f, 1f) * fullH).toInt()
+            .coerceAtMost(fullH)
+        val rect = Rect(left, top, right, bot)
+        if (rect.width() <= 0 || rect.height() <= 0) return null
+        val regionDecoder = BitmapRegionDecoder.newInstance(
+            fullResJpeg, 0, fullResJpeg.size, false
+        )
+        val cropped = regionDecoder.decodeRegion(rect, null)
+        regionDecoder.recycle()
+        if (cropped == null) return null
+        val out = ByteArrayOutputStream()
+        // Re-encode the crop at the thumbnail sizing the LLM is
+        // expecting.  We pass MAX_DIM=768 so the crop arrives at the
+        // same resolution the LLM is used to; the *content* is
+        // higher-fidelity because the crop is ~1/4 of the source.
+        val scale = 768f / maxOf(cropped.width, cropped.height)
+        val finalBitmap = if (scale < 1f) {
+            val sw = (cropped.width * scale).toInt().coerceAtLeast(1)
+            val sh = (cropped.height * scale).toInt().coerceAtLeast(1)
+            Bitmap.createScaledBitmap(cropped, sw, sh, true)
+                .also { if (it !== cropped) cropped.recycle() }
+        } else cropped
+        val ok = finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+        if (finalBitmap !== cropped) finalBitmap.recycle()
+        if (ok) out.toByteArray() else null
+    } catch (_: Throwable) {
+        null
     }
 }
