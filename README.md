@@ -3,317 +3,327 @@
 A real-time intent-recognition Android app: point the back camera at
 something, the model figures out what you want to do with it.
 
-The system blends three signal sources in a single captured frame:
+The system is **LLM-driven end-to-end**. There is **no on-device CV**
+(OCR / object detection / barcode scanning were all tried and removed
+— see commit history). The model itself reads the image, picks a
+specialized tool, and writes a structured final answer. If the
+initial frame doesn't carry enough detail, the model can ask the
+client to crop a region at native pixels and look again.
 
-1. **On-device ML Kit OCR** (Latin + Chinese, bundled models) — text ground truth
-2. **On-device ML Kit object detection** (single-image mode + ImageNet-style
-   classification, bundled model) — object ground truth
-3. **A vision LLM** accessed via an Anthropic-compatible `/v1/messages`
-   endpoint, driving a **3-round prompt protocol** (BROAD → VERIFY → DECIDE)
-   with CoT-forced scene description and streamed SSE responses
-
-The user picks an intent bubble, the captured frame is sent back to the same
-model with the answer prompt, and the answer streams back while the live
-camera preview continues rolling.
+```
+                ┌──────────────────────────────────┐
+                │  Camera (back, preview only)     │
+                └────────────────┬─────────────────┘
+                                 │ tap shutter
+                                 ▼
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  FrameAnalyzer → two JPEGs                                      │
+   │    thumbnail:  768 max-dim, q80   (sent to LLM, ~70 KB)         │
+   │    fullRes:    native, q95        (kept in memory for crops)    │
+   └─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  ToolUseLoop.runCycle  (multi-round, suspend)                  │
+   │                                                                 │
+   │  Round 1:  LLM sees thumbnail, calls one interpret_image tool  │
+   │  Round 2:  tool body returns; LLM calls emit_bubble (or another │
+   │            tool, including zoom_in)                            │
+   │  …                                                                │
+   │  Done when: emit_bubble fires  |  ask_user asks for clarification│
+   │            |  error timeout  |  max rounds hit                  │
+   └─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  AppViewModel  → UiState.bubbles (Compose)                       │
+   │  Detail view shows "via {toolName}" + action_chips              │
+   │  Tap a chip → new chip-direct cycle via runWithTool              │
+   └─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## High-level data flow
+## 12-tool architecture
+
+| Tool | What it does | When LLM picks it |
+|---|---|---|
+| `default_describe` | fallback, free-form | truly ambiguous scenes |
+| `identify_animal_or_plant` | animal / plant ID | picture of a pet, flower, etc |
+| `identify_product` | product label | branded item (food, drink) |
+| `navigate_to_block` | location / street | road sign, map, street scene |
+| `scan_qr_code` | QR decode | image has a QR code |
+| `translate_text` | foreign text | English/Japanese text in image |
+| `solve_problem` | math / logic | equations, formulas |
+| `read_screen` | phone screen | notifications, app UI |
+| `read_manual` | manual / recipe / contract | multi-line documents |
+| `read_device_reading` | BP / BMI / temp | health-device display |
+| `ask_user` | **generic clarification** | "I'm not sure what you want" |
+| `emit_bubble` | **final answer** | end the cycle with structured fields |
+
+Every tool body is currently a **thin pass-through** that returns a
+`toolSummary` string. The actual vision work happens in **round 2**
+where the LLM re-reasons over the image with the tool result as
+context. This is intentional: it pushes the heavy lifting to the LLM
+and keeps the local code trivially auditable.
+
+The two exceptions are:
+
+- **`navigate_to_block`** with empty `destination` — returns
+  `needsUserInput = true`, the UI shows a dialog, the typed answer
+  flows back as `userText` in the next round.
+- **`emit_bubble`** — its body extracts the structured fields
+  (`scene / intent / type / confidence / action_chips`) from its own
+  input and returns them as a final Bubble. The orchestrator pulls
+  them straight through to the UI without parsing JSON.
+
+### ask_user — generic clarification
+
+`ask_user(question: string)` is the **general-purpose** form of
+"need more info from the user". Any tool body (or the model itself
+when uncertain) can return `needsUserInput = true` and a
+`userInputPrompt`. The orchestrator surfaces a dialog; the typed
+answer resumes the cycle with `userText` set. Used by
+`navigate_to_block` for destination lookup; the same plumbing
+covers any future "I need to ask" use case.
+
+### action_chips — model-suggested follow-ups
+
+`emit_bubble` schema includes an optional `action_chips` array of
+`{label, tool, tool_input}` items. The LLM uses this to suggest
+0-3 follow-up actions at final-answer time (e.g. for a tea label
+it might emit:
+
+```json
+"action_chips": [
+  {"label": "看配料", "tool": "identify_product", "tool_input": {"focus": "ingredients"}},
+  {"label": "查保质期", "tool": "read_manual", "tool_input": {}}
+]
+```
+
+The detail view renders them as tappable Surface chips. Tapping
+one calls `ToolUseLoop.runWithTool` to invoke the saved tool+input
+directly — skipping round 1's tool-pick entirely.
+
+### zoom_in — detail-on-demand
+
+When the LLM can't read a region at 768px (small text, dense layout),
+it calls `zoom_in({x, y, w, h, focus})` with **normalized** coords.
+The client's `BitmapRegionDecoder` crops the **full-resolution**
+JPEG that FrameAnalyzer kept in memory, returns the crop as a
+`followUpJpeg`. The orchestrator attaches it to the next user
+message so the model sees a high-detail region alongside the original.
+
+**Chain mode** (default `source = "last"`): the second `zoom_in`
+call crops whatever was just produced. Calling it twice with default
+source gives a chained crop of a crop — iterative zoom-in.
+
+**Sibling mode** (`source = "original"`): the second call crops
+the original full-res photo instead. Coords are absolute. Use this
+when the model wants to see two different parts of the original
+in the same round.
+
+**Multi-zoom in one round**: every `zoom_in` call returns its own
+`followUpJpeg`; the orchestrator attaches **all of them** to the
+next user message in call order. A single round can produce 2-5
+crops that the model sees together.
+
+End-to-end demo on `IMG2.jpg` (a real phone photo of a tea label
+with dense fine text):
+- R1: 3 `zoom_in` calls covering different label regions
+- R2: 2 more `zoom_in` calls drilling into sub-regions
+- R3: 1 `emit_bubble` with every previously-missed detail
+  (production address, seller name, insurance line) now correct
+
+### Frame resolution benchmark
+
+`profiling/eval_resize.py` simulates FrameAnalyzer's JPEG rescaling
+end-to-end against the 9-fixture eval set (3 runs, temp = 0).
+Average composite scores (lower is worse, 1.0 is perfect):
+
+| Config | base64 / frame | Real phone photo |
+|---|---|---|
+| 256 / q50 | ~7 KB | 主品类都错（红茶→花生），SC 编号乱码，**不可用** |
+| 384 / q60 | ~15 KB | 主字段对，小字漏（生产地址漏、销售商错） |
+| 512 / q75 | ~40 KB | 几乎全对 |
+| 768 / q80 | ~70 KB | 几乎全对（**当前**） |
+| 768 + zoom_in | ~70 KB + 跟随 | **全对 + 所有细节** |
+
+768 won because the LLM internally downsamples to its ViT patch
+grid anyway; packing more original detail into the same number of
+patches helps. Adding `zoom_in` on top closes the last ~10% gap
+on real-world dense text.
+
+---
+
+## Multi-round protocol
 
 ```
-                ┌──────────────────────────────────────────────┐
-                │            Camera (back, 30 fps)            │
-                └────────────────────┬─────────────────────────┘
-                                     │ ImageProxy (RGBA_8888)
-                                     ▼
-   ┌─────────────────────────────────────────────────────────────────┐
-   │  FrameAnalyzer  (single-thread executor, ~120 Hz sample)        │
-   │  ─ buffer-only luma sample, 24×24 grid, mean-abs-diff vs prev  │
-   │  ─ stability check (diff < 8f) gates dual-JPEG emit             │
-   │  ─ on stable + not busy + ≥ 500ms throttle: emit FrameJpegs   │
-   │      ├ analyze: 512 px max, q70   ≈ 30 KB                      │
-   │      └ answer:  768 px max, q75   ≈ 70 KB                      │
-   │  ─ diff > 40f + debounce → onSceneChange()                      │
-   └─────────────────────────────────────────────────────────────────┘
-                                     │ FrameJpegs
-                                     ▼
-   ┌─────────────────────────────────────────────────────────────────┐
-   │  AppViewModel  (one-shot capture-gate, 1s stability window)    │
-   │  stableSinceMs + lastFrame flag: capture only once per SCANNING │
-   │  ─ on capture → clears intents/scene/selected bubbles in state  │
-   │  ─ launches runAnalysisCycle(myCycle, analyze, answer)           │
-   └─────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼  (parallel on Dispatchers.Default)
-   ┌──────────────────────┐  ┌───────────────────────┐  ┌──────────────┐
-   │  OcrEngine            │  │  ObjectDetector       │  │  cropCenter  │
-   │  Latin + Chinese, in  │  │  SINGLE_IMAGE_MODE +  │  │  65% center  │
-   │  parallel; merged by  │  │  classification on;  │  │  crop + q80  │
-   │  bounding-box IoU     │  │  labels sorted by     │  │  re-encode   │
-   │  ≥ 0.30 with confidence  │  position top→bottom       │              │
-   └──────────┬────────────┘  └──────────┬──────────┘  └──────┬───────┘
-              ▼                       ▼                     ▼
-              └───────────────────────┴─────────────────────┘
-                                     │ OcrResult + ObjectResult + zoomJpeg
-                                     ▼
-   ┌─────────────────────────────────────────────────────────────────┐
-   │  LlmClient.analyzeRefined  (suspend, Dispatchers.IO)            │
-   │  for level in BROAD → VERIFY → DECIDE:                          │
-   │     build prompt (CoT + OCR + obj + history)                    │
-   │     okhttp-sse stream → extract partial scene per delta         │
-   │     parseAnalysis() → AnalysisResult (scene + intents[])         │
-   │     decideToStop(intents, level) → break / continue / forced    │
-   └─────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-              ┌──────────────────────────────────────────┐
-              │  UiState.intents → bubbles appear (Compose) │
-              │  user taps one → selectIntent(intent)    │
-              └──────────────┬───────────────────────────┘
-                                     │
-                                     ▼
-   ┌─────────────────────────────────────────────────────────────────┐
-   │  LlmClient.answerStream  (suspend)                              │
-   │  same SSE plumbing, longer max_tokens (900), answer-only prompt │
-   │  streamed back into UiState.answer (Compose)                    │
-   └─────────────────────────────────────────────────────────────────┘
+Round 1:
+  messages = [user(image + "调用工具。")]
+  LLM → tool_use block (one of 12 tools)
+  body runs locally → ToolResult
+
+Round 2..N:
+  if body returned followUpJpeg:
+    messages += user(cropped image + "放大区域" + tool_result)
+  else:
+    messages += user(tool_result)
+  LLM → next tool_use (zoom_in / emit_bubble / another tool)
+  …
+
+Stop when:
+  - emit_bubble fires → final Bubble
+  - ask_user / needsUserInput fires → UI dialog → user types → resume
+  - 4 rounds hit (configurable via LlmConfig.maxToolRounds, hardcoded
+    in ToolUseLoop.MAX_ROUNDS)
+  - LLM returns text without tool_use → fallback parse (rare)
+  - timeout (20s per round, hardcoded in LlmClient.TOTAL_TIMEOUT_MS)
 ```
+
+The image the LLM sees in round 1 is the **thumbnail** (768/q80).
+The full-res photo stays in client memory and is only sent when a
+`zoom_in` tool body crops a region. The LLM therefore sees
+**both** views when it asks for detail — the original (in round-1
+context) and the crop (in the next user message).
 
 ---
 
 ## State machine
 
 ```
-                                                  onPermissionsGranted
-   NEED_PERMISSION ──────────────────────────────────────► SCANNING
-                                                            │
-                                          ┌──── capture after 1s stability ────┐
-                                          │ (intents currently empty)          │
-                                          ▼                                      │
-                                                   (intents populated, bubbles show)│
-                                          SCANNING (with bubbles)                 │
-                                          ▲                       │              │
-                          restartScanning│                       │ tap bubble   │
-                                          │                       ▼              │
-                                          │               selectIntent → ANSWERING
-                                          │                                         │
-                                          │                            stream done  │
-                                          │                                         ▼
-                                          │                                    ANSWER
-                                          │                       ┌────── user taps 重新扫描 ─────┐
-                                          └───────────────────────┘                                  │
-                                                                                                   │
-                                                                                       (back to SCANNING) ┘
-
-  Phase transitions:
-    NEED_PERMISSION → SCANNING          (onPermissionsGranted)
-    SCANNING (live, no bubbles) → SCANNING (live, with bubbles)
-                                   (runAnalysisCycle commits intents + scene)
-    SCANNING (with bubbles) → ANSWERING   (selectIntent)
-    ANSWERING → ANSWER                   (answerStream completes)
-    any → SETTINGS                       (openSettings; closeSettings → restartScanning)
+NEED_PERMISSION ──── onPermissionsGranted ────► SCANNING
+                                                      │
+                                          tap shutter  │
+                                                      ▼
+                                                  ANALYZING
+                                                      │
+                            ┌─── Outcome.Bubble ─────┤─── Outcome.PendingUserInput ───► USER_INPUT
+                            │                         │
+                            ▼                         │
+                       (bubble shown)                 │  submitUserInput(text) → resume
+                            │                         │
+                  tap bubble│                         │
+                            ▼                         │
+                     SHOWING_DETAIL                   │
+                            │                         │
+              tap 退出  /  tap chip                    │
+                            │                         │
+                            └────────► (back to SCANNING) ◄───── cancel ◄─────┘
+                                                      
+                  any → SETTINGS (openSettings / closeSettings → restartScanning)
 ```
+
+State writes go through `MutableStateFlow` which is thread-safe via
+CAS. Every `analyzing` write is paired with the corresponding
+`analyzing: AtomicBoolean` so the camera analyzer's `isBusy()`
+callback always sees the latest value.
 
 ---
 
-## Frame capture (the stability gate)
+## Frame capture (the shutter path)
+
+There is **no stability gate** anymore. The previous 1-second
+"wait for scene to settle" gate was removed in commit `9cc4746`
+when the architecture moved from "passive scene detection" to
+"active user trigger":
 
 ```
-FrameAnalyzer.analyze() runs on a single-thread executor fed by
-CameraX ImageAnalysis at the device frame rate (~30 fps).  Each frame:
+User taps shutter:
+  captureLatestFrame()
+    armed = true  (CAS — FrameAnalyzer's next frame is captured)
+    state.analyzing = true
 
-  if elapsed since last sample < 120 ms → skip
-  if isBusy() (analyzing or phase != SCANNING) → skip CPU work entirely
-  read buffer sample (24×24 stride-8 luma grid, ~1 ms)
-  diff = mean-abs-delta vs previous sample
-  if diff > 40 + debounce 1.5 s → onSceneChange()
-                                       return                  ──┐
-  if diff < 8 (stable) AND ≥500 ms since last emit AND not busy:    │
-    emit dual JPEG via buffer → Bitmap → scale → JPEG             │
-    onStableFrame(FrameJpegs)                                     │
-    return                                                        │
-  return                                                          │
-                                                                   │
-AppViewModel.onStableFrame():                                     │
-  if lastFrame != null → skip (already captured this SCANNING)    ◄┘
-  if stableSinceMs == -1L → stableSinceMs = now; return
-  if now − stableSinceMs < 1000 ms → return
-  else (≥ 1 s accumulated stability):
-    clear scene/intents/selected
-    lastFrame = jpegs
-    spawn runAnalysisCycle
+FrameAnalyzer.analyze() next frame:
+  if !isArmed → return  (common case — user just looking)
+  encode full + thumbnail JPEGs
+  onFrame(CapturedFrame(thumb, full))
+  armed = false  (only one frame captured per tap)
+
+AppViewModel captures:
+  if latestFrame == null → wait up to 500 ms
+  runRecognitionCycle(frame)
+    toolUseLoop.runCycle(thumb, full, userText)
+      ↳  Outcome.Bubble / PendingUserInput / Error
 ```
 
-After the first capture, the analyzer keeps sampling but every emit is
-discarded (`lastFrame != null`). To get a new capture, the user must tap
-**重新扫描**, which clears `lastFrame` + `stableSinceMs` and returns to
-SCANNING.
+`latestFrame` is cleared on tap; the next tap can fire a fresh
+capture immediately. There is no longer a notion of "scene changed"
+— the user is in control.
+
+The camera preview keeps running independently of the analyzer,
+so the live feed is unaffected by recognition cycles. The preview
++ analyzer are both CameraX subscribers on the same ImageAnalysis
+output.
 
 ---
 
-## The 3-round intent protocol
+## Cancellation & concurrency model
 
-Each round hits the same `/v1/messages` endpoint with a different prompt and
-the same image. The cycle short-circuits on clarity.
+- `viewModelScope` is the only coroutine scope; tearing down the
+  ViewModel cancels every in-flight recognition.
+- `analyzing: AtomicBoolean` gates the camera analyzer so the next
+  shutter tap is a no-op while a cycle is in flight.
+- The OkHttp `EventSource.cancel()` is invoked from
+  `suspendCancellableCoroutine.invokeOnCancellation` so the SSE
+  connection drops the moment the coroutine is cancelled.
+- Per-round timeout (20s) wraps the whole stream; stalled servers
+  surface as a friendly `IllegalStateException("tooluse: 模型在 Nms 内未完成")`.
 
-```
-Round 1 ─── BROAD  ─── force CoT, full image
-                         system: "你是手机端实时视觉意图助手…先用
-                                  observation 字段描述所见…"
-                         user:   "1. observation: 描述画面 (≤40字)
-                                 2. scene: 用户视角画面描述 (≤20字)
-                                 3. intents: [info|location|solve]
-                                 - 设备识别物体 (object detection labels)
-                                 - 设备 OCR 文字
-                                 - 位置 (地理)
-                                 JSON only, no prose."
-                         image:  analyzeJpeg (512 px q70)
-                         parse:  AnalysisResult { scene, intents[4] }
-                         STOP if top ≥ 0.70 AND gap ≥ 0.25
-                         else CONTINUE
-
-Round 2 ─── VERIFY ─── self-review against prior round
-                         system: same BROAD system prompt
-                         user:   "重看同一张图，基于上一轮判断做修正…
-                                 上一轮 observation: …
-                                 上一轮 scene: …
-                                 上一轮 intents: …(top 3 with conf)
-                                 1. 重写 observation
-                                 2. 重写 scene
-                                 3. 重写 intents (校准 confidence)"
-                         image:  analyzeJpeg (same)
-                         STOP if top ≥ 0.60 AND gap ≥ 0.18
-                         else CONTINUE
-
-Round 3 ─── DECIDE ─── forced final
-                         system: same BROAD system prompt
-                         user:   "最后一轮决策。从最近 N 轮判断中提取共识。
-                                 {round1: obs, scene, top}
-                                 {round2: obs, scene, top}
-                                 …
-                                 必须给出 1-2 个最合理的意图；都不对
-                                 就给信心最低的（≤0.5）。"
-                         image:  zoomJpeg (center-cropped 65 %, q80)
-                         FORCED → stop regardless
-
-Total cycle time per round: per-round timeout 15 s.
-The first round resolves > ~70 % of scenes on its own; the second round
-typically pays another ~25 %; only ~5 % reach the third.
-```
-
-The history passed to round N+1 contains **all** prior rounds' results. The
-image stays the same across all rounds — only the prompt shape changes. R3
-sends a tighter center-crop JPEG of the answer-sized image (still 768 px, q80
-re-encoded to recover detail), which gives the model a closer look at the
-visual center for ambiguous scenes.
-
----
-
-## On-device ground-truth fusion
-
-Both ML Kit engines take the **answerJpeg** (768 × N q75) as input, decode it
-with `inSampleSize = 2` (≈ 384 × N), run their respective model, and return
-text/objects with bounding boxes in the JPEG's original coordinate space
-(`OcrEngine` and `ObjectDetector` both multiply box coordinates by 2 to undo
-the downsample).
-
-The two OCR recognizers — Latin and Chinese — run **in parallel**
-(`coroutineScope { async {} async {} }`). Results are merged with an
-**IoU-based dedup**: if two lines' bboxes overlap by ≥ 30 % of their union area,
-the higher-confidence line wins. For tea-label-style scenes (mixed Chinese
-and English), both recognizers fire on the same region but the higher
-confidence wins per region, not per recognizer.
-
-`ObjectDetector` runs in `SINGLE_IMAGE_MODE` with `enableClassification()`, so
-each detection comes back with its ImageNet-style top label + confidence.
-
----
-
-## Streaming pipeline
-
-```
-Anthropic /v1/messages with stream: true
-└── LlmClient.streamText  (suspending)
-     │
-     │  okhhtp3 + okhttp-sse EventSource
-     ▼
-   EventSourceListener:
-     onEvent  → if resolved → extract text_delta → snapshot → onDelta(snapshot)
-                                                   │
-                                                   ▼
-                                          AppViewModel.onDelta
-                                            extractPartialScene → partialScene
-     onClosed → resolved → resume(full accumulated text)
-     onFailure → resolved → resumeWithException(t or HTTP code)
-     invokeOnCancellation → EventSource.cancel()
-     ─────────────────────────────────────────
-     also:  if (cont.isCancelled) skip resume  (guards against ISE on dead continuation)
-
-Top-level guard:
-  withTimeout(totalTimeoutMs) — server stalls abort with friendly error
-  try/catch TimeoutCancellationException → IllegalStateException("tag: 模型在 …ms 内未完成")
-```
-
-`extractPartialScene` walks the partial JSON char-by-char, decoding JSON
-string escapes (`\n`, `\t`, `\"`, `\\`, and **\uXXXX via `appendCodePoint`** so
-the user sees "中" instead of literal `中`).
-
----
-
-## Threading model
-
-| Component | Thread | Reason |
+| Thread | Where | Why |
 |---|---|---|
-| `FrameAnalyzer.analyze` | single-thread `Executors.newSingleThreadExecutor` | CameraX guarantees serial execution; we keep our work on the analyzer thread to avoid contention with main |
-| `OcrEngine.recognizeFromBytes` | `Dispatchers.Default` | bitmap decode + ML Kit CPU |
-| `ObjectDetector.recognizeFromBytes` | `Dispatchers.Default` | bitmap decode + ML Kit CPU |
-| `cropCenter` | `Dispatchers.Default` | bitmap decode + crop + JPEG encode |
-| `LlmClient.analyzeRefined` / `answerStream` | `Dispatchers.IO` (wrapped by `withContext`) | OkHttp Sockets I/O + DNS |
-| `AppViewModel.runAnalysisCycle` | `viewModelScope` (Main by default) suspended over the I/O calls | UI state writes |
-| `onDelta` callbacks from SSE listener | OkHttp dispatcher thread | acc + snapshot → `MutableStateFlow.value` is thread-safe |
-| `extractPartialScene` | Same thread as onDelta | Cheap char scan |
-| `_state.value = …` writes | Any thread | `MutableStateFlow` uses CAS; safe to set concurrently; Compose picks up changes |
+| `Executors.newSingleThreadExecutor` | FrameAnalyzer | CameraX analyzer thread; we own the loop |
+| `Dispatchers.IO` | LlmClient.streamToolUse | OkHttp Sockets I/O + DNS |
+| `viewModelScope` (Main) | AppViewModel.runToolUseCycle, runChip | UI state writes + Compose recomposition |
+| `Main` | Compose recomposition | The whole app is single-Composable-Activity |
 
 ---
 
-## Cancellation model
+## Bubble model
 
-Every async operation funnels through either coroutine cancellation or
-structured concurrency:
+```kotlin
+data class Bubble(
+    val id: String,
+    val type: String,         // "info" | "location" | "solve"
+    val title: String,         // user-facing intent, ≤12 chars
+    val detail: String,        // scene description
+    val confidence: Float,     // 0.0 .. 1.0
+    val imageBytes: ByteArray,  // high-res JPEG for detail view
+    val createdAtMs: Long,
+    val toolName: String? = null,   // e.g. "read_device_reading"
+    val needsUserInput: Boolean = false,  // placeholder pending reply
+    val chips: List<ActionChip> = emptyList(),  // model-suggested follow-ups
+)
+```
 
-- `AppViewModel.currentAnalyzeJob.cancel()` cancels the entire cycle → propagates
-  via `coroutineScope { async { … } }` to OCR + objDetector + OkHttp call. The
-  OkHttp `EventSource.cancel()` is invoked from
-  `suspendCancellableCoroutine.invokeOnCancellation`.
-- `Tasks.kt` provides `awaitCancellable()` for ML Kit `Task<T>`. The Task
-  itself cannot be aborted (no public `cancel()` on GMS API), but the
-  coroutine awaiting it returns cleanly and the result is discarded.
-- `AppViewModel.runAnalysisCycle` catches `CancellationException` at the
-  boundary, resets `analyzing`, and only writes to state if `myCycle ==
-  analyzeCycleId.get()` — so a cancelled cycle never stomps later state.
-- `AppViewModel.selectIntent` guards `if (_state.value.selected != null)`
-  at the entry to prevent double-launching an answer when an auto-proceed
-  race collides with a user tap.
+`Bubble` is FIFO-capped at 4 in `UiState.bubbles`; older bubbles
+evict when a new one arrives. `imageBytes` is the original
+high-res photo (the fullRes JPEG), not the 768/q80 thumbnail, so
+the detail view can show a sharper image.
+
+`ActionChip(label, toolName, toolInputJson)` carries the raw
+JSON string of the chip's saved input; the orchestrator
+re-parses it when the user taps the chip.
 
 ---
 
-## State fields (`UiState`)
+## Debug overlay
 
-| Field | Source | Used for |
-|---|---|---|
-| `phase` | various | gate `isBusy()` and select the bottom panel |
-| `scene` | final round's `result.scene` | top-bar text after analysis |
-| `intents` | final round's `result.intents` | bubble list |
-| `analyzing` | `AtomicBoolean analyzing.get()` mirrored into UI | spinner in the top bar |
-| `partialScene` | `extractPartialScene` of streamed JSON | live scene while analyzing |
-| `selected` | `selectIntent()` | the user's pick; gates `selectIntent` re-entry |
-| `answer` | streamed from `answerStream` | answer text panel |
-| `error` | catch block of `runAnalysisCycle` / answerStream | top-bar error; if non-null, the bottom error hint shows too |
-| `location` | `LocationHelper.currentLocationText()` cached 15 s | optional ground truth in prompt |
-| `roundCount` | increments each completed cycle | telemetry |
-| `lastSceneChangeMs` | `onSceneChange` | debug only |
-| `ocrOverlay` | `OcrResult.lines` | (currently unused by Compose; held for future overlay) |
-| `ocrEpoch` | bumps on each OCR run | Compose key to refresh |
+`UiState.debugEnabled` (default ON) renders a translucent
+scrolling log panel above the camera preview. Each
+`DebugLogEntry` carries:
+
+- `timestampMs: Long` — wall-clock display
+- `seq: Long` — monotonic `AtomicLong.incrementAndGet()` per
+  ViewModel; **used as the LazyColumn key** (not `timestampMs`)
+- `tag: String` — short category ("CAP", "TOOL", "INPUT", "FINAL")
+- `message: String` — single line, capped 160 chars
+
+`seq` was added to fix a `LazyColumn` crash where multiple
+`logDebug` calls in the same round (CAP → TOOL → TOOL → …) shared
+the same `timestampMs` (millisecond resolution), causing
+"Key X was already used" and killing the process. With `seq`
+every key is unique, the panel scrolls cleanly.
 
 ---
 
@@ -322,9 +332,12 @@ structured concurrency:
 The settings screen (top-right gear icon) lets you override
 
 - `ANTHROPIC_BASE_URL` — default `https://api.minimaxi.com/anthropic`
-- `ANTHROPIC_AUTH_TOKEN` — **field is always blank in the UI**; blank saves
-  preserve whatever token is currently active (default if blank, custom
-  otherwise); the real token never appears on screen.
+- `ANTHROPIC_AUTH_TOKEN` — **field is always blank in the UI**;
+  blank saves preserve whatever token is currently active (default
+  if blank, custom otherwise). The real token never appears on
+  screen. `Models.kt` ships a `REPLACE_AT_RUNTIME` placeholder;
+  real builds need either a runtime token (Settings) or an env
+  var set at compile time.
 - `ANTHROPIC_MODEL` — default `MiniMax-M3`
 
 Values are persisted to `SharedPreferences` via `SettingsStore`.
@@ -333,64 +346,114 @@ Values are persisted to `SharedPreferences` via `SettingsStore`.
 
 ## Build
 
+The dev APK is built with:
+
 ```bash
-JAVA_HOME=/path/to/jdk17 /path/to/gradle :app:assembleDebug
+JAVA_HOME=/path/to/jdk17 /path/to/gradle clean :app:assembleDebug
+cp app/build/outputs/apk/debug/app-debug.apk ./intentcam.apk
 ```
 
-The dev APK is copied to `intentcam.apk` at the project root by the build
-script per project convention.
+Always run `clean` before measuring APK size — incremental builds
+accumulate stale native libs and inflate the artifact from ~10 MB
+to ~100 MB. The clean artifact is the real one.
 
-The Debug APK bundles the OCR (≈ 16 MB), Chinese OCR (≈ 7 MB), and Object
-Detection (≈ 5 MB) ML Kit models. Total APK ≈ 107 MB. R8 + resource shrinking
-on release would cut this roughly in half.
+`intentcam.apk` (~10 MB) is the dev build; release would benefit
+from `isMinifyEnabled = true` and an actual signing config (neither
+wired up yet — see TODO at bottom).
 
 ---
 
 ## Tuning
 
-| Knob | Default | Where |
-|---|---|---|
-| Stability threshold | `8f` | `FrameAnalyzer.stableThreshold` |
-| Motion / scene-change threshold | `40f` | `FrameAnalyzer.motionThreshold` |
-| Motion debounce | `1500L` ms | `FrameAnalyzer.motionDebounceMs` |
-| Sample cadence | `120L` ms | `FrameAnalyzer.SAMPLE_INTERVAL_MS` |
-| Min interval between emits | `500L` ms | `FrameAnalyzer.minIntervalMs` |
-| Capture-after-stable duration | `1000L` ms | `AppViewModel.CAPTURE_AFTER_MS` |
-| Per-round analyze timeout | `15_000L` ms | `LlmClient.ANALYZE_ROUND_TIMEOUT_MS` |
-| Total answer timeout | `45_000L` ms | `LlmClient.ANSWER_TOTAL_TIMEOUT_MS` |
-| Analyze image max-dim | `512` px | `FrameAnalyzer.ANALYZE_MAX_DIM` |
-| Answer image max-dim | `768` px | `FrameAnalyzer.ANSWER_MAX_DIM` |
-| Analyze image quality | `70` | `FrameAnalyzer.ANALYZE_QUALITY` |
-| Answer image quality | `75` | `FrameAnalyzer.ANSWER_QUALITY` |
-| Analyze round max tokens | `320` | `LlmClient.ANALYZE_MAX_TOKENS` |
-| Answer max tokens | `900` | `LlmClient.ANSWER_MAX_TOKENS` |
-| Decide-round crop fraction | `0.65` (center) | `AppViewModel.cropCenter` |
-| Decide-round crop quality | `80` | `AppViewModel.cropCenter` |
-| OCR / Object det downsample | `2` | `OcrEngine.DOWNSAMPLE`, `ObjectDetector.DOWNSAMPLE` |
-| OCR merge IoU threshold | `0.30f` | `OcrEngine.OVERLAP_THRESHOLD` |
-| Stop-decision BROAD | `top ≥ 0.70 && gap ≥ 0.25` (or single-cand ≥ 0.55) | `AppViewModel.decideToStop` |
-| Stop-decision VERIFY | `top ≥ 0.60 && gap ≥ 0.18` | `AppViewModel.decideToStop` |
+| Knob | Default | Where | Purpose |
+|---|---|---|---|
+| `MAX_DIM` (thumbnail) | `768` | `FrameAnalyzer.kt` | max-dim cap for the LLM-facing image |
+| `QUALITY` (thumbnail) | `80` | `FrameAnalyzer.kt` | JPEG quality for the LLM-facing image |
+| `MAX_FULL_DIM` | `4096` | `FrameAnalyzer.kt` | cap for the in-memory full-res JPEG |
+| `FULL_QUALITY` | `95` | `FrameAnalyzer.kt` | JPEG quality for the in-memory full-res JPEG |
+| `MAX_ROUNDS` | `4` | `ToolUseLoop.kt` | hard cap on rounds per recognition cycle |
+| `TOTAL_TIMEOUT_MS` | `20_000L` | `LlmClient.kt` | per-round SSE timeout |
+| `MAX_TOKENS` | `256` | `LlmClient.kt` | output token cap per round |
+| `REQUEST_TEMPERATURE` | `0.0` | `LlmClient.kt` | locked at 0 for deterministic routing |
+| `capture timeout` | `500L` ms | `AppViewModel.captureLatestFrame` | how long to wait for the analyzer's next frame |
+| `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
+| `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
 
-## Profiling
+---
 
-`profiling/bench_pipeline.py` is a Pillow microbenchmark that simulates each
-pipeline stage on the test fixtures (`IMG1.jpg`, `IMG2.jpg`). Run on PC to
-attribute slowness to specific stages before changing production code.
+## Eval benchmark
+
+`profiling/evaluate_tooluse.py` is the per-fixture composite scorer.
+For each of 9 fixtures it computes:
+
+```
+composite = 0.50 × round1_score + 0.50 × round2_score
+round1_score = 0.70 × (tool_pick_correct) + 0.30 × (input_valid)
+round2_score = keyword match against expected `must_have` /
+               `acceptable_intent_keywords` in the model's final text
+```
+
+`profiling/eval_resize.py` adds `--resize N --quality Q` flags that
+simulate FrameAnalyzer's JPEG rescaling before the LLM call, used
+to benchmark 256/384/512/768 against each other. Latest averages
+(3 runs, temp = 0):
+
+| Config | Average composite |
+|---|---|
+| 256 / q50 | 0.858 |
+| 384 / q60 | 0.840 |
+| 512 / q75 | 0.750 |
+| 768 / q80 | **0.827** |
+| 768 / q80 + zoom_in | **0.819** |
+
+Synth fixtures are clean test images — eval differences between
+configs are within temp=0 variance. The real story is the
+end-to-end OCR test on `IMG2.jpg` (real phone photo), where
+768 + `zoom_in` recovers every previously-missed fine-text field
+(see "Frame resolution benchmark" above).
+
+`profiling/runs/` keeps a measurement trail of past evals so
+future changes can be compared against the same fixtures.
+
+---
 
 ## Key files
 
 ```
 app/src/main/java/com/example/intentcam/
-├── AppViewModel.kt     — capture → analyze → pick → answer state machine
-├── FrameAnalyzer.kt    — stability detection + dual-JPEG emit
-├── LlmClient.kt        — Anthropic-compatible streaming, 3-round prompts
-├── OcrEngine.kt        — ML Kit OCR (Latin + Chinese), IoU-merged
-├── ObjectDetector.kt   — ML Kit object detection
-├── Tasks.kt            — Task<T>.awaitCancellable() helper for GMS
-├── Models.kt           — IntentItem / AnalysisResult / UiState / LlmConfig
-├── MainActivity.kt     — CameraX preview + Compose UI
-├── SettingsScreen.kt   — Compose settings sheet
-├── SettingsStore.kt    — SharedPreferences wrapper
-├── LocationHelper.kt   — FusedLocationClient wrapper
-└── Theme.kt            — Compose theme
+├── AppViewModel.kt          — capture → runCycle → bubble, user-input, chip-direct
+├── FrameAnalyzer.kt         — CameraX → dual JPEGs (thumbnail + fullRes), crop helper
+├── LlmClient.kt             — Anthropic-compatible SSE, tool_use content block parsing
+├── MainActivity.kt          — Camera preview + Compose UI (incl. detail view with chips)
+├── Models.kt                — Bubble / ActionChip / UiState / LlmConfig
+├── SettingsScreen.kt        — Compose settings sheet
+├── SettingsStore.kt         — SharedPreferences wrapper
+├── Theme.kt                 — Compose theme
+├── Tools.kt                 — ToolDef / ToolRegistry / ToolContext / ToolResult
+├── ToolImplementations.kt   — 12 default tool bodies (10 interpret + ask_user + zoom_in + emit_bubble)
+└── ToolUseLoop.kt           — orchestrator: round-trip, dispatch, followUpJpeg chain
+
+profiling/
+├── evaluate_tooluse.py      — composite scorer, 9 fixtures
+├── eval_resize.py           — same + --resize/--quality for FrameAnalyzer simulation
+├── ground_truth_tooluse.json — 9 fixtures (T_BP_METER, T_TEA_LABEL, …)
+├── test_tooluse.py           — one-shot smoke test of model + tools[]
+├── bench_pipeline.py         — Pillow microbenchmark of pipeline stages
+├── fetch_real_imgs.py        — pulls Picsum photos for real-world eval
+├── gen_img100.py             — generates 100 synthetic test fixtures
+└── runs/                     — measurement trail of past eval runs
 ```
+
+---
+
+## TODOs
+
+- Release signing config + `isMinifyEnabled = true` (currently debug-only)
+- Plumb `ANTHROPIC_AUTH_TOKEN` env var into the default token at
+  build time so the debug APK works out-of-the-box without manual
+  Settings entry
+- CI: run `eval_resize.py --resize 768 --quality 80` on every
+  commit; flag regressions > 0.05 in average composite
+- The 9-fixture eval set is dominated by clear synth images; build
+  a real-photo benchmark set with hand-tagged ground truth (the
+  current `IMG1.jpg` / `IMG2.jpg` are 2 of those; need ~20 more)
