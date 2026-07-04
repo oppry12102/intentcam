@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "description": "Ground truth for evaluate_tooluse.py — one fixture per registered tool (skipping default_describe which the legacy evaluate.py already covers as a regression).",
+  "fixtures": [
+    {
+      "id": "T_BP_METER",
+      "image": "IMG1.jpg",
+      "what_is_pictured": "Omron HEM-7211 血压计，屏幕显示 98/62 mmHg，脉搏 86，时间 11:21。",
+      "expected_tool": "read_device_reading",
+      "required_input_keys": [],
+      "must_have_in_final_text": ["血压", "mmHg"],
+      "acceptable_intent_keywords": [
+        ["血压", "读数"],
+        ["正常", "范围"]
+      ]
+    },
+    {
+      "id": "T_TEA_LABEL",
+      "image": "IMG2.jpg",
+      "what_is_pictured": "茶叶包装盒背面标签，品名 工夫红茶(正山小种)，净含量 250g，保质期 36个月。",
+      "expected_tool": "identify_product",
+      "required_input_keys": ["focus"],
+      "acceptable_input_enums": {
+        "focus": ["ingredients", "expiry", "link", "compare"]
+      },
+      "must_have_in_final_text": ["红茶"],
+      "acceptable_intent_keywords": [
+        ["配料", "成分", "原料"],
+        ["保质期", "过期"]
+      ]
+    },
+    {
+      "id": "T_STREET_SIGN",
+      "image": "profiling/F_STREET_SIGN.png",
+      "what_is_pictured": "英文路牌：Main Street，门牌 24，方向 Center 4 km。",
+      "expected_tool": "navigate_to_block",
+      "required_input_keys": [],
+      "acceptable_input_enums": {
+        "mode": ["where_am_i", "directions", "nearby"]
+      },
+      "must_have_in_final_text": ["路", "方向"],
+      "acceptable_intent_keywords": [
+        ["导航", "方向", "怎么去"],
+        ["位置", "我在哪"]
+      ]
+    },
+    {
+      "id": "T_MATH",
+      "image": "profiling/F_MATH_PROBLEM.png",
+      "what_is_pictured": "二次方程 x² + 5x + 6 = 0。",
+      "expected_tool": "solve_problem",
+      "required_input_keys": [],
+      "acceptable_input_enums": {
+        "operation": ["solve", "verify", "factor"]
+      },
+      "must_have_in_final_text": ["x", "="],
+      "acceptable_intent_keywords": [
+        ["解", "根", "x ="],
+        ["因式", "分解", "(x"]
+      ]
+    },
+    {
+      "id": "T_NUTRITION",
+      "image": "profiling/F_NUTRITION.png",
+      "what_is_pictured": "英文 Nutrition Facts panel：Calories 120, Fat 4g, Sodium 200mg。",
+      "expected_tool": "translate_text",
+      "required_input_keys": [],
+      "must_have_in_final_text": ["卡路里", "Calories"],
+      "acceptable_intent_keywords": [
+        ["营养", "成分"],
+        ["热量", "卡路里"]
+      ]
+    },
+    {
+      "id": "T_RX_LABEL",
+      "image": "profiling/F_RX_LABEL.png",
+      "what_is_pictured": "Rx 处方标签 ACETAMINOPHEN 500 mg，用法 Take 1-2 tablets every 4-6 hours。",
+      "expected_tool": "read_manual",
+      "required_input_keys": [],
+      "must_have_in_final_text": ["用量", "用法"],
+      "acceptable_intent_keywords": [
+        ["用量", "用法", "吃法"],
+        ["对乙酰氨基酚", "Acetaminophen"]
+      ]
+    },
+    {
+      "id": "T_QR",
+      "image": "profiling/F_QR_CAPTION.png",
+      "what_is_pictured": "二维码 + 标题 Scan QR for origin verification + 副标 Premium Tieguanyin。",
+      "expected_tool": "scan_qr_code",
+      "required_input_keys": [],
+      "must_have_in_final_text": [],
+      "acceptable_intent_keywords": [
+        ["二维码", "QR", "解码"],
+        ["内容", "链接", "origin"]
+      ]
+    },
+    {
+      "id": "T_ASK_NAV",
+      "image": "profiling/F_STREET_SIGN.png",
+      "what_is_pictured": "英文路牌：Main Street 24，方向 Center 4 km — 用户问『去市中心怎么走』但路牌没显示市中心名字。",
+      "expected_tool": "ask_user",
+      "also_accept": ["navigate_to_block"],
+      "required_input_keys": ["question"],
+      "acceptable_intent_keywords": [
+        ["目的地", "市中心", "Center", "怎么走"]
+      ]
+    },
+    {
+      "id": "T_CHIPS_PRODUCT",
+      "image": "IMG2.jpg",
+      "what_is_pictured": "茶叶包装盒背面标签。",
+      "expected_tool": "identify_product",
+      "required_input_keys": [],
+      "must_have_action_chip_tool": "translate_text"
+    }
+  ]
+}
