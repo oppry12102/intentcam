@@ -337,59 +337,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * User tapped an action chip in the detail view.  Runs a
-     * chip-direct cycle: the named tool is invoked with the saved
-     * input, and the model is asked for the final emit_bubble in a
-     * single follow-up round.  The result becomes a new bubble in the
-     * queue and the detail view updates in place.
+     * Reserved for action_chips.  Deferred — emit_bubble in the
+     * new architecture doesn't carry chips, so runChip has no
+     * triggers in the UI.  Kept as a stub for future re-enablement.
      */
-    fun runChip(jpeg: ByteArray, chip: ActionChip) {
-        if (!analyzing.compareAndSet(false, true)) return
-        _state.value = _state.value.copy(analyzing = true, error = null)
-        viewModelScope.launch {
-            try {
-                // Chip path: use the same jpeg for both thumbnail and
-                // fullRes.  The model only sees the thumbnail; if it
-                // then wants to zoom_in, fullRes is the same source so
-                // the crop works.
-                val outcome = toolUseLoop.runWithTool(jpeg, jpeg, chip.toolName, chip.toolInputJson)
-                when (outcome) {
-                    is ToolUseLoop.Outcome.Bubble -> {
-                        val merged = (_state.value.bubbles + outcome.bubble)
-                            .takeLast(UiState.BUBBLE_MAX)
-                        _state.value = _state.value.copy(
-                            scene = outcome.bubble.detail.take(80),
-                            bubbles = merged,
-                            selectedBubble = outcome.bubble,
-                            analyzing = false,
-                        )
-                        logDebug(
-                            "CHIP",
-                            "→ ${chip.toolName} → type=${outcome.bubble.type} " +
-                                "intent=${outcome.bubble.title}"
-                        )
-                    }
-                    is ToolUseLoop.Outcome.PendingUserInput -> {
-                        val merged = (_state.value.bubbles + outcome.placeholder)
-                            .takeLast(UiState.BUBBLE_MAX)
-                        _state.value = _state.value.copy(
-                            scene = outcome.request.prompt,
-                            bubbles = merged,
-                            analyzing = false,
-                            userInputRequest = outcome.request,
-                        )
-                    }
-                    is ToolUseLoop.Outcome.Error -> {
-                        _state.value = _state.value.copy(analyzing = false, error = outcome.message)
-                    }
-                }
-            } catch (e: Throwable) {
-                if (e is CancellationException) throw e
-                _state.value = _state.value.copy(analyzing = false, error = e.message)
-            } finally {
-                analyzing.set(false)
-                _state.value = _state.value.copy(analyzing = false)
-            }
-        }
+    fun runChip(jpeg: ByteArray, @Suppress("UNUSED_PARAMETER") chip: Any) {
+        // no-op until action_chips are re-enabled
     }
 
     /** User explicitly tapped "重新扫描" — full reset including bubble history. */

@@ -123,10 +123,6 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
             DetailScreen(
                 bubble = state.selectedBubble,
                 onRestart = viewModel::clearBubbleSelection,
-                onChip = { chip ->
-                    val jpeg = state.selectedBubble.imageBytes
-                    viewModel.runChip(jpeg, chip)
-                },
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -459,7 +455,6 @@ private fun ToolChip(toolName: String) {
 private fun DetailScreen(
     bubble: Bubble,
     onRestart: () -> Unit,
-    onChip: (ActionChip) -> Unit,
     modifier: Modifier
 ) {
     val fullImage = remember(bubble.imageBytes) {
@@ -534,26 +529,9 @@ private fun DetailScreen(
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
-            // Action chips: LLM-suggested follow-up actions.  Rendered
-            // as a horizontal row of buttons; tapping one dispatches
-            // the saved tool+input as a chip-direct cycle.
-            if (bubble.chips.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    "下一步",
-                    color = Color(0xFFB9C4DE),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                Spacer(Modifier.height(6.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    bubble.chips.forEach { chip ->
-                        ActionChipButton(chip = chip, accent = accent, onClick = { onChip(chip) })
-                    }
-                }
-            }
+            // Action chips deferred — the new architecture's emit_bubble
+            // schema doesn't carry chips.  Re-enable when chips come
+            // back.
         }
         // 退出 button at the bottom — dismisses the detail view; the
         // main loop restarts from step 1 and starts a fresh stability
@@ -574,21 +552,8 @@ private fun DetailScreen(
 /** Pill-shaped action button.  Distinct from [ToolChip] (which is a
  *  passive label) — this is a tappable button. */
 @OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ActionChipButton(chip: ActionChip, accent: Color, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        color = accent.copy(alpha = 0.18f),
-        contentColor = Color.White,
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Text(
-            chip.label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelMedium,
-        )
-    }
-}
+// ActionChipButton removed — action_chips deferred.  Re-add when
+// chips come back to the emit_bubble schema.
 
 /**
  * Translucent scrolling panel that shows the recognition-pipeline log.

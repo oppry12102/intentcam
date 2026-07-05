@@ -282,16 +282,35 @@ class LlmClient(@Volatile var config: LlmConfig) {
         /** Hard ceiling for one recognition round-trip. */
         const val TOTAL_TIMEOUT_MS = 20_000L
 
-        /** System prompt for the tool-use path.  Tells the model it
-         *  MUST emit a `tool_use` block on round 1 — the orchestrator
-         *  won't proceed otherwise. */
+        /** System prompt for the tool-use path.  Two-stage flow:
+         *  Stage 1 — content understanding.  Look at the image; if any
+         *  detail is unclear (small text, dense area, etc.) call
+         *  zoom_in to see it at native resolution.
+         *  Stage 2 — intent inference.  Once you understand the
+         *  content, think about what the user is likely trying to do
+         *  with the image.  If the intent-relevant region has a
+         *  detail you need, zoom_in again to confirm.
+         *  Finish — call emit_bubble with a structured summary.
+         *
+         *  No fixed round limit; the model can iterate as long as
+         *  it needs.  No "default" tool — the model is expected to
+         *  look at the image directly.  Use zoom_in for clarity, not
+         *  for fan-out; chain semantics (source=last) means the next
+         *  zoom_in crops the previous crop, allowing progressive
+         *  drill-down.  Use source=original for sibling views of
+         *  different parts of the original photo.
+         */
         const val TOOL_USE_SYSTEM =
-            "你是 IntentCam 的工具调用助手。看到画面后，你必须调用一个工具来处理它。" +
-                    "不要直接用文字描述画面内容（那是 default_describe 的工作）。" +
-                    "如果拿不准选哪个工具，就调 default_describe 让旧逻辑接管。" +
-                    "回复必须是中文。纯文本和 tool_use 可同回合出现，但第一回合必须调用工具。"
+            "你是 IntentCam 的视觉意图助手。你的工作分两步：\n" +
+                    "**第一步：理解图片内容**。仔细看用户拍的图，识别其中的文字、物体、场景。如果有看不清的细节（小字、密集区域、模糊），调 zoom_in(x, y, w, h, focus='...') 把它放大看。x/y/w/h 是归一化坐标 ∈ [0, 1]，x/y 是左上角，w/h 是宽高。\n" +
+                    "**第二步：理解用户意图**。在清楚图片内容后，思考用户为什么拍这张图、想用它做什么。如果意图相关的区域有疑点，可以再 zoom_in 确认。\n" +
+                    "**收尾**：当你完全理解图片内容和用户意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence) 总结。type ∈ {info, location, solve}。\n" +
+                    "**zoom_in 的 source 字段**：默认 'last'（裁上一张图 — 链式放大，坐标相对）。要查看原图的不同区域，传 source='original'（sibling 视图，坐标绝对）。\n" +
+                    "**不要**用纯文本总结。**必须**调 emit_bubble 收尾。"
 
-        /** System prompt for the final round (after tool results). */
+        /** Legacy system prompt for the one-shot path (unused by
+         *  ToolUseLoop but kept for the /v1/messages fallthrough in
+         *  tests). */
         const val FINAL_ANSWER_SYSTEM =
             "你是 IntentCam 的视觉意图助手。系统已经替你跑过选定的工具，并返回了工具结果摘要。" +
                     "请用一段简短的中文 JSON 总结：scene（看到了什么，一句话）, intent（用户最可能的意图，动宾短语≤12字），" +

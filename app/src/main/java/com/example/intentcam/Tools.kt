@@ -96,10 +96,10 @@ data class ToolResult(
      *  [UserInputRequest] surfaced to the UI. */
     val userInputPrompt: String = "",
     /** Follow-up actions the LLM suggested via emit_bubble's
-     *  action_chips field.  Carried verbatim into the resulting
-     *  [com.example.intentcam.Bubble.chips].  Empty for non-final
-     *  tool results. */
-    val chips: List<com.example.intentcam.ActionChip> = emptyList(),
+     *  Reserved for future fields the orchestrator might want to
+     *  bubble up.  Empty in the current architecture — emit_bubble
+     *  carries the structured answer via [finalBubble]. */
+    val reserved: Map<String, String> = emptyMap(),
     /** Optional follow-up image to attach to the next user message.
      *  Used by zoom_in: the orchestrator pulls this out and adds it
      *  to the next round's user content alongside the tool_result,

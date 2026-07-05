@@ -5,47 +5,28 @@ package com.example.intentcam
  * the bubble can show a thumbnail and the detail view can show the
  * full picture without re-fetching from anywhere.
  *
+ * Two-stage recognition result:
+ *  - [content]  : what the model sees in the image (after any zoom_ins)
+ *  - [title]    : the user's inferred intent (动宾短语, ≤30 chars)
+ *  - [type]     : info / location / solve
+ *  - [intentFocus] : which area of the image informs the intent
+ *  - [confidence] : 0.0..1.0
+ *
  * [imageBytes] is the JPEG bytes returned by the camera at capture
- * time.  For a 384 px q60 capture that's ~10–15 kB; with a 4-bubble
- * cap we hold at most ~60 kB of image data in memory, which is fine.
- *
- * [toolName] names the tool that produced this bubble (e.g.
- * "identify_product").  Surfaced as "via ${toolName}" in the UI so the
- * user can tell which path the model took.  Null for bubbles from the
- * legacy one-shot path.
- *
- * [needsUserInput] is true for placeholder bubbles parked while the
- * orchestrator waits for the user to type a follow-up (e.g. the
- * destination of a navigate_to_block call).  The UI shows an input
- * dialog and submits the text back to the orchestrator.
- *
- * [chips] are follow-up actions the LLM suggested via emit_bubble.
- * Each chip names a tool + saved input; tapping one in the detail view
- * triggers a new recognition cycle with that tool called directly.
+ * time.  [needsUserInput] is true for placeholder bubbles parked
+ * while the orchestrator waits for the user to type a follow-up.
  */
 data class Bubble(
     val id: String,
-    val type: String,         // "info" | "location" | "solve" | other
-    val title: String,
-    val detail: String,
-    val confidence: Float,    // 0.0 .. 1.0
+    val type: String,             // "info" | "location" | "solve"
+    val title: String,             // intent (动宾短语)
+    val detail: String,            // scene description (was 'content' in tool)
+    val confidence: Float,
     val imageBytes: ByteArray,
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
-    val chips: List<ActionChip> = emptyList(),
-)
-
-/** A follow-up action the model suggested.  Surfaced as a tappable
- *  chip in the bubble's detail view; tapping it tells the orchestrator
- *  to call [toolName] with [toolInput] as if the model had picked it. */
-data class ActionChip(
-    val label: String,
-    val toolName: String,
-    /** Raw JSON string from the model's emit_bubble input.  Kept as a
-     *  string so we can re-parse it without an intermediate typed
-     *  object — the orchestrator only ever round-trips it. */
-    val toolInputJson: String,
+    val intentFocus: String? = null,  // optional; supports [type]
 )
 
 /** Whole-screen UI state exposed by [AppViewModel]. */
