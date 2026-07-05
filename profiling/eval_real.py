@@ -38,8 +38,8 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_GROUND_TRUTH = ROOT / "profiling" / "ground_truth_golden.json"
-IMG_DIR = ROOT / "img" / "golden"
+DEFAULT_GROUND_TRUTH = ROOT / "profiling" / "ground_truth_real.json"
+IMG_DIR = ROOT / "img" / "real"
 
 BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.minimaxi.com/anthropic")
 MODEL = os.environ.get("ANTHROPIC_MODEL", "MiniMax-M3")
