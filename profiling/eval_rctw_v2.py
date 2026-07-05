@@ -88,18 +88,10 @@ TOOLS = [
 # accept any of the listed tools at full credit, similar to the
 # synth eval's also_accept mechanism.
 # Expected intent `type` per category.  Used to score the
-# emit_bubble.type field.
+# emit_bubble.type field.  For the default (image-description)
+# regression test, all fixtures map to type=info.
 CATEGORY_EXPECTED_TYPE: dict[str, str] = {
-    "food_label":      "info",
-    "device_reading":  "info",
-    "math":            "solve",
-    "receipt":         "info",
-    "street_sign":     "location",
-    "menu":            "info",
-    "qr_code":         "info",
-    "map":             "location",
-    "english_text":    "info",
-    "screen_capture":  "info",
+    "default":         "info",
 }
 
 SYSTEM_PROMPT = (

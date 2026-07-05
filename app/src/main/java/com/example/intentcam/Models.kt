@@ -1,14 +1,27 @@
 package com.example.intentcam
 
 /**
+ * One row in the detail-view table.  Each detail is something the
+ * LLM extracted from the image (text, number, object, color, etc.)
+ * and the table renders them in (kind, label, value) columns.
+ */
+data class Detail(
+    val kind: String,    // "text" | "number" | "object" | "color" | "shape" | ...
+    val label: String,   // human-friendly name, e.g. "Brand name"
+    val value: String,   // the extracted content
+)
+
+/**
  * One intent bubble shown to the user.  Carries the captured JPEG so
  * the bubble can show a thumbnail and the detail view can show the
  * full picture without re-fetching from anywhere.
  *
  * Two-stage recognition result:
- *  - [content]  : what the model sees in the image (after any zoom_ins)
+ *  - [content]  : 1-2 sentence overall image description
  *  - [title]    : the user's inferred intent (动宾短语, ≤30 chars)
  *  - [type]     : info / location / solve
+ *  - [details]  : structured items for the detail-view table; can
+ *                 be empty if the LLM chose not to extract any
  *  - [intentFocus] : which area of the image informs the intent
  *  - [confidence] : 0.0..1.0
  *
@@ -20,13 +33,14 @@ data class Bubble(
     val id: String,
     val type: String,             // "info" | "location" | "solve"
     val title: String,             // intent (动宾短语)
-    val detail: String,            // scene description (was 'content' in tool)
+    val detail: String,            // content description (was 'detail' in tool)
     val confidence: Float,
     val imageBytes: ByteArray,
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
-    val intentFocus: String? = null,  // optional; supports [type]
+    val intentFocus: String? = null,
+    val details: List<Detail> = emptyList(),
 )
 
 /** Whole-screen UI state exposed by [AppViewModel]. */

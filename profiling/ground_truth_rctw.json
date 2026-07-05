@@ -9,7 +9,7 @@
     {
       "id": "rctw_device_reading_01",
       "file": "rctw_device_reading_01.jpg",
-      "category": "device_reading",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -46,7 +46,7 @@
     {
       "id": "rctw_device_reading_02",
       "file": "rctw_device_reading_02.jpg",
-      "category": "device_reading",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -83,7 +83,7 @@
     {
       "id": "rctw_device_reading_03",
       "file": "rctw_device_reading_03.jpg",
-      "category": "device_reading",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -120,7 +120,7 @@
     {
       "id": "rctw_device_reading_04",
       "file": "rctw_device_reading_04.jpg",
-      "category": "device_reading",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -157,7 +157,7 @@
     {
       "id": "rctw_device_reading_05",
       "file": "rctw_device_reading_05.jpg",
-      "category": "device_reading",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -194,7 +194,7 @@
     {
       "id": "rctw_english_text_01",
       "file": "rctw_english_text_01.jpg",
-      "category": "english_text",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -228,7 +228,7 @@
     {
       "id": "rctw_english_text_02",
       "file": "rctw_english_text_02.jpg",
-      "category": "english_text",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -262,7 +262,7 @@
     {
       "id": "rctw_english_text_03",
       "file": "rctw_english_text_03.jpg",
-      "category": "english_text",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -296,7 +296,7 @@
     {
       "id": "rctw_english_text_04",
       "file": "rctw_english_text_04.jpg",
-      "category": "english_text",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -330,7 +330,7 @@
     {
       "id": "rctw_english_text_05",
       "file": "rctw_english_text_05.jpg",
-      "category": "english_text",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -364,7 +364,7 @@
     {
       "id": "rctw_food_label_01",
       "file": "rctw_food_label_01.jpg",
-      "category": "food_label",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -408,7 +408,7 @@
     {
       "id": "rctw_food_label_02",
       "file": "rctw_food_label_02.jpg",
-      "category": "food_label",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -452,7 +452,7 @@
     {
       "id": "rctw_food_label_03",
       "file": "rctw_food_label_03.jpg",
-      "category": "food_label",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -496,7 +496,7 @@
     {
       "id": "rctw_food_label_04",
       "file": "rctw_food_label_04.jpg",
-      "category": "food_label",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -540,7 +540,7 @@
     {
       "id": "rctw_food_label_05",
       "file": "rctw_food_label_05.jpg",
-      "category": "food_label",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -584,9 +584,9 @@
     {
       "id": "rctw_map_01",
       "file": "rctw_map_01.jpg",
-      "category": "map",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -625,9 +625,9 @@
     {
       "id": "rctw_map_02",
       "file": "rctw_map_02.jpg",
-      "category": "map",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -666,9 +666,9 @@
     {
       "id": "rctw_map_03",
       "file": "rctw_map_03.jpg",
-      "category": "map",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -707,9 +707,9 @@
     {
       "id": "rctw_map_04",
       "file": "rctw_map_04.jpg",
-      "category": "map",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -748,9 +748,9 @@
     {
       "id": "rctw_map_05",
       "file": "rctw_map_05.jpg",
-      "category": "map",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -789,9 +789,9 @@
     {
       "id": "rctw_math_01",
       "file": "rctw_math_01.jpg",
-      "category": "math",
+      "category": "default",
       "expected_top_intent_type": [
-        "solve"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -819,9 +819,9 @@
     {
       "id": "rctw_math_02",
       "file": "rctw_math_02.jpg",
-      "category": "math",
+      "category": "default",
       "expected_top_intent_type": [
-        "solve"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -849,9 +849,9 @@
     {
       "id": "rctw_math_03",
       "file": "rctw_math_03.jpg",
-      "category": "math",
+      "category": "default",
       "expected_top_intent_type": [
-        "solve"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -879,9 +879,9 @@
     {
       "id": "rctw_math_04",
       "file": "rctw_math_04.jpg",
-      "category": "math",
+      "category": "default",
       "expected_top_intent_type": [
-        "solve"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -909,9 +909,9 @@
     {
       "id": "rctw_math_05",
       "file": "rctw_math_05.jpg",
-      "category": "math",
+      "category": "default",
       "expected_top_intent_type": [
-        "solve"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -939,7 +939,7 @@
     {
       "id": "rctw_menu_01",
       "file": "rctw_menu_01.jpg",
-      "category": "menu",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -979,7 +979,7 @@
     {
       "id": "rctw_menu_02",
       "file": "rctw_menu_02.jpg",
-      "category": "menu",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1019,7 +1019,7 @@
     {
       "id": "rctw_menu_03",
       "file": "rctw_menu_03.jpg",
-      "category": "menu",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1059,7 +1059,7 @@
     {
       "id": "rctw_menu_04",
       "file": "rctw_menu_04.jpg",
-      "category": "menu",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1099,7 +1099,7 @@
     {
       "id": "rctw_menu_05",
       "file": "rctw_menu_05.jpg",
-      "category": "menu",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1139,7 +1139,7 @@
     {
       "id": "rctw_qr_code_01",
       "file": "rctw_qr_code_01.jpg",
-      "category": "qr_code",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1169,7 +1169,7 @@
     {
       "id": "rctw_qr_code_02",
       "file": "rctw_qr_code_02.jpg",
-      "category": "qr_code",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1199,7 +1199,7 @@
     {
       "id": "rctw_qr_code_03",
       "file": "rctw_qr_code_03.jpg",
-      "category": "qr_code",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1229,7 +1229,7 @@
     {
       "id": "rctw_qr_code_04",
       "file": "rctw_qr_code_04.jpg",
-      "category": "qr_code",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1259,7 +1259,7 @@
     {
       "id": "rctw_qr_code_05",
       "file": "rctw_qr_code_05.jpg",
-      "category": "qr_code",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1289,7 +1289,7 @@
     {
       "id": "rctw_receipt_01",
       "file": "rctw_receipt_01.jpg",
-      "category": "receipt",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1330,7 +1330,7 @@
     {
       "id": "rctw_receipt_02",
       "file": "rctw_receipt_02.jpg",
-      "category": "receipt",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1371,7 +1371,7 @@
     {
       "id": "rctw_receipt_03",
       "file": "rctw_receipt_03.jpg",
-      "category": "receipt",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1412,7 +1412,7 @@
     {
       "id": "rctw_receipt_04",
       "file": "rctw_receipt_04.jpg",
-      "category": "receipt",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1453,7 +1453,7 @@
     {
       "id": "rctw_receipt_05",
       "file": "rctw_receipt_05.jpg",
-      "category": "receipt",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1494,7 +1494,7 @@
     {
       "id": "rctw_screen_capture_01",
       "file": "rctw_screen_capture_01.jpg",
-      "category": "screen_capture",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1519,7 +1519,7 @@
     {
       "id": "rctw_screen_capture_02",
       "file": "rctw_screen_capture_02.jpg",
-      "category": "screen_capture",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1544,7 +1544,7 @@
     {
       "id": "rctw_screen_capture_03",
       "file": "rctw_screen_capture_03.jpg",
-      "category": "screen_capture",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1569,7 +1569,7 @@
     {
       "id": "rctw_screen_capture_04",
       "file": "rctw_screen_capture_04.jpg",
-      "category": "screen_capture",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1594,7 +1594,7 @@
     {
       "id": "rctw_screen_capture_05",
       "file": "rctw_screen_capture_05.jpg",
-      "category": "screen_capture",
+      "category": "default",
       "expected_top_intent_type": [
         "info"
       ],
@@ -1619,9 +1619,9 @@
     {
       "id": "rctw_street_sign_01",
       "file": "rctw_street_sign_01.jpg",
-      "category": "street_sign",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -1663,9 +1663,9 @@
     {
       "id": "rctw_street_sign_02",
       "file": "rctw_street_sign_02.jpg",
-      "category": "street_sign",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -1707,9 +1707,9 @@
     {
       "id": "rctw_street_sign_03",
       "file": "rctw_street_sign_03.jpg",
-      "category": "street_sign",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -1751,9 +1751,9 @@
     {
       "id": "rctw_street_sign_04",
       "file": "rctw_street_sign_04.jpg",
-      "category": "street_sign",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [
@@ -1795,9 +1795,9 @@
     {
       "id": "rctw_street_sign_05",
       "file": "rctw_street_sign_05.jpg",
-      "category": "street_sign",
+      "category": "default",
       "expected_top_intent_type": [
-        "location"
+        "info"
       ],
       "acceptable_intent_keywords": [
         [

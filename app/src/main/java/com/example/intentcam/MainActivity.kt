@@ -471,21 +471,28 @@ private fun DetailScreen(
         modifier
             .background(Color(0xFF000000))
     ) {
+        // Top half: image (fixed height).  ContentScale.Fit keeps
+        // aspect ratio; black bars on the sides for non-16:9.
         if (fullImage != null) {
             Image(
                 bitmap = fullImage.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(360.dp)
+                    .align(Alignment.TopCenter)
+                    .background(Color.Black)
             )
         }
-        // Header strip with title and confidence
+        // Bottom half: header info + details table + 退出 button.
         Column(
             Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(Color(0xCC000000))
-                .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .background(Color(0xE6111828))
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -510,7 +517,7 @@ private fun DetailScreen(
                 }
             }
             bubble.toolName?.let { name ->
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(4.dp))
                 ToolChip(toolName = name)
             }
             if (bubble.detail.isNotBlank()) {
@@ -518,7 +525,7 @@ private fun DetailScreen(
                 Text(
                     bubble.detail,
                     color = Color(0xFFE7ECF7),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
             if (bubble.needsUserInput) {
@@ -529,22 +536,75 @@ private fun DetailScreen(
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
-            // Action chips deferred — the new architecture's emit_bubble
-            // schema doesn't carry chips.  Re-enable when chips come
-            // back.
+            // Details table — extracted from the image by the LLM.
+            if (bubble.details.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "图片细节",
+                    color = Color(0xFFB9C4DE),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(4.dp))
+                DetailsTable(bubble.details)
+            }
+            // 退出 button — back to the recognition loop.
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onRestart,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("退出")
+            }
         }
-        // 退出 button at the bottom — dismisses the detail view; the
-        // main loop restarts from step 1 and starts a fresh stability
-        // counter.
-        Button(
-            onClick = onRestart,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 20.dp)
-                .fillMaxWidth()
-        ) {
-            Text("退出")
+    }
+}
+
+/** Renders a small (kind, label, value) table for the detail view.
+ *  Used by DetailScreen when the LLM extracted structured details
+ *  via emit_bubble. */
+@Composable
+private fun DetailsTable(details: List<Detail>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1A2138), RoundedCornerShape(8.dp))
+            .padding(8.dp)
+    ) {
+        details.forEachIndexed { i, d ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    d.kind,
+                    color = Color(0xFF7B8FB8),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.width(60.dp),
+                )
+                Text(
+                    d.label,
+                    color = Color(0xFFB9C4DE),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.width(110.dp),
+                )
+                Text(
+                    d.value,
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            if (i < details.size - 1) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Color(0xFF2A3050))
+                )
+            }
         }
     }
 }

@@ -252,6 +252,7 @@ class ToolUseLoop(
                     imageBytes = fullRes,
                     createdAtMs = System.currentTimeMillis(),
                     toolName = def.name,
+                    details = tb.details,
                 )
             )
         }
