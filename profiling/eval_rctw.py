@@ -275,6 +275,8 @@ def score_emit_type(emit_type: str | None, fixture: dict) -> float:
 
 
 def run_follow_up(user_msg: dict, response1: dict) -> dict:
+    """Legacy single-round stub.  Use run_orchestrator for the
+    full multi-round flow that handles zoom_in and multi-zoom."""
     tool_uses = [b for b in response1.get("content", []) if b.get("type") == "tool_use"]
     if not tool_uses:
         return response1
@@ -297,6 +299,137 @@ def run_follow_up(user_msg: dict, response1: dict) -> dict:
          follow_up_msg],
         max_tokens=640,
     )
+
+
+def crop_region(src_bytes: bytes, x: float, y: float, w: float, h: float,
+                 max_dim: int = 768, quality: int = 80) -> bytes:
+    """Crop a normalized rect from a JPEG, re-encode as JPEG.  Mirrors
+    FrameAnalyzer.cropJpegRegion.  Used by the eval when the model
+    asks for a zoom_in — we want to actually feed the high-detail
+    crop back so the round-2 reasoning benefits from the zoom."""
+    from PIL import Image
+    import io
+    img = Image.open(io.BytesIO(src_bytes))
+    W, H = img.size
+    L = max(0, int(x * W))
+    T = max(0, int(y * H))
+    R = min(W, int((x + w) * W))
+    B = min(H, int((y + h) * H))
+    if R <= L or B <= T:
+        return b""
+    cropped = img.crop((L, T, R, B))
+    s = max_dim / max(cropped.size)
+    if s < 1:
+        cropped = cropped.resize(
+            (int(cropped.size[0] * s), int(cropped.size[1] * s)),
+            Image.LANCZOS,
+        )
+    buf = io.BytesIO()
+    cropped.convert("RGB").save(buf, "JPEG", quality=quality)
+    return buf.getvalue()
+
+
+def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
+                      max_rounds=2):
+    """Multi-round orchestrator that mirrors the app's ToolUseLoop.
+
+    Round 1:  model sees the thumbnail, picks tool(s) (incl. zoom_in).
+    Round 2:  zoom_in crops are real (cropped from the original
+              or the previous crop), sent back as followUpJpegs.
+              Other tool calls get a stub tool_result.  Then the
+              LLM is asked to give the final emit_bubble.
+
+    Caps at max_rounds (default 2) to keep the eval bounded.  We
+    only allow up to 1 zoom_in per round (chain semantics — the
+    next round's zoom_in crops the result).  This matches the
+    intent of zoom_in: progressive drill-down, not a fan-out.
+
+    The final response is whatever the LLM produced last; if the
+    model never emits emit_bubble we fall back to its free text.
+    """
+    messages = [
+        user_msg,
+        {"role": "assistant", "content": response1.get("content", [])},
+    ]
+    all_follow_ups = []
+    current_image = original_jpeg
+    final_resp = response1
+    for round_i in range(1, max_rounds + 1):
+        tool_uses = [b for b in final_resp.get("content", []) if b.get("type") == "tool_use"]
+        if not tool_uses:
+            break
+        if any(b.get("name") == "emit_bubble" for b in tool_uses):
+            break
+        # Cap zoom_in to 1 per round (chain, not fan-out).  The first
+        # zoom_in wins; the rest are returned as a "duplicate skipped"
+        # message so the model learns.
+        zoom_in_call = next((b for b in tool_uses if b["name"] == "zoom_in"), None)
+        tool_results = []
+        round_follow_ups = []
+        for block in tool_uses:
+            inp = block.get("input", {}) or {}
+            summary = "已处理"
+            if block is zoom_in_call and block["name"] == "zoom_in":
+                src = inp.get("source", "last")
+                src_img = original_jpeg if src == "original" else current_image
+                try:
+                    crop = crop_region(
+                        src_img,
+                        float(inp.get("x", 0)),
+                        float(inp.get("y", 0)),
+                        float(inp.get("w", 0.2)),
+                        float(inp.get("h", 0.2)),
+                    )
+                except Exception:
+                    crop = b""
+                if crop:
+                    current_image = crop
+                    round_follow_ups.append(crop)
+                    summary = (
+                        f"已放大区域 (x={inp.get('x', '?')}, y={inp.get('y', '?')}, "
+                        f"w={inp.get('w', '?')}, h={inp.get('h', '?')}, "
+                        f"focus={inp.get('focus', '')})"
+                    )
+                else:
+                    summary = "zoom_in 失败：区域无效"
+            elif block["name"] == "zoom_in":
+                summary = "本轮已有 zoom_in 被处理；额外 zoom_in 已忽略（每 round 只接受 1 个）"
+            tool_results.append({
+                "type": "tool_result",
+                "tool_use_id": block.get("id"),
+                "content": [{"type": "text", "text": summary}],
+            })
+        # Build the next user message: followUps first (in call order),
+        # then the tool_results (required by Anthropic protocol).
+        next_content = []
+        for i, img in enumerate(round_follow_ups):
+            next_content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64", "media_type": "image/jpeg",
+                    "data": base64.b64encode(img).decode(),
+                },
+            })
+            hint = ("已放大你刚才要求的区域，请用这张图继续回答。"
+                    if len(round_follow_ups) == 1
+                    else f"放大区域 #{i+1}/{len(round_follow_ups)}，请用这些图继续回答。")
+            next_content.append({"type": "text", "text": hint})
+        for tr in tool_results:
+            next_content.append(tr)
+        # Round 2 is the final round: explicitly nudge the model
+        # to call emit_bubble if it didn't already.
+        next_content.append({
+            "type": "text",
+            "text": "请调用 emit_bubble 给出最终意图摘要（scene/intent/type/confidence），不要再调其它工具。",
+        })
+        messages.append({"role": "user", "content": next_content})
+        all_follow_ups.extend(round_follow_ups)
+        final_resp = call_model(messages, max_tokens=800)
+        if any(b.get("name") == "emit_bubble"
+               for b in final_resp.get("content", [])
+               if b.get("type") == "tool_use"):
+            break
+    return final_resp, all_follow_ups
 
 
 def main() -> int:
@@ -350,16 +483,37 @@ def main() -> int:
         r2_emit_chips: list = []
         r2_text_score = 0.0
         r2_type_score = 1.0  # default if no rubric
-        tool_uses = [b for b in r1.get("content", []) if b.get("type") == "tool_use"]
-        if tool_uses:
-            r2 = run_follow_up(user_msg, r1)
+        # Read the original (full-res) JPEG so zoom_in can crop from it.
+        original_jpeg = img_path.read_bytes()
+        # The thumbnail the LLM actually sees in round 1.  When
+        # --resize is set, make_user_msg already produced a smaller
+        # copy; the original is the source of truth for crops.
+        r1_text = " ".join(
+            b.get("text", "") for b in r1.get("content", [])
+            if b.get("type") == "text"
+        )
+        r2_text = r1_text  # for cases where r1 already produced text
+        tool_uses_r1 = [b for b in r1.get("content", []) if b.get("type") == "tool_use"]
+        if tool_uses_r1:
+            # Run the multi-round orchestrator.  It will:
+            #   - dispatch each tool_use (including zoom_in → real crop)
+            #   - feed the followUpJpegs back as round-2 user images
+            #   - keep going until the model emits emit_bubble or
+            #     max_rounds is hit
+            final_resp, _ = run_orchestrator(
+                user_msg=user_msg,
+                response1=r1,
+                original_jpeg=original_jpeg,
+                thumbnail_jpeg=original_jpeg,
+                max_rounds=4,
+            )
             r2_text = " ".join(
                 b.get("text", "")
-                for b in r2.get("content", [])
+                for b in final_resp.get("content", [])
                 if b.get("type") == "text"
             )
             r2_emit_blocks = [
-                b for b in r2.get("content", [])
+                b for b in final_resp.get("content", [])
                 if b.get("type") == "tool_use" and b.get("name") == "emit_bubble"
             ]
             if r2_emit_blocks:
