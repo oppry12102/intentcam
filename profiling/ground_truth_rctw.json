@@ -1,0 +1,1840 @@
+{
+  "version": 1,
+  "description": "RCTW-17 gold-standard benchmark. 27 images from RCTW-17 (https://rctw.vlrlab.net, downloaded via OpenDataLab https://openxlab.com.cn) — Chinese scene text in the wild, captured by mobile cameras. 23 images from Loremflickr for categories RCTW does not cover (math, qr_code, device_reading, screen_capture, more english_text). 50 fixtures across 10 categories.",
+  "sources": {
+    "rctw-17": "https://rctw.vlrlab.net (downloaded via OpenDataLab OpenDataLab/RCTW-17 — https://openxlab.com.cn)",
+    "loremflickr": "https://loremflickr.com (real Flickr photos by tag)"
+  },
+  "scenes": [
+    {
+      "id": "rctw_device_reading_01",
+      "file": "rctw_device_reading_01.jpg",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "reading",
+          "value",
+          "读数",
+          "数字",
+          "screen shows"
+        ],
+        [
+          "血压",
+          "体重",
+          "温度",
+          "blood pressure",
+          "temperature",
+          "weight",
+          "meter",
+          "gauge"
+        ],
+        [
+          "normal",
+          "正常",
+          "range"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_device_reading_02",
+      "file": "rctw_device_reading_02.jpg",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "reading",
+          "value",
+          "读数",
+          "数字",
+          "screen shows"
+        ],
+        [
+          "血压",
+          "体重",
+          "温度",
+          "blood pressure",
+          "temperature",
+          "weight",
+          "meter",
+          "gauge"
+        ],
+        [
+          "normal",
+          "正常",
+          "range"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_device_reading_03",
+      "file": "rctw_device_reading_03.jpg",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "reading",
+          "value",
+          "读数",
+          "数字",
+          "screen shows"
+        ],
+        [
+          "血压",
+          "体重",
+          "温度",
+          "blood pressure",
+          "temperature",
+          "weight",
+          "meter",
+          "gauge"
+        ],
+        [
+          "normal",
+          "正常",
+          "range"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_device_reading_04",
+      "file": "rctw_device_reading_04.jpg",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "reading",
+          "value",
+          "读数",
+          "数字",
+          "screen shows"
+        ],
+        [
+          "血压",
+          "体重",
+          "温度",
+          "blood pressure",
+          "temperature",
+          "weight",
+          "meter",
+          "gauge"
+        ],
+        [
+          "normal",
+          "正常",
+          "range"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_device_reading_05",
+      "file": "rctw_device_reading_05.jpg",
+      "category": "device_reading",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "reading",
+          "value",
+          "读数",
+          "数字",
+          "screen shows"
+        ],
+        [
+          "血压",
+          "体重",
+          "温度",
+          "blood pressure",
+          "temperature",
+          "weight",
+          "meter",
+          "gauge"
+        ],
+        [
+          "normal",
+          "正常",
+          "range"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "device reading"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_english_text_01",
+      "file": "rctw_english_text_01.jpg",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "read",
+          "text",
+          "says",
+          "sign",
+          "label",
+          "读",
+          "文字",
+          "标识"
+        ],
+        [
+          "hello",
+          "welcome",
+          "exit",
+          "open",
+          "no.",
+          "tel",
+          "phone"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_english_text_02",
+      "file": "rctw_english_text_02.jpg",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "read",
+          "text",
+          "says",
+          "sign",
+          "label",
+          "读",
+          "文字",
+          "标识"
+        ],
+        [
+          "hello",
+          "welcome",
+          "exit",
+          "open",
+          "no.",
+          "tel",
+          "phone"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_english_text_03",
+      "file": "rctw_english_text_03.jpg",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "read",
+          "text",
+          "says",
+          "sign",
+          "label",
+          "读",
+          "文字",
+          "标识"
+        ],
+        [
+          "hello",
+          "welcome",
+          "exit",
+          "open",
+          "no.",
+          "tel",
+          "phone"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_english_text_04",
+      "file": "rctw_english_text_04.jpg",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "read",
+          "text",
+          "says",
+          "sign",
+          "label",
+          "读",
+          "文字",
+          "标识"
+        ],
+        [
+          "hello",
+          "welcome",
+          "exit",
+          "open",
+          "no.",
+          "tel",
+          "phone"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_english_text_05",
+      "file": "rctw_english_text_05.jpg",
+      "category": "english_text",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "read",
+          "text",
+          "says",
+          "sign",
+          "label",
+          "读",
+          "文字",
+          "标识"
+        ],
+        [
+          "hello",
+          "welcome",
+          "exit",
+          "open",
+          "no.",
+          "tel",
+          "phone"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "english text"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_food_label_01",
+      "file": "rctw_food_label_01.jpg",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配料",
+          "成分",
+          "营养",
+          "热量",
+          "保质",
+          "净含量",
+          "ingredients",
+          "food",
+          "product"
+        ],
+        [
+          "食品",
+          "饮料",
+          "茶叶",
+          "茶",
+          "米",
+          "油",
+          "面",
+          "酒"
+        ],
+        [
+          "查",
+          "看",
+          "read",
+          "identify",
+          "是什么",
+          "tell"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_food_label_02",
+      "file": "rctw_food_label_02.jpg",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配料",
+          "成分",
+          "营养",
+          "热量",
+          "保质",
+          "净含量",
+          "ingredients",
+          "food",
+          "product"
+        ],
+        [
+          "食品",
+          "饮料",
+          "茶叶",
+          "茶",
+          "米",
+          "油",
+          "面",
+          "酒"
+        ],
+        [
+          "查",
+          "看",
+          "read",
+          "identify",
+          "是什么",
+          "tell"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_food_label_03",
+      "file": "rctw_food_label_03.jpg",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配料",
+          "成分",
+          "营养",
+          "热量",
+          "保质",
+          "净含量",
+          "ingredients",
+          "food",
+          "product"
+        ],
+        [
+          "食品",
+          "饮料",
+          "茶叶",
+          "茶",
+          "米",
+          "油",
+          "面",
+          "酒"
+        ],
+        [
+          "查",
+          "看",
+          "read",
+          "identify",
+          "是什么",
+          "tell"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_food_label_04",
+      "file": "rctw_food_label_04.jpg",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配料",
+          "成分",
+          "营养",
+          "热量",
+          "保质",
+          "净含量",
+          "ingredients",
+          "food",
+          "product"
+        ],
+        [
+          "食品",
+          "饮料",
+          "茶叶",
+          "茶",
+          "米",
+          "油",
+          "面",
+          "酒"
+        ],
+        [
+          "查",
+          "看",
+          "read",
+          "identify",
+          "是什么",
+          "tell"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_food_label_05",
+      "file": "rctw_food_label_05.jpg",
+      "category": "food_label",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "配料",
+          "成分",
+          "营养",
+          "热量",
+          "保质",
+          "净含量",
+          "ingredients",
+          "food",
+          "product"
+        ],
+        [
+          "食品",
+          "饮料",
+          "茶叶",
+          "茶",
+          "米",
+          "油",
+          "面",
+          "酒"
+        ],
+        [
+          "查",
+          "看",
+          "read",
+          "identify",
+          "是什么",
+          "tell"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "food label"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_map_01",
+      "file": "rctw_map_01.jpg",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "街",
+          "区",
+          "号",
+          "map",
+          "street",
+          "road",
+          "area"
+        ],
+        [
+          "导航",
+          "方向",
+          "where",
+          "navigate",
+          "direction",
+          "哪里"
+        ],
+        [
+          "address",
+          "address",
+          "位置",
+          "地点",
+          "address"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_map_02",
+      "file": "rctw_map_02.jpg",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "街",
+          "区",
+          "号",
+          "map",
+          "street",
+          "road",
+          "area"
+        ],
+        [
+          "导航",
+          "方向",
+          "where",
+          "navigate",
+          "direction",
+          "哪里"
+        ],
+        [
+          "address",
+          "address",
+          "位置",
+          "地点",
+          "address"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_map_03",
+      "file": "rctw_map_03.jpg",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "街",
+          "区",
+          "号",
+          "map",
+          "street",
+          "road",
+          "area"
+        ],
+        [
+          "导航",
+          "方向",
+          "where",
+          "navigate",
+          "direction",
+          "哪里"
+        ],
+        [
+          "address",
+          "address",
+          "位置",
+          "地点",
+          "address"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_map_04",
+      "file": "rctw_map_04.jpg",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "街",
+          "区",
+          "号",
+          "map",
+          "street",
+          "road",
+          "area"
+        ],
+        [
+          "导航",
+          "方向",
+          "where",
+          "navigate",
+          "direction",
+          "哪里"
+        ],
+        [
+          "address",
+          "address",
+          "位置",
+          "地点",
+          "address"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_map_05",
+      "file": "rctw_map_05.jpg",
+      "category": "map",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "地图",
+          "路",
+          "街",
+          "区",
+          "号",
+          "map",
+          "street",
+          "road",
+          "area"
+        ],
+        [
+          "导航",
+          "方向",
+          "where",
+          "navigate",
+          "direction",
+          "哪里"
+        ],
+        [
+          "address",
+          "address",
+          "位置",
+          "地点",
+          "address"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "map"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_math_01",
+      "file": "rctw_math_01.jpg",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "solve",
+          "解",
+          "算",
+          "calculate",
+          "equation",
+          "formula"
+        ],
+        [
+          "=",
+          "equals",
+          "result",
+          "结果",
+          "等于"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_math_02",
+      "file": "rctw_math_02.jpg",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "solve",
+          "解",
+          "算",
+          "calculate",
+          "equation",
+          "formula"
+        ],
+        [
+          "=",
+          "equals",
+          "result",
+          "结果",
+          "等于"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_math_03",
+      "file": "rctw_math_03.jpg",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "solve",
+          "解",
+          "算",
+          "calculate",
+          "equation",
+          "formula"
+        ],
+        [
+          "=",
+          "equals",
+          "result",
+          "结果",
+          "等于"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_math_04",
+      "file": "rctw_math_04.jpg",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "solve",
+          "解",
+          "算",
+          "calculate",
+          "equation",
+          "formula"
+        ],
+        [
+          "=",
+          "equals",
+          "result",
+          "结果",
+          "等于"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_math_05",
+      "file": "rctw_math_05.jpg",
+      "category": "math",
+      "expected_top_intent_type": [
+        "solve"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "solve",
+          "解",
+          "算",
+          "calculate",
+          "equation",
+          "formula"
+        ],
+        [
+          "=",
+          "equals",
+          "result",
+          "结果",
+          "等于"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "math"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_menu_01",
+      "file": "rctw_menu_01.jpg",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜单",
+          "menu",
+          "菜",
+          "dish",
+          "item"
+        ],
+        [
+          "价格",
+          "元",
+          "￥",
+          "¥",
+          "price",
+          "cost",
+          "多少钱"
+        ],
+        [
+          "餐厅",
+          "食堂",
+          "restaurant",
+          "cafe",
+          "lunch",
+          "dinner",
+          "breakfast"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_menu_02",
+      "file": "rctw_menu_02.jpg",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜单",
+          "menu",
+          "菜",
+          "dish",
+          "item"
+        ],
+        [
+          "价格",
+          "元",
+          "￥",
+          "¥",
+          "price",
+          "cost",
+          "多少钱"
+        ],
+        [
+          "餐厅",
+          "食堂",
+          "restaurant",
+          "cafe",
+          "lunch",
+          "dinner",
+          "breakfast"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_menu_03",
+      "file": "rctw_menu_03.jpg",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜单",
+          "menu",
+          "菜",
+          "dish",
+          "item"
+        ],
+        [
+          "价格",
+          "元",
+          "￥",
+          "¥",
+          "price",
+          "cost",
+          "多少钱"
+        ],
+        [
+          "餐厅",
+          "食堂",
+          "restaurant",
+          "cafe",
+          "lunch",
+          "dinner",
+          "breakfast"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_menu_04",
+      "file": "rctw_menu_04.jpg",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜单",
+          "menu",
+          "菜",
+          "dish",
+          "item"
+        ],
+        [
+          "价格",
+          "元",
+          "￥",
+          "¥",
+          "price",
+          "cost",
+          "多少钱"
+        ],
+        [
+          "餐厅",
+          "食堂",
+          "restaurant",
+          "cafe",
+          "lunch",
+          "dinner",
+          "breakfast"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_menu_05",
+      "file": "rctw_menu_05.jpg",
+      "category": "menu",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "菜单",
+          "menu",
+          "菜",
+          "dish",
+          "item"
+        ],
+        [
+          "价格",
+          "元",
+          "￥",
+          "¥",
+          "price",
+          "cost",
+          "多少钱"
+        ],
+        [
+          "餐厅",
+          "食堂",
+          "restaurant",
+          "cafe",
+          "lunch",
+          "dinner",
+          "breakfast"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "menu"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_qr_code_01",
+      "file": "rctw_qr_code_01.jpg",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "qr",
+          "二维码",
+          "barcode",
+          "code",
+          "scan"
+        ],
+        [
+          "link",
+          "url",
+          "decode",
+          "链接",
+          "扫描",
+          "解码"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_qr_code_02",
+      "file": "rctw_qr_code_02.jpg",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "qr",
+          "二维码",
+          "barcode",
+          "code",
+          "scan"
+        ],
+        [
+          "link",
+          "url",
+          "decode",
+          "链接",
+          "扫描",
+          "解码"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_qr_code_03",
+      "file": "rctw_qr_code_03.jpg",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "qr",
+          "二维码",
+          "barcode",
+          "code",
+          "scan"
+        ],
+        [
+          "link",
+          "url",
+          "decode",
+          "链接",
+          "扫描",
+          "解码"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_qr_code_04",
+      "file": "rctw_qr_code_04.jpg",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "qr",
+          "二维码",
+          "barcode",
+          "code",
+          "scan"
+        ],
+        [
+          "link",
+          "url",
+          "decode",
+          "链接",
+          "扫描",
+          "解码"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_qr_code_05",
+      "file": "rctw_qr_code_05.jpg",
+      "category": "qr_code",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "qr",
+          "二维码",
+          "barcode",
+          "code",
+          "scan"
+        ],
+        [
+          "link",
+          "url",
+          "decode",
+          "链接",
+          "扫描",
+          "解码"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "qr code"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_receipt_01",
+      "file": "rctw_receipt_01.jpg",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "小票",
+          "收据",
+          "发票",
+          "receipt",
+          "invoice",
+          "bill"
+        ],
+        [
+          "total",
+          "合计",
+          "总计",
+          "amount",
+          "金额",
+          "price",
+          "价格",
+          "元",
+          "￥",
+          "¥"
+        ],
+        [
+          "支付",
+          "微信",
+          "支付宝",
+          "paid"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_receipt_02",
+      "file": "rctw_receipt_02.jpg",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "小票",
+          "收据",
+          "发票",
+          "receipt",
+          "invoice",
+          "bill"
+        ],
+        [
+          "total",
+          "合计",
+          "总计",
+          "amount",
+          "金额",
+          "price",
+          "价格",
+          "元",
+          "￥",
+          "¥"
+        ],
+        [
+          "支付",
+          "微信",
+          "支付宝",
+          "paid"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_receipt_03",
+      "file": "rctw_receipt_03.jpg",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "小票",
+          "收据",
+          "发票",
+          "receipt",
+          "invoice",
+          "bill"
+        ],
+        [
+          "total",
+          "合计",
+          "总计",
+          "amount",
+          "金额",
+          "price",
+          "价格",
+          "元",
+          "￥",
+          "¥"
+        ],
+        [
+          "支付",
+          "微信",
+          "支付宝",
+          "paid"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_receipt_04",
+      "file": "rctw_receipt_04.jpg",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "小票",
+          "收据",
+          "发票",
+          "receipt",
+          "invoice",
+          "bill"
+        ],
+        [
+          "total",
+          "合计",
+          "总计",
+          "amount",
+          "金额",
+          "price",
+          "价格",
+          "元",
+          "￥",
+          "¥"
+        ],
+        [
+          "支付",
+          "微信",
+          "支付宝",
+          "paid"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_receipt_05",
+      "file": "rctw_receipt_05.jpg",
+      "category": "receipt",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "小票",
+          "收据",
+          "发票",
+          "receipt",
+          "invoice",
+          "bill"
+        ],
+        [
+          "total",
+          "合计",
+          "总计",
+          "amount",
+          "金额",
+          "price",
+          "价格",
+          "元",
+          "￥",
+          "¥"
+        ],
+        [
+          "支付",
+          "微信",
+          "支付宝",
+          "paid"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "receipt"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_screen_capture_01",
+      "file": "rctw_screen_capture_01.jpg",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "screen",
+          "notification",
+          "app",
+          "window",
+          "display",
+          "屏",
+          "通知",
+          "应用"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_screen_capture_02",
+      "file": "rctw_screen_capture_02.jpg",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "screen",
+          "notification",
+          "app",
+          "window",
+          "display",
+          "屏",
+          "通知",
+          "应用"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_screen_capture_03",
+      "file": "rctw_screen_capture_03.jpg",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "screen",
+          "notification",
+          "app",
+          "window",
+          "display",
+          "屏",
+          "通知",
+          "应用"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_screen_capture_04",
+      "file": "rctw_screen_capture_04.jpg",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "screen",
+          "notification",
+          "app",
+          "window",
+          "display",
+          "屏",
+          "通知",
+          "应用"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_screen_capture_05",
+      "file": "rctw_screen_capture_05.jpg",
+      "category": "screen_capture",
+      "expected_top_intent_type": [
+        "info"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "screen",
+          "notification",
+          "app",
+          "window",
+          "display",
+          "屏",
+          "通知",
+          "应用"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "screen capture"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_street_sign_01",
+      "file": "rctw_street_sign_01.jpg",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "路",
+          "街",
+          "大道",
+          "sign",
+          "street",
+          "road",
+          "avenue",
+          "巷"
+        ],
+        [
+          "禁止",
+          "小心",
+          "注意",
+          "安全",
+          "警告",
+          "warning",
+          "danger",
+          "caution"
+        ],
+        [
+          "导航",
+          "方向",
+          "navigate",
+          "direction",
+          "where",
+          "怎么走",
+          "地址"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_street_sign_02",
+      "file": "rctw_street_sign_02.jpg",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "路",
+          "街",
+          "大道",
+          "sign",
+          "street",
+          "road",
+          "avenue",
+          "巷"
+        ],
+        [
+          "禁止",
+          "小心",
+          "注意",
+          "安全",
+          "警告",
+          "warning",
+          "danger",
+          "caution"
+        ],
+        [
+          "导航",
+          "方向",
+          "navigate",
+          "direction",
+          "where",
+          "怎么走",
+          "地址"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_street_sign_03",
+      "file": "rctw_street_sign_03.jpg",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "路",
+          "街",
+          "大道",
+          "sign",
+          "street",
+          "road",
+          "avenue",
+          "巷"
+        ],
+        [
+          "禁止",
+          "小心",
+          "注意",
+          "安全",
+          "警告",
+          "warning",
+          "danger",
+          "caution"
+        ],
+        [
+          "导航",
+          "方向",
+          "navigate",
+          "direction",
+          "where",
+          "怎么走",
+          "地址"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_street_sign_04",
+      "file": "rctw_street_sign_04.jpg",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "路",
+          "街",
+          "大道",
+          "sign",
+          "street",
+          "road",
+          "avenue",
+          "巷"
+        ],
+        [
+          "禁止",
+          "小心",
+          "注意",
+          "安全",
+          "警告",
+          "warning",
+          "danger",
+          "caution"
+        ],
+        [
+          "导航",
+          "方向",
+          "navigate",
+          "direction",
+          "where",
+          "怎么走",
+          "地址"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "street sign"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_street_sign_05",
+      "file": "rctw_street_sign_05.jpg",
+      "category": "street_sign",
+      "expected_top_intent_type": [
+        "location"
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "路",
+          "街",
+          "大道",
+          "sign",
+          "street",
+          "road",
+          "avenue",
+          "巷"
+        ],
+        [
+          "禁止",
+          "小心",
+          "注意",
+          "安全",
+          "警告",
+          "warning",
+          "danger",
+          "caution"
+        ],
+        [
+          "导航",
+          "方向",
+          "navigate",
+          "direction",
+          "where",
+          "怎么走",
+          "地址"
+        ]
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "street sign"
+        ]
+      ]
+    }
+  ]
+}
