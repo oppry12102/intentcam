@@ -1,15 +1,20 @@
 package com.example.intentcam
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -248,16 +253,33 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val outcome = toolUseLoop.runCycle(frame.thumbnail, frame.fullRes, userText)
         when (outcome) {
             is ToolUseLoop.Outcome.Bubble -> {
-                val merged = (_state.value.bubbles + outcome.bubble).takeLast(UiState.BUBBLE_MAX)
+                // Downsample imageBytes to 2048px max so the bubbles list
+                // doesn't accumulate 4× ~2-8MB full-res JPEGs in heap (which
+                // is what was starving the FrameAnalyzer's bitmap allocator
+                // and surfacing as repeated "500ms 内没拿到帧" after several
+                // recognitions). DetailScreen renders at fillMaxWidth ×
+                // 360dp ≈ 1080×1080 on phones, so 2048px leaves plenty of
+                // headroom; zoom_in still gets a useful 2048px source to
+                // crop from.
+                val downsampledImage = withContext(Dispatchers.IO) {
+                    downscaleJpeg(outcome.bubble.imageBytes, maxDim = 2048, quality = 85)
+                }
+                val stored = if (downsampledImage != null) {
+                    outcome.bubble.copy(imageBytes = downsampledImage)
+                } else {
+                    outcome.bubble
+                }
+                val merged = (_state.value.bubbles + stored).takeLast(UiState.BUBBLE_MAX)
                 _state.value = _state.value.copy(
-                    scene = outcome.bubble.detail.take(80),
+                    scene = stored.detail.take(80),
                     bubbles = merged,
                     analyzing = false,
                 )
                 logDebug(
                     "FINAL",
-                    "type=${outcome.bubble.type} intent=${outcome.bubble.title} " +
-                        "via=${outcome.bubble.toolName ?: "?"}"
+                    "type=${stored.type} intent=${stored.title} " +
+                        "via=${stored.toolName ?: "?"} " +
+                        "img=${stored.imageBytes.size / 1024}KB"
                 )
             }
             is ToolUseLoop.Outcome.PendingUserInput -> {
@@ -390,5 +412,46 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun resetConfigToDefault() {
         settings.reset()
         client.config = settings.load()
+    }
+}
+
+/**
+ * Decode a JPEG, scale to [maxDim] on its longest side, re-encode at
+ * [quality]. Returns null on decode/encode failure. Pure utility — does
+ * NOT touch the ViewModel state.  Callers must invoke this off the main
+ * thread (e.g. Dispatchers.IO); peak transient memory is roughly the
+ * decoded bitmap (16–48 MB at 4096×3072 ARGB_8888), so calling on Main
+ * would defeat the purpose.
+ */
+fun downscaleJpeg(src: ByteArray, maxDim: Int, quality: Int): ByteArray? {
+    return try {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(src, 0, src.size, bounds)
+        val fullW = bounds.outWidth
+        val fullH = bounds.outHeight
+        if (fullW <= 0 || fullH <= 0) return null
+        var sample = 1
+        while (fullW / sample > maxDim || fullH / sample > maxDim) sample *= 2
+        val decode = BitmapFactory.Options().apply { inSampleSize = sample }
+        val decoded = BitmapFactory.decodeByteArray(src, 0, src.size, decode) ?: return null
+        val scale = maxDim.toFloat() / maxOf(decoded.width, decoded.height)
+        val out = ByteArrayOutputStream()
+        try {
+            val ok = if (scale < 1f) {
+                val sw = (decoded.width * scale).toInt().coerceAtLeast(1)
+                val sh = (decoded.height * scale).toInt().coerceAtLeast(1)
+                val scaled = Bitmap.createScaledBitmap(decoded, sw, sh, true)
+                val result = scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
+                if (scaled !== decoded) scaled.recycle()
+                result
+            } else {
+                decoded.compress(Bitmap.CompressFormat.JPEG, quality, out)
+            }
+            if (ok) out.toByteArray() else null
+        } finally {
+            decoded.recycle()
+        }
+    } catch (_: Throwable) {
+        null
     }
 }
