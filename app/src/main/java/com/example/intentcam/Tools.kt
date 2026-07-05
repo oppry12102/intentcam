@@ -89,17 +89,16 @@ data class ToolResult(
     val title: String = "",
     val detail: String = "",
     val confidence: Float = 0.7f,
+    /** Structured details extracted from the image (text, numbers,
+     *  brand names, etc.).  Each entry becomes a row in the
+     *  detail-view table.  Populated by emit_bubble. */
+    val details: List<com.example.intentcam.Detail> = emptyList(),
     /** True when the orchestrator should park and ask the user for
      *  free-form input before continuing. */
     val needsUserInput: Boolean = false,
     /** Required when [needsUserInput] is true.  Goes into the
      *  [UserInputRequest] surfaced to the UI. */
     val userInputPrompt: String = "",
-    /** Follow-up actions the LLM suggested via emit_bubble's
-     *  Reserved for future fields the orchestrator might want to
-     *  bubble up.  Empty in the current architecture — emit_bubble
-     *  carries the structured answer via [finalBubble]. */
-    val reserved: Map<String, String> = emptyMap(),
     /** Optional follow-up image to attach to the next user message.
      *  Used by zoom_in: the orchestrator pulls this out and adds it
      *  to the next round's user content alongside the tool_result,

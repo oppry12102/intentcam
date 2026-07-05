@@ -138,6 +138,29 @@ fun ToolRegistry.registerDefaultTools() {
                         put("type", "string")
                         put("description", "支撑意图的图像区域（可空）")
                     })
+                    put("details", JSONObject().apply {
+                        put("type", "array")
+                        put("description", "细节列表，详情页表格行")
+                        put("items", JSONObject().apply {
+                            put("type", "object")
+                            put("properties", JSONObject().apply {
+                                put("kind", JSONObject().apply {
+                                    put("type", "string")
+                                    put("description", "text / number / object / color / shape / logo / date / price / ...")
+                                })
+                                put("label", JSONObject().apply {
+                                    put("type", "string")
+                                    put("description", "人类可读的名字")
+                                })
+                                put("value", JSONObject().apply {
+                                    put("type", "string")
+                                    put("description", "从图中读到的值")
+                                })
+                            })
+                            put("required", JSONArray().put("kind").put("label").put("value"))
+                            put("additionalProperties", false)
+                        })
+                    })
                     put("confidence", JSONObject().apply {
                         put("type", "number")
                         put("description", "置信度 0.0~1.0")
@@ -147,13 +170,27 @@ fun ToolRegistry.registerDefaultTools() {
                 put("additionalProperties", false)
             },
             body = { _, input ->
+                val details = mutableListOf<Detail>()
+                val detArr = input.optJSONArray("details")
+                if (detArr != null) {
+                    for (i in 0 until detArr.length()) {
+                        val d = detArr.optJSONObject(i) ?: continue
+                        val kind = d.optString("kind", "text").ifBlank { "text" }
+                        val label = d.optString("label", "").trim()
+                        val value = d.optString("value", "").trim()
+                        if (label.isNotEmpty() && value.isNotEmpty()) {
+                            details.add(Detail(kind = kind, label = label, value = value))
+                        }
+                    }
+                }
                 ToolResult(
-                    toolSummary = "emit_bubble 收尾",
+                    toolSummary = "emit_bubble 收尾（${details.size} 条 detail）",
                     finalBubble = true,
                     type = input.optString("type", "info").ifBlank { "info" },
-                    title = input.optString("intent", "").ifBlank { "未识别" },
+                    title = input.optString("intent", "").ifBlank { "查看图片细节" },
                     detail = input.optString("content", ""),
                     confidence = input.optDouble("confidence", 0.7).toFloat().coerceIn(0f, 1f),
+                    details = details,
                 )
             },
         )
