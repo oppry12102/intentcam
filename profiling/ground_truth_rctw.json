@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "description": "50 real-world images (RCTW-17 + Loremflickr) all classified as 'default' (image description). Each fixture's `expected_description_keywords` and `expected_details` were auto-annotated by the LLM. The eval scores emit_bubble's content + extracted details against these.",
+  "version": 3,
+  "description": "100 real RCTW-17 training images (https://rctw.vlrlab.net), renamed to rctw_default_NN.jpg. Single default intent: image description. GT auto-parsed from the dataset's XML labels (difficulty=0 lines only) — expected_description_keywords is the set of visible text in the image, expected_details maps to the first 6 text regions. The 10 old category types are gone — all fixtures use category='default' + type='info'.",
   "scenes": [
     {
       "id": "rctw_default_01",
@@ -8,66 +8,51 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "老人",
-        "跑步",
-        "慢跑",
-        "帽子",
-        "墨镜",
-        "短裤",
-        "运动鞋",
-        "石屋",
-        "黑白",
-        "街道"
+        "乙丑年",
+        "照白堂深门",
+        "衣日幽柳问",
+        "裳清映读山",
+        "辉每书路闲"
       ],
       "expected_details": [
         {
-          "kind": "location",
-          "label": "场景",
-          "value": "街道旁的石砌房屋前"
+          "kind": "text",
+          "label": "区域1",
+          "value": "辉每书路闲"
         },
         {
-          "kind": "person",
-          "label": "人物",
-          "value": "戴帽子和墨镜的老人正在慢跑"
+          "kind": "text",
+          "label": "区域2",
+          "value": "照白堂深门"
         },
         {
-          "kind": "color",
-          "label": "整体色调",
-          "value": "黑白"
+          "kind": "text",
+          "label": "区域3",
+          "value": "衣日幽柳问"
         },
         {
-          "kind": "object",
-          "label": "服装",
-          "value": "白色T恤、黑色短裤、深色运动鞋"
+          "kind": "text",
+          "label": "区域4",
+          "value": "乙丑年"
         },
         {
-          "kind": "object",
-          "label": "配饰",
-          "value": "棒球帽、墨镜"
-        },
-        {
-          "kind": "object",
-          "label": "建筑",
-          "value": "传统石墙房屋，带尖顶阁楼和飘窗"
+          "kind": "text",
+          "label": "区域5",
+          "value": "裳清映读山"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "老人"
+          "乙丑年"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "老人",
-          "跑步",
-          "慢跑",
-          "帽子",
-          "墨镜",
-          "短裤",
-          "运动鞋",
-          "石屋",
-          "黑白",
-          "街道"
+          "乙丑年",
+          "照白堂深门",
+          "衣日幽柳问",
+          "裳清映读山",
+          "辉每书路闲"
         ]
       ]
     },
@@ -77,66 +62,60 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "飞机",
-        "雕塑",
-        "彩绘",
-        "夜景",
-        "灯光",
-        "草地",
-        "三角形",
-        "国旗",
-        "颜色",
-        "户外展览"
+        "P",
+        "TAXI",
+        "上下客",
+        "他车辆停放",
+        "出租车",
+        "禁止非法营",
+        "运车辆和其"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Watermark",
-          "value": "chooyutshing"
-        },
-        {
-          "kind": "object",
-          "label": "Main subject",
-          "value": "Painted aircraft sculptures"
-        },
-        {
-          "kind": "color",
-          "label": "Colors",
-          "value": "Blue, red, yellow, white, turquoise, purple"
-        },
-        {
-          "kind": "shape",
-          "label": "Aircraft shapes",
-          "value": "Two stylized airplane/jet sculptures mounted on metal stands"
-        },
-        {
-          "kind": "location",
-          "label": "Setting",
-          "value": "Outdoor grassy area at night with string lights and display panels"
+          "label": "区域1",
+          "value": "出租车"
         },
         {
           "kind": "text",
-          "label": "Partial signage",
-          "value": "CC (top left corner)"
+          "label": "区域2",
+          "value": "上下客"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "P"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "TAXI"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "禁止非法营"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "运车辆和其"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "飞机"
+          "P"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "飞机",
-          "雕塑",
-          "彩绘",
-          "夜景",
-          "灯光",
-          "草地",
-          "三角形",
-          "国旗",
-          "颜色",
-          "户外展览"
+          "P",
+          "TAXI",
+          "上下客",
+          "他车辆停放",
+          "出租车",
+          "禁止非法营",
+          "运车辆和其"
         ]
       ]
     },
@@ -146,86 +125,44 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "PLEASE",
-        "DO NOT LICK",
-        "BODY BUTTER TESTERS",
-        "no licking symbol",
-        "木框",
-        "Heartfelt Hemp",
-        "Alpacapella",
-        "body butter",
-        "禁止舔",
-        "告示牌"
+        "26188806",
+        "AN REN",
+        "DA",
+        "大懒人冒菜"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Sign header",
-          "value": "PLEASE"
+          "label": "区域1",
+          "value": "AN REN"
         },
         {
           "kind": "text",
-          "label": "Sign main message",
-          "value": "DO NOT LICK THE BODY BUTTER TESTERS"
+          "label": "区域2",
+          "value": "大懒人冒菜"
         },
         {
           "kind": "text",
-          "label": "Sign footer",
-          "value": "I CAN'T BELIEVE WE HAD TO MAKE THIS SIGN! :)"
+          "label": "区域3",
+          "value": "DA"
         },
         {
-          "kind": "symbol",
-          "label": "Prohibition symbol",
-          "value": "Red circle with slash over a mouth/face icon"
-        },
-        {
-          "kind": "brand",
-          "label": "Top jar brand",
-          "value": "Heartfelt Hemp - handmade whipped"
-        },
-        {
-          "kind": "brand",
-          "label": "Bottom jar brand",
-          "value": "Alpacapella - handmade whipped body butter"
-        },
-        {
-          "kind": "object",
-          "label": "Container type",
-          "value": "Glass jars with metal lids"
-        },
-        {
-          "kind": "color",
-          "label": "Sign border",
-          "value": "Light wood frame"
-        },
-        {
-          "kind": "color",
-          "label": "Sign background",
-          "value": "White with red header"
-        },
-        {
-          "kind": "location",
-          "label": "Setting",
-          "value": "Retail store display shelf"
+          "kind": "number",
+          "label": "区域4",
+          "value": "26188806"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "PLEASE"
+          "26188806"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "PLEASE",
-          "DO NOT LICK",
-          "BODY BUTTER TESTERS",
-          "no licking symbol",
-          "木框",
-          "Heartfelt Hemp",
-          "Alpacapella",
-          "body butter",
-          "禁止舔",
-          "告示牌"
+          "26188806",
+          "AN REN",
+          "DA",
+          "大懒人冒菜"
         ]
       ]
     },
@@ -235,66 +172,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "圣诞树",
-        "建筑",
-        "灯光",
-        "Macy's",
-        "橱窗",
-        "圣诞",
-        "红色",
-        "霓虹",
-        "汽车",
-        "夜晚"
+        "Gazan雅山",
+        "牛满碗·奇道中式料理"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店铺名称",
-          "value": "Macy's"
+          "label": "区域1",
+          "value": "Gazan雅山"
         },
         {
           "kind": "text",
-          "label": "标语",
-          "value": "Believe in the joy"
-        },
-        {
-          "kind": "text",
-          "label": "底部红星文字",
-          "value": "Macy's Day"
-        },
-        {
-          "kind": "object",
-          "label": "主要装饰",
-          "value": "圣诞树"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "红色、紫色、霓虹色"
-        },
-        {
-          "kind": "location",
-          "label": "场景类型",
-          "value": "纽约梅西百货圣诞橱窗展示"
+          "label": "区域2",
+          "value": "牛满碗·奇道中式料理"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "圣诞树"
+          "Gazan雅山"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "圣诞树",
-          "建筑",
-          "灯光",
-          "Macy's",
-          "橱窗",
-          "圣诞",
-          "红色",
-          "霓虹",
-          "汽车",
-          "夜晚"
+          "Gazan雅山",
+          "牛满碗·奇道中式料理"
         ]
       ]
     },
@@ -304,68 +205,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "博物馆",
-        "拱形窗户",
-        "展柜",
-        "玻璃柜",
-        "标本",
-        "倒影",
-        "暖光",
-        "石墙",
-        "cc-nc-nd",
-        "树影",
-        "对称"
+        "在阳光下，",
+        "弯弯曲曲的水稻梯田，",
+        "水波粼粼。"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "左上角水印",
-          "value": "cc-nc-nd"
+          "label": "区域1",
+          "value": "弯弯曲曲的水稻梯田，"
         },
         {
           "kind": "text",
-          "label": "左下水印",
-          "value": "nvrecado"
+          "label": "区域2",
+          "value": "在阳光下，"
         },
         {
-          "kind": "object",
-          "label": "中央展品",
-          "value": "玻璃金字塔形展柜，内部陈设小型标本"
-        },
-        {
-          "kind": "object",
-          "label": "两侧展品",
-          "value": "立式玻璃展柜，多层陈列标本"
-        },
-        {
-          "kind": "shape",
-          "label": "窗户形状",
-          "value": "圆形+双拱形哥特式尖拱窗"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "暖黄色光影与深棕色阴影对比"
+          "kind": "text",
+          "label": "区域3",
+          "value": "水波粼粼。"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "博物馆"
+          "在阳光下，"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "博物馆",
-          "拱形窗户",
-          "展柜",
-          "玻璃柜",
-          "标本",
-          "倒影",
-          "暖光",
-          "石墙",
-          "cc-nc-nd",
-          "树影",
-          "对称"
+          "在阳光下，",
+          "弯弯曲曲的水稻梯田，",
+          "水波粼粼。"
         ]
       ]
     },
@@ -375,66 +245,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "Welcome to Historic Old Town Scottsdale",
-        "cowboy",
-        "lasso",
-        "cactus",
-        "red hat",
-        "horse",
-        "chaps",
-        "brown",
-        "road sign",
-        "Scottsdale"
+        "Anti-Scar Treatment Rehabilitation Center",
+        "疤痕治疗与康复中心"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Main sign text",
-          "value": "Welcome to Historic Old Town Scottsdale"
+          "label": "区域1",
+          "value": "疤痕治疗与康复中心"
         },
         {
           "kind": "text",
-          "label": "Street sign",
-          "value": "Scottsdale 7200 Main St"
-        },
-        {
-          "kind": "object",
-          "label": "Figure",
-          "value": "Cowboy cutout with lasso"
-        },
-        {
-          "kind": "object",
-          "label": "Surrounding objects",
-          "value": "Green saguaro cacti and wooden fence"
-        },
-        {
-          "kind": "location",
-          "label": "Location",
-          "value": "Old Town Scottsdale, Arizona"
-        },
-        {
-          "kind": "color",
-          "label": "Cowboy's hat color",
-          "value": "Red"
+          "label": "区域2",
+          "value": "Anti-Scar Treatment Rehabilitation Center"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "Welcome to Historic Old Town Scottsdale"
+          "Anti-Scar Treatment Rehabilitation Center"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "Welcome to Historic Old Town Scottsdale",
-          "cowboy",
-          "lasso",
-          "cactus",
-          "red hat",
-          "horse",
-          "chaps",
-          "brown",
-          "road sign",
-          "Scottsdale"
+          "Anti-Scar Treatment Rehabilitation Center",
+          "疤痕治疗与康复中心"
         ]
       ]
     },
@@ -444,66 +278,58 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "Pink Rabbit",
-        "Café",
-        "AO'S",
-        "Rest-Lounge-Bar",
-        "pink car",
-        "stone stairs",
-        "handrail",
-        "cobblestone",
-        "matte pink",
-        "Rabbit"
+        "2016",
+        "GIF S",
+        "仟仟有礼",
+        "支",
+        "支付宝付款消费满20元即可享受随机立减优惠",
+        "随机立减"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店铺名称上半",
-          "value": "AO'S"
+          "label": "区域1",
+          "value": "仟仟有礼"
         },
         {
           "kind": "text",
-          "label": "店铺副标题",
-          "value": "T·LOUNGE·BAR"
+          "label": "区域2",
+          "value": "随机立减"
+        },
+        {
+          "kind": "number",
+          "label": "区域3",
+          "value": "支付宝付款消费满20元即可享受随机立减优惠"
+        },
+        {
+          "kind": "number",
+          "label": "区域4",
+          "value": "2016"
         },
         {
           "kind": "text",
-          "label": "车身文字",
-          "value": "Pink Rabbit"
+          "label": "区域5",
+          "value": "GIF S"
         },
         {
-          "kind": "object",
-          "label": "主体车辆",
-          "value": "小型三轮/两厢车"
-        },
-        {
-          "kind": "color",
-          "label": "车身颜色",
-          "value": "哑光粉 (matte pink)"
-        },
-        {
-          "kind": "object",
-          "label": "场景元素",
-          "value": "石头楼梯与金属扶手"
+          "kind": "text",
+          "label": "区域6",
+          "value": "支"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "Pink Rabbit"
+          "2016"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "Pink Rabbit",
-          "Café",
-          "AO'S",
-          "Rest-Lounge-Bar",
-          "pink car",
-          "stone stairs",
-          "handrail",
-          "cobblestone",
-          "matte pink",
-          "Rabbit"
+          "2016",
+          "GIF S",
+          "仟仟有礼",
+          "支",
+          "支付宝付款消费满20元即可享受随机立减优惠",
+          "随机立减"
         ]
       ]
     },
@@ -513,71 +339,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "Blue Swallow",
-        "MOTEL",
-        "VACANCY",
-        "TV",
-        "霓虹灯",
-        "夜景",
-        "老爷车",
-        "LOBBY",
-        "OPEN",
-        "Route 66"
+        "CT检查",
+        "DR拍片"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "主招牌文字",
-          "value": "Blue Swallow MOTEL"
+          "label": "区域1",
+          "value": "CT检查"
         },
         {
           "kind": "text",
-          "label": "副招牌文字",
-          "value": "VACANCY"
-        },
-        {
-          "kind": "text",
-          "label": "设施标识",
-          "value": "TV"
-        },
-        {
-          "kind": "text",
-          "label": "入口标识",
-          "value": "LOBBY"
-        },
-        {
-          "kind": "text",
-          "label": "营业状态",
-          "value": "OPEN"
-        },
-        {
-          "kind": "location",
-          "label": "地点",
-          "value": "美国 66号公路 (Route 66)"
-        },
-        {
-          "kind": "object",
-          "label": "车辆",
-          "value": "白色复古老爷车 (Vintage Car)"
+          "label": "区域2",
+          "value": "DR拍片"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "Blue Swallow"
+          "CT检查"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "Blue Swallow",
-          "MOTEL",
-          "VACANCY",
-          "TV",
-          "霓虹灯",
-          "夜景",
-          "老爷车",
-          "LOBBY",
-          "OPEN",
-          "Route 66"
+          "CT检查",
+          "DR拍片"
         ]
       ]
     },
@@ -587,59 +372,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "木门",
-        "玻璃",
-        "今日有房",
-        "电话号码",
-        "TEL.13812727950",
-        "门面",
-        "粉色字",
-        "门上拉手",
-        "商铺"
+        "Management Room",
+        "武汉东湖",
+        "管理间"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "手写标语",
-          "value": "今日有房"
+          "label": "区域1",
+          "value": "管理间"
         },
         {
           "kind": "text",
-          "label": "电话标签",
-          "value": "TEL."
+          "label": "区域2",
+          "value": "Management Room"
         },
         {
-          "kind": "number",
-          "label": "联系电话",
-          "value": "13812727950"
-        },
-        {
-          "kind": "object",
-          "label": "门的材质",
-          "value": "木质"
-        },
-        {
-          "kind": "object",
-          "label": "门上装饰",
-          "value": "金属环形拉手"
+          "kind": "text",
+          "label": "区域3",
+          "value": "武汉东湖"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "木门"
+          "Management Room"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "木门",
-          "玻璃",
-          "今日有房",
-          "电话号码",
-          "TEL.13812727950",
-          "门面",
-          "粉色字",
-          "门上拉手",
-          "商铺"
+          "Management Room",
+          "武汉东湖",
+          "管理间"
         ]
       ]
     },
@@ -649,66 +412,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "拱门",
-        "建筑",
-        "3F",
-        "美食城",
-        "德意风情街",
-        "横幅",
-        "行人",
-        "商店",
-        "CGV",
-        "拱廊"
+        "1x",
+        "1月13日",
+        "3G",
+        "4000581008",
+        "DHA蛋白质粉",
+        "[1420519580860218]",
+        "中国能量堡垒",
+        "乳清蛋白质粉",
+        "二维码[1420279160816506]",
+        "健康正能量"
       ],
       "expected_details": [
         {
-          "kind": "text",
-          "label": "横幅文字",
-          "value": "3F 99食堂 德意风情街最大的人气美食城"
+          "kind": "number",
+          "label": "区域1",
+          "value": "晚上7:58"
         },
         {
           "kind": "text",
-          "label": "楼层标识",
-          "value": "3F"
+          "label": "区域2",
+          "value": "中国能量堡垒"
         },
         {
           "kind": "text",
-          "label": "远端横幅",
-          "value": "3F 德意风情街最大的人气美食城"
+          "label": "区域3",
+          "value": "您好"
         },
         {
-          "kind": "brand",
-          "label": "品牌名称",
-          "value": "CGV"
+          "kind": "number",
+          "label": "区域4",
+          "value": "二维码[1420279160816506]"
         },
         {
-          "kind": "object",
-          "label": "主要建筑特征",
-          "value": "双层石拱门及拱廊"
+          "kind": "text",
+          "label": "区域5",
+          "value": "币。立即查看能量币"
         },
         {
-          "kind": "location",
-          "label": "场景类型",
-          "value": "商业街区步行通道"
+          "kind": "text",
+          "label": "区域6",
+          "value": "查看全文"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "拱门"
+          "1x"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "拱门",
-          "建筑",
-          "3F",
-          "美食城",
-          "德意风情街",
-          "横幅",
-          "行人",
-          "商店",
-          "CGV",
-          "拱廊"
+          "1x",
+          "1月13日",
+          "3G",
+          "4000581008",
+          "DHA蛋白质粉",
+          "[1420519580860218]",
+          "中国能量堡垒",
+          "乳清蛋白质粉",
+          "二维码[1420279160816506]",
+          "健康正能量"
         ]
       ]
     },
@@ -718,66 +481,44 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "微笑",
-        "美甲",
-        "彩妆",
-        "接发",
-        "美睫",
-        "招牌",
-        "红色",
-        "招聘",
-        "招学徒",
-        "火爆首推"
+        "NO",
+        "P",
+        "PARKING",
+        "请勿泊车"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店铺主名称",
-          "value": "微笑"
+          "label": "区域1",
+          "value": "请勿泊车"
         },
         {
           "kind": "text",
-          "label": "服务项目",
-          "value": "美甲 彩妆 接发 美睫"
-        },
-        {
-          "kind": "logo",
-          "label": "店铺标志",
-          "value": "彩色的嘴唇和花朵图案"
+          "label": "区域2",
+          "value": "NO"
         },
         {
           "kind": "text",
-          "label": "招聘电话",
-          "value": "15972923828"
+          "label": "区域3",
+          "value": "PARKING"
         },
         {
           "kind": "text",
-          "label": "招聘岗位",
-          "value": "美甲师/学员"
-        },
-        {
-          "kind": "color",
-          "label": "招牌主色调",
-          "value": "深红色背景配白色字体"
+          "label": "区域4",
+          "value": "P"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "微笑"
+          "NO"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "微笑",
-          "美甲",
-          "彩妆",
-          "接发",
-          "美睫",
-          "招牌",
-          "红色",
-          "招聘",
-          "招学徒",
-          "火爆首推"
+          "NO",
+          "P",
+          "PARKING",
+          "请勿泊车"
         ]
       ]
     },
@@ -787,66 +528,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "墙面",
-        "招牌",
-        "黑字",
-        "黄底",
-        "店铺",
-        "定制鞋",
-        "立体字",
-        "店面",
-        "logo",
-        "门头"
+        "www.zon100.com",
+        "中百商网",
+        "中百电器",
+        "中百集团旗下购物网站",
+        "便捷",
+        "在您生活的每一天",
+        "完美保障",
+        "家具一体",
+        "摆放到位",
+        "无忧"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "招牌主文字",
-          "value": "墙面走定制鞋"
+          "label": "区域1",
+          "value": "中百电器"
         },
         {
-          "kind": "color",
-          "label": "背景颜色",
-          "value": "亮黄色"
+          "kind": "text",
+          "label": "区域2",
+          "value": "在您生活的每一天"
         },
         {
-          "kind": "color",
-          "label": "文字颜色",
-          "value": "黑色"
+          "kind": "text",
+          "label": "区域3",
+          "value": "无忧"
         },
         {
-          "kind": "shape",
-          "label": "字体风格",
-          "value": "立体方块字"
+          "kind": "text",
+          "label": "区域4",
+          "value": "便捷"
         },
         {
-          "kind": "location",
-          "label": "店铺类型",
-          "value": "鞋店门头招牌"
+          "kind": "text",
+          "label": "区域5",
+          "value": "正品"
         },
         {
-          "kind": "object",
-          "label": "下方展示",
-          "value": "鞋类商品橱窗"
+          "kind": "text",
+          "label": "区域6",
+          "value": "诚信"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "墙面"
+          "www.zon100.com"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "墙面",
-          "招牌",
-          "黑字",
-          "黄底",
-          "店铺",
-          "定制鞋",
-          "立体字",
-          "店面",
-          "logo",
-          "门头"
+          "www.zon100.com",
+          "中百商网",
+          "中百电器",
+          "中百集团旗下购物网站",
+          "便捷",
+          "在您生活的每一天",
+          "完美保障",
+          "家具一体",
+          "摆放到位",
+          "无忧"
         ]
       ]
     },
@@ -856,66 +597,44 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "7 Days Inn",
-        "7DaysInn",
-        "7天连锁酒店",
-        "鲜花",
-        "秉见面",
-        "招牌",
-        "建筑",
-        "天空",
-        "树",
-        "黄色"
+        "CHUAN JI DAO",
+        "创意餐厅",
+        "川吉道",
+        "新派川菜"
       ],
       "expected_details": [
         {
-          "kind": "logo",
-          "label": "Brand logo",
-          "value": "7 Days Inn (7天连锁酒店)"
+          "kind": "text",
+          "label": "区域1",
+          "value": "创意餐厅"
         },
         {
           "kind": "text",
-          "label": "Brand name (English)",
-          "value": "7Days Inn"
-        },
-        {
-          "kind": "number",
-          "label": "Logo number",
-          "value": "7"
+          "label": "区域2",
+          "value": "新派川菜"
         },
         {
           "kind": "text",
-          "label": "Chinese characters (red)",
-          "value": "鲜花"
+          "label": "区域3",
+          "value": "川吉道"
         },
         {
           "kind": "text",
-          "label": "Chinese characters (yellow)",
-          "value": "秉见面"
-        },
-        {
-          "kind": "color",
-          "label": "Logo background color",
-          "value": "Blue"
+          "label": "区域4",
+          "value": "CHUAN JI DAO"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "7 Days Inn"
+          "CHUAN JI DAO"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "7 Days Inn",
-          "7DaysInn",
-          "7天连锁酒店",
-          "鲜花",
-          "秉见面",
-          "招牌",
-          "建筑",
-          "天空",
-          "树",
-          "黄色"
+          "CHUAN JI DAO",
+          "创意餐厅",
+          "川吉道",
+          "新派川菜"
         ]
       ]
     },
@@ -925,66 +644,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "律师楼",
-        "招牌",
-        "武汉",
-        "湖北",
-        "光谷",
-        "标准",
-        "公司",
-        "门口",
-        "玻璃门",
-        "黑色"
+        "Don't leave any valuablong in the car.",
+        "Don't leave the key in the car.",
+        "THE",
+        "the rules of guarding aguinst theft of cars",
+        "不要讲车匙留在车内。",
+        "严禁鸣叫",
+        "停靠后请熄火",
+        "切勿将贵重物品留在车内。",
+        "收费",
+        "武价"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "门口招牌",
-          "value": "律师楼"
+          "label": "区域1",
+          "value": "严禁鸣叫"
         },
         {
           "kind": "text",
-          "label": "竖排招牌",
-          "value": "武汉勤光驰标准件有限公司"
-        },
-        {
-          "kind": "object",
-          "label": "室内可见物品",
-          "value": "饮水机、椅子、桌子"
-        },
-        {
-          "kind": "color",
-          "label": "招牌文字颜色",
-          "value": "红色（律师楼）、黑色（竖排）"
-        },
-        {
-          "kind": "location",
-          "label": "建筑入口",
-          "value": "玻璃门入口处"
+          "label": "区域2",
+          "value": "请轻关门"
         },
         {
           "kind": "text",
-          "label": "背景模糊文字",
-          "value": "湖北"
+          "label": "区域3",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "请排气管朝外"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "汽车防盗守则"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "律师楼"
+          "Don't leave any valuablong in the car."
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "律师楼",
-          "招牌",
-          "武汉",
-          "湖北",
-          "光谷",
-          "标准",
-          "公司",
-          "门口",
-          "玻璃门",
-          "黑色"
+          "Don't leave any valuablong in the car.",
+          "Don't leave the key in the car.",
+          "THE",
+          "the rules of guarding aguinst theft of cars",
+          "不要讲车匙留在车内。",
+          "严禁鸣叫",
+          "停靠后请熄火",
+          "切勿将贵重物品留在车内。",
+          "收费",
+          "武价"
         ]
       ]
     },
@@ -994,66 +713,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "大嘴巴",
-        "重庆酸辣粉",
-        "风味小吃",
-        "Yuan Yuan",
-        "Chuan Xiang",
-        "加盟店",
-        "红黄绿",
-        "店铺",
-        "LED屏幕",
-        "顾客"
+        "10元",
+        "30%",
+        "4G",
+        "5个",
+        "下午8:45",
+        "中国联通",
+        "关闭",
+        "发红包",
+        "当前为拼手气红包，改为普通红包",
+        "微信安全支付"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店铺招牌",
-          "value": "大嘴巴 风味小吃 重庆酸辣粉"
+          "label": "区域1",
+          "value": "中国联通"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "下午8:45"
         },
         {
           "kind": "text",
-          "label": "LED屏幕文字",
-          "value": "大嘴巴美食欢迎您"
+          "label": "区域3",
+          "value": "关闭"
         },
         {
-          "kind": "brand",
-          "label": "楼上店铺品牌",
-          "value": "袁缘 YUAN YUAN (全国连锁)"
+          "kind": "number",
+          "label": "区域4",
+          "value": "30%"
         },
         {
           "kind": "text",
-          "label": "左侧招牌",
-          "value": "Xiang 手工面"
+          "label": "区域5",
+          "value": "红包个数"
         },
         {
-          "kind": "color",
-          "label": "招牌主色调",
-          "value": "红底配橙黄绿三色圆形logo"
-        },
-        {
-          "kind": "person",
-          "label": "门口人物",
-          "value": "数名顾客在店铺门口排队点餐"
+          "kind": "number",
+          "label": "区域6",
+          "value": "5个"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "大嘴巴"
+          "10元"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "大嘴巴",
-          "重庆酸辣粉",
-          "风味小吃",
-          "Yuan Yuan",
-          "Chuan Xiang",
-          "加盟店",
-          "红黄绿",
-          "店铺",
-          "LED屏幕",
-          "顾客"
+          "10元",
+          "30%",
+          "4G",
+          "5个",
+          "下午8:45",
+          "中国联通",
+          "关闭",
+          "发红包",
+          "当前为拼手气红包，改为普通红包",
+          "微信安全支付"
         ]
       ]
     },
@@ -1063,80 +782,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "微信",
-        "我的钱包",
-        "零钱",
-        "0.11",
-        "付款",
-        "银行卡",
-        "腾讯服务",
-        "转账",
-        "手机充值",
-        "理财通",
-        "Q币充值",
-        "生活缴费",
-        "城市服务",
-        "信用卡还款",
-        "微信红包",
-        "AA收款",
-        "20:46"
+        "栈客留长"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "页面标题",
-          "value": "我的钱包"
-        },
-        {
-          "kind": "text",
-          "label": "副标题",
-          "value": "微信安全支付"
-        },
-        {
-          "kind": "text",
-          "label": "零钱余额",
-          "value": "¥0.11"
-        },
-        {
-          "kind": "text",
-          "label": "服务分类",
-          "value": "腾讯服务"
-        },
-        {
-          "kind": "time",
-          "label": "状态栏时间",
-          "value": "20:46"
-        },
-        {
-          "kind": "brand",
-          "label": "应用名称",
-          "value": "微信支付"
+          "label": "区域1",
+          "value": "栈客留长"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "微信"
+          "栈客留长"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "微信",
-          "我的钱包",
-          "零钱",
-          "0.11",
-          "付款",
-          "银行卡",
-          "腾讯服务",
-          "转账",
-          "手机充值",
-          "理财通",
-          "Q币充值",
-          "生活缴费",
-          "城市服务",
-          "信用卡还款",
-          "微信红包",
-          "AA收款",
-          "20:46"
+          "栈客留长"
         ]
       ]
     },
@@ -1146,66 +808,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "湖北",
-        "招牌",
-        "金属",
-        "不锈钢",
-        "竖排",
-        "黑字",
-        "店面",
-        "柱子",
-        "大理石",
-        "门口"
+        "426",
+        "510",
+        "5F",
+        "Y1774",
+        "严禁携带易燃易爆物品",
+        "中西自助",
+        "卓刀泉·古玩珠宝城",
+        "地址：洪山区珞喻路370号（卓刀泉公园内）",
+        "日韩烧烤",
+        "海鲜粗粮"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "招牌文字（左）",
-          "value": "湖北省口腔医学会常务理事单位"
+          "label": "区域1",
+          "value": "中西自助"
         },
         {
           "kind": "text",
-          "label": "招牌文字（右）",
-          "value": "湖北省种植技术资格认证单位"
+          "label": "区域2",
+          "value": "海鲜粗粮"
         },
         {
-          "kind": "object",
-          "label": "招牌材质",
-          "value": "不锈钢/金属"
+          "kind": "text",
+          "label": "区域3",
+          "value": "日韩烧烤"
         },
         {
-          "kind": "color",
-          "label": "招牌底色",
-          "value": "银色/反光金属色"
+          "kind": "text",
+          "label": "区域4",
+          "value": "音乐酒吧"
         },
         {
-          "kind": "color",
-          "label": "文字颜色",
-          "value": "黑色"
+          "kind": "number",
+          "label": "区域5",
+          "value": "510"
         },
         {
-          "kind": "location",
-          "label": "招牌位置",
-          "value": "店面门口柱子"
+          "kind": "text",
+          "label": "区域6",
+          "value": "严禁携带易燃易爆物品"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "湖北"
+          "426"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "湖北",
-          "招牌",
-          "金属",
-          "不锈钢",
-          "竖排",
-          "黑字",
-          "店面",
-          "柱子",
-          "大理石",
-          "门口"
+          "426",
+          "510",
+          "5F",
+          "Y1774",
+          "严禁携带易燃易爆物品",
+          "中西自助",
+          "卓刀泉·古玩珠宝城",
+          "地址：洪山区珞喻路370号（卓刀泉公园内）",
+          "日韩烧烤",
+          "海鲜粗粮"
         ]
       ]
     },
@@ -1215,66 +877,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "尚美·乐学",
-        "低碳城市",
-        "宜居可持续",
-        "红色横幅",
-        "操场跑道",
-        "讲台",
-        "教学楼",
-        "空调外机",
-        "摄像头",
-        "窗栏"
+        "8666",
+        "8832",
+        "Baidu 百度",
+        "MAN",
+        "只为男人",
+        "名仕男科",
+        "咨询",
+        "武汉名仕男科研究院",
+        "男科",
+        "院址：武昌大东门立交桥旁"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "背景墙大字",
-          "value": "尚美·乐学"
+          "label": "区域1",
+          "value": "武汉名仕男科研究院"
         },
         {
           "kind": "text",
-          "label": "横幅标语1",
-          "value": "低碳城市"
+          "label": "区域2",
+          "value": "武汉名仕男科研究院"
         },
         {
           "kind": "text",
-          "label": "横幅标语2",
-          "value": "宜居可持续"
+          "label": "区域3",
+          "value": "Baidu 百度"
         },
         {
-          "kind": "color",
-          "label": "横幅颜色",
-          "value": "红色"
+          "kind": "text",
+          "label": "区域4",
+          "value": "院址：武昌大东门立交桥旁"
         },
         {
-          "kind": "object",
-          "label": "场所类型",
-          "value": "学校操场主席台"
+          "kind": "text",
+          "label": "区域5",
+          "value": "男科"
         },
         {
-          "kind": "color",
-          "label": "跑道颜色",
-          "value": "红褐色"
+          "kind": "text",
+          "label": "区域6",
+          "value": "咨询"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "尚美·乐学"
+          "8666"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "尚美·乐学",
-          "低碳城市",
-          "宜居可持续",
-          "红色横幅",
-          "操场跑道",
-          "讲台",
-          "教学楼",
-          "空调外机",
-          "摄像头",
-          "窗栏"
+          "8666",
+          "8832",
+          "Baidu 百度",
+          "MAN",
+          "只为男人",
+          "名仕男科",
+          "咨询",
+          "武汉名仕男科研究院",
+          "男科",
+          "院址：武昌大东门立交桥旁"
         ]
       ]
     },
@@ -1284,76 +946,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "广告牌",
-        "粉色",
-        "演唱会",
-        "抢票",
-        "手机",
-        "湖北移动",
-        "4G",
-        "公交站",
-        "树",
-        "8月15日"
+        "中国伴恋网"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Headline Text",
-          "value": "看演唱会 得手机"
-        },
-        {
-          "kind": "date",
-          "label": "Event Date",
-          "value": "8月15日"
-        },
-        {
-          "kind": "text",
-          "label": "Call to Action",
-          "value": "抢票喽！"
-        },
-        {
-          "kind": "logo",
-          "label": "Brand Logo",
-          "value": "湖北移动 动感4G之彩"
-        },
-        {
-          "kind": "logo",
-          "label": "Network Logo",
-          "value": "4G LTE"
-        },
-        {
-          "kind": "location",
-          "label": "Organizer",
-          "value": "仙桃市委宣传部 仙桃市文体广电新闻出版局"
-        },
-        {
-          "kind": "location",
-          "label": "Co-organizer",
-          "value": "湖北移动江汉分公司 中国仙桃网"
-        },
-        {
-          "kind": "color",
-          "label": "Billboard Background Color",
-          "value": "Pink/Magenta"
+          "label": "区域1",
+          "value": "中国伴恋网"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "广告牌"
+          "中国伴恋网"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "广告牌",
-          "粉色",
-          "演唱会",
-          "抢票",
-          "手机",
-          "湖北移动",
-          "4G",
-          "公交站",
-          "树",
-          "8月15日"
+          "中国伴恋网"
         ]
       ]
     },
@@ -1363,70 +972,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "仙桃市",
-        "地震局",
-        "科学技术局",
-        "知识产权局",
-        "红灯笼",
-        "柱子",
-        "拱形窗户",
-        "中国梦",
-        "中国结",
-        "对联",
-        "12",
-        "轿车"
+        "F 儿童城",
+        "入口",
+        "观光电梯"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "最左侧竖牌",
-          "value": "仙桃九派创业投资有限公司"
+          "label": "区域1",
+          "value": "观光电梯"
         },
         {
           "kind": "text",
-          "label": "左二竖牌",
-          "value": "仙桃市地震局"
+          "label": "区域2",
+          "value": "F 儿童城"
         },
         {
           "kind": "text",
-          "label": "左中竖牌",
-          "value": "仙桃市科学技术局"
-        },
-        {
-          "kind": "text",
-          "label": "右中竖牌",
-          "value": "中共仙桃市科学技术局党组"
-        },
-        {
-          "kind": "text",
-          "label": "右二竖牌",
-          "value": "仙桃市知识产权局"
-        },
-        {
-          "kind": "number",
-          "label": "门牌号",
-          "value": "12"
+          "label": "区域3",
+          "value": "入口"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "仙桃市"
+          "F 儿童城"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "仙桃市",
-          "地震局",
-          "科学技术局",
-          "知识产权局",
-          "红灯笼",
-          "柱子",
-          "拱形窗户",
-          "中国梦",
-          "中国结",
-          "对联",
-          "12",
-          "轿车"
+          "F 儿童城",
+          "入口",
+          "观光电梯"
         ]
       ]
     },
@@ -1436,66 +1012,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "wooden",
-        "puzzle",
-        "cow",
-        "beef cuts",
-        "butcher",
-        "CHUCK",
-        "SHANK",
-        "RIB",
-        "PLATE",
-        "wood"
+        "028-26183333",
+        "028-26780888",
+        "Business hours",
+        "Cafe declined",
+        "Cafe with food",
+        "Reminder",
+        "Reservation hotline.",
+        "Rettycoffee",
+        "Thank you for you cooperation",
+        "上午：9:00——凌晨：01:00"
       ],
       "expected_details": [
         {
-          "kind": "object",
-          "label": "Main object",
-          "value": "Wooden puzzle board"
-        },
-        {
-          "kind": "object",
-          "label": "Puzzle subject",
-          "value": "Cow diagram"
-        },
-        {
-          "kind": "color",
-          "label": "Material color",
-          "value": "Light brown wood"
+          "kind": "text",
+          "label": "区域1",
+          "value": "瑞缇"
         },
         {
           "kind": "text",
-          "label": "Visible label",
-          "value": "CHUCK"
+          "label": "区域2",
+          "value": "Rettycoffee"
         },
         {
           "kind": "text",
-          "label": "Visible label",
-          "value": "SHANK"
+          "label": "区域3",
+          "value": "咖啡"
         },
         {
           "kind": "text",
-          "label": "Visible label",
-          "value": "RIB"
+          "label": "区域4",
+          "value": "温馨提示："
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "瑞缇"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "wooden"
+          "028-26183333"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "wooden",
-          "puzzle",
-          "cow",
-          "beef cuts",
-          "butcher",
-          "CHUCK",
-          "SHANK",
-          "RIB",
-          "PLATE",
-          "wood"
+          "028-26183333",
+          "028-26780888",
+          "Business hours",
+          "Cafe declined",
+          "Cafe with food",
+          "Reminder",
+          "Reservation hotline.",
+          "Rettycoffee",
+          "Thank you for you cooperation",
+          "上午：9:00——凌晨：01:00"
         ]
       ]
     },
@@ -1505,66 +1081,44 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "暖通空调风管",
-        "HVAC ducts",
-        "金属管道",
-        "弯头",
-        "镀锌板",
-        "工厂车间",
-        "通风系统",
-        "灰白色",
-        "方形风管",
-        "机房"
+        "MALE4000863358",
+        "P",
+        "停车场",
+        "迈欧健身游泳"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "水印",
-          "value": "co-oc-rd"
+          "label": "区域1",
+          "value": "迈欧健身游泳"
         },
         {
           "kind": "text",
-          "label": "摄影师水印",
-          "value": "ganesh.sundaresan"
+          "label": "区域2",
+          "value": "停车场"
         },
         {
-          "kind": "object",
-          "label": "主要物体",
-          "value": "暖通空调方形镀锌风管及弯头"
+          "kind": "text",
+          "label": "区域3",
+          "value": "P"
         },
         {
-          "kind": "color",
-          "label": "主体颜色",
-          "value": "灰白、银灰色"
-        },
-        {
-          "kind": "shape",
-          "label": "形状",
-          "value": "方形管道、L形弯头"
-        },
-        {
-          "kind": "location",
-          "label": "拍摄场景",
-          "value": "机房或工厂天花板上方的通风管道"
+          "kind": "number",
+          "label": "区域4",
+          "value": "MALE4000863358"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "暖通空调风管"
+          "MALE4000863358"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "暖通空调风管",
-          "HVAC ducts",
-          "金属管道",
-          "弯头",
-          "镀锌板",
-          "工厂车间",
-          "通风系统",
-          "灰白色",
-          "方形风管",
-          "机房"
+          "MALE4000863358",
+          "P",
+          "停车场",
+          "迈欧健身游泳"
         ]
       ]
     },
@@ -1574,66 +1128,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "黑白",
-        "圆点",
-        "网格",
-        "错觉",
-        "光学",
-        "图案",
-        "扭曲",
-        "中心",
-        "cc-nc-nd",
-        "shonk"
+        "上海通用",
+        "川MB9899"
       ],
       "expected_details": [
         {
-          "kind": "text",
-          "label": "左上角文字",
-          "value": "cc-nc-nd"
+          "kind": "number",
+          "label": "区域1",
+          "value": "川MB9899"
         },
         {
           "kind": "text",
-          "label": "左下角文字",
-          "value": "shonk"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "黑白"
-        },
-        {
-          "kind": "shape",
-          "label": "图形元素",
-          "value": "方形圆点"
-        },
-        {
-          "kind": "shape",
-          "label": "图案布局",
-          "value": "圆形辐射网格"
-        },
-        {
-          "kind": "object",
-          "label": "视觉效果",
-          "value": "光学错觉"
+          "label": "区域2",
+          "value": "上海通用"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "黑白"
+          "上海通用"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "黑白",
-          "圆点",
-          "网格",
-          "错觉",
-          "光学",
-          "图案",
-          "扭曲",
-          "中心",
-          "cc-nc-nd",
-          "shonk"
+          "上海通用",
+          "川MB9899"
         ]
       ]
     },
@@ -1643,66 +1161,47 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "赛车",
-        "赛道",
-        "绿色",
-        "蓝色",
-        "210",
-        "DüScholux",
-        "车手",
-        "头盔",
-        "竞速",
-        "弯道"
+        "清江茶楼",
+        "蜀都乡",
+        "，新鲜看得见，"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Green car number",
-          "value": "210"
+          "label": "区域1",
+          "value": "清江茶楼"
         },
         {
           "kind": "text",
-          "label": "Blue car sponsor",
-          "value": "DüScholux"
+          "label": "区域2",
+          "value": "清江茶楼"
         },
         {
-          "kind": "color",
-          "label": "Green car color",
-          "value": "Green with red and white accents"
+          "kind": "text",
+          "label": "区域3",
+          "value": "蜀都乡"
         },
         {
-          "kind": "color",
-          "label": "Blue car color",
-          "value": "Light blue with white accents"
+          "kind": "text",
+          "label": "区域4",
+          "value": "蜀都乡"
         },
         {
-          "kind": "object",
-          "label": "Vehicle type",
-          "value": "Open-wheel formula race cars"
-        },
-        {
-          "kind": "location",
-          "label": "Setting",
-          "value": "Asphalt race track with white edge line and grass"
+          "kind": "text",
+          "label": "区域5",
+          "value": "，新鲜看得见，"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "赛车"
+          "清江茶楼"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "赛车",
-          "赛道",
-          "绿色",
-          "蓝色",
-          "210",
-          "DüScholux",
-          "车手",
-          "头盔",
-          "竞速",
-          "弯道"
+          "清江茶楼",
+          "蜀都乡",
+          "，新鲜看得见，"
         ]
       ]
     },
@@ -1712,66 +1211,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "红色背景",
-        "手绘",
-        "蓝色",
-        "十字架",
-        "公式",
-        "纸张",
-        "数学图",
-        "白纸",
-        "CC-ncc-69",
-        "compbell14"
+        "类似球墨"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "代码标识",
-          "value": "CC-ncc-69"
-        },
-        {
-          "kind": "text",
-          "label": "用户标识",
-          "value": "compbell14"
-        },
-        {
-          "kind": "text",
-          "label": "手写公式",
-          "value": "4(n+1)-3"
-        },
-        {
-          "kind": "color",
-          "label": "背景颜色",
-          "value": "红色"
-        },
-        {
-          "kind": "color",
-          "label": "绘图颜色",
-          "value": "蓝色"
-        },
-        {
-          "kind": "shape",
-          "label": "图形形状",
-          "value": "十字架/十字形"
+          "label": "区域1",
+          "value": "类似球墨"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "红色背景"
+          "类似球墨"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "红色背景",
-          "手绘",
-          "蓝色",
-          "十字架",
-          "公式",
-          "纸张",
-          "数学图",
-          "白纸",
-          "CC-ncc-69",
-          "compbell14"
+          "类似球墨"
         ]
       ]
     },
@@ -1781,66 +1237,58 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "广告牌",
-        "演唱会",
-        "粉色",
-        "手机",
-        "抢票",
-        "8月15日",
-        "体育馆",
-        "4G LTE",
-        "仙桃",
-        "树木"
+        "中山东街",
+        "在线",
+        "宽带",
+        "寿星街",
+        "电信",
+        "超市"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "广告主标语",
-          "value": "看演唱会得手机"
+          "label": "区域1",
+          "value": "超市"
         },
         {
           "kind": "text",
-          "label": "品牌",
-          "value": "仙桃移动 动感4G之家"
-        },
-        {
-          "kind": "date",
-          "label": "决赛日期",
-          "value": "8月15日"
+          "label": "区域2",
+          "value": "中山东街"
         },
         {
           "kind": "text",
-          "label": "场地",
-          "value": "体育馆等着您"
+          "label": "区域3",
+          "value": "宽带"
         },
         {
           "kind": "text",
-          "label": "活动说明",
-          "value": "抢票喽！现场观众百分百中奖"
+          "label": "区域4",
+          "value": "电信"
         },
         {
-          "kind": "logo",
-          "label": "网络标识",
-          "value": "4G LTE"
+          "kind": "text",
+          "label": "区域5",
+          "value": "在线"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "寿星街"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "广告牌"
+          "中山东街"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "广告牌",
-          "演唱会",
-          "粉色",
-          "手机",
-          "抢票",
-          "8月15日",
-          "体育馆",
-          "4G LTE",
-          "仙桃",
-          "树木"
+          "中山东街",
+          "在线",
+          "宽带",
+          "寿星街",
+          "电信",
+          "超市"
         ]
       ]
     },
@@ -1850,66 +1298,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "我的钱包",
-        "微信安全支付",
-        "付款",
-        "零钱",
-        "银行卡",
-        "腾讯服务",
-        "转账",
-        "手机充值",
-        "理财通",
-        "Q币充值"
+        "青花六车"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "页面标题",
-          "value": "我的钱包"
-        },
-        {
-          "kind": "text",
-          "label": "副标题",
-          "value": "微信安全支付"
-        },
-        {
-          "kind": "price",
-          "label": "零钱余额",
-          "value": "￥0.11"
-        },
-        {
-          "kind": "text",
-          "label": "状态栏时间",
-          "value": "20:46"
-        },
-        {
-          "kind": "text",
-          "label": "腾讯服务分类",
-          "value": "腾讯服务"
-        },
-        {
-          "kind": "location",
-          "label": "顶部功能区",
-          "value": "付款 / 零钱 / 银行卡"
+          "label": "区域1",
+          "value": "青花六车"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "我的钱包"
+          "青花六车"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "我的钱包",
-          "微信安全支付",
-          "付款",
-          "零钱",
-          "银行卡",
-          "腾讯服务",
-          "转账",
-          "手机充值",
-          "理财通",
-          "Q币充值"
+          "青花六车"
         ]
       ]
     },
@@ -1919,66 +1324,35 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "XIN HAI COFFEE",
-        "棋牌",
-        "商务套餐",
-        "蓝天",
-        "白色建筑",
-        "红色招牌",
-        "屋顶",
-        "窗户",
-        "树",
-        "门店"
+        "她他酒店",
+        "旺铺"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "招牌英文",
-          "value": "XIN HAI COFFEE"
+          "label": "区域1",
+          "value": "旺铺"
         },
         {
           "kind": "text",
-          "label": "招牌中文",
-          "value": "棋牌"
+          "label": "区域2",
+          "value": "她他酒店"
         },
         {
           "kind": "text",
-          "label": "业务标签",
-          "value": "商务套餐"
-        },
-        {
-          "kind": "color",
-          "label": "招牌背景色",
-          "value": "深红色"
-        },
-        {
-          "kind": "color",
-          "label": "天空颜色",
-          "value": "深蓝色"
-        },
-        {
-          "kind": "object",
-          "label": "建筑特征",
-          "value": "白墙深色斜屋顶和大窗户"
+          "label": "区域3",
+          "value": "她他酒店"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "XIN HAI COFFEE"
+          "她他酒店"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "XIN HAI COFFEE",
-          "棋牌",
-          "商务套餐",
-          "蓝天",
-          "白色建筑",
-          "红色招牌",
-          "屋顶",
-          "窗户",
-          "树",
-          "门店"
+          "她他酒店",
+          "旺铺"
         ]
       ]
     },
@@ -1988,66 +1362,51 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "购物",
-        "商场",
-        "指示牌",
-        "箭头",
-        "服装",
-        "品牌",
-        "楼层",
-        "导视",
-        "圣诞",
-        "促销"
+        "RED SPIRI PARK",
+        "正在施工",
+        "红塔公园",
+        "自然",
+        "谢绝参观"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店铺1",
-          "value": "eryn.B 艾艾挪 Thursday Island TOP FEELING"
+          "label": "区域1",
+          "value": "自然"
         },
         {
           "kind": "text",
-          "label": "店铺2",
-          "value": "VE Love Full D.H Bosty"
+          "label": "区域2",
+          "value": "红塔公园"
         },
         {
           "kind": "text",
-          "label": "店铺3",
-          "value": "GILLIVO Maiv Martin ZUKKA.PRO 三叶草"
+          "label": "区域3",
+          "value": "正在施工"
         },
         {
           "kind": "text",
-          "label": "店铺4",
-          "value": "HYPESCAND PACO BNX 爱慕一家人"
+          "label": "区域4",
+          "value": "谢绝参观"
         },
         {
-          "kind": "color",
-          "label": "指示牌颜色",
-          "value": "紫色, 青色, 红色, 玫红色"
-        },
-        {
-          "kind": "object",
-          "label": "商场结构",
-          "value": "多层商场, 透明玻璃护栏"
+          "kind": "text",
+          "label": "区域5",
+          "value": "RED SPIRI PARK"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "购物"
+          "RED SPIRI PARK"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "购物",
-          "商场",
-          "指示牌",
-          "箭头",
-          "服装",
-          "品牌",
-          "楼层",
-          "导视",
-          "圣诞",
-          "促销"
+          "RED SPIRI PARK",
+          "正在施工",
+          "红塔公园",
+          "自然",
+          "谢绝参观"
         ]
       ]
     },
@@ -2057,66 +1416,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "9D",
-        "VR",
-        "30",
-        "元",
-        "体验价",
-        "玻璃门",
-        "红色",
-        "店铺",
-        "体感",
-        "飞行模拟器"
+        "2652",
+        "5555",
+        "伊之美容整形",
+        "伊之美整形",
+        "水光针",
+        "火爆",
+        "联网",
+        "迎光临",
+        "防盗",
+        "项目"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店铺招牌",
-          "value": "虚拟现实体验馆"
+          "label": "区域1",
+          "value": "伊之美整形"
         },
         {
-          "kind": "price",
-          "label": "9D VR体验价",
-          "value": "30元"
+          "kind": "text",
+          "label": "区域2",
+          "value": "，吸脂瘦身，拉皮除皱等。美容"
         },
         {
-          "kind": "object",
-          "label": "设备类型",
-          "value": "9D VR体验设备/体感模拟器"
+          "kind": "text",
+          "label": "区域3",
+          "value": "水光针"
         },
         {
-          "kind": "color",
-          "label": "机器颜色",
-          "value": "红色"
+          "kind": "text",
+          "label": "区域4",
+          "value": "火爆"
         },
         {
-          "kind": "location",
-          "label": "场景",
-          "value": "商场或店铺入口"
+          "kind": "text",
+          "label": "区域5",
+          "value": "项目"
         },
         {
-          "kind": "shape",
-          "label": "招牌形状",
-          "value": "蓝色矩形海报"
+          "kind": "text",
+          "label": "区域6",
+          "value": "迎光临"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "9D"
+          "2652"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "9D",
-          "VR",
-          "30",
-          "元",
-          "体验价",
-          "玻璃门",
-          "红色",
-          "店铺",
-          "体感",
-          "飞行模拟器"
+          "2652",
+          "5555",
+          "伊之美容整形",
+          "伊之美整形",
+          "水光针",
+          "火爆",
+          "联网",
+          "迎光临",
+          "防盗",
+          "项目"
         ]
       ]
     },
@@ -2126,66 +1485,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "MOS Café",
-        "MOS BURGER",
-        "纸杯",
-        "白色",
-        "红色",
-        "二维码",
-        "QR code",
-        "两个",
-        "外卖杯",
-        "美式墨斯汉堡"
+        "SIJUSHEQUJUJIAYANGLAOFUWUZHONGXIN",
+        "四居社区居家养老服务中心"
       ],
       "expected_details": [
         {
-          "kind": "brand",
-          "label": "品牌名称",
-          "value": "MOS Burger"
+          "kind": "text",
+          "label": "区域1",
+          "value": "四居社区居家养老服务中心"
         },
         {
           "kind": "text",
-          "label": "产品系列",
-          "value": "MOS Café"
-        },
-        {
-          "kind": "text",
-          "label": "Logo文字",
-          "value": "MOS BURGER"
-        },
-        {
-          "kind": "object",
-          "label": "容器类型",
-          "value": "纸杯"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "白色配红色印刷"
-        },
-        {
-          "kind": "logo",
-          "label": "图形标识",
-          "value": "MOS Burger 三角形logo及二维码"
+          "label": "区域2",
+          "value": "SIJUSHEQUJUJIAYANGLAOFUWUZHONGXIN"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "MOS Café"
+          "SIJUSHEQUJUJIAYANGLAOFUWUZHONGXIN"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "MOS Café",
-          "MOS BURGER",
-          "纸杯",
-          "白色",
-          "红色",
-          "二维码",
-          "QR code",
-          "两个",
-          "外卖杯",
-          "美式墨斯汉堡"
+          "SIJUSHEQUJUJIAYANGLAOFUWUZHONGXIN",
+          "四居社区居家养老服务中心"
         ]
       ]
     },
@@ -2195,71 +1518,58 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "YAKINIKU DON",
-        "丁次郎",
-        "はんの焼肉",
-        "烧肉丼",
-        "QR code",
-        "white",
-        "paper cup",
-        "black text",
-        "Magicscup Paper Cup",
-        "上白下黑"
+        "99",
+        "中山大道",
+        "巷时尚",
+        "武汉天宇",
+        "武汉天宇缝制设备贸易有限",
+        "沪杭风"
       ],
       "expected_details": [
         {
-          "kind": "object",
-          "label": "产品类型",
-          "value": "纸杯 / Paper Cup"
+          "kind": "text",
+          "label": "区域1",
+          "value": "武汉天宇缝制设备贸易有限"
         },
         {
           "kind": "text",
-          "label": "日文",
-          "value": "はんの焼肉"
+          "label": "区域2",
+          "value": "中山大道"
+        },
+        {
+          "kind": "number",
+          "label": "区域3",
+          "value": "99"
         },
         {
           "kind": "text",
-          "label": "中文/日文汉字",
-          "value": "丁次郎"
+          "label": "区域4",
+          "value": "武汉天宇"
         },
         {
           "kind": "text",
-          "label": "英文品名",
-          "value": "YAKINIKU DON"
-        },
-        {
-          "kind": "logo",
-          "label": "二维码",
-          "value": "QR code (右下角)"
+          "label": "区域5",
+          "value": "沪杭风"
         },
         {
           "kind": "text",
-          "label": "水印",
-          "value": "cc-nc-nd"
-        },
-        {
-          "kind": "text",
-          "label": "底部文字",
-          "value": "Magicscup Paper Cup - 0:30 26 25 0"
+          "label": "区域6",
+          "value": "巷时尚"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "YAKINIKU DON"
+          "99"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "YAKINIKU DON",
-          "丁次郎",
-          "はんの焼肉",
-          "烧肉丼",
-          "QR code",
-          "white",
-          "paper cup",
-          "black text",
-          "Magicscup Paper Cup",
-          "上白下黑"
+          "99",
+          "中山大道",
+          "巷时尚",
+          "武汉天宇",
+          "武汉天宇缝制设备贸易有限",
+          "沪杭风"
         ]
       ]
     },
@@ -2269,76 +1579,35 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "建筑",
-        "墙",
-        "画廊",
-        "街道",
-        "招牌",
-        "标志",
-        "画廊Y. GASTOU",
-        "巴黎",
-        "街道标志",
-        "壁画"
+        "HAPPY DINO",
+        "小龙哈彼"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "画廊名称",
-          "value": "GALERIE Y.GASTOU"
+          "label": "区域1",
+          "value": "小龙哈彼"
         },
         {
           "kind": "text",
-          "label": "街道牌",
-          "value": "RUE BONAPARTE"
+          "label": "区域2",
+          "value": "HAPPY DINO"
         },
         {
           "kind": "text",
-          "label": "区",
-          "value": "6e"
-        },
-        {
-          "kind": "object",
-          "label": "建筑特征",
-          "value": "外墙有裂缝和风化的灰泥"
-        },
-        {
-          "kind": "object",
-          "label": "阳台",
-          "value": "带有装饰栏杆的法式阳台"
-        },
-        {
-          "kind": "logo",
-          "label": "街道标志颜色",
-          "value": "蓝色"
-        },
-        {
-          "kind": "object",
-          "label": "店面材料",
-          "value": "斑点/水磨石立面"
-        },
-        {
-          "kind": "location",
-          "label": "城市",
-          "value": "巴黎"
+          "label": "区域3",
+          "value": "HAPPY DINO"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "建筑"
+          "HAPPY DINO"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "建筑",
-          "墙",
-          "画廊",
-          "街道",
-          "招牌",
-          "标志",
-          "画廊Y. GASTOU",
-          "巴黎",
-          "街道标志",
-          "壁画"
+          "HAPPY DINO",
+          "小龙哈彼"
         ]
       ]
     },
@@ -2348,62 +1617,58 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "灰色",
-        "墙面",
-        "木纹",
-        "门框",
-        "缝隙",
-        "裂纹",
-        "水泥",
-        "棕色"
+        "North Gate",
+        "ncient Mei-flower Garden",
+        "北門",
+        "北门",
+        "古梅园",
+        "古梅園"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "水印",
-          "value": "ccync-sa"
+          "label": "区域1",
+          "value": "北门"
         },
         {
           "kind": "text",
-          "label": "署名",
-          "value": "Yoav Lerman"
+          "label": "区域2",
+          "value": "North Gate"
         },
         {
-          "kind": "color",
-          "label": "墙面颜色",
-          "value": "灰色"
+          "kind": "text",
+          "label": "区域3",
+          "value": "古梅园"
         },
         {
-          "kind": "color",
-          "label": "门框颜色",
-          "value": "棕色"
+          "kind": "text",
+          "label": "区域4",
+          "value": "北門"
         },
         {
-          "kind": "object",
-          "label": "主要材质",
-          "value": "水泥墙面与木质门框"
+          "kind": "text",
+          "label": "区域5",
+          "value": "古梅園"
         },
         {
-          "kind": "shape",
-          "label": "门缝",
-          "value": "垂直细长缝隙"
+          "kind": "text",
+          "label": "区域6",
+          "value": "ncient Mei-flower Garden"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "灰色"
+          "North Gate"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "灰色",
-          "墙面",
-          "木纹",
-          "门框",
-          "缝隙",
-          "裂纹",
-          "水泥",
-          "棕色"
+          "North Gate",
+          "ncient Mei-flower Garden",
+          "北門",
+          "北门",
+          "古梅园",
+          "古梅園"
         ]
       ]
     },
@@ -2413,66 +1678,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "冰淇淋杯",
-        "Baskin Robbins",
-        "粉色",
-        "蓝色",
-        "纸杯",
-        "QR码",
-        "BR logo",
-        "Baskin-Robbins",
-        "包装",
-        "马吉斯"
+        "让"
       ],
       "expected_details": [
         {
-          "kind": "brand",
-          "label": "Brand",
-          "value": "Baskin Robbins (31冰淇淋)"
-        },
-        {
           "kind": "text",
-          "label": "Brand text",
-          "value": "BR baskin robbins"
-        },
-        {
-          "kind": "color",
-          "label": "Center cup color",
-          "value": "Pink/Magenta"
-        },
-        {
-          "kind": "color",
-          "label": "Side cup colors",
-          "value": "Blue and Dark Red/Maroon"
-        },
-        {
-          "kind": "object",
-          "label": "Object type",
-          "value": "Paper ice cream cups"
-        },
-        {
-          "kind": "text",
-          "label": "Bottom watermark",
-          "value": "Majiscup Paper Cup"
+          "label": "区域1",
+          "value": "让"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "冰淇淋杯"
+          "让"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "冰淇淋杯",
-          "Baskin Robbins",
-          "粉色",
-          "蓝色",
-          "纸杯",
-          "QR码",
-          "BR logo",
-          "Baskin-Robbins",
-          "包装",
-          "马吉斯"
+          "让"
         ]
       ]
     },
@@ -2482,66 +1704,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "创意DIY区",
-        "12:00",
-        "21:00",
-        "周一休",
-        "支付宝",
-        "opening",
-        "白板",
-        "手写",
-        "商场",
-        "盆栽"
+        "你TM说话注意点",
+        "可不是闹着玩的",
+        "我这只8块钱的拖鞋"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Sign title",
-          "value": "创意DIY区"
-        },
-        {
-          "kind": "text",
-          "label": "Opening hours",
-          "value": "12:00 ~ 21:00"
-        },
-        {
-          "kind": "text",
-          "label": "Closed day",
-          "value": "周一休 (Closed on Monday)"
-        },
-        {
-          "kind": "text",
-          "label": "Payment methods",
-          "value": "(支持支付宝转账)"
-        },
-        {
-          "kind": "text",
-          "label": "English label",
-          "value": "opening"
+          "label": "区域1",
+          "value": "你TM说话注意点"
         },
         {
           "kind": "number",
-          "label": "Phone number",
-          "value": "13554079512"
+          "label": "区域2",
+          "value": "我这只8块钱的拖鞋"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "可不是闹着玩的"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "创意DIY区"
+          "你TM说话注意点"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "创意DIY区",
-          "12:00",
-          "21:00",
-          "周一休",
-          "支付宝",
-          "opening",
-          "白板",
-          "手写",
-          "商场",
-          "盆栽"
+          "你TM说话注意点",
+          "可不是闹着玩的",
+          "我这只8块钱的拖鞋"
         ]
       ]
     },
@@ -2551,71 +1744,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "购物中心",
-        "导视牌",
-        "指示牌",
-        "楼层指引",
-        "英文",
-        "中文",
-        "箭头",
-        "紫色",
-        "红色",
-        "粉色"
+        "R",
+        "让爱健康你的心",
+        "雀巢Nestle"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "商家名称-紫色",
-          "value": "eryn.B, Thursday Island, 艾艾挪, TOP FEELING"
+          "label": "区域1",
+          "value": "雀巢Nestle"
         },
         {
           "kind": "text",
-          "label": "商家名称-青色",
-          "value": "VE, Love Full, D.H, Bost"
+          "label": "区域2",
+          "value": "让爱健康你的心"
         },
         {
           "kind": "text",
-          "label": "商家名称-红色",
-          "value": "GILLIVO, Maiv Martin, ZUKKA.PRO, 三叶草"
-        },
-        {
-          "kind": "text",
-          "label": "商家名称-粉色",
-          "value": "HYPE SCAND, PACO, BNX, 爱慕一家人"
-        },
-        {
-          "kind": "shape",
-          "label": "方向标识",
-          "value": "右指箭头 (>)"
-        },
-        {
-          "kind": "color",
-          "label": "指示牌颜色",
-          "value": "紫、青、红、粉"
-        },
-        {
-          "kind": "location",
-          "label": "场景",
-          "value": "商场室内中庭楼层指示牌"
+          "label": "区域3",
+          "value": "R"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "购物中心"
+          "R"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "购物中心",
-          "导视牌",
-          "指示牌",
-          "楼层指引",
-          "英文",
-          "中文",
-          "箭头",
-          "紫色",
-          "红色",
-          "粉色"
+          "R",
+          "让爱健康你的心",
+          "雀巢Nestle"
         ]
       ]
     },
@@ -2625,85 +1784,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "我的钱包",
-        "微信安全支付",
-        "零钱",
-        "银行卡",
-        "腾讯服务",
-        "转账",
-        "手机充值",
-        "理财通",
-        "Q币充值",
-        "生活缴费",
-        "城市服务",
-        "信用卡还款",
-        "微信红包",
-        "AA收款",
-        "20:46",
-        "¥0.11",
-        "付款"
+        "冰淇淋",
+        "冷热饮品",
+        "味思美鸡排"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "页面标题",
-          "value": "我的钱包"
+          "label": "区域1",
+          "value": "味思美鸡排"
         },
         {
           "kind": "text",
-          "label": "副标题",
-          "value": "微信安全支付"
-        },
-        {
-          "kind": "price",
-          "label": "零钱余额",
-          "value": "¥0.11"
+          "label": "区域2",
+          "value": "冷热饮品"
         },
         {
           "kind": "text",
-          "label": "分类标题",
-          "value": "腾讯服务"
-        },
-        {
-          "kind": "time",
-          "label": "状态栏时间",
-          "value": "20:46"
-        },
-        {
-          "kind": "object",
-          "label": "顶部菜单项",
-          "value": "付款、零钱、银行卡"
-        },
-        {
-          "kind": "object",
-          "label": "服务图标",
-          "value": "转账、手机充值、理财通、Q币充值、生活缴费、城市服务、信用卡还款、微信红包、AA收款"
+          "label": "区域3",
+          "value": "冰淇淋"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "我的钱包"
+          "冰淇淋"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "我的钱包",
-          "微信安全支付",
-          "零钱",
-          "银行卡",
-          "腾讯服务",
-          "转账",
-          "手机充值",
-          "理财通",
-          "Q币充值",
-          "生活缴费",
-          "城市服务",
-          "信用卡还款",
-          "微信红包",
-          "AA收款",
-          "20:46",
-          "¥0.11",
-          "付款"
+          "冰淇淋",
+          "冷热饮品",
+          "味思美鸡排"
         ]
       ]
     },
@@ -2713,66 +1824,62 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "广告牌",
-        "粉色",
-        "演唱会",
-        "中国移动",
-        "4G",
-        "抢票",
-        "8月15日",
-        "仙桃",
-        "树",
-        "公交车"
+        "10",
+        "4",
+        "元",
+        "展兴",
+        "推",
+        "特价",
+        "营业员",
+        "诚聘"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "广告主标语",
-          "value": "看演唱会得手机"
-        },
-        {
-          "kind": "date",
-          "label": "决赛日期",
-          "value": "8月15日"
+          "label": "区域1",
+          "value": "推"
         },
         {
           "kind": "text",
-          "label": "活动提示",
-          "value": "体育馆等着您！"
+          "label": "区域2",
+          "value": "展兴"
         },
         {
           "kind": "text",
-          "label": "抢票提示",
-          "value": "抢票喽！"
+          "label": "区域3",
+          "value": "诚聘"
         },
         {
-          "kind": "location",
-          "label": "活动地点",
-          "value": "体育馆"
+          "kind": "text",
+          "label": "区域4",
+          "value": "营业员"
         },
         {
-          "kind": "brand",
-          "label": "品牌名称",
-          "value": "中国移动 4G之好"
+          "kind": "number",
+          "label": "区域5",
+          "value": "10"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "元"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "广告牌"
+          "10"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "广告牌",
-          "粉色",
-          "演唱会",
-          "中国移动",
-          "4G",
-          "抢票",
-          "8月15日",
-          "仙桃",
-          "树",
-          "公交车"
+          "10",
+          "4",
+          "元",
+          "展兴",
+          "推",
+          "特价",
+          "营业员",
+          "诚聘"
         ]
       ]
     },
@@ -2782,62 +1889,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "工程训练中心",
-        "ENGINEERING TRAINING CENTER",
-        "蓝色",
-        "标志",
-        "齿轮",
-        "灯光",
-        "夜晚",
-        "横幅"
+        "12个字，简洁明",
+        "仙桃市“周末大舞台”送戏下基层文艺演出",
+        "仙桃市第11届太极拳剑交流赛",
+        "作风、廉",
+        "复州花园居委会",
+        "复州花园社区与包挂单位市商务局",
+        "复州花园社区与实验二小",
+        "复州花园社区代表队在体育馆参加",
+        "太极拳剑交流赛",
+        "宣"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Chinese Text",
-          "value": "工程训练中心"
+          "label": "区域1",
+          "value": "复州花园社区与实验二小"
         },
         {
           "kind": "text",
-          "label": "English Text",
-          "value": "ENGINEERING TRAINING CENTER"
+          "label": "区域2",
+          "value": "开展创城万人签名活动"
         },
         {
-          "kind": "color",
-          "label": "Background Color",
-          "value": "Blue"
+          "kind": "text",
+          "label": "区域3",
+          "value": "复州花园社区代表队在体育馆参加"
         },
         {
-          "kind": "logo",
-          "label": "Logo Design",
-          "value": "Gear and shape emblem"
+          "kind": "number",
+          "label": "区域4",
+          "value": "仙桃市第11届太极拳剑交流赛"
         },
         {
-          "kind": "location",
-          "label": "Sign Location",
-          "value": "Indoor hallway"
+          "kind": "text",
+          "label": "区域5",
+          "value": "复州花园社区与包挂单位市商务局"
         },
         {
-          "kind": "object",
-          "label": "Main Object",
-          "value": "Illuminated sign board"
+          "kind": "text",
+          "label": "区域6",
+          "value": "市保险公司开展“周末大舞台”文艺进社区"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "工程训练中心"
+          "12个字，简洁明"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "工程训练中心",
-          "ENGINEERING TRAINING CENTER",
-          "蓝色",
-          "标志",
-          "齿轮",
-          "灯光",
-          "夜晚",
-          "横幅"
+          "12个字，简洁明",
+          "仙桃市“周末大舞台”送戏下基层文艺演出",
+          "仙桃市第11届太极拳剑交流赛",
+          "作风、廉",
+          "复州花园居委会",
+          "复州花园社区与包挂单位市商务局",
+          "复州花园社区与实验二小",
+          "复州花园社区代表队在体育馆参加",
+          "太极拳剑交流赛",
+          "宣"
         ]
       ]
     },
@@ -2847,59 +1958,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "黑白照片",
-        "女人",
-        "桌子",
-        "茶壶",
-        "杯子",
-        "报纸",
-        "盘子",
-        "短发",
-        "深色衣服"
+        "BOPV",
+        "抱璞创意"
       ],
       "expected_details": [
         {
-          "kind": "color",
-          "label": "照片颜色",
-          "value": "黑白"
+          "kind": "text",
+          "label": "区域1",
+          "value": "BOPV"
         },
         {
           "kind": "text",
-          "label": "水印",
-          "value": "cc-nc-nd"
-        },
-        {
-          "kind": "text",
-          "label": "左下角文字",
-          "value": "Breehtbug"
-        },
-        {
-          "kind": "person",
-          "label": "人物",
-          "value": "一位短发女性"
-        },
-        {
-          "kind": "object",
-          "label": "桌上物品",
-          "value": "茶壶、杯子、托盘、报纸"
+          "label": "区域2",
+          "value": "抱璞创意"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "黑白照片"
+          "BOPV"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "黑白照片",
-          "女人",
-          "桌子",
-          "茶壶",
-          "杯子",
-          "报纸",
-          "盘子",
-          "短发",
-          "深色衣服"
+          "BOPV",
+          "抱璞创意"
         ]
       ]
     },
@@ -2909,66 +1991,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "Mock Election",
-        "Y Vote",
-        "Hansard Society",
-        "European Election 2009",
-        "megaphone",
-        "bar chart",
-        "Students",
-        "Teachers",
-        "Political Parties",
-        "RUN A CAMPAIGN"
+        "武汉市第三十九中学"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "Website Title",
-          "value": "Y Vote Mock Elections"
-        },
-        {
-          "kind": "text",
-          "label": "Chart Title",
-          "value": "European Election 2009"
-        },
-        {
-          "kind": "number",
-          "label": "Chart Y-axis Label",
-          "value": "Seats"
-        },
-        {
-          "kind": "number",
-          "label": "Chart Values",
-          "value": "16, 15, 13, 11, 8, 7, 5"
-        },
-        {
-          "kind": "text",
-          "label": "Section Heading",
-          "value": "Latest News"
-        },
-        {
-          "kind": "text",
-          "label": "Organization",
-          "value": "Hansard Society"
+          "label": "区域1",
+          "value": "武汉市第三十九中学"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "Mock Election"
+          "武汉市第三十九中学"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "Mock Election",
-          "Y Vote",
-          "Hansard Society",
-          "European Election 2009",
-          "megaphone",
-          "bar chart",
-          "Students",
-          "Teachers",
-          "Political Parties",
-          "RUN A CAMPAIGN"
+          "武汉市第三十九中学"
         ]
       ]
     },
@@ -2978,66 +2017,64 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "猫",
-        "笔记本电脑",
-        "联想",
-        "Lenovo",
-        "键盘",
-        "黑白条纹",
-        "睡觉",
-        "桌面",
-        "显示器",
-        "向日葵"
+        "8888888",
+        "GALAXY A7",
+        "ICE TEA",
+        "Samsung",
+        "乐孚LOVE",
+        "冰力十足",
+        "冰红茶",
+        "美食天地",
+        "闪耀上市"
       ],
       "expected_details": [
         {
-          "kind": "brand",
-          "label": "Laptop brand",
-          "value": "Lenovo"
+          "kind": "text",
+          "label": "区域1",
+          "value": "冰红茶"
         },
         {
-          "kind": "object",
-          "label": "Main subject",
-          "value": "Cat"
+          "kind": "text",
+          "label": "区域2",
+          "value": "ICE TEA"
         },
         {
-          "kind": "color",
-          "label": "Cat color",
-          "value": "Black, white, and brown tabby"
+          "kind": "text",
+          "label": "区域3",
+          "value": "冰力十足"
         },
         {
-          "kind": "location",
-          "label": "Location",
-          "value": "On laptop keyboard"
+          "kind": "text",
+          "label": "区域4",
+          "value": "闪耀上市"
         },
         {
-          "kind": "object",
-          "label": "Mug design",
-          "value": "Sunflower"
+          "kind": "number",
+          "label": "区域5",
+          "value": "GALAXY A7"
         },
         {
-          "kind": "object",
-          "label": "Background items",
-          "value": "Monitor, speakers, cables"
+          "kind": "text",
+          "label": "区域6",
+          "value": "Samsung"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "猫"
+          "8888888"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "猫",
-          "笔记本电脑",
-          "联想",
-          "Lenovo",
-          "键盘",
-          "黑白条纹",
-          "睡觉",
-          "桌面",
-          "显示器",
-          "向日葵"
+          "8888888",
+          "GALAXY A7",
+          "ICE TEA",
+          "Samsung",
+          "乐孚LOVE",
+          "冰力十足",
+          "冰红茶",
+          "美食天地",
+          "闪耀上市"
         ]
       ]
     },
@@ -3047,66 +2084,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "cc-nc-nd",
-        "Blackwell_S",
-        "黑白",
-        "路灯",
-        "长椅",
-        "砖墙",
-        "帽子",
-        "户外",
-        "树",
-        "吊灯"
+        "鲜又多水果超市"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "顶部水印",
-          "value": "cc-nc-nd"
-        },
-        {
-          "kind": "text",
-          "label": "左下角署名",
-          "value": "Blackwell_S"
-        },
-        {
-          "kind": "object",
-          "label": "场景类型",
-          "value": "户外露台/庭院"
-        },
-        {
-          "kind": "object",
-          "label": "可见物品",
-          "value": "球形路灯、吊式加热灯、多张长椅和金属桌椅、人物、树木、砖墙"
-        },
-        {
-          "kind": "color",
-          "label": "整体色调",
-          "value": "黑白"
-        },
-        {
-          "kind": "person",
-          "label": "人物特征",
-          "value": "戴帽子、穿深色上衣、坐在桌椅处"
+          "label": "区域1",
+          "value": "鲜又多水果超市"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "cc-nc-nd"
+          "鲜又多水果超市"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "cc-nc-nd",
-          "Blackwell_S",
-          "黑白",
-          "路灯",
-          "长椅",
-          "砖墙",
-          "帽子",
-          "户外",
-          "树",
-          "吊灯"
+          "鲜又多水果超市"
         ]
       ]
     },
@@ -3116,61 +2110,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "鳄鱼",
-        "水中",
-        "眼睛",
-        "沼泽",
-        "草",
-        "棕色",
-        "爬行动物",
-        "水面",
-        "ca-nc-nd",
-        "orientalizing"
+        "6.万年潜水党",
+        "我就是看，啥也不干"
       ],
       "expected_details": [
         {
-          "kind": "object",
-          "label": "主体",
-          "value": "鳄鱼头部"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "棕色"
-        },
-        {
-          "kind": "location",
-          "label": "场景",
-          "value": "水中/沼泽"
+          "kind": "number",
+          "label": "区域1",
+          "value": "6.万年潜水党"
         },
         {
           "kind": "text",
-          "label": "左上角水印",
-          "value": "cc-nc-nd"
-        },
-        {
-          "kind": "text",
-          "label": "左下角署名",
-          "value": "orientalizing"
+          "label": "区域2",
+          "value": "我就是看，啥也不干"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "鳄鱼"
+          "6.万年潜水党"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "鳄鱼",
-          "水中",
-          "眼睛",
-          "沼泽",
-          "草",
-          "棕色",
-          "爬行动物",
-          "水面",
-          "ca-nc-nd",
-          "orientalizing"
+          "6.万年潜水党",
+          "我就是看，啥也不干"
         ]
       ]
     },
@@ -3180,81 +2143,23 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "广告牌",
-        "粉色",
-        "中国",
-        "手机",
-        "演唱会",
-        "公交站",
-        "树木",
-        "电线",
-        "仙桃",
-        "4G"
+        "我不在"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "主标题",
-          "value": "看演唱会得手机"
-        },
-        {
-          "kind": "date",
-          "label": "日期",
-          "value": "8月15日"
-        },
-        {
-          "kind": "text",
-          "label": "品牌",
-          "value": "仙桃移动4G之约"
-        },
-        {
-          "kind": "text",
-          "label": "口号",
-          "value": "体育馆等着您!"
-        },
-        {
-          "kind": "text",
-          "label": "抢票说明",
-          "value": "下载咪咕爱唱进入活动专区"
-        },
-        {
-          "kind": "text",
-          "label": "运营商",
-          "value": "中国移动"
-        },
-        {
-          "kind": "color",
-          "label": "背景颜色",
-          "value": "粉红色"
-        },
-        {
-          "kind": "location",
-          "label": "地点",
-          "value": "仙桃市"
-        },
-        {
-          "kind": "object",
-          "label": "下方物体",
-          "value": "黄色公交车"
+          "label": "区域1",
+          "value": "我不在"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "广告牌"
+          "我不在"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "广告牌",
-          "粉色",
-          "中国",
-          "手机",
-          "演唱会",
-          "公交站",
-          "树木",
-          "电线",
-          "仙桃",
-          "4G"
+          "我不在"
         ]
       ]
     },
@@ -3264,66 +2169,37 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "新派川菜",
-        "4F",
-        "电话",
-        "027-87878057",
-        "武汉光谷",
-        "意大利风情街",
-        "招牌",
-        "红色",
-        "黄色",
-        "楼梯间"
+        "和路雪",
+        "大庆市红宝石冰淇淋有限公司",
+        "紅寶石"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "店名",
-          "value": "新派川菜"
+          "label": "区域1",
+          "value": "紅寶石"
         },
         {
           "kind": "text",
-          "label": "楼层",
-          "value": "4F"
+          "label": "区域2",
+          "value": "和路雪"
         },
         {
           "kind": "text",
-          "label": "电话",
-          "value": "027-87878057"
-        },
-        {
-          "kind": "text",
-          "label": "地址",
-          "value": "武汉光谷步行街意大利风情街5号楼4楼"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "红、白、黄"
-        },
-        {
-          "kind": "object",
-          "label": "类型",
-          "value": "竖幅广告牌/招牌"
+          "label": "区域3",
+          "value": "大庆市红宝石冰淇淋有限公司"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "新派川菜"
+          "和路雪"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "新派川菜",
-          "4F",
-          "电话",
-          "027-87878057",
-          "武汉光谷",
-          "意大利风情街",
-          "招牌",
-          "红色",
-          "黄色",
-          "楼梯间"
+          "和路雪",
+          "大庆市红宝石冰淇淋有限公司",
+          "紅寶石"
         ]
       ]
     },
@@ -3333,66 +2209,30 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "律师事务所",
-        "招牌",
-        "玻璃门",
-        "律师楼",
-        "建筑入口",
-        "椅子",
-        "空调",
-        "窗",
-        "柱",
-        "门牌"
+        "府督都军鄂",
+        "请往左走过安检"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "竖排横幅文字",
-          "value": "武汉勤光建材有限公司"
+          "label": "区域1",
+          "value": "请往左走过安检"
         },
         {
           "kind": "text",
-          "label": "玻璃门顶部文字",
-          "value": "律师楼"
-        },
-        {
-          "kind": "text",
-          "label": "玻璃门竖排文字",
-          "value": "湖北东风"
-        },
-        {
-          "kind": "text",
-          "label": "门牌号",
-          "value": "02"
-        },
-        {
-          "kind": "location",
-          "label": "场景",
-          "value": "建筑入口"
-        },
-        {
-          "kind": "object",
-          "label": "可见物品",
-          "value": "椅子、空调、桌子"
+          "label": "区域2",
+          "value": "府督都军鄂"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "律师事务所"
+          "府督都军鄂"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "律师事务所",
-          "招牌",
-          "玻璃门",
-          "律师楼",
-          "建筑入口",
-          "椅子",
-          "空调",
-          "窗",
-          "柱",
-          "门牌"
+          "府督都军鄂",
+          "请往左走过安检"
         ]
       ]
     },
@@ -3402,66 +2242,66 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "工地",
-        "围栏",
-        "燃气",
-        "警示牌",
-        "安全",
-        "注意",
-        "管道",
-        "施工",
-        "建筑",
-        "泥地"
+        "10%",
+        "11票",
+        "153票",
+        "2%",
+        "23、周登祥",
+        "24、王立波",
+        "25、陈静（已选）",
+        "591票",
+        "8%",
+        "与同业不一样的银行!"
       ],
       "expected_details": [
         {
-          "kind": "logo",
-          "label": "Logo text",
-          "value": "港华燃气"
-        },
-        {
-          "kind": "brand",
-          "label": "Company name",
-          "value": "吴江港华燃气有限公司"
+          "kind": "text",
+          "label": "区域1",
+          "value": "建行安阳分行"
         },
         {
           "kind": "number",
-          "label": "维修电话",
-          "value": "63426830"
+          "label": "区域2",
+          "value": "23、周登祥"
         },
         {
-          "kind": "text",
-          "label": "Warning text",
-          "value": "工地现场 注意安全"
+          "kind": "number",
+          "label": "区域3",
+          "value": "153票"
         },
         {
-          "kind": "color",
-          "label": "Safety flag colors",
-          "value": "红/蓝/黄/绿"
+          "kind": "number",
+          "label": "区域4",
+          "value": "24、王立波"
         },
         {
-          "kind": "object",
-          "label": "Foreground object",
-          "value": "金属施工围栏（铁马）"
+          "kind": "number",
+          "label": "区域5",
+          "value": "11票"
+        },
+        {
+          "kind": "number",
+          "label": "区域6",
+          "value": "25、陈静（已选）"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "工地"
+          "10%"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "工地",
-          "围栏",
-          "燃气",
-          "警示牌",
-          "安全",
-          "注意",
-          "管道",
-          "施工",
-          "建筑",
-          "泥地"
+          "10%",
+          "11票",
+          "153票",
+          "2%",
+          "23、周登祥",
+          "24、王立波",
+          "25、陈静（已选）",
+          "591票",
+          "8%",
+          "与同业不一样的银行!"
         ]
       ]
     },
@@ -3471,86 +2311,2168 @@
       "category": "default",
       "expected_type": "info",
       "expected_description_keywords": [
-        "严禁鸣喇",
-        "请轻关门",
-        "停靠后请熄火",
-        "请勿使用远光灯",
-        "请排气管朝外",
-        "汽车防盗守则",
-        "蓝色",
-        "告示牌",
-        "中英文",
-        "图标"
+        "P",
+        "停车场"
       ],
       "expected_details": [
         {
           "kind": "text",
-          "label": "顶部禁令1",
-          "value": "严禁鸣喇"
+          "label": "区域1",
+          "value": "停车场"
         },
         {
           "kind": "text",
-          "label": "顶部禁令2",
-          "value": "请轻关门"
-        },
-        {
-          "kind": "text",
-          "label": "顶部禁令3",
-          "value": "停靠后请熄火"
-        },
-        {
-          "kind": "text",
-          "label": "顶部禁令4",
-          "value": "请勿使用远光灯"
-        },
-        {
-          "kind": "text",
-          "label": "顶部禁令5",
-          "value": "请排气管朝外"
-        },
-        {
-          "kind": "text",
-          "label": "主标题",
-          "value": "汽车防盗守则"
-        },
-        {
-          "kind": "text",
-          "label": "英文副标题",
-          "value": "the rules of guarding aguinst theft of cars"
-        },
-        {
-          "kind": "color",
-          "label": "主色调",
-          "value": "蓝色"
-        },
-        {
-          "kind": "text",
-          "label": "左下说明",
-          "value": "切勿将贵重物品留在车内 Dont leave any valuablong in the car."
-        },
-        {
-          "kind": "text",
-          "label": "右下说明",
-          "value": "不要将车匙留在车内 Don'leave the key in the car.t"
+          "label": "区域2",
+          "value": "P"
         }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "严禁鸣喇"
+          "P"
         ]
       ],
       "acceptable_intent_keywords": [
         [
-          "严禁鸣喇",
-          "请轻关门",
-          "停靠后请熄火",
-          "请勿使用远光灯",
-          "请排气管朝外",
-          "汽车防盗守则",
-          "蓝色",
-          "告示牌",
-          "中英文",
-          "图标"
+          "P",
+          "停车场"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_51",
+      "file": "rctw_default_51.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "HOLiKE",
+        "保罗·安德鲁",
+        "全屋源",
+        "好莱客衣柜",
+        "好莱客衣柜·世界之作"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "全屋源"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "保罗·安德鲁"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "好莱客衣柜·世界之作"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "HOLiKE"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "好莱客衣柜"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "HOLiKE"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "HOLiKE",
+          "保罗·安德鲁",
+          "全屋源",
+          "好莱客衣柜",
+          "好莱客衣柜·世界之作"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_52",
+      "file": "rctw_default_52.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "5",
+        "5舍"
+      ],
+      "expected_details": [
+        {
+          "kind": "number",
+          "label": "区域1",
+          "value": "5舍"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "5"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "5"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "5",
+          "5舍"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_53",
+      "file": "rctw_default_53.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "操你妈",
+        "真踢啊"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "操你妈"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "真踢啊"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "操你妈"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "操你妈",
+          "真踢啊"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_54",
+      "file": "rctw_default_54.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "纳米触摸屏"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "纳米触摸屏"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "纳米触摸屏"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "纳米触摸屏"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_55",
+      "file": "rctw_default_55.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "公",
+        "小胡鴨",
+        "报警电",
+        "武汉铁路公安警务服务岗",
+        "警戒带"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "武汉铁路公安警务服务岗"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "报警电"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "小胡鴨"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "警戒带"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "公"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "公"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "公",
+          "小胡鴨",
+          "报警电",
+          "武汉铁路公安警务服务岗",
+          "警戒带"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_56",
+      "file": "rctw_default_56.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "68860",
+        "G奥康"
+      ],
+      "expected_details": [
+        {
+          "kind": "number",
+          "label": "区域1",
+          "value": "68860"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "G奥康"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "68860"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "68860",
+          "G奥康"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_57",
+      "file": "rctw_default_57.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "Luojiashan Road",
+        "珞珈山路"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "珞珈山路"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "Luojiashan Road"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "Luojiashan Road"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "Luojiashan Road",
+          "珞珈山路"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_58",
+      "file": "rctw_default_58.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "宝岛种苗"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "宝岛种苗"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "宝岛种苗"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "宝岛种苗"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_59",
+      "file": "rctw_default_59.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "车軎"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "车軎"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "车軎"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "车軎"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_60",
+      "file": "rctw_default_60.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "皇室布艺"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "皇室布艺"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "皇室布艺"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "皇室布艺"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_61",
+      "file": "rctw_default_61.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "100米",
+        "15250517650",
+        "63373000",
+        "二楼客货综合维修",
+        "宝田汽修",
+        "汽车贷款",
+        "让"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "汽车贷款"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "15250517650"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "让"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "宝田汽修"
+        },
+        {
+          "kind": "number",
+          "label": "区域5",
+          "value": "63373000"
+        },
+        {
+          "kind": "number",
+          "label": "区域6",
+          "value": "100米"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "100米"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "100米",
+          "15250517650",
+          "63373000",
+          "二楼客货综合维修",
+          "宝田汽修",
+          "汽车贷款",
+          "让"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_62",
+      "file": "rctw_default_62.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "0053067",
+        "徐家庭院客栈",
+        "徐家私房菜",
+        "电话：15162507965"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "徐家私房菜"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "徐家庭院客栈"
+        },
+        {
+          "kind": "number",
+          "label": "区域3",
+          "value": "0053067"
+        },
+        {
+          "kind": "number",
+          "label": "区域4",
+          "value": "电话：15162507965"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "0053067"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "0053067",
+          "徐家庭院客栈",
+          "徐家私房菜",
+          "电话：15162507965"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_63",
+      "file": "rctw_default_63.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "翡翠明珠"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "翡翠明珠"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "翡翠明珠"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "翡翠明珠"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_64",
+      "file": "rctw_default_64.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "1377",
+        "1631",
+        "399",
+        "吊车"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "吊车"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "1377"
+        },
+        {
+          "kind": "number",
+          "label": "区域3",
+          "value": "1631"
+        },
+        {
+          "kind": "number",
+          "label": "区域4",
+          "value": "399"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "1377"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "1377",
+          "1631",
+          "399",
+          "吊车"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_65",
+      "file": "rctw_default_65.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "加盟电话：15827211433",
+        "川湘阁",
+        "水城羊肉粉",
+        "炒菜",
+        "盖饭"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "水城羊肉粉"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "川湘阁"
+        },
+        {
+          "kind": "number",
+          "label": "区域3",
+          "value": "加盟电话：15827211433"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "炒菜"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "盖饭"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "加盟电话：15827211433"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "加盟电话：15827211433",
+          "川湘阁",
+          "水城羊肉粉",
+          "炒菜",
+          "盖饭"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_66",
+      "file": "rctw_default_66.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        ":我特别怀念高中的时候，各科",
+        "把自己想到的全告诉我们，看看现在",
+        "老师和我们一起猜题，压题，恨不得",
+        "还装的一副不知道的样子",
+        "这些大学老师，明明题就是你出的，"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "老师和我们一起猜题，压题，恨不得"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "把自己想到的全告诉我们，看看现在"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "这些大学老师，明明题就是你出的，"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "还装的一副不知道的样子"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": ":我特别怀念高中的时候，各科"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          ":我特别怀念高中的时候，各科"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          ":我特别怀念高中的时候，各科",
+          "把自己想到的全告诉我们，看看现在",
+          "老师和我们一起猜题，压题，恨不得",
+          "还装的一副不知道的样子",
+          "这些大学老师，明明题就是你出的，"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_67",
+      "file": "rctw_default_67.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "快乐柠檬"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "快乐柠檬"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "快乐柠檬"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "快乐柠檬"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_68",
+      "file": "rctw_default_68.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "9号",
+        "小心伤人",
+        "影厅出口",
+        "随时开门"
+      ],
+      "expected_details": [
+        {
+          "kind": "number",
+          "label": "区域1",
+          "value": "9号"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "影厅出口"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "随时开门"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "小心伤人"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "9号"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "9号",
+          "小心伤人",
+          "影厅出口",
+          "随时开门"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_69",
+      "file": "rctw_default_69.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "价格公道",
+        "椒盐旁皮鱼",
+        "欢迎品尝",
+        "白水鱼",
+        "白虾",
+        "脆炸虾饼"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "白水鱼"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "白虾"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "椒盐旁皮鱼"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "脆炸虾饼"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "价格公道"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "欢迎品尝"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "价格公道"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "价格公道",
+          "椒盐旁皮鱼",
+          "欢迎品尝",
+          "白水鱼",
+          "白虾",
+          "脆炸虾饼"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_70",
+      "file": "rctw_default_70.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "7",
+        "武汉电气行业协会"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "武汉电气行业协会"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "7"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "7"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "7",
+          "武汉电气行业协会"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_71",
+      "file": "rctw_default_71.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "人民幸福",
+        "天振兴"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "天振兴"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "人民幸福"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "人民幸福"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "人民幸福",
+          "天振兴"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_72",
+      "file": "rctw_default_72.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "容·美发·刮痧·拔罐·造型",
+        "精品摩托",
+        "韩剪"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "韩剪"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "精品摩托"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "韩剪"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "容·美发·刮痧·拔罐·造型"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "容·美发·刮痧·拔罐·造型"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "容·美发·刮痧·拔罐·造型",
+          "精品摩托",
+          "韩剪"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_73",
+      "file": "rctw_default_73.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "08:30——18:00",
+        "ICBC",
+        "不停车",
+        "中国工商银行",
+        "买汽车",
+        "卡",
+        "告诉收费",
+        "大额消费",
+        "电话银行：95588",
+        "网址www.icbc.com.cn"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "中国工商银行"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "资阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "买汽车"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "大额消费"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "告诉收费"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "不停车"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "08:30——18:00"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "08:30——18:00",
+          "ICBC",
+          "不停车",
+          "中国工商银行",
+          "买汽车",
+          "卡",
+          "告诉收费",
+          "大额消费",
+          "电话银行：95588",
+          "网址www.icbc.com.cn"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_74",
+      "file": "rctw_default_74.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "童乐园"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "童乐园"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "童乐园"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "童乐园"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_75",
+      "file": "rctw_default_75.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "寄",
+        "抵押借款",
+        "貂皮",
+        "车辆抵押",
+        "首义商行"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "抵押借款"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "首义商行"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "车辆抵押"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "貂皮"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "寄"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "寄"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "寄",
+          "抵押借款",
+          "貂皮",
+          "车辆抵押",
+          "首义商行"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_76",
+      "file": "rctw_default_76.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "楚河鱼府"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "楚河鱼府"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "楚河鱼府"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "楚河鱼府"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_77",
+      "file": "rctw_default_77.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "SCHOOL OF MANAGEMENT",
+        "管理学院"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "管理学院"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "SCHOOL OF MANAGEMENT"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "SCHOOL OF MANAGEMENT"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "SCHOOL OF MANAGEMENT",
+          "管理学院"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_78",
+      "file": "rctw_default_78.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "寄存处",
+        "桑拿"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "寄存处"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "3"
+        },
+        {
+          "kind": "number",
+          "label": "区域3",
+          "value": "4"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "桑拿"
+        },
+        {
+          "kind": "number",
+          "label": "区域5",
+          "value": "1"
+        },
+        {
+          "kind": "number",
+          "label": "区域6",
+          "value": "2"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "1"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "1",
+          "2",
+          "3",
+          "4",
+          "寄存处",
+          "桑拿"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_79",
+      "file": "rctw_default_79.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "中国",
+        "忠厚传家久",
+        "梦",
+        "诗书继世长"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "忠厚传家久"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "中国"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "梦"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "诗书继世长"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "中国"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "中国",
+          "忠厚传家久",
+          "梦",
+          "诗书继世长"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_80",
+      "file": "rctw_default_80.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "政",
+        "艳阳景轩",
+        "艳阳景轩酒店"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "艳阳景轩"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "艳阳景轩酒店"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "政"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "政"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "政",
+          "艳阳景轩",
+          "艳阳景轩酒店"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_81",
+      "file": "rctw_default_81.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "乐泰亮甲",
+        "古筝",
+        "嘉禾",
+        "手足",
+        "灰",
+        "礼",
+        "苏妈小店",
+        "货真",
+        "进口食品百货",
+        "钢琴电"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "苏妈小店"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "进口食品百货"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "货真"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "阳光琴行"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "古筝"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "乐泰亮甲"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "乐泰亮甲"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "乐泰亮甲",
+          "古筝",
+          "嘉禾",
+          "手足",
+          "灰",
+          "礼",
+          "苏妈小店",
+          "货真",
+          "进口食品百货",
+          "钢琴电"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_82",
+      "file": "rctw_default_82.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "冰糖龙眼",
+        "油焖草菇"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "冰糖龙眼"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "油焖草菇"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "冰糖龙眼"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "冰糖龙眼",
+          "油焖草菇"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_83",
+      "file": "rctw_default_83.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "No Thoroughfare",
+        "Wuhan east lake",
+        "easy lake",
+        "武汉东湖",
+        "请勿通过"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "easy lake"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "武汉东湖"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "Wuhan east lake"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "请勿通过"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "No Thoroughfare"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "No Thoroughfare"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "No Thoroughfare",
+          "Wuhan east lake",
+          "easy lake",
+          "武汉东湖",
+          "请勿通过"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_84",
+      "file": "rctw_default_84.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "16",
+        "传统小吃",
+        "寻味記",
+        "鱼行"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "传统小吃"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "传统小吃"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "寻味記"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "寻味記"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "鱼行"
+        },
+        {
+          "kind": "number",
+          "label": "区域6",
+          "value": "16"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "16"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "16",
+          "传统小吃",
+          "寻味記",
+          "鱼行"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_85",
+      "file": "rctw_default_85.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "享受夺目尽在皮皮屋",
+        "广隆蛋挞王",
+        "皮皮屋"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "广隆蛋挞王"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "皮皮屋"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "享受夺目尽在皮皮屋"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "享受夺目尽在皮皮屋"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "享受夺目尽在皮皮屋",
+          "广隆蛋挞王",
+          "皮皮屋"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_86",
+      "file": "rctw_default_86.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "停"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "停"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "停"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "停"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_87",
+      "file": "rctw_default_87.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "会议",
+        "咖啡",
+        "商务",
+        "棋牌"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "咖啡"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "棋牌"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "商务"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "会议"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "会议"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "会议",
+          "咖啡",
+          "商务",
+          "棋牌"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_88",
+      "file": "rctw_default_88.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "万豪圣会水都休闲有限公"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "万豪圣会水都休闲有限公"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "万豪圣会水都休闲有限公"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "万豪圣会水都休闲有限公"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_89",
+      "file": "rctw_default_89.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "S S",
+        "adidas",
+        "哪里都是运动场",
+        "无我所畏"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "adidas"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "哪里都是运动场"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "无我所畏"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "S S"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "adidas"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "S S"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "S S",
+          "adidas",
+          "哪里都是运动场",
+          "无我所畏"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_90",
+      "file": "rctw_default_90.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "宣传栏",
+        "清洁",
+        "笔记本维修",
+        "贴膜"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "宣传栏"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "笔记本维修"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "清洁"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "贴膜"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "宣传栏"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "宣传栏",
+          "清洁",
+          "笔记本维修",
+          "贴膜"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_91",
+      "file": "rctw_default_91.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "512H1067",
+        "59",
+        "5973",
+        "严禁携带易燃易爆",
+        "采花",
+        "采花毛尖"
+      ],
+      "expected_details": [
+        {
+          "kind": "number",
+          "label": "区域1",
+          "value": "5973"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "512H1067"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "采花"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "采花毛尖"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "严禁携带易燃易爆"
+        },
+        {
+          "kind": "number",
+          "label": "区域6",
+          "value": "59"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "512H1067"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "512H1067",
+          "59",
+          "5973",
+          "严禁携带易燃易爆",
+          "采花",
+          "采花毛尖"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_92",
+      "file": "rctw_default_92.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "鲨鱼大滑梯"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "鲨鱼大滑梯"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "鲨鱼大滑梯"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "鲨鱼大滑梯"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_93",
+      "file": "rctw_default_93.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "古镇实景"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "古镇实景"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "古镇实景"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "古镇实景"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_94",
+      "file": "rctw_default_94.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "280",
+        "吴江泰格动力机械有限公司"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "吴江泰格动力机械有限公司"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "280"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "280"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "280",
+          "吴江泰格动力机械有限公司"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_95",
+      "file": "rctw_default_95.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "实在佩服",
+        "这B的装法，在下"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "这B的装法，在下"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "实在佩服"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "实在佩服"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "实在佩服",
+          "这B的装法，在下"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_96",
+      "file": "rctw_default_96.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "18995981923",
+        "NO.AM",
+        "九州更辉煌",
+        "修理",
+        "办证",
+        "四星社区居家养老服务中心",
+        "安全",
+        "平价车行",
+        "招聘",
+        "星月神"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "平价车行"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "修理"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "电摩"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "精修"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "安全"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "稳定"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "18995981923"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "18995981923",
+          "NO.AM",
+          "九州更辉煌",
+          "修理",
+          "办证",
+          "四星社区居家养老服务中心",
+          "安全",
+          "平价车行",
+          "招聘",
+          "星月神"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_97",
+      "file": "rctw_default_97.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "兵哥小吃",
+        "订餐热线：15071060706"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "兵哥小吃"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "订餐热线：15071060706"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "兵哥小吃"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "兵哥小吃",
+          "订餐热线：15071060706"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_98",
+      "file": "rctw_default_98.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "15387080553",
+        "5F",
+        "B1F",
+        "OPTICS VALLEY INTL PLAZA",
+        "光谷国际广场",
+        "服适人生",
+        "机器修鞋",
+        "电话02786659922",
+        "盛大招商",
+        "联系人万经理"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "光谷国际广场"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "OPTICS VALLEY INTL PLAZA"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "负一楼"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "服适人生"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "食全"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "鱼烤场"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "15387080553"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "15387080553",
+          "5F",
+          "B1F",
+          "OPTICS VALLEY INTL PLAZA",
+          "光谷国际广场",
+          "服适人生",
+          "机器修鞋",
+          "电话02786659922",
+          "盛大招商",
+          "联系人万经理"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_99",
+      "file": "rctw_default_99.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "市",
+        "烟酒茶",
+        "飞洋"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "飞洋"
+        },
+        {
+          "kind": "text",
+          "label": "区域2",
+          "value": "市"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "烟酒茶"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "市"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "市",
+          "烟酒茶",
+          "飞洋"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_100",
+      "file": "rctw_default_100.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "A85414",
+        "奇蕾电动车",
+        "川·M",
+        "肖氏车行",
+        "资阳专卖店",
+        "资阳总店"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "区域1",
+          "value": "川·M"
+        },
+        {
+          "kind": "number",
+          "label": "区域2",
+          "value": "A85414"
+        },
+        {
+          "kind": "text",
+          "label": "区域3",
+          "value": "奇蕾电动车"
+        },
+        {
+          "kind": "text",
+          "label": "区域4",
+          "value": "资阳专卖店"
+        },
+        {
+          "kind": "text",
+          "label": "区域5",
+          "value": "肖氏车行"
+        },
+        {
+          "kind": "text",
+          "label": "区域6",
+          "value": "资阳总店"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "A85414"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "A85414",
+          "奇蕾电动车",
+          "川·M",
+          "肖氏车行",
+          "资阳专卖店",
+          "资阳总店"
         ]
       ]
     }
