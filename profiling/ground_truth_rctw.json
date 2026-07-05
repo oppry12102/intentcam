@@ -1,1838 +1,3556 @@
 {
-  "version": 1,
-  "description": "RCTW-17 gold-standard benchmark. 27 images from RCTW-17 (https://rctw.vlrlab.net, downloaded via OpenDataLab https://openxlab.com.cn) — Chinese scene text in the wild, captured by mobile cameras. 23 images from Loremflickr for categories RCTW does not cover (math, qr_code, device_reading, screen_capture, more english_text). 50 fixtures across 10 categories.",
-  "sources": {
-    "rctw-17": "https://rctw.vlrlab.net (downloaded via OpenDataLab OpenDataLab/RCTW-17 — https://openxlab.com.cn)",
-    "loremflickr": "https://loremflickr.com (real Flickr photos by tag)"
-  },
+  "version": 2,
+  "description": "50 real-world images (RCTW-17 + Loremflickr) all classified as 'default' (image description). Each fixture's `expected_description_keywords` and `expected_details` were auto-annotated by the LLM. The eval scores emit_bubble's content + extracted details against these.",
   "scenes": [
     {
-      "id": "rctw_device_reading_01",
-      "file": "rctw_device_reading_01.jpg",
+      "id": "rctw_default_01",
+      "file": "rctw_default_01.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "老人",
+        "跑步",
+        "慢跑",
+        "帽子",
+        "墨镜",
+        "短裤",
+        "运动鞋",
+        "石屋",
+        "黑白",
+        "街道"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "reading",
-          "value",
-          "读数",
-          "数字",
-          "screen shows"
-        ],
-        [
-          "血压",
-          "体重",
-          "温度",
-          "blood pressure",
-          "temperature",
-          "weight",
-          "meter",
-          "gauge"
-        ],
-        [
-          "normal",
-          "正常",
-          "range"
-        ]
+      "expected_details": [
+        {
+          "kind": "location",
+          "label": "场景",
+          "value": "街道旁的石砌房屋前"
+        },
+        {
+          "kind": "person",
+          "label": "人物",
+          "value": "戴帽子和墨镜的老人正在慢跑"
+        },
+        {
+          "kind": "color",
+          "label": "整体色调",
+          "value": "黑白"
+        },
+        {
+          "kind": "object",
+          "label": "服装",
+          "value": "白色T恤、黑色短裤、深色运动鞋"
+        },
+        {
+          "kind": "object",
+          "label": "配饰",
+          "value": "棒球帽、墨镜"
+        },
+        {
+          "kind": "object",
+          "label": "建筑",
+          "value": "传统石墙房屋，带尖顶阁楼和飘窗"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "device reading"
+          "老人"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "老人",
+          "跑步",
+          "慢跑",
+          "帽子",
+          "墨镜",
+          "短裤",
+          "运动鞋",
+          "石屋",
+          "黑白",
+          "街道"
         ]
       ]
     },
     {
-      "id": "rctw_device_reading_02",
-      "file": "rctw_device_reading_02.jpg",
+      "id": "rctw_default_02",
+      "file": "rctw_default_02.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "飞机",
+        "雕塑",
+        "彩绘",
+        "夜景",
+        "灯光",
+        "草地",
+        "三角形",
+        "国旗",
+        "颜色",
+        "户外展览"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "reading",
-          "value",
-          "读数",
-          "数字",
-          "screen shows"
-        ],
-        [
-          "血压",
-          "体重",
-          "温度",
-          "blood pressure",
-          "temperature",
-          "weight",
-          "meter",
-          "gauge"
-        ],
-        [
-          "normal",
-          "正常",
-          "range"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Watermark",
+          "value": "chooyutshing"
+        },
+        {
+          "kind": "object",
+          "label": "Main subject",
+          "value": "Painted aircraft sculptures"
+        },
+        {
+          "kind": "color",
+          "label": "Colors",
+          "value": "Blue, red, yellow, white, turquoise, purple"
+        },
+        {
+          "kind": "shape",
+          "label": "Aircraft shapes",
+          "value": "Two stylized airplane/jet sculptures mounted on metal stands"
+        },
+        {
+          "kind": "location",
+          "label": "Setting",
+          "value": "Outdoor grassy area at night with string lights and display panels"
+        },
+        {
+          "kind": "text",
+          "label": "Partial signage",
+          "value": "CC (top left corner)"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "device reading"
+          "飞机"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "飞机",
+          "雕塑",
+          "彩绘",
+          "夜景",
+          "灯光",
+          "草地",
+          "三角形",
+          "国旗",
+          "颜色",
+          "户外展览"
         ]
       ]
     },
     {
-      "id": "rctw_device_reading_03",
-      "file": "rctw_device_reading_03.jpg",
+      "id": "rctw_default_03",
+      "file": "rctw_default_03.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "PLEASE",
+        "DO NOT LICK",
+        "BODY BUTTER TESTERS",
+        "no licking symbol",
+        "木框",
+        "Heartfelt Hemp",
+        "Alpacapella",
+        "body butter",
+        "禁止舔",
+        "告示牌"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "reading",
-          "value",
-          "读数",
-          "数字",
-          "screen shows"
-        ],
-        [
-          "血压",
-          "体重",
-          "温度",
-          "blood pressure",
-          "temperature",
-          "weight",
-          "meter",
-          "gauge"
-        ],
-        [
-          "normal",
-          "正常",
-          "range"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Sign header",
+          "value": "PLEASE"
+        },
+        {
+          "kind": "text",
+          "label": "Sign main message",
+          "value": "DO NOT LICK THE BODY BUTTER TESTERS"
+        },
+        {
+          "kind": "text",
+          "label": "Sign footer",
+          "value": "I CAN'T BELIEVE WE HAD TO MAKE THIS SIGN! :)"
+        },
+        {
+          "kind": "symbol",
+          "label": "Prohibition symbol",
+          "value": "Red circle with slash over a mouth/face icon"
+        },
+        {
+          "kind": "brand",
+          "label": "Top jar brand",
+          "value": "Heartfelt Hemp - handmade whipped"
+        },
+        {
+          "kind": "brand",
+          "label": "Bottom jar brand",
+          "value": "Alpacapella - handmade whipped body butter"
+        },
+        {
+          "kind": "object",
+          "label": "Container type",
+          "value": "Glass jars with metal lids"
+        },
+        {
+          "kind": "color",
+          "label": "Sign border",
+          "value": "Light wood frame"
+        },
+        {
+          "kind": "color",
+          "label": "Sign background",
+          "value": "White with red header"
+        },
+        {
+          "kind": "location",
+          "label": "Setting",
+          "value": "Retail store display shelf"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "device reading"
+          "PLEASE"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "PLEASE",
+          "DO NOT LICK",
+          "BODY BUTTER TESTERS",
+          "no licking symbol",
+          "木框",
+          "Heartfelt Hemp",
+          "Alpacapella",
+          "body butter",
+          "禁止舔",
+          "告示牌"
         ]
       ]
     },
     {
-      "id": "rctw_device_reading_04",
-      "file": "rctw_device_reading_04.jpg",
+      "id": "rctw_default_04",
+      "file": "rctw_default_04.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "圣诞树",
+        "建筑",
+        "灯光",
+        "Macy's",
+        "橱窗",
+        "圣诞",
+        "红色",
+        "霓虹",
+        "汽车",
+        "夜晚"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "reading",
-          "value",
-          "读数",
-          "数字",
-          "screen shows"
-        ],
-        [
-          "血压",
-          "体重",
-          "温度",
-          "blood pressure",
-          "temperature",
-          "weight",
-          "meter",
-          "gauge"
-        ],
-        [
-          "normal",
-          "正常",
-          "range"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店铺名称",
+          "value": "Macy's"
+        },
+        {
+          "kind": "text",
+          "label": "标语",
+          "value": "Believe in the joy"
+        },
+        {
+          "kind": "text",
+          "label": "底部红星文字",
+          "value": "Macy's Day"
+        },
+        {
+          "kind": "object",
+          "label": "主要装饰",
+          "value": "圣诞树"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "红色、紫色、霓虹色"
+        },
+        {
+          "kind": "location",
+          "label": "场景类型",
+          "value": "纽约梅西百货圣诞橱窗展示"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "device reading"
+          "圣诞树"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "圣诞树",
+          "建筑",
+          "灯光",
+          "Macy's",
+          "橱窗",
+          "圣诞",
+          "红色",
+          "霓虹",
+          "汽车",
+          "夜晚"
         ]
       ]
     },
     {
-      "id": "rctw_device_reading_05",
-      "file": "rctw_device_reading_05.jpg",
+      "id": "rctw_default_05",
+      "file": "rctw_default_05.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "博物馆",
+        "拱形窗户",
+        "展柜",
+        "玻璃柜",
+        "标本",
+        "倒影",
+        "暖光",
+        "石墙",
+        "cc-nc-nd",
+        "树影",
+        "对称"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "reading",
-          "value",
-          "读数",
-          "数字",
-          "screen shows"
-        ],
-        [
-          "血压",
-          "体重",
-          "温度",
-          "blood pressure",
-          "temperature",
-          "weight",
-          "meter",
-          "gauge"
-        ],
-        [
-          "normal",
-          "正常",
-          "range"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "左上角水印",
+          "value": "cc-nc-nd"
+        },
+        {
+          "kind": "text",
+          "label": "左下水印",
+          "value": "nvrecado"
+        },
+        {
+          "kind": "object",
+          "label": "中央展品",
+          "value": "玻璃金字塔形展柜，内部陈设小型标本"
+        },
+        {
+          "kind": "object",
+          "label": "两侧展品",
+          "value": "立式玻璃展柜，多层陈列标本"
+        },
+        {
+          "kind": "shape",
+          "label": "窗户形状",
+          "value": "圆形+双拱形哥特式尖拱窗"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "暖黄色光影与深棕色阴影对比"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "device reading"
+          "博物馆"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "博物馆",
+          "拱形窗户",
+          "展柜",
+          "玻璃柜",
+          "标本",
+          "倒影",
+          "暖光",
+          "石墙",
+          "cc-nc-nd",
+          "树影",
+          "对称"
         ]
       ]
     },
     {
-      "id": "rctw_english_text_01",
-      "file": "rctw_english_text_01.jpg",
+      "id": "rctw_default_06",
+      "file": "rctw_default_06.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "Welcome to Historic Old Town Scottsdale",
+        "cowboy",
+        "lasso",
+        "cactus",
+        "red hat",
+        "horse",
+        "chaps",
+        "brown",
+        "road sign",
+        "Scottsdale"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "read",
-          "text",
-          "says",
-          "sign",
-          "label",
-          "读",
-          "文字",
-          "标识"
-        ],
-        [
-          "hello",
-          "welcome",
-          "exit",
-          "open",
-          "no.",
-          "tel",
-          "phone"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Main sign text",
+          "value": "Welcome to Historic Old Town Scottsdale"
+        },
+        {
+          "kind": "text",
+          "label": "Street sign",
+          "value": "Scottsdale 7200 Main St"
+        },
+        {
+          "kind": "object",
+          "label": "Figure",
+          "value": "Cowboy cutout with lasso"
+        },
+        {
+          "kind": "object",
+          "label": "Surrounding objects",
+          "value": "Green saguaro cacti and wooden fence"
+        },
+        {
+          "kind": "location",
+          "label": "Location",
+          "value": "Old Town Scottsdale, Arizona"
+        },
+        {
+          "kind": "color",
+          "label": "Cowboy's hat color",
+          "value": "Red"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "english text"
+          "Welcome to Historic Old Town Scottsdale"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "Welcome to Historic Old Town Scottsdale",
+          "cowboy",
+          "lasso",
+          "cactus",
+          "red hat",
+          "horse",
+          "chaps",
+          "brown",
+          "road sign",
+          "Scottsdale"
         ]
       ]
     },
     {
-      "id": "rctw_english_text_02",
-      "file": "rctw_english_text_02.jpg",
+      "id": "rctw_default_07",
+      "file": "rctw_default_07.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "Pink Rabbit",
+        "Café",
+        "AO'S",
+        "Rest-Lounge-Bar",
+        "pink car",
+        "stone stairs",
+        "handrail",
+        "cobblestone",
+        "matte pink",
+        "Rabbit"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "read",
-          "text",
-          "says",
-          "sign",
-          "label",
-          "读",
-          "文字",
-          "标识"
-        ],
-        [
-          "hello",
-          "welcome",
-          "exit",
-          "open",
-          "no.",
-          "tel",
-          "phone"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店铺名称上半",
+          "value": "AO'S"
+        },
+        {
+          "kind": "text",
+          "label": "店铺副标题",
+          "value": "T·LOUNGE·BAR"
+        },
+        {
+          "kind": "text",
+          "label": "车身文字",
+          "value": "Pink Rabbit"
+        },
+        {
+          "kind": "object",
+          "label": "主体车辆",
+          "value": "小型三轮/两厢车"
+        },
+        {
+          "kind": "color",
+          "label": "车身颜色",
+          "value": "哑光粉 (matte pink)"
+        },
+        {
+          "kind": "object",
+          "label": "场景元素",
+          "value": "石头楼梯与金属扶手"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "english text"
+          "Pink Rabbit"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "Pink Rabbit",
+          "Café",
+          "AO'S",
+          "Rest-Lounge-Bar",
+          "pink car",
+          "stone stairs",
+          "handrail",
+          "cobblestone",
+          "matte pink",
+          "Rabbit"
         ]
       ]
     },
     {
-      "id": "rctw_english_text_03",
-      "file": "rctw_english_text_03.jpg",
+      "id": "rctw_default_08",
+      "file": "rctw_default_08.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "Blue Swallow",
+        "MOTEL",
+        "VACANCY",
+        "TV",
+        "霓虹灯",
+        "夜景",
+        "老爷车",
+        "LOBBY",
+        "OPEN",
+        "Route 66"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "read",
-          "text",
-          "says",
-          "sign",
-          "label",
-          "读",
-          "文字",
-          "标识"
-        ],
-        [
-          "hello",
-          "welcome",
-          "exit",
-          "open",
-          "no.",
-          "tel",
-          "phone"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "主招牌文字",
+          "value": "Blue Swallow MOTEL"
+        },
+        {
+          "kind": "text",
+          "label": "副招牌文字",
+          "value": "VACANCY"
+        },
+        {
+          "kind": "text",
+          "label": "设施标识",
+          "value": "TV"
+        },
+        {
+          "kind": "text",
+          "label": "入口标识",
+          "value": "LOBBY"
+        },
+        {
+          "kind": "text",
+          "label": "营业状态",
+          "value": "OPEN"
+        },
+        {
+          "kind": "location",
+          "label": "地点",
+          "value": "美国 66号公路 (Route 66)"
+        },
+        {
+          "kind": "object",
+          "label": "车辆",
+          "value": "白色复古老爷车 (Vintage Car)"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "english text"
+          "Blue Swallow"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "Blue Swallow",
+          "MOTEL",
+          "VACANCY",
+          "TV",
+          "霓虹灯",
+          "夜景",
+          "老爷车",
+          "LOBBY",
+          "OPEN",
+          "Route 66"
         ]
       ]
     },
     {
-      "id": "rctw_english_text_04",
-      "file": "rctw_english_text_04.jpg",
+      "id": "rctw_default_09",
+      "file": "rctw_default_09.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "木门",
+        "玻璃",
+        "今日有房",
+        "电话号码",
+        "TEL.13812727950",
+        "门面",
+        "粉色字",
+        "门上拉手",
+        "商铺"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "read",
-          "text",
-          "says",
-          "sign",
-          "label",
-          "读",
-          "文字",
-          "标识"
-        ],
-        [
-          "hello",
-          "welcome",
-          "exit",
-          "open",
-          "no.",
-          "tel",
-          "phone"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "手写标语",
+          "value": "今日有房"
+        },
+        {
+          "kind": "text",
+          "label": "电话标签",
+          "value": "TEL."
+        },
+        {
+          "kind": "number",
+          "label": "联系电话",
+          "value": "13812727950"
+        },
+        {
+          "kind": "object",
+          "label": "门的材质",
+          "value": "木质"
+        },
+        {
+          "kind": "object",
+          "label": "门上装饰",
+          "value": "金属环形拉手"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "english text"
+          "木门"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "木门",
+          "玻璃",
+          "今日有房",
+          "电话号码",
+          "TEL.13812727950",
+          "门面",
+          "粉色字",
+          "门上拉手",
+          "商铺"
         ]
       ]
     },
     {
-      "id": "rctw_english_text_05",
-      "file": "rctw_english_text_05.jpg",
+      "id": "rctw_default_10",
+      "file": "rctw_default_10.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "拱门",
+        "建筑",
+        "3F",
+        "美食城",
+        "德意风情街",
+        "横幅",
+        "行人",
+        "商店",
+        "CGV",
+        "拱廊"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "read",
-          "text",
-          "says",
-          "sign",
-          "label",
-          "读",
-          "文字",
-          "标识"
-        ],
-        [
-          "hello",
-          "welcome",
-          "exit",
-          "open",
-          "no.",
-          "tel",
-          "phone"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "横幅文字",
+          "value": "3F 99食堂 德意风情街最大的人气美食城"
+        },
+        {
+          "kind": "text",
+          "label": "楼层标识",
+          "value": "3F"
+        },
+        {
+          "kind": "text",
+          "label": "远端横幅",
+          "value": "3F 德意风情街最大的人气美食城"
+        },
+        {
+          "kind": "brand",
+          "label": "品牌名称",
+          "value": "CGV"
+        },
+        {
+          "kind": "object",
+          "label": "主要建筑特征",
+          "value": "双层石拱门及拱廊"
+        },
+        {
+          "kind": "location",
+          "label": "场景类型",
+          "value": "商业街区步行通道"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "english text"
+          "拱门"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "拱门",
+          "建筑",
+          "3F",
+          "美食城",
+          "德意风情街",
+          "横幅",
+          "行人",
+          "商店",
+          "CGV",
+          "拱廊"
         ]
       ]
     },
     {
-      "id": "rctw_food_label_01",
-      "file": "rctw_food_label_01.jpg",
+      "id": "rctw_default_11",
+      "file": "rctw_default_11.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "微笑",
+        "美甲",
+        "彩妆",
+        "接发",
+        "美睫",
+        "招牌",
+        "红色",
+        "招聘",
+        "招学徒",
+        "火爆首推"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "配料",
-          "成分",
-          "营养",
-          "热量",
-          "保质",
-          "净含量",
-          "ingredients",
-          "food",
-          "product"
-        ],
-        [
-          "食品",
-          "饮料",
-          "茶叶",
-          "茶",
-          "米",
-          "油",
-          "面",
-          "酒"
-        ],
-        [
-          "查",
-          "看",
-          "read",
-          "identify",
-          "是什么",
-          "tell"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店铺主名称",
+          "value": "微笑"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "美甲 彩妆 接发 美睫"
+        },
+        {
+          "kind": "logo",
+          "label": "店铺标志",
+          "value": "彩色的嘴唇和花朵图案"
+        },
+        {
+          "kind": "text",
+          "label": "招聘电话",
+          "value": "15972923828"
+        },
+        {
+          "kind": "text",
+          "label": "招聘岗位",
+          "value": "美甲师/学员"
+        },
+        {
+          "kind": "color",
+          "label": "招牌主色调",
+          "value": "深红色背景配白色字体"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "food label"
+          "微笑"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "微笑",
+          "美甲",
+          "彩妆",
+          "接发",
+          "美睫",
+          "招牌",
+          "红色",
+          "招聘",
+          "招学徒",
+          "火爆首推"
         ]
       ]
     },
     {
-      "id": "rctw_food_label_02",
-      "file": "rctw_food_label_02.jpg",
+      "id": "rctw_default_12",
+      "file": "rctw_default_12.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "墙面",
+        "招牌",
+        "黑字",
+        "黄底",
+        "店铺",
+        "定制鞋",
+        "立体字",
+        "店面",
+        "logo",
+        "门头"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "配料",
-          "成分",
-          "营养",
-          "热量",
-          "保质",
-          "净含量",
-          "ingredients",
-          "food",
-          "product"
-        ],
-        [
-          "食品",
-          "饮料",
-          "茶叶",
-          "茶",
-          "米",
-          "油",
-          "面",
-          "酒"
-        ],
-        [
-          "查",
-          "看",
-          "read",
-          "identify",
-          "是什么",
-          "tell"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "招牌主文字",
+          "value": "墙面走定制鞋"
+        },
+        {
+          "kind": "color",
+          "label": "背景颜色",
+          "value": "亮黄色"
+        },
+        {
+          "kind": "color",
+          "label": "文字颜色",
+          "value": "黑色"
+        },
+        {
+          "kind": "shape",
+          "label": "字体风格",
+          "value": "立体方块字"
+        },
+        {
+          "kind": "location",
+          "label": "店铺类型",
+          "value": "鞋店门头招牌"
+        },
+        {
+          "kind": "object",
+          "label": "下方展示",
+          "value": "鞋类商品橱窗"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "food label"
+          "墙面"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "墙面",
+          "招牌",
+          "黑字",
+          "黄底",
+          "店铺",
+          "定制鞋",
+          "立体字",
+          "店面",
+          "logo",
+          "门头"
         ]
       ]
     },
     {
-      "id": "rctw_food_label_03",
-      "file": "rctw_food_label_03.jpg",
+      "id": "rctw_default_13",
+      "file": "rctw_default_13.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "7 Days Inn",
+        "7DaysInn",
+        "7天连锁酒店",
+        "鲜花",
+        "秉见面",
+        "招牌",
+        "建筑",
+        "天空",
+        "树",
+        "黄色"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "配料",
-          "成分",
-          "营养",
-          "热量",
-          "保质",
-          "净含量",
-          "ingredients",
-          "food",
-          "product"
-        ],
-        [
-          "食品",
-          "饮料",
-          "茶叶",
-          "茶",
-          "米",
-          "油",
-          "面",
-          "酒"
-        ],
-        [
-          "查",
-          "看",
-          "read",
-          "identify",
-          "是什么",
-          "tell"
-        ]
+      "expected_details": [
+        {
+          "kind": "logo",
+          "label": "Brand logo",
+          "value": "7 Days Inn (7天连锁酒店)"
+        },
+        {
+          "kind": "text",
+          "label": "Brand name (English)",
+          "value": "7Days Inn"
+        },
+        {
+          "kind": "number",
+          "label": "Logo number",
+          "value": "7"
+        },
+        {
+          "kind": "text",
+          "label": "Chinese characters (red)",
+          "value": "鲜花"
+        },
+        {
+          "kind": "text",
+          "label": "Chinese characters (yellow)",
+          "value": "秉见面"
+        },
+        {
+          "kind": "color",
+          "label": "Logo background color",
+          "value": "Blue"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "food label"
+          "7 Days Inn"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "7 Days Inn",
+          "7DaysInn",
+          "7天连锁酒店",
+          "鲜花",
+          "秉见面",
+          "招牌",
+          "建筑",
+          "天空",
+          "树",
+          "黄色"
         ]
       ]
     },
     {
-      "id": "rctw_food_label_04",
-      "file": "rctw_food_label_04.jpg",
+      "id": "rctw_default_14",
+      "file": "rctw_default_14.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "律师楼",
+        "招牌",
+        "武汉",
+        "湖北",
+        "光谷",
+        "标准",
+        "公司",
+        "门口",
+        "玻璃门",
+        "黑色"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "配料",
-          "成分",
-          "营养",
-          "热量",
-          "保质",
-          "净含量",
-          "ingredients",
-          "food",
-          "product"
-        ],
-        [
-          "食品",
-          "饮料",
-          "茶叶",
-          "茶",
-          "米",
-          "油",
-          "面",
-          "酒"
-        ],
-        [
-          "查",
-          "看",
-          "read",
-          "identify",
-          "是什么",
-          "tell"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "门口招牌",
+          "value": "律师楼"
+        },
+        {
+          "kind": "text",
+          "label": "竖排招牌",
+          "value": "武汉勤光驰标准件有限公司"
+        },
+        {
+          "kind": "object",
+          "label": "室内可见物品",
+          "value": "饮水机、椅子、桌子"
+        },
+        {
+          "kind": "color",
+          "label": "招牌文字颜色",
+          "value": "红色（律师楼）、黑色（竖排）"
+        },
+        {
+          "kind": "location",
+          "label": "建筑入口",
+          "value": "玻璃门入口处"
+        },
+        {
+          "kind": "text",
+          "label": "背景模糊文字",
+          "value": "湖北"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "food label"
+          "律师楼"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "律师楼",
+          "招牌",
+          "武汉",
+          "湖北",
+          "光谷",
+          "标准",
+          "公司",
+          "门口",
+          "玻璃门",
+          "黑色"
         ]
       ]
     },
     {
-      "id": "rctw_food_label_05",
-      "file": "rctw_food_label_05.jpg",
+      "id": "rctw_default_15",
+      "file": "rctw_default_15.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "大嘴巴",
+        "重庆酸辣粉",
+        "风味小吃",
+        "Yuan Yuan",
+        "Chuan Xiang",
+        "加盟店",
+        "红黄绿",
+        "店铺",
+        "LED屏幕",
+        "顾客"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "配料",
-          "成分",
-          "营养",
-          "热量",
-          "保质",
-          "净含量",
-          "ingredients",
-          "food",
-          "product"
-        ],
-        [
-          "食品",
-          "饮料",
-          "茶叶",
-          "茶",
-          "米",
-          "油",
-          "面",
-          "酒"
-        ],
-        [
-          "查",
-          "看",
-          "read",
-          "identify",
-          "是什么",
-          "tell"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店铺招牌",
+          "value": "大嘴巴 风味小吃 重庆酸辣粉"
+        },
+        {
+          "kind": "text",
+          "label": "LED屏幕文字",
+          "value": "大嘴巴美食欢迎您"
+        },
+        {
+          "kind": "brand",
+          "label": "楼上店铺品牌",
+          "value": "袁缘 YUAN YUAN (全国连锁)"
+        },
+        {
+          "kind": "text",
+          "label": "左侧招牌",
+          "value": "Xiang 手工面"
+        },
+        {
+          "kind": "color",
+          "label": "招牌主色调",
+          "value": "红底配橙黄绿三色圆形logo"
+        },
+        {
+          "kind": "person",
+          "label": "门口人物",
+          "value": "数名顾客在店铺门口排队点餐"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "food label"
+          "大嘴巴"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "大嘴巴",
+          "重庆酸辣粉",
+          "风味小吃",
+          "Yuan Yuan",
+          "Chuan Xiang",
+          "加盟店",
+          "红黄绿",
+          "店铺",
+          "LED屏幕",
+          "顾客"
         ]
       ]
     },
     {
-      "id": "rctw_map_01",
-      "file": "rctw_map_01.jpg",
+      "id": "rctw_default_16",
+      "file": "rctw_default_16.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "微信",
+        "我的钱包",
+        "零钱",
+        "0.11",
+        "付款",
+        "银行卡",
+        "腾讯服务",
+        "转账",
+        "手机充值",
+        "理财通",
+        "Q币充值",
+        "生活缴费",
+        "城市服务",
+        "信用卡还款",
+        "微信红包",
+        "AA收款",
+        "20:46"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "地图",
-          "路",
-          "街",
-          "区",
-          "号",
-          "map",
-          "street",
-          "road",
-          "area"
-        ],
-        [
-          "导航",
-          "方向",
-          "where",
-          "navigate",
-          "direction",
-          "哪里"
-        ],
-        [
-          "address",
-          "address",
-          "位置",
-          "地点",
-          "address"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "我的钱包"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "text",
+          "label": "零钱余额",
+          "value": "¥0.11"
+        },
+        {
+          "kind": "text",
+          "label": "服务分类",
+          "value": "腾讯服务"
+        },
+        {
+          "kind": "time",
+          "label": "状态栏时间",
+          "value": "20:46"
+        },
+        {
+          "kind": "brand",
+          "label": "应用名称",
+          "value": "微信支付"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "map"
+          "微信"
         ]
-      ]
-    },
-    {
-      "id": "rctw_map_02",
-      "file": "rctw_map_02.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
       ],
       "acceptable_intent_keywords": [
         [
-          "地图",
-          "路",
-          "街",
-          "区",
-          "号",
-          "map",
-          "street",
-          "road",
-          "area"
-        ],
-        [
-          "导航",
-          "方向",
-          "where",
-          "navigate",
-          "direction",
-          "哪里"
-        ],
-        [
-          "address",
-          "address",
-          "位置",
-          "地点",
-          "address"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "map"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_map_03",
-      "file": "rctw_map_03.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "地图",
-          "路",
-          "街",
-          "区",
-          "号",
-          "map",
-          "street",
-          "road",
-          "area"
-        ],
-        [
-          "导航",
-          "方向",
-          "where",
-          "navigate",
-          "direction",
-          "哪里"
-        ],
-        [
-          "address",
-          "address",
-          "位置",
-          "地点",
-          "address"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "map"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_map_04",
-      "file": "rctw_map_04.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "地图",
-          "路",
-          "街",
-          "区",
-          "号",
-          "map",
-          "street",
-          "road",
-          "area"
-        ],
-        [
-          "导航",
-          "方向",
-          "where",
-          "navigate",
-          "direction",
-          "哪里"
-        ],
-        [
-          "address",
-          "address",
-          "位置",
-          "地点",
-          "address"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "map"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_map_05",
-      "file": "rctw_map_05.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "地图",
-          "路",
-          "街",
-          "区",
-          "号",
-          "map",
-          "street",
-          "road",
-          "area"
-        ],
-        [
-          "导航",
-          "方向",
-          "where",
-          "navigate",
-          "direction",
-          "哪里"
-        ],
-        [
-          "address",
-          "address",
-          "位置",
-          "地点",
-          "address"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "map"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_math_01",
-      "file": "rctw_math_01.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "solve",
-          "解",
-          "算",
-          "calculate",
-          "equation",
-          "formula"
-        ],
-        [
-          "=",
-          "equals",
-          "result",
-          "结果",
-          "等于"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "math"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_math_02",
-      "file": "rctw_math_02.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "solve",
-          "解",
-          "算",
-          "calculate",
-          "equation",
-          "formula"
-        ],
-        [
-          "=",
-          "equals",
-          "result",
-          "结果",
-          "等于"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "math"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_math_03",
-      "file": "rctw_math_03.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "solve",
-          "解",
-          "算",
-          "calculate",
-          "equation",
-          "formula"
-        ],
-        [
-          "=",
-          "equals",
-          "result",
-          "结果",
-          "等于"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "math"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_math_04",
-      "file": "rctw_math_04.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "solve",
-          "解",
-          "算",
-          "calculate",
-          "equation",
-          "formula"
-        ],
-        [
-          "=",
-          "equals",
-          "result",
-          "结果",
-          "等于"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "math"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_math_05",
-      "file": "rctw_math_05.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "solve",
-          "解",
-          "算",
-          "calculate",
-          "equation",
-          "formula"
-        ],
-        [
-          "=",
-          "equals",
-          "result",
-          "结果",
-          "等于"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "math"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_menu_01",
-      "file": "rctw_menu_01.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "菜单",
-          "menu",
-          "菜",
-          "dish",
-          "item"
-        ],
-        [
-          "价格",
-          "元",
-          "￥",
-          "¥",
-          "price",
-          "cost",
-          "多少钱"
-        ],
-        [
-          "餐厅",
-          "食堂",
-          "restaurant",
-          "cafe",
-          "lunch",
-          "dinner",
-          "breakfast"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "menu"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_menu_02",
-      "file": "rctw_menu_02.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "菜单",
-          "menu",
-          "菜",
-          "dish",
-          "item"
-        ],
-        [
-          "价格",
-          "元",
-          "￥",
-          "¥",
-          "price",
-          "cost",
-          "多少钱"
-        ],
-        [
-          "餐厅",
-          "食堂",
-          "restaurant",
-          "cafe",
-          "lunch",
-          "dinner",
-          "breakfast"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "menu"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_menu_03",
-      "file": "rctw_menu_03.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "菜单",
-          "menu",
-          "菜",
-          "dish",
-          "item"
-        ],
-        [
-          "价格",
-          "元",
-          "￥",
-          "¥",
-          "price",
-          "cost",
-          "多少钱"
-        ],
-        [
-          "餐厅",
-          "食堂",
-          "restaurant",
-          "cafe",
-          "lunch",
-          "dinner",
-          "breakfast"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "menu"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_menu_04",
-      "file": "rctw_menu_04.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "菜单",
-          "menu",
-          "菜",
-          "dish",
-          "item"
-        ],
-        [
-          "价格",
-          "元",
-          "￥",
-          "¥",
-          "price",
-          "cost",
-          "多少钱"
-        ],
-        [
-          "餐厅",
-          "食堂",
-          "restaurant",
-          "cafe",
-          "lunch",
-          "dinner",
-          "breakfast"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "menu"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_menu_05",
-      "file": "rctw_menu_05.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "菜单",
-          "menu",
-          "菜",
-          "dish",
-          "item"
-        ],
-        [
-          "价格",
-          "元",
-          "￥",
-          "¥",
-          "price",
-          "cost",
-          "多少钱"
-        ],
-        [
-          "餐厅",
-          "食堂",
-          "restaurant",
-          "cafe",
-          "lunch",
-          "dinner",
-          "breakfast"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "menu"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_qr_code_01",
-      "file": "rctw_qr_code_01.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "qr",
-          "二维码",
-          "barcode",
-          "code",
-          "scan"
-        ],
-        [
-          "link",
-          "url",
-          "decode",
-          "链接",
-          "扫描",
-          "解码"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "qr code"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_qr_code_02",
-      "file": "rctw_qr_code_02.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "qr",
-          "二维码",
-          "barcode",
-          "code",
-          "scan"
-        ],
-        [
-          "link",
-          "url",
-          "decode",
-          "链接",
-          "扫描",
-          "解码"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "qr code"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_qr_code_03",
-      "file": "rctw_qr_code_03.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "qr",
-          "二维码",
-          "barcode",
-          "code",
-          "scan"
-        ],
-        [
-          "link",
-          "url",
-          "decode",
-          "链接",
-          "扫描",
-          "解码"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "qr code"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_qr_code_04",
-      "file": "rctw_qr_code_04.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "qr",
-          "二维码",
-          "barcode",
-          "code",
-          "scan"
-        ],
-        [
-          "link",
-          "url",
-          "decode",
-          "链接",
-          "扫描",
-          "解码"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "qr code"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_qr_code_05",
-      "file": "rctw_qr_code_05.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "qr",
-          "二维码",
-          "barcode",
-          "code",
-          "scan"
-        ],
-        [
-          "link",
-          "url",
-          "decode",
-          "链接",
-          "扫描",
-          "解码"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "qr code"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_receipt_01",
-      "file": "rctw_receipt_01.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "小票",
-          "收据",
-          "发票",
-          "receipt",
-          "invoice",
-          "bill"
-        ],
-        [
-          "total",
-          "合计",
-          "总计",
-          "amount",
-          "金额",
-          "price",
-          "价格",
-          "元",
-          "￥",
-          "¥"
-        ],
-        [
-          "支付",
           "微信",
-          "支付宝",
-          "paid"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "receipt"
+          "我的钱包",
+          "零钱",
+          "0.11",
+          "付款",
+          "银行卡",
+          "腾讯服务",
+          "转账",
+          "手机充值",
+          "理财通",
+          "Q币充值",
+          "生活缴费",
+          "城市服务",
+          "信用卡还款",
+          "微信红包",
+          "AA收款",
+          "20:46"
         ]
       ]
     },
     {
-      "id": "rctw_receipt_02",
-      "file": "rctw_receipt_02.jpg",
+      "id": "rctw_default_17",
+      "file": "rctw_default_17.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "湖北",
+        "招牌",
+        "金属",
+        "不锈钢",
+        "竖排",
+        "黑字",
+        "店面",
+        "柱子",
+        "大理石",
+        "门口"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "招牌文字（左）",
+          "value": "湖北省口腔医学会常务理事单位"
+        },
+        {
+          "kind": "text",
+          "label": "招牌文字（右）",
+          "value": "湖北省种植技术资格认证单位"
+        },
+        {
+          "kind": "object",
+          "label": "招牌材质",
+          "value": "不锈钢/金属"
+        },
+        {
+          "kind": "color",
+          "label": "招牌底色",
+          "value": "银色/反光金属色"
+        },
+        {
+          "kind": "color",
+          "label": "文字颜色",
+          "value": "黑色"
+        },
+        {
+          "kind": "location",
+          "label": "招牌位置",
+          "value": "店面门口柱子"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "湖北"
+        ]
       ],
       "acceptable_intent_keywords": [
         [
-          "小票",
-          "收据",
-          "发票",
-          "receipt",
-          "invoice",
-          "bill"
-        ],
+          "湖北",
+          "招牌",
+          "金属",
+          "不锈钢",
+          "竖排",
+          "黑字",
+          "店面",
+          "柱子",
+          "大理石",
+          "门口"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_18",
+      "file": "rctw_default_18.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "尚美·乐学",
+        "低碳城市",
+        "宜居可持续",
+        "红色横幅",
+        "操场跑道",
+        "讲台",
+        "教学楼",
+        "空调外机",
+        "摄像头",
+        "窗栏"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "背景墙大字",
+          "value": "尚美·乐学"
+        },
+        {
+          "kind": "text",
+          "label": "横幅标语1",
+          "value": "低碳城市"
+        },
+        {
+          "kind": "text",
+          "label": "横幅标语2",
+          "value": "宜居可持续"
+        },
+        {
+          "kind": "color",
+          "label": "横幅颜色",
+          "value": "红色"
+        },
+        {
+          "kind": "object",
+          "label": "场所类型",
+          "value": "学校操场主席台"
+        },
+        {
+          "kind": "color",
+          "label": "跑道颜色",
+          "value": "红褐色"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
         [
-          "total",
-          "合计",
-          "总计",
-          "amount",
-          "金额",
-          "price",
-          "价格",
+          "尚美·乐学"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "尚美·乐学",
+          "低碳城市",
+          "宜居可持续",
+          "红色横幅",
+          "操场跑道",
+          "讲台",
+          "教学楼",
+          "空调外机",
+          "摄像头",
+          "窗栏"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_19",
+      "file": "rctw_default_19.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "广告牌",
+        "粉色",
+        "演唱会",
+        "抢票",
+        "手机",
+        "湖北移动",
+        "4G",
+        "公交站",
+        "树",
+        "8月15日"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Headline Text",
+          "value": "看演唱会 得手机"
+        },
+        {
+          "kind": "date",
+          "label": "Event Date",
+          "value": "8月15日"
+        },
+        {
+          "kind": "text",
+          "label": "Call to Action",
+          "value": "抢票喽！"
+        },
+        {
+          "kind": "logo",
+          "label": "Brand Logo",
+          "value": "湖北移动 动感4G之彩"
+        },
+        {
+          "kind": "logo",
+          "label": "Network Logo",
+          "value": "4G LTE"
+        },
+        {
+          "kind": "location",
+          "label": "Organizer",
+          "value": "仙桃市委宣传部 仙桃市文体广电新闻出版局"
+        },
+        {
+          "kind": "location",
+          "label": "Co-organizer",
+          "value": "湖北移动江汉分公司 中国仙桃网"
+        },
+        {
+          "kind": "color",
+          "label": "Billboard Background Color",
+          "value": "Pink/Magenta"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "广告牌"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "广告牌",
+          "粉色",
+          "演唱会",
+          "抢票",
+          "手机",
+          "湖北移动",
+          "4G",
+          "公交站",
+          "树",
+          "8月15日"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_20",
+      "file": "rctw_default_20.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "仙桃市",
+        "地震局",
+        "科学技术局",
+        "知识产权局",
+        "红灯笼",
+        "柱子",
+        "拱形窗户",
+        "中国梦",
+        "中国结",
+        "对联",
+        "12",
+        "轿车"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "最左侧竖牌",
+          "value": "仙桃九派创业投资有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "左二竖牌",
+          "value": "仙桃市地震局"
+        },
+        {
+          "kind": "text",
+          "label": "左中竖牌",
+          "value": "仙桃市科学技术局"
+        },
+        {
+          "kind": "text",
+          "label": "右中竖牌",
+          "value": "中共仙桃市科学技术局党组"
+        },
+        {
+          "kind": "text",
+          "label": "右二竖牌",
+          "value": "仙桃市知识产权局"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号",
+          "value": "12"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "仙桃市"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "仙桃市",
+          "地震局",
+          "科学技术局",
+          "知识产权局",
+          "红灯笼",
+          "柱子",
+          "拱形窗户",
+          "中国梦",
+          "中国结",
+          "对联",
+          "12",
+          "轿车"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_21",
+      "file": "rctw_default_21.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "wooden",
+        "puzzle",
+        "cow",
+        "beef cuts",
+        "butcher",
+        "CHUCK",
+        "SHANK",
+        "RIB",
+        "PLATE",
+        "wood"
+      ],
+      "expected_details": [
+        {
+          "kind": "object",
+          "label": "Main object",
+          "value": "Wooden puzzle board"
+        },
+        {
+          "kind": "object",
+          "label": "Puzzle subject",
+          "value": "Cow diagram"
+        },
+        {
+          "kind": "color",
+          "label": "Material color",
+          "value": "Light brown wood"
+        },
+        {
+          "kind": "text",
+          "label": "Visible label",
+          "value": "CHUCK"
+        },
+        {
+          "kind": "text",
+          "label": "Visible label",
+          "value": "SHANK"
+        },
+        {
+          "kind": "text",
+          "label": "Visible label",
+          "value": "RIB"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "wooden"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "wooden",
+          "puzzle",
+          "cow",
+          "beef cuts",
+          "butcher",
+          "CHUCK",
+          "SHANK",
+          "RIB",
+          "PLATE",
+          "wood"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_22",
+      "file": "rctw_default_22.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "暖通空调风管",
+        "HVAC ducts",
+        "金属管道",
+        "弯头",
+        "镀锌板",
+        "工厂车间",
+        "通风系统",
+        "灰白色",
+        "方形风管",
+        "机房"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "水印",
+          "value": "co-oc-rd"
+        },
+        {
+          "kind": "text",
+          "label": "摄影师水印",
+          "value": "ganesh.sundaresan"
+        },
+        {
+          "kind": "object",
+          "label": "主要物体",
+          "value": "暖通空调方形镀锌风管及弯头"
+        },
+        {
+          "kind": "color",
+          "label": "主体颜色",
+          "value": "灰白、银灰色"
+        },
+        {
+          "kind": "shape",
+          "label": "形状",
+          "value": "方形管道、L形弯头"
+        },
+        {
+          "kind": "location",
+          "label": "拍摄场景",
+          "value": "机房或工厂天花板上方的通风管道"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "暖通空调风管"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "暖通空调风管",
+          "HVAC ducts",
+          "金属管道",
+          "弯头",
+          "镀锌板",
+          "工厂车间",
+          "通风系统",
+          "灰白色",
+          "方形风管",
+          "机房"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_23",
+      "file": "rctw_default_23.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "黑白",
+        "圆点",
+        "网格",
+        "错觉",
+        "光学",
+        "图案",
+        "扭曲",
+        "中心",
+        "cc-nc-nd",
+        "shonk"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "左上角文字",
+          "value": "cc-nc-nd"
+        },
+        {
+          "kind": "text",
+          "label": "左下角文字",
+          "value": "shonk"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "黑白"
+        },
+        {
+          "kind": "shape",
+          "label": "图形元素",
+          "value": "方形圆点"
+        },
+        {
+          "kind": "shape",
+          "label": "图案布局",
+          "value": "圆形辐射网格"
+        },
+        {
+          "kind": "object",
+          "label": "视觉效果",
+          "value": "光学错觉"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "黑白"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "黑白",
+          "圆点",
+          "网格",
+          "错觉",
+          "光学",
+          "图案",
+          "扭曲",
+          "中心",
+          "cc-nc-nd",
+          "shonk"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_24",
+      "file": "rctw_default_24.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "赛车",
+        "赛道",
+        "绿色",
+        "蓝色",
+        "210",
+        "DüScholux",
+        "车手",
+        "头盔",
+        "竞速",
+        "弯道"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Green car number",
+          "value": "210"
+        },
+        {
+          "kind": "text",
+          "label": "Blue car sponsor",
+          "value": "DüScholux"
+        },
+        {
+          "kind": "color",
+          "label": "Green car color",
+          "value": "Green with red and white accents"
+        },
+        {
+          "kind": "color",
+          "label": "Blue car color",
+          "value": "Light blue with white accents"
+        },
+        {
+          "kind": "object",
+          "label": "Vehicle type",
+          "value": "Open-wheel formula race cars"
+        },
+        {
+          "kind": "location",
+          "label": "Setting",
+          "value": "Asphalt race track with white edge line and grass"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "赛车"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "赛车",
+          "赛道",
+          "绿色",
+          "蓝色",
+          "210",
+          "DüScholux",
+          "车手",
+          "头盔",
+          "竞速",
+          "弯道"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_25",
+      "file": "rctw_default_25.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "红色背景",
+        "手绘",
+        "蓝色",
+        "十字架",
+        "公式",
+        "纸张",
+        "数学图",
+        "白纸",
+        "CC-ncc-69",
+        "compbell14"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "代码标识",
+          "value": "CC-ncc-69"
+        },
+        {
+          "kind": "text",
+          "label": "用户标识",
+          "value": "compbell14"
+        },
+        {
+          "kind": "text",
+          "label": "手写公式",
+          "value": "4(n+1)-3"
+        },
+        {
+          "kind": "color",
+          "label": "背景颜色",
+          "value": "红色"
+        },
+        {
+          "kind": "color",
+          "label": "绘图颜色",
+          "value": "蓝色"
+        },
+        {
+          "kind": "shape",
+          "label": "图形形状",
+          "value": "十字架/十字形"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "红色背景"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "红色背景",
+          "手绘",
+          "蓝色",
+          "十字架",
+          "公式",
+          "纸张",
+          "数学图",
+          "白纸",
+          "CC-ncc-69",
+          "compbell14"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_26",
+      "file": "rctw_default_26.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "广告牌",
+        "演唱会",
+        "粉色",
+        "手机",
+        "抢票",
+        "8月15日",
+        "体育馆",
+        "4G LTE",
+        "仙桃",
+        "树木"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "广告主标语",
+          "value": "看演唱会得手机"
+        },
+        {
+          "kind": "text",
+          "label": "品牌",
+          "value": "仙桃移动 动感4G之家"
+        },
+        {
+          "kind": "date",
+          "label": "决赛日期",
+          "value": "8月15日"
+        },
+        {
+          "kind": "text",
+          "label": "场地",
+          "value": "体育馆等着您"
+        },
+        {
+          "kind": "text",
+          "label": "活动说明",
+          "value": "抢票喽！现场观众百分百中奖"
+        },
+        {
+          "kind": "logo",
+          "label": "网络标识",
+          "value": "4G LTE"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "广告牌"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "广告牌",
+          "演唱会",
+          "粉色",
+          "手机",
+          "抢票",
+          "8月15日",
+          "体育馆",
+          "4G LTE",
+          "仙桃",
+          "树木"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_27",
+      "file": "rctw_default_27.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "我的钱包",
+        "微信安全支付",
+        "付款",
+        "零钱",
+        "银行卡",
+        "腾讯服务",
+        "转账",
+        "手机充值",
+        "理财通",
+        "Q币充值"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "我的钱包"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "price",
+          "label": "零钱余额",
+          "value": "￥0.11"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏时间",
+          "value": "20:46"
+        },
+        {
+          "kind": "text",
+          "label": "腾讯服务分类",
+          "value": "腾讯服务"
+        },
+        {
+          "kind": "location",
+          "label": "顶部功能区",
+          "value": "付款 / 零钱 / 银行卡"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "我的钱包"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "我的钱包",
+          "微信安全支付",
+          "付款",
+          "零钱",
+          "银行卡",
+          "腾讯服务",
+          "转账",
+          "手机充值",
+          "理财通",
+          "Q币充值"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_28",
+      "file": "rctw_default_28.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "XIN HAI COFFEE",
+        "棋牌",
+        "商务套餐",
+        "蓝天",
+        "白色建筑",
+        "红色招牌",
+        "屋顶",
+        "窗户",
+        "树",
+        "门店"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "招牌英文",
+          "value": "XIN HAI COFFEE"
+        },
+        {
+          "kind": "text",
+          "label": "招牌中文",
+          "value": "棋牌"
+        },
+        {
+          "kind": "text",
+          "label": "业务标签",
+          "value": "商务套餐"
+        },
+        {
+          "kind": "color",
+          "label": "招牌背景色",
+          "value": "深红色"
+        },
+        {
+          "kind": "color",
+          "label": "天空颜色",
+          "value": "深蓝色"
+        },
+        {
+          "kind": "object",
+          "label": "建筑特征",
+          "value": "白墙深色斜屋顶和大窗户"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "XIN HAI COFFEE"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "XIN HAI COFFEE",
+          "棋牌",
+          "商务套餐",
+          "蓝天",
+          "白色建筑",
+          "红色招牌",
+          "屋顶",
+          "窗户",
+          "树",
+          "门店"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_29",
+      "file": "rctw_default_29.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "购物",
+        "商场",
+        "指示牌",
+        "箭头",
+        "服装",
+        "品牌",
+        "楼层",
+        "导视",
+        "圣诞",
+        "促销"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店铺1",
+          "value": "eryn.B 艾艾挪 Thursday Island TOP FEELING"
+        },
+        {
+          "kind": "text",
+          "label": "店铺2",
+          "value": "VE Love Full D.H Bosty"
+        },
+        {
+          "kind": "text",
+          "label": "店铺3",
+          "value": "GILLIVO Maiv Martin ZUKKA.PRO 三叶草"
+        },
+        {
+          "kind": "text",
+          "label": "店铺4",
+          "value": "HYPESCAND PACO BNX 爱慕一家人"
+        },
+        {
+          "kind": "color",
+          "label": "指示牌颜色",
+          "value": "紫色, 青色, 红色, 玫红色"
+        },
+        {
+          "kind": "object",
+          "label": "商场结构",
+          "value": "多层商场, 透明玻璃护栏"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "购物"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "购物",
+          "商场",
+          "指示牌",
+          "箭头",
+          "服装",
+          "品牌",
+          "楼层",
+          "导视",
+          "圣诞",
+          "促销"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_30",
+      "file": "rctw_default_30.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "9D",
+        "VR",
+        "30",
+        "元",
+        "体验价",
+        "玻璃门",
+        "红色",
+        "店铺",
+        "体感",
+        "飞行模拟器"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店铺招牌",
+          "value": "虚拟现实体验馆"
+        },
+        {
+          "kind": "price",
+          "label": "9D VR体验价",
+          "value": "30元"
+        },
+        {
+          "kind": "object",
+          "label": "设备类型",
+          "value": "9D VR体验设备/体感模拟器"
+        },
+        {
+          "kind": "color",
+          "label": "机器颜色",
+          "value": "红色"
+        },
+        {
+          "kind": "location",
+          "label": "场景",
+          "value": "商场或店铺入口"
+        },
+        {
+          "kind": "shape",
+          "label": "招牌形状",
+          "value": "蓝色矩形海报"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "9D"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "9D",
+          "VR",
+          "30",
           "元",
-          "￥",
-          "¥"
-        ],
+          "体验价",
+          "玻璃门",
+          "红色",
+          "店铺",
+          "体感",
+          "飞行模拟器"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_31",
+      "file": "rctw_default_31.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "MOS Café",
+        "MOS BURGER",
+        "纸杯",
+        "白色",
+        "红色",
+        "二维码",
+        "QR code",
+        "两个",
+        "外卖杯",
+        "美式墨斯汉堡"
+      ],
+      "expected_details": [
+        {
+          "kind": "brand",
+          "label": "品牌名称",
+          "value": "MOS Burger"
+        },
+        {
+          "kind": "text",
+          "label": "产品系列",
+          "value": "MOS Café"
+        },
+        {
+          "kind": "text",
+          "label": "Logo文字",
+          "value": "MOS BURGER"
+        },
+        {
+          "kind": "object",
+          "label": "容器类型",
+          "value": "纸杯"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "白色配红色印刷"
+        },
+        {
+          "kind": "logo",
+          "label": "图形标识",
+          "value": "MOS Burger 三角形logo及二维码"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
         [
-          "支付",
-          "微信",
+          "MOS Café"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "MOS Café",
+          "MOS BURGER",
+          "纸杯",
+          "白色",
+          "红色",
+          "二维码",
+          "QR code",
+          "两个",
+          "外卖杯",
+          "美式墨斯汉堡"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_32",
+      "file": "rctw_default_32.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "YAKINIKU DON",
+        "丁次郎",
+        "はんの焼肉",
+        "烧肉丼",
+        "QR code",
+        "white",
+        "paper cup",
+        "black text",
+        "Magicscup Paper Cup",
+        "上白下黑"
+      ],
+      "expected_details": [
+        {
+          "kind": "object",
+          "label": "产品类型",
+          "value": "纸杯 / Paper Cup"
+        },
+        {
+          "kind": "text",
+          "label": "日文",
+          "value": "はんの焼肉"
+        },
+        {
+          "kind": "text",
+          "label": "中文/日文汉字",
+          "value": "丁次郎"
+        },
+        {
+          "kind": "text",
+          "label": "英文品名",
+          "value": "YAKINIKU DON"
+        },
+        {
+          "kind": "logo",
+          "label": "二维码",
+          "value": "QR code (右下角)"
+        },
+        {
+          "kind": "text",
+          "label": "水印",
+          "value": "cc-nc-nd"
+        },
+        {
+          "kind": "text",
+          "label": "底部文字",
+          "value": "Magicscup Paper Cup - 0:30 26 25 0"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "YAKINIKU DON"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "YAKINIKU DON",
+          "丁次郎",
+          "はんの焼肉",
+          "烧肉丼",
+          "QR code",
+          "white",
+          "paper cup",
+          "black text",
+          "Magicscup Paper Cup",
+          "上白下黑"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_33",
+      "file": "rctw_default_33.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "建筑",
+        "墙",
+        "画廊",
+        "街道",
+        "招牌",
+        "标志",
+        "画廊Y. GASTOU",
+        "巴黎",
+        "街道标志",
+        "壁画"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "画廊名称",
+          "value": "GALERIE Y.GASTOU"
+        },
+        {
+          "kind": "text",
+          "label": "街道牌",
+          "value": "RUE BONAPARTE"
+        },
+        {
+          "kind": "text",
+          "label": "区",
+          "value": "6e"
+        },
+        {
+          "kind": "object",
+          "label": "建筑特征",
+          "value": "外墙有裂缝和风化的灰泥"
+        },
+        {
+          "kind": "object",
+          "label": "阳台",
+          "value": "带有装饰栏杆的法式阳台"
+        },
+        {
+          "kind": "logo",
+          "label": "街道标志颜色",
+          "value": "蓝色"
+        },
+        {
+          "kind": "object",
+          "label": "店面材料",
+          "value": "斑点/水磨石立面"
+        },
+        {
+          "kind": "location",
+          "label": "城市",
+          "value": "巴黎"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "建筑"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "建筑",
+          "墙",
+          "画廊",
+          "街道",
+          "招牌",
+          "标志",
+          "画廊Y. GASTOU",
+          "巴黎",
+          "街道标志",
+          "壁画"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_34",
+      "file": "rctw_default_34.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "灰色",
+        "墙面",
+        "木纹",
+        "门框",
+        "缝隙",
+        "裂纹",
+        "水泥",
+        "棕色"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "水印",
+          "value": "ccync-sa"
+        },
+        {
+          "kind": "text",
+          "label": "署名",
+          "value": "Yoav Lerman"
+        },
+        {
+          "kind": "color",
+          "label": "墙面颜色",
+          "value": "灰色"
+        },
+        {
+          "kind": "color",
+          "label": "门框颜色",
+          "value": "棕色"
+        },
+        {
+          "kind": "object",
+          "label": "主要材质",
+          "value": "水泥墙面与木质门框"
+        },
+        {
+          "kind": "shape",
+          "label": "门缝",
+          "value": "垂直细长缝隙"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "灰色"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "灰色",
+          "墙面",
+          "木纹",
+          "门框",
+          "缝隙",
+          "裂纹",
+          "水泥",
+          "棕色"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_35",
+      "file": "rctw_default_35.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "冰淇淋杯",
+        "Baskin Robbins",
+        "粉色",
+        "蓝色",
+        "纸杯",
+        "QR码",
+        "BR logo",
+        "Baskin-Robbins",
+        "包装",
+        "马吉斯"
+      ],
+      "expected_details": [
+        {
+          "kind": "brand",
+          "label": "Brand",
+          "value": "Baskin Robbins (31冰淇淋)"
+        },
+        {
+          "kind": "text",
+          "label": "Brand text",
+          "value": "BR baskin robbins"
+        },
+        {
+          "kind": "color",
+          "label": "Center cup color",
+          "value": "Pink/Magenta"
+        },
+        {
+          "kind": "color",
+          "label": "Side cup colors",
+          "value": "Blue and Dark Red/Maroon"
+        },
+        {
+          "kind": "object",
+          "label": "Object type",
+          "value": "Paper ice cream cups"
+        },
+        {
+          "kind": "text",
+          "label": "Bottom watermark",
+          "value": "Majiscup Paper Cup"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "冰淇淋杯"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "冰淇淋杯",
+          "Baskin Robbins",
+          "粉色",
+          "蓝色",
+          "纸杯",
+          "QR码",
+          "BR logo",
+          "Baskin-Robbins",
+          "包装",
+          "马吉斯"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_36",
+      "file": "rctw_default_36.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "创意DIY区",
+        "12:00",
+        "21:00",
+        "周一休",
+        "支付宝",
+        "opening",
+        "白板",
+        "手写",
+        "商场",
+        "盆栽"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Sign title",
+          "value": "创意DIY区"
+        },
+        {
+          "kind": "text",
+          "label": "Opening hours",
+          "value": "12:00 ~ 21:00"
+        },
+        {
+          "kind": "text",
+          "label": "Closed day",
+          "value": "周一休 (Closed on Monday)"
+        },
+        {
+          "kind": "text",
+          "label": "Payment methods",
+          "value": "(支持支付宝转账)"
+        },
+        {
+          "kind": "text",
+          "label": "English label",
+          "value": "opening"
+        },
+        {
+          "kind": "number",
+          "label": "Phone number",
+          "value": "13554079512"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "创意DIY区"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "创意DIY区",
+          "12:00",
+          "21:00",
+          "周一休",
           "支付宝",
-          "paid"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "receipt"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_receipt_03",
-      "file": "rctw_receipt_03.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "小票",
-          "收据",
-          "发票",
-          "receipt",
-          "invoice",
-          "bill"
-        ],
-        [
-          "total",
-          "合计",
-          "总计",
-          "amount",
-          "金额",
-          "price",
-          "价格",
-          "元",
-          "￥",
-          "¥"
-        ],
-        [
-          "支付",
-          "微信",
-          "支付宝",
-          "paid"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "receipt"
+          "opening",
+          "白板",
+          "手写",
+          "商场",
+          "盆栽"
         ]
       ]
     },
     {
-      "id": "rctw_receipt_04",
-      "file": "rctw_receipt_04.jpg",
+      "id": "rctw_default_37",
+      "file": "rctw_default_37.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "购物中心",
+        "导视牌",
+        "指示牌",
+        "楼层指引",
+        "英文",
+        "中文",
+        "箭头",
+        "紫色",
+        "红色",
+        "粉色"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "小票",
-          "收据",
-          "发票",
-          "receipt",
-          "invoice",
-          "bill"
-        ],
-        [
-          "total",
-          "合计",
-          "总计",
-          "amount",
-          "金额",
-          "price",
-          "价格",
-          "元",
-          "￥",
-          "¥"
-        ],
-        [
-          "支付",
-          "微信",
-          "支付宝",
-          "paid"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "商家名称-紫色",
+          "value": "eryn.B, Thursday Island, 艾艾挪, TOP FEELING"
+        },
+        {
+          "kind": "text",
+          "label": "商家名称-青色",
+          "value": "VE, Love Full, D.H, Bost"
+        },
+        {
+          "kind": "text",
+          "label": "商家名称-红色",
+          "value": "GILLIVO, Maiv Martin, ZUKKA.PRO, 三叶草"
+        },
+        {
+          "kind": "text",
+          "label": "商家名称-粉色",
+          "value": "HYPE SCAND, PACO, BNX, 爱慕一家人"
+        },
+        {
+          "kind": "shape",
+          "label": "方向标识",
+          "value": "右指箭头 (>)"
+        },
+        {
+          "kind": "color",
+          "label": "指示牌颜色",
+          "value": "紫、青、红、粉"
+        },
+        {
+          "kind": "location",
+          "label": "场景",
+          "value": "商场室内中庭楼层指示牌"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "receipt"
+          "购物中心"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "购物中心",
+          "导视牌",
+          "指示牌",
+          "楼层指引",
+          "英文",
+          "中文",
+          "箭头",
+          "紫色",
+          "红色",
+          "粉色"
         ]
       ]
     },
     {
-      "id": "rctw_receipt_05",
-      "file": "rctw_receipt_05.jpg",
+      "id": "rctw_default_38",
+      "file": "rctw_default_38.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "我的钱包",
+        "微信安全支付",
+        "零钱",
+        "银行卡",
+        "腾讯服务",
+        "转账",
+        "手机充值",
+        "理财通",
+        "Q币充值",
+        "生活缴费",
+        "城市服务",
+        "信用卡还款",
+        "微信红包",
+        "AA收款",
+        "20:46",
+        "¥0.11",
+        "付款"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "小票",
-          "收据",
-          "发票",
-          "receipt",
-          "invoice",
-          "bill"
-        ],
-        [
-          "total",
-          "合计",
-          "总计",
-          "amount",
-          "金额",
-          "price",
-          "价格",
-          "元",
-          "￥",
-          "¥"
-        ],
-        [
-          "支付",
-          "微信",
-          "支付宝",
-          "paid"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "我的钱包"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "price",
+          "label": "零钱余额",
+          "value": "¥0.11"
+        },
+        {
+          "kind": "text",
+          "label": "分类标题",
+          "value": "腾讯服务"
+        },
+        {
+          "kind": "time",
+          "label": "状态栏时间",
+          "value": "20:46"
+        },
+        {
+          "kind": "object",
+          "label": "顶部菜单项",
+          "value": "付款、零钱、银行卡"
+        },
+        {
+          "kind": "object",
+          "label": "服务图标",
+          "value": "转账、手机充值、理财通、Q币充值、生活缴费、城市服务、信用卡还款、微信红包、AA收款"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "receipt"
+          "我的钱包"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "我的钱包",
+          "微信安全支付",
+          "零钱",
+          "银行卡",
+          "腾讯服务",
+          "转账",
+          "手机充值",
+          "理财通",
+          "Q币充值",
+          "生活缴费",
+          "城市服务",
+          "信用卡还款",
+          "微信红包",
+          "AA收款",
+          "20:46",
+          "¥0.11",
+          "付款"
         ]
       ]
     },
     {
-      "id": "rctw_screen_capture_01",
-      "file": "rctw_screen_capture_01.jpg",
+      "id": "rctw_default_39",
+      "file": "rctw_default_39.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "广告牌",
+        "粉色",
+        "演唱会",
+        "中国移动",
+        "4G",
+        "抢票",
+        "8月15日",
+        "仙桃",
+        "树",
+        "公交车"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "screen",
-          "notification",
-          "app",
-          "window",
-          "display",
-          "屏",
-          "通知",
-          "应用"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "广告主标语",
+          "value": "看演唱会得手机"
+        },
+        {
+          "kind": "date",
+          "label": "决赛日期",
+          "value": "8月15日"
+        },
+        {
+          "kind": "text",
+          "label": "活动提示",
+          "value": "体育馆等着您！"
+        },
+        {
+          "kind": "text",
+          "label": "抢票提示",
+          "value": "抢票喽！"
+        },
+        {
+          "kind": "location",
+          "label": "活动地点",
+          "value": "体育馆"
+        },
+        {
+          "kind": "brand",
+          "label": "品牌名称",
+          "value": "中国移动 4G之好"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "screen capture"
+          "广告牌"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "广告牌",
+          "粉色",
+          "演唱会",
+          "中国移动",
+          "4G",
+          "抢票",
+          "8月15日",
+          "仙桃",
+          "树",
+          "公交车"
         ]
       ]
     },
     {
-      "id": "rctw_screen_capture_02",
-      "file": "rctw_screen_capture_02.jpg",
+      "id": "rctw_default_40",
+      "file": "rctw_default_40.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "工程训练中心",
+        "ENGINEERING TRAINING CENTER",
+        "蓝色",
+        "标志",
+        "齿轮",
+        "灯光",
+        "夜晚",
+        "横幅"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "screen",
-          "notification",
-          "app",
-          "window",
-          "display",
-          "屏",
-          "通知",
-          "应用"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Chinese Text",
+          "value": "工程训练中心"
+        },
+        {
+          "kind": "text",
+          "label": "English Text",
+          "value": "ENGINEERING TRAINING CENTER"
+        },
+        {
+          "kind": "color",
+          "label": "Background Color",
+          "value": "Blue"
+        },
+        {
+          "kind": "logo",
+          "label": "Logo Design",
+          "value": "Gear and shape emblem"
+        },
+        {
+          "kind": "location",
+          "label": "Sign Location",
+          "value": "Indoor hallway"
+        },
+        {
+          "kind": "object",
+          "label": "Main Object",
+          "value": "Illuminated sign board"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "screen capture"
+          "工程训练中心"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "工程训练中心",
+          "ENGINEERING TRAINING CENTER",
+          "蓝色",
+          "标志",
+          "齿轮",
+          "灯光",
+          "夜晚",
+          "横幅"
         ]
       ]
     },
     {
-      "id": "rctw_screen_capture_03",
-      "file": "rctw_screen_capture_03.jpg",
+      "id": "rctw_default_41",
+      "file": "rctw_default_41.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "黑白照片",
+        "女人",
+        "桌子",
+        "茶壶",
+        "杯子",
+        "报纸",
+        "盘子",
+        "短发",
+        "深色衣服"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "screen",
-          "notification",
-          "app",
-          "window",
-          "display",
-          "屏",
-          "通知",
-          "应用"
-        ]
+      "expected_details": [
+        {
+          "kind": "color",
+          "label": "照片颜色",
+          "value": "黑白"
+        },
+        {
+          "kind": "text",
+          "label": "水印",
+          "value": "cc-nc-nd"
+        },
+        {
+          "kind": "text",
+          "label": "左下角文字",
+          "value": "Breehtbug"
+        },
+        {
+          "kind": "person",
+          "label": "人物",
+          "value": "一位短发女性"
+        },
+        {
+          "kind": "object",
+          "label": "桌上物品",
+          "value": "茶壶、杯子、托盘、报纸"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "screen capture"
+          "黑白照片"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "黑白照片",
+          "女人",
+          "桌子",
+          "茶壶",
+          "杯子",
+          "报纸",
+          "盘子",
+          "短发",
+          "深色衣服"
         ]
       ]
     },
     {
-      "id": "rctw_screen_capture_04",
-      "file": "rctw_screen_capture_04.jpg",
+      "id": "rctw_default_42",
+      "file": "rctw_default_42.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "Mock Election",
+        "Y Vote",
+        "Hansard Society",
+        "European Election 2009",
+        "megaphone",
+        "bar chart",
+        "Students",
+        "Teachers",
+        "Political Parties",
+        "RUN A CAMPAIGN"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "screen",
-          "notification",
-          "app",
-          "window",
-          "display",
-          "屏",
-          "通知",
-          "应用"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "Website Title",
+          "value": "Y Vote Mock Elections"
+        },
+        {
+          "kind": "text",
+          "label": "Chart Title",
+          "value": "European Election 2009"
+        },
+        {
+          "kind": "number",
+          "label": "Chart Y-axis Label",
+          "value": "Seats"
+        },
+        {
+          "kind": "number",
+          "label": "Chart Values",
+          "value": "16, 15, 13, 11, 8, 7, 5"
+        },
+        {
+          "kind": "text",
+          "label": "Section Heading",
+          "value": "Latest News"
+        },
+        {
+          "kind": "text",
+          "label": "Organization",
+          "value": "Hansard Society"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "screen capture"
+          "Mock Election"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "Mock Election",
+          "Y Vote",
+          "Hansard Society",
+          "European Election 2009",
+          "megaphone",
+          "bar chart",
+          "Students",
+          "Teachers",
+          "Political Parties",
+          "RUN A CAMPAIGN"
         ]
       ]
     },
     {
-      "id": "rctw_screen_capture_05",
-      "file": "rctw_screen_capture_05.jpg",
+      "id": "rctw_default_43",
+      "file": "rctw_default_43.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "猫",
+        "笔记本电脑",
+        "联想",
+        "Lenovo",
+        "键盘",
+        "黑白条纹",
+        "睡觉",
+        "桌面",
+        "显示器",
+        "向日葵"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "screen",
-          "notification",
-          "app",
-          "window",
-          "display",
-          "屏",
-          "通知",
-          "应用"
-        ]
+      "expected_details": [
+        {
+          "kind": "brand",
+          "label": "Laptop brand",
+          "value": "Lenovo"
+        },
+        {
+          "kind": "object",
+          "label": "Main subject",
+          "value": "Cat"
+        },
+        {
+          "kind": "color",
+          "label": "Cat color",
+          "value": "Black, white, and brown tabby"
+        },
+        {
+          "kind": "location",
+          "label": "Location",
+          "value": "On laptop keyboard"
+        },
+        {
+          "kind": "object",
+          "label": "Mug design",
+          "value": "Sunflower"
+        },
+        {
+          "kind": "object",
+          "label": "Background items",
+          "value": "Monitor, speakers, cables"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "screen capture"
+          "猫"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "猫",
+          "笔记本电脑",
+          "联想",
+          "Lenovo",
+          "键盘",
+          "黑白条纹",
+          "睡觉",
+          "桌面",
+          "显示器",
+          "向日葵"
         ]
       ]
     },
     {
-      "id": "rctw_street_sign_01",
-      "file": "rctw_street_sign_01.jpg",
+      "id": "rctw_default_44",
+      "file": "rctw_default_44.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "cc-nc-nd",
+        "Blackwell_S",
+        "黑白",
+        "路灯",
+        "长椅",
+        "砖墙",
+        "帽子",
+        "户外",
+        "树",
+        "吊灯"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "顶部水印",
+          "value": "cc-nc-nd"
+        },
+        {
+          "kind": "text",
+          "label": "左下角署名",
+          "value": "Blackwell_S"
+        },
+        {
+          "kind": "object",
+          "label": "场景类型",
+          "value": "户外露台/庭院"
+        },
+        {
+          "kind": "object",
+          "label": "可见物品",
+          "value": "球形路灯、吊式加热灯、多张长椅和金属桌椅、人物、树木、砖墙"
+        },
+        {
+          "kind": "color",
+          "label": "整体色调",
+          "value": "黑白"
+        },
+        {
+          "kind": "person",
+          "label": "人物特征",
+          "value": "戴帽子、穿深色上衣、坐在桌椅处"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "cc-nc-nd"
+        ]
       ],
       "acceptable_intent_keywords": [
         [
-          "路",
-          "街",
-          "大道",
-          "sign",
-          "street",
-          "road",
-          "avenue",
-          "巷"
-        ],
+          "cc-nc-nd",
+          "Blackwell_S",
+          "黑白",
+          "路灯",
+          "长椅",
+          "砖墙",
+          "帽子",
+          "户外",
+          "树",
+          "吊灯"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_45",
+      "file": "rctw_default_45.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "鳄鱼",
+        "水中",
+        "眼睛",
+        "沼泽",
+        "草",
+        "棕色",
+        "爬行动物",
+        "水面",
+        "ca-nc-nd",
+        "orientalizing"
+      ],
+      "expected_details": [
+        {
+          "kind": "object",
+          "label": "主体",
+          "value": "鳄鱼头部"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "棕色"
+        },
+        {
+          "kind": "location",
+          "label": "场景",
+          "value": "水中/沼泽"
+        },
+        {
+          "kind": "text",
+          "label": "左上角水印",
+          "value": "cc-nc-nd"
+        },
+        {
+          "kind": "text",
+          "label": "左下角署名",
+          "value": "orientalizing"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
         [
-          "禁止",
-          "小心",
-          "注意",
+          "鳄鱼"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "鳄鱼",
+          "水中",
+          "眼睛",
+          "沼泽",
+          "草",
+          "棕色",
+          "爬行动物",
+          "水面",
+          "ca-nc-nd",
+          "orientalizing"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_46",
+      "file": "rctw_default_46.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "广告牌",
+        "粉色",
+        "中国",
+        "手机",
+        "演唱会",
+        "公交站",
+        "树木",
+        "电线",
+        "仙桃",
+        "4G"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "看演唱会得手机"
+        },
+        {
+          "kind": "date",
+          "label": "日期",
+          "value": "8月15日"
+        },
+        {
+          "kind": "text",
+          "label": "品牌",
+          "value": "仙桃移动4G之约"
+        },
+        {
+          "kind": "text",
+          "label": "口号",
+          "value": "体育馆等着您!"
+        },
+        {
+          "kind": "text",
+          "label": "抢票说明",
+          "value": "下载咪咕爱唱进入活动专区"
+        },
+        {
+          "kind": "text",
+          "label": "运营商",
+          "value": "中国移动"
+        },
+        {
+          "kind": "color",
+          "label": "背景颜色",
+          "value": "粉红色"
+        },
+        {
+          "kind": "location",
+          "label": "地点",
+          "value": "仙桃市"
+        },
+        {
+          "kind": "object",
+          "label": "下方物体",
+          "value": "黄色公交车"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "广告牌"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "广告牌",
+          "粉色",
+          "中国",
+          "手机",
+          "演唱会",
+          "公交站",
+          "树木",
+          "电线",
+          "仙桃",
+          "4G"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_47",
+      "file": "rctw_default_47.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "新派川菜",
+        "4F",
+        "电话",
+        "027-87878057",
+        "武汉光谷",
+        "意大利风情街",
+        "招牌",
+        "红色",
+        "黄色",
+        "楼梯间"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "店名",
+          "value": "新派川菜"
+        },
+        {
+          "kind": "text",
+          "label": "楼层",
+          "value": "4F"
+        },
+        {
+          "kind": "text",
+          "label": "电话",
+          "value": "027-87878057"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "武汉光谷步行街意大利风情街5号楼4楼"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "红、白、黄"
+        },
+        {
+          "kind": "object",
+          "label": "类型",
+          "value": "竖幅广告牌/招牌"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "新派川菜"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "新派川菜",
+          "4F",
+          "电话",
+          "027-87878057",
+          "武汉光谷",
+          "意大利风情街",
+          "招牌",
+          "红色",
+          "黄色",
+          "楼梯间"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_48",
+      "file": "rctw_default_48.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "律师事务所",
+        "招牌",
+        "玻璃门",
+        "律师楼",
+        "建筑入口",
+        "椅子",
+        "空调",
+        "窗",
+        "柱",
+        "门牌"
+      ],
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "竖排横幅文字",
+          "value": "武汉勤光建材有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门顶部文字",
+          "value": "律师楼"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门竖排文字",
+          "value": "湖北东风"
+        },
+        {
+          "kind": "text",
+          "label": "门牌号",
+          "value": "02"
+        },
+        {
+          "kind": "location",
+          "label": "场景",
+          "value": "建筑入口"
+        },
+        {
+          "kind": "object",
+          "label": "可见物品",
+          "value": "椅子、空调、桌子"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "律师事务所"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "律师事务所",
+          "招牌",
+          "玻璃门",
+          "律师楼",
+          "建筑入口",
+          "椅子",
+          "空调",
+          "窗",
+          "柱",
+          "门牌"
+        ]
+      ]
+    },
+    {
+      "id": "rctw_default_49",
+      "file": "rctw_default_49.jpg",
+      "category": "default",
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "工地",
+        "围栏",
+        "燃气",
+        "警示牌",
+        "安全",
+        "注意",
+        "管道",
+        "施工",
+        "建筑",
+        "泥地"
+      ],
+      "expected_details": [
+        {
+          "kind": "logo",
+          "label": "Logo text",
+          "value": "港华燃气"
+        },
+        {
+          "kind": "brand",
+          "label": "Company name",
+          "value": "吴江港华燃气有限公司"
+        },
+        {
+          "kind": "number",
+          "label": "维修电话",
+          "value": "63426830"
+        },
+        {
+          "kind": "text",
+          "label": "Warning text",
+          "value": "工地现场 注意安全"
+        },
+        {
+          "kind": "color",
+          "label": "Safety flag colors",
+          "value": "红/蓝/黄/绿"
+        },
+        {
+          "kind": "object",
+          "label": "Foreground object",
+          "value": "金属施工围栏（铁马）"
+        }
+      ],
+      "must_have_in_scene_or_observation": [
+        [
+          "工地"
+        ]
+      ],
+      "acceptable_intent_keywords": [
+        [
+          "工地",
+          "围栏",
+          "燃气",
+          "警示牌",
           "安全",
-          "警告",
-          "warning",
-          "danger",
-          "caution"
-        ],
-        [
-          "导航",
-          "方向",
-          "navigate",
-          "direction",
-          "where",
-          "怎么走",
-          "地址"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "street sign"
+          "注意",
+          "管道",
+          "施工",
+          "建筑",
+          "泥地"
         ]
       ]
     },
     {
-      "id": "rctw_street_sign_02",
-      "file": "rctw_street_sign_02.jpg",
+      "id": "rctw_default_50",
+      "file": "rctw_default_50.jpg",
       "category": "default",
-      "expected_top_intent_type": [
-        "info"
+      "expected_type": "info",
+      "expected_description_keywords": [
+        "严禁鸣喇",
+        "请轻关门",
+        "停靠后请熄火",
+        "请勿使用远光灯",
+        "请排气管朝外",
+        "汽车防盗守则",
+        "蓝色",
+        "告示牌",
+        "中英文",
+        "图标"
       ],
-      "acceptable_intent_keywords": [
-        [
-          "路",
-          "街",
-          "大道",
-          "sign",
-          "street",
-          "road",
-          "avenue",
-          "巷"
-        ],
-        [
-          "禁止",
-          "小心",
-          "注意",
-          "安全",
-          "警告",
-          "warning",
-          "danger",
-          "caution"
-        ],
-        [
-          "导航",
-          "方向",
-          "navigate",
-          "direction",
-          "where",
-          "怎么走",
-          "地址"
-        ]
+      "expected_details": [
+        {
+          "kind": "text",
+          "label": "顶部禁令1",
+          "value": "严禁鸣喇"
+        },
+        {
+          "kind": "text",
+          "label": "顶部禁令2",
+          "value": "请轻关门"
+        },
+        {
+          "kind": "text",
+          "label": "顶部禁令3",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "顶部禁令4",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "顶部禁令5",
+          "value": "请排气管朝外"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "汽车防盗守则"
+        },
+        {
+          "kind": "text",
+          "label": "英文副标题",
+          "value": "the rules of guarding aguinst theft of cars"
+        },
+        {
+          "kind": "color",
+          "label": "主色调",
+          "value": "蓝色"
+        },
+        {
+          "kind": "text",
+          "label": "左下说明",
+          "value": "切勿将贵重物品留在车内 Dont leave any valuablong in the car."
+        },
+        {
+          "kind": "text",
+          "label": "右下说明",
+          "value": "不要将车匙留在车内 Don'leave the key in the car.t"
+        }
       ],
       "must_have_in_scene_or_observation": [
         [
-          "street sign"
+          "严禁鸣喇"
         ]
-      ]
-    },
-    {
-      "id": "rctw_street_sign_03",
-      "file": "rctw_street_sign_03.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
       ],
       "acceptable_intent_keywords": [
         [
-          "路",
-          "街",
-          "大道",
-          "sign",
-          "street",
-          "road",
-          "avenue",
-          "巷"
-        ],
-        [
-          "禁止",
-          "小心",
-          "注意",
-          "安全",
-          "警告",
-          "warning",
-          "danger",
-          "caution"
-        ],
-        [
-          "导航",
-          "方向",
-          "navigate",
-          "direction",
-          "where",
-          "怎么走",
-          "地址"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "street sign"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_street_sign_04",
-      "file": "rctw_street_sign_04.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "路",
-          "街",
-          "大道",
-          "sign",
-          "street",
-          "road",
-          "avenue",
-          "巷"
-        ],
-        [
-          "禁止",
-          "小心",
-          "注意",
-          "安全",
-          "警告",
-          "warning",
-          "danger",
-          "caution"
-        ],
-        [
-          "导航",
-          "方向",
-          "navigate",
-          "direction",
-          "where",
-          "怎么走",
-          "地址"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "street sign"
-        ]
-      ]
-    },
-    {
-      "id": "rctw_street_sign_05",
-      "file": "rctw_street_sign_05.jpg",
-      "category": "default",
-      "expected_top_intent_type": [
-        "info"
-      ],
-      "acceptable_intent_keywords": [
-        [
-          "路",
-          "街",
-          "大道",
-          "sign",
-          "street",
-          "road",
-          "avenue",
-          "巷"
-        ],
-        [
-          "禁止",
-          "小心",
-          "注意",
-          "安全",
-          "警告",
-          "warning",
-          "danger",
-          "caution"
-        ],
-        [
-          "导航",
-          "方向",
-          "navigate",
-          "direction",
-          "where",
-          "怎么走",
-          "地址"
-        ]
-      ],
-      "must_have_in_scene_or_observation": [
-        [
-          "street sign"
+          "严禁鸣喇",
+          "请轻关门",
+          "停靠后请熄火",
+          "请勿使用远光灯",
+          "请排气管朝外",
+          "汽车防盗守则",
+          "蓝色",
+          "告示牌",
+          "中英文",
+          "图标"
         ]
       ]
     }
