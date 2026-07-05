@@ -68,8 +68,9 @@ TOOLS = [
     {
         "name": "emit_bubble",
         "description": "当你完全理解了图片内容和用户意图后，调这个工具结束识别循环。"
-                     "content: 图片内容描述。intent: 用户想做什么。type: info/location/solve。"
-                     "details: array of {kind, label, value}，详情页表格行。confidence: 0-1。",
+                     "**content 字段关键**：必须把图里所有可见文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式原样写出来（如\"包装文字：'品名 工夫红茶' 净含量 '250g'  生产日期 '2020-12-01'\"）。"
+                     "intent: 用户想做什么。type: info/location/solve。"
+                     "details: array of {kind, label, value}，详情页表格行——把图里读到的关键文字逐行列出。confidence: 0-1。",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -110,7 +111,14 @@ SYSTEM_PROMPT = (
     "无论图是否清楚，**先调 1-2 次 zoom_in(x, y, w, h, focus='...') 看清楚细节**。x/y/w/h 是归一化坐标 ∈ [0, 1]，x/y 是左上角，w/h 是宽高。"
     "源 source 默认 'last'（链式放大 — 第二次裁第一次的结果）。要看原图不同区域用 source='original'。\n"
     "**第二步：理解用户意图**。在清楚图片内容后，思考用户为什么拍这张图、想用它做什么。\n"
-    "**收尾**：看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。type ∈ {info, location, solve}。**details 字段必填**，把图里读到的所有文字 / 数字 / 品牌 / 日期 / 价格都列出来。\n"
+    "**收尾**：看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。type ∈ {info, location, solve}。\n"
+    "\n"
+    "**关键 — content 字段必须包含图里所有可见文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式**（用户要看的）：\n"
+    "  例如：茶叶包装 → content 写\"包装文字：'品名: 工夫红茶', '净含量: 250g', '生产日期: 2020-12-01'\"\n"
+    "  路牌 → \"建国路 100号\"\n"
+    "  收据 → \"合计 ¥168.50, 微信支付\"\n"
+    "  菜单 → \"宫保鸡丁 ¥38, 鱼香肉丝 ¥42\"\n"
+    "  漏一个字 = 漏一个关键信息。**content 必须把图里所有可见文字原样写出来**。\n"
     "**不要**用纯文本总结。**必须**调 emit_bubble 收尾。"
 )
 
@@ -352,21 +360,33 @@ def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
     all_follow_ups = []
     current_image = original_jpeg
     final_resp = response1
+    # Track cumulative text content too — the model may put useful
+    # text in any round (not just emit_bubble).  We take the last
+    # non-empty text as a fallback if the model never emits_bubble.
+    last_text_content = ""
     for round_i in range(1, max_rounds + 1):
         tool_uses = [b for b in final_resp.get("content", []) if b.get("type") == "tool_use"]
+        # Capture free text from this round (model might write a draft
+        # before emit_bubble, or in lieu of it).
+        round_text = " ".join(
+            b.get("text", "") for b in final_resp.get("content", [])
+            if b.get("type") == "text" and b.get("text", "").strip()
+        )
+        if round_text:
+            last_text_content = round_text
         if any(b.get("name") == "emit_bubble" for b in tool_uses):
             break
-        # Round 1 special case: if no zoom_in was called, nudge the
-        # model to use the default (zoom first).
         is_first_round = round_i == 1
         if not tool_uses:
             if is_first_round:
-                # No tool use at all in round 1 — push hard for zoom
                 messages.append({"role": "user", "content": [
-                    {"type": "text", "text": "请先调 zoom_in(x, y, w, h, focus='...') 放大看 1-2 个区域（这是缺省模式），看清后再调 emit_bubble 总结。"}
+                    {"type": "text", "text": "请先调 zoom_in(x, y, w, h, focus='...') 放大看 1-2 个区域（缺省模式），看清后再调 emit_bubble 总结。"}
                 ]})
                 final_resp = call_model(messages, max_tokens=800)
                 continue
+            # No tool_use in a non-first round: model gave pure text.
+            # Treat the latest text as the final content; we don't
+            # run more rounds.
             break
         zoom_in_call = next((b for b in tool_uses if b["name"] == "zoom_in"), None)
         tool_results = []
@@ -423,6 +443,7 @@ def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
             next_content.append(tr)
         # End-of-round nudge.  After the first zoom, push the model
         # toward emit_bubble (it has seen the high-detail crop).
+        cumulative_zooms = len(all_follow_ups) + len(round_follow_ups)
         if is_first_round and zoom_in_call is not None:
             # The model used zoom_in in round 1; in the next round
             # it will see the crop and should emit_bubble (after
@@ -431,11 +452,11 @@ def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
                 "type": "text",
                 "text": "（已 zoom_in 一次。还可以再 zoom_in 一次看更细的细节；或者直接调 emit_bubble 总结：content 描述图、intent 用户意图、type ∈ {info,location,solve}、details 必填）",
             })
-        elif zoom_in_call is None and all_follow_ups:
-            # Second zoom happened in earlier round; nudge emit_bubble
+        elif cumulative_zooms >= 2:
+            # Two or more zooms done — FORCE emit_bubble now.
             next_content.append({
                 "type": "text",
-                "text": "（已 zoom_in 多次。**现在必须调 emit_bubble** 总结：content 描述图、intent 用户意图、type ∈ {info,location,solve}、details 必填）",
+                "text": "（已 zoom_in 多次，看清细节了。**必须调 emit_bubble** 总结：content 列出图里所有可见文字/数字/品牌/日期/价格，intent 用户意图，type=info，details 把每个读出的文字列成 {kind, label, value}）",
             })
         else:
             next_content.append({
@@ -445,6 +466,10 @@ def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
         messages.append({"role": "user", "content": next_content})
         all_follow_ups.extend(round_follow_ups)
         final_resp = call_model(messages, max_tokens=800)
+    # Stash last_text_content on final_resp so the caller can read
+    # it (the eval uses it as a content fallback).
+    if last_text_content and final_resp is not None:
+        final_resp["_last_free_text"] = last_text_content
     return final_resp, all_follow_ups
 
 
@@ -550,6 +575,10 @@ def main() -> int:
                         if isinstance(d, dict):
                             r2_emit_details.append(d)
             combined = r2_text + " " + r2_emit_scene
+            # Fallback: if the model never emitted_bubble but did
+            # write useful text in some round, include it.
+            if not r2_emit_scene and final_resp.get("_last_free_text"):
+                combined = final_resp["_last_free_text"]
             r2_text_score = score_text(combined, fixture, r2_emit_details)
             r2_type_score = score_emit_type(r2_emit_type, fixture)
         # round2_score is 50/50 text-match + emit-type
