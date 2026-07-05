@@ -1,0 +1,836 @@
+{
+  "food_label": [
+    {
+      "image": "VizWiz_val_00000001.jpg",
+      "question": "Can you tell me what this medicine is please?",
+      "top_answer": "night time",
+      "all_answers": [
+        "no",
+        "unanswerable",
+        "night time",
+        "unanswerable",
+        "night time",
+        "night time cold medicine",
+        "night time",
+        "night time",
+        "night time",
+        "night time medicine"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000022.jpg",
+      "question": "Can you tell what this is?",
+      "top_answer": "dropper bottle",
+      "all_answers": [
+        "bottle something dropper lid",
+        "unanswerable",
+        "bottle meds",
+        "some kind drops",
+        "dropper bottle",
+        "medicine",
+        "dropper bottle",
+        "yes",
+        "nose drops",
+        "bottle dropper"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000023.jpg",
+      "question": "Can you tell me what the error message is on the Windows screen?",
+      "top_answer": "starting windows",
+      "all_answers": [
+        "unanswerable",
+        "starting windows",
+        "starting windows",
+        "no",
+        "starting windows",
+        "unanswerable",
+        "no error windows starting up",
+        "no",
+        "starting windows",
+        "no error"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000054.jpg",
+      "question": "What's the name of the drink?",
+      "top_answer": "irn bru",
+      "all_answers": [
+        "irnbru",
+        "irn bru",
+        "irnbru barr",
+        "barr irn bru sugar free",
+        "barr irn bru sugar free",
+        "irn bru",
+        "irn bru",
+        "irn barr bru",
+        "irn barr bru sugar free",
+        "irn bru"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000069.jpg",
+      "question": "Can you tell me what this bottle says?",
+      "top_answer": "warm vanilla sugar",
+      "all_answers": [
+        "warm vanilla sugar",
+        "sugar",
+        "warm vanilla sugar",
+        "warm vanilla sugar",
+        "warm vanilla sugar body lotion",
+        "warm vanila sugar",
+        "warm vanilla sugar body lotion",
+        "warm vanilla sugar",
+        "warm vanilla sugar body lotion",
+        "warm vanilla sugar"
+      ]
+    }
+  ],
+  "device_reading": [
+    {
+      "image": "VizWiz_val_00000518.jpg",
+      "question": "What is that?",
+      "top_answer": "computer monitor",
+      "all_answers": [
+        "computers monitor keyboard",
+        "monitor",
+        "computer monitor",
+        "computer screen",
+        "computer",
+        "computer monitor",
+        "computer screen",
+        "desktop",
+        "graph",
+        "graph"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000875.jpg",
+      "question": "What is this?",
+      "top_answer": "monitor",
+      "all_answers": [
+        "printer pop up on top survey something",
+        "monitor",
+        "computer",
+        "prompt screen",
+        "computer screen",
+        "screen",
+        "monitor",
+        "computer screen",
+        "computer",
+        "monitor"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000934.jpg",
+      "question": "What was that item I just took a picture of?",
+      "top_answer": "computer monitor",
+      "all_answers": [
+        "computer monitor",
+        "computer",
+        "computer screen",
+        "unanswerable",
+        "unanswerable",
+        "laptop",
+        "computer screen",
+        "laptop",
+        "computer monitor",
+        "laptop computer"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00001185.jpg",
+      "question": "Can you please read to me what is shown on this display? ",
+      "top_answer": "use washer dryer swipe card",
+      "all_answers": [
+        "use washer dryer swipe card",
+        "use washer dryer swipe card",
+        "use washer dryer swipe card",
+        "use washer dryer swipe caed",
+        "use washer dryer swipe card",
+        "use washer dryer swipe card",
+        "use washer dryer swipe card",
+        "use washer dryer swipe card",
+        "use washer dryer swipe card",
+        "use washer dryer swipe card"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00001408.jpg",
+      "question": "Can you please tell me my current oven temperature? Thank you.",
+      "top_answer": "100 degrees",
+      "all_answers": [
+        "100 degrees",
+        "100 degrees",
+        "100‘Ť",
+        "100",
+        "100 degrees",
+        "100",
+        "100 degrees",
+        "100",
+        "100",
+        "100 degrees"
+      ]
+    }
+  ],
+  "math": [
+    {
+      "image": "VizWiz_val_00000343.jpg",
+      "question": "What is on this page?",
+      "top_answer": "numbers",
+      "all_answers": [
+        "dollar amounts",
+        "account statement",
+        "numbers",
+        "i dont know",
+        "numbers",
+        "unanswerable",
+        "numbers",
+        "ledger",
+        "bank statment",
+        "unanswerable"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000355.jpg",
+      "question": "What numbers are marked on this ticket?",
+      "top_answer": "04 35 36 42 50 01 02",
+      "all_answers": [
+        "04 35 36 42 50 01 02",
+        "04 35 36 42 50 01 02",
+        "04 35 36 42 50 01 02",
+        "04 35 36 42 50 01 02",
+        "04 35 36 42 50 01 02 10",
+        "04 35 36 42 50 01 02",
+        "04 35 36 42 50 01 02",
+        "04 35 36 42 50 01 02",
+        "unanswerable",
+        "104353642500102"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000499.jpg",
+      "question": "Hi, can you tell me what this captcha says on the screen? I just tried one and I think it timed out, sorry about that, thank you.",
+      "top_answer": "aktir",
+      "all_answers": [
+        "aktir",
+        "aktrr",
+        "arktr",
+        "aktr",
+        "arktir",
+        "aktlr",
+        "unanswerable",
+        "unanswerable",
+        "aktr",
+        "aktir"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000751.jpg",
+      "question": "What does this CAPTCHA say?",
+      "top_answer": "ionsuo",
+      "all_answers": [
+        "ionsuo",
+        "practical yonsuo",
+        "ionsuo",
+        "practical lonsuo",
+        "practical ionsuo",
+        "practical 1onsuo",
+        "practical lonsup",
+        "practical ionsuo",
+        "ionsuo",
+        "practical lonsuo"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000861.jpg",
+      "question": "I need to know the captcha code if anyone could, please. Thanks.",
+      "top_answer": "2rm5",
+      "all_answers": [
+        "2 rm5",
+        "2rm5",
+        "2rm5",
+        "2rm5",
+        "2rm5",
+        "2rm5",
+        "2rm5",
+        "2rm5",
+        "2rm5",
+        "2bm5"
+      ]
+    }
+  ],
+  "receipt": [
+    {
+      "image": "VizWiz_val_00000154.jpg",
+      "question": "What does this coupon say on it?",
+      "top_answer": "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+      "all_answers": [
+        "buy 1 pizza at menu price receive on pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza at menu price receive 1 equal lesser value free",
+        "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza",
+        "buy 1 pizza get 1 free",
+        "buy 1 get 1 free on pizza",
+        "buy 1 pizza at menu price",
+        "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza get 1 free"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000247.jpg",
+      "question": "Can you tell me what this price tag says?",
+      "top_answer": "mission tortilla strips",
+      "all_answers": [
+        "mission tortilla strips mission foods 1015 7373108100 2",
+        "mission tortilla strips",
+        "mission tortilla strips mission foods",
+        "move to right",
+        "mission foods",
+        "unanswerable",
+        "mission tortilla strips",
+        "mission tortilla strips",
+        "unanswerable",
+        "no"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000781.jpg",
+      "question": "What is the price of the french fries?",
+      "top_answer": "1.29 1.99",
+      "all_answers": [
+        "small 1.29 large 1.99",
+        "1.29 1.99",
+        "$1.29 $1.99",
+        "1.29 1.99",
+        "$1.29 $1.99",
+        "small $1.29 large $1.99",
+        "small 1.29 lg 1.99",
+        "1.29 1.99",
+        "1.29 1.99",
+        "$1.29 $1.99"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000878.jpg",
+      "question": "What does it say on this coupon?",
+      "top_answer": "$5 avocado bacon tostada combo",
+      "all_answers": [
+        "$5 avocado bacon tostada combo",
+        "5 combo",
+        "$5 avocado bacon tostada combo",
+        "5$ avocado bacon tostada combo",
+        "$5 avocado bacon tostada combo",
+        "$ avocado bacon tostada combo",
+        "$5",
+        "avocado bacon tostada combo",
+        "$5 avocado bacon tostada combo",
+        "$5 avocado bacon tostada combo"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000903.jpg",
+      "question": "Can you tell me the price of this computer please?",
+      "top_answer": "12999.01",
+      "all_answers": [
+        "12999.91",
+        "12999.01",
+        "$12999.01",
+        "$12999.01",
+        "12999.01",
+        "12999.01",
+        "12999.01",
+        "12999.01",
+        "1299.01",
+        "12999.01"
+      ]
+    }
+  ],
+  "street_sign": [
+    {
+      "image": "VizWiz_val_00000048.jpg",
+      "question": "What store is this?",
+      "top_answer": "original pancake house",
+      "all_answers": [
+        "original pancake house",
+        "original pancake house",
+        "original pancake house",
+        "original pancake house",
+        "original pancake house",
+        "original pancake house",
+        "original pancake house",
+        "original pancake house",
+        "pancake house",
+        "pancake house"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000112.jpg",
+      "question": "Please describe this page. Thank you.",
+      "top_answer": "store ad",
+      "all_answers": [
+        "store ad",
+        "has prices pics various sale products",
+        "ad for sporting goods store",
+        "camping supplies",
+        "sales flyer",
+        "local ad for store",
+        "coupons",
+        "ad",
+        "sale ad",
+        "coupons for store"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000640.jpg",
+      "question": "What is it?",
+      "top_answer": "street",
+      "all_answers": [
+        "street",
+        "road way",
+        "sidewalk street",
+        "wet street through window",
+        "street",
+        "roadway",
+        "street",
+        "parking lot",
+        "street outside",
+        "road"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000784.jpg",
+      "question": "Yes this is a google street view and I just want a description of the image please be as detailed as possible.",
+      "top_answer": "view multistory building in suburbs",
+      "all_answers": [
+        "view multistory building in suburbs",
+        "yes 1 building 4 trees lawn",
+        "landscaped office building",
+        "building",
+        "electric post 2 trees on driveway",
+        "large brick building trees grass in front bushes sidewalk by street",
+        "street grass bushes trees building",
+        "trees grass bushes sidewalk power lines church",
+        "building grass trees",
+        "trees"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000845.jpg",
+      "question": "Yes, this is a Google Street View. I need a description,, as detailed as possible, of the image, and I need to know if there's a bus stop visible.",
+      "top_answer": "no bus stop",
+      "all_answers": [
+        "bus stop",
+        "sign by side roads close to some woods",
+        "trees sign but unreadable",
+        "picture woods from street sign but does not look like bus stop sign",
+        "no bus stop",
+        "no bus stop",
+        "side road showing train track next to woodbine 1 street sign to right photo",
+        "trees",
+        "railroad tracks trees no bus stop visible",
+        "bushes on side road unreadable street sign"
+      ]
+    }
+  ],
+  "menu": [
+    {
+      "image": "VizWiz_val_00000154.jpg",
+      "question": "What does this coupon say on it?",
+      "top_answer": "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+      "all_answers": [
+        "buy 1 pizza at menu price receive on pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza at menu price receive 1 equal lesser value free",
+        "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza",
+        "buy 1 pizza get 1 free",
+        "buy 1 get 1 free on pizza",
+        "buy 1 pizza at menu price",
+        "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza at menu price receive 1 pizza equal lesser value free expires 12 31 11",
+        "buy 1 pizza get 1 free"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000601.jpg",
+      "question": "What does this say?",
+      "top_answer": "bar b que restaurant",
+      "all_answers": [
+        "bar b que restaurant",
+        "bar b que restaurant",
+        "bar b que restaurant open",
+        "bar b que restaurant",
+        "bar b que restaurant open 10",
+        "bar b que restaurant open to",
+        "barbeque restaurant",
+        "bar b que restaurant",
+        "bar b que restaurant open",
+        "barbque"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000770.jpg",
+      "question": "What is this?",
+      "top_answer": "menu",
+      "all_answers": [
+        "waffle mix",
+        "stomach",
+        "microwavable breakfast waffles",
+        "back package",
+        "menu",
+        "unanswerable",
+        "waffles box",
+        "menu",
+        "pancake mix",
+        "waffles recipe"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000789.jpg",
+      "question": "What is this?",
+      "top_answer": "menu",
+      "all_answers": [
+        "menu",
+        "unanswerable",
+        "menu",
+        "menu",
+        "menu",
+        "table contents",
+        "menu",
+        "menu",
+        "price list",
+        "unanswerable"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000920.jpg",
+      "question": "Please tell which screen I'm on? I'm trying to access the boot menu and I'm trying to boot from a USB drive. See if you can me what screen is up and what option is? ",
+      "top_answer": "please select boot device",
+      "all_answers": [
+        "press down arrow once then enter for usb",
+        "boot menu on boot from hdd option",
+        "unanswerable",
+        "u bootmood",
+        "please select boot device",
+        "please select boot device:",
+        "please select boot device hdd: pm st9250315as",
+        "please select boot device",
+        "screen header: please select boot device move arrow down 1 spot to usb:usb disk pro",
+        "please select boot device"
+      ]
+    }
+  ],
+  "qr_code": [
+    {
+      "image": "VizWiz_val_00002537.jpg",
+      "question": "Can you do what the semi useless upc databases have failed to do and identify this?",
+      "top_answer": "michelina chicken teriyaki",
+      "all_answers": [
+        "chicken teriyaki",
+        "michelina chicken teriyaki",
+        "michelina signature chicken teriyaki",
+        "michelina chicken teriyaki meal",
+        "frozen chicken teriyaki dinner",
+        "stir fry",
+        "chicken meal",
+        "michelina tv dinner",
+        "michelina chicken teriyaki",
+        "michelina"
+      ]
+    },
+    {
+      "image": "golden_qr_01.jpg",
+      "question": "(loremflickr QR sample) golden_qr_01.jpg",
+      "top_answer": "(real QR/barcode photo from loremflickr)",
+      "all_answers": [
+        "(real QR/barcode photo from loremflickr)"
+      ]
+    },
+    {
+      "image": "golden_qr_02.jpg",
+      "question": "(loremflickr QR sample) golden_qr_02.jpg",
+      "top_answer": "(real QR/barcode photo from loremflickr)",
+      "all_answers": [
+        "(real QR/barcode photo from loremflickr)"
+      ]
+    },
+    {
+      "image": "golden_qr_03.jpg",
+      "question": "(loremflickr QR sample) golden_qr_03.jpg",
+      "top_answer": "(real QR/barcode photo from loremflickr)",
+      "all_answers": [
+        "(real QR/barcode photo from loremflickr)"
+      ]
+    },
+    {
+      "image": "golden_qr_04.jpg",
+      "question": "(loremflickr QR sample) golden_qr_04.jpg",
+      "top_answer": "(real QR/barcode photo from loremflickr)",
+      "all_answers": [
+        "(real QR/barcode photo from loremflickr)"
+      ]
+    }
+  ],
+  "map": [
+    {
+      "image": "VizWiz_val_00000297.jpg",
+      "question": "Where is the white cup?",
+      "top_answer": "on table",
+      "all_answers": [
+        "near laptop",
+        "left",
+        "on table",
+        "top left",
+        "sitting on desk next to laptop",
+        "on table",
+        "coffee cup",
+        "to left",
+        "unanswerable",
+        "lower left"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00001314.jpg",
+      "question": "Where is the printer?",
+      "top_answer": "on table",
+      "all_answers": [
+        "on table",
+        "on small table under white board",
+        "on table",
+        "on top folding table",
+        "table",
+        "to left door frame",
+        "against wall",
+        "gffdg",
+        "table",
+        "on table"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00001392.jpg",
+      "question": "Where is this box from?",
+      "top_answer": "fedex",
+      "all_answers": [
+        "fedex",
+        "fedex",
+        "fedex",
+        "table",
+        "fedex",
+        "fedex",
+        "fed ex",
+        "unanswerable",
+        "fedex",
+        "fedex"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00001924.jpg",
+      "question": "Where is the menu button?",
+      "top_answer": "directly under large volume button on left side",
+      "all_answers": [
+        "directly under large volume button on left side",
+        "in middle remote buttons in circle menu button top left these buttons",
+        "top left on circle",
+        "outer circle in middle top left",
+        "outer upper left circle",
+        "top left circle",
+        "up to left arrow buttons",
+        "unanswerable",
+        "left middle",
+        "top"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00002306.jpg",
+      "question": "Where is my black braille book?",
+      "top_answer": "on blanket",
+      "all_answers": [
+        "on bed",
+        "on blankets",
+        "on blanket",
+        "left stuffed animal",
+        "on blue blanket to left",
+        "bed",
+        "in blanket",
+        "on blanket",
+        "on blue blanket",
+        "top blue comforter"
+      ]
+    }
+  ],
+  "english_text": [
+    {
+      "image": "VizWiz_val_00000023.jpg",
+      "question": "Can you tell me what the error message is on the Windows screen?",
+      "top_answer": "starting windows",
+      "all_answers": [
+        "unanswerable",
+        "starting windows",
+        "starting windows",
+        "no",
+        "starting windows",
+        "unanswerable",
+        "no error windows starting up",
+        "no",
+        "starting windows",
+        "no error"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000132.jpg",
+      "question": "What does this message say?",
+      "top_answer": "restoration complete",
+      "all_answers": [
+        "restoration complete",
+        "unanswerable",
+        "successful restoration complete",
+        "restoration complete",
+        "restoration complete",
+        "restoration complete",
+        "restoration complete",
+        "registration complete",
+        "restoration complete",
+        "restoration complete"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000137.jpg",
+      "question": "What is on this piece of paper?  Thank you.",
+      "top_answer": "sales ad",
+      "all_answers": [
+        "sales ad",
+        "coupon",
+        "sales ads",
+        "store advertisement for clothing laser rangefinder arrows",
+        "store circular",
+        "sales paper",
+        "sale ads",
+        "coupons",
+        "outdoor gear advertisement",
+        "store ad"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000138.jpg",
+      "question": "What does this say?What does this say?",
+      "top_answer": "medicare inquiry center",
+      "all_answers": [
+        "medicare inquiry center po box 31647 tampa florida 33633 1586",
+        "business reply mail",
+        "unanswerable",
+        "address for medicare inquiry center",
+        "medicare inquiry center",
+        "business reply mail medicare inquiry center po box 31647 tampa fl 33633 1586",
+        "medicare inquiry center business reply mailer",
+        "medicare inquiry center po box 31647 tampa fl 33633 1586",
+        "medicare inquiry center",
+        "medical inquiry center"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000139.jpg",
+      "question": "What does this message say?",
+      "top_answer": "restoration complete",
+      "all_answers": [
+        "unanswerable",
+        "restore complete",
+        "unanswerable",
+        "restoration complete",
+        "restoration complete",
+        "unanswerable",
+        "restoration complete",
+        "restoration complete",
+        "restoration complete",
+        "restoration complete"
+      ]
+    }
+  ],
+  "screen_capture": [
+    {
+      "image": "VizWiz_val_00000061.jpg",
+      "question": "What is this?",
+      "top_answer": "computer screen",
+      "all_answers": [
+        "email tab",
+        "desktop",
+        "close up computer screen",
+        "computer screen",
+        "computer screen",
+        "program window",
+        "computer screen",
+        "unanswerable",
+        "screen",
+        "unanswerable"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000125.jpg",
+      "question": "Can you tell me what this is a picture of?",
+      "top_answer": "computer screen",
+      "all_answers": [
+        "computer screen",
+        "computer screen showing online chat session",
+        "unanswerable",
+        "unanswerable",
+        "computer screen",
+        "computer screen",
+        "computer screen showing comment box",
+        "computer screen",
+        "computer screen",
+        "online chat on computer screen"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000133.jpg",
+      "question": "Can you tell us what this screen says? Thanks.",
+      "top_answer": "next",
+      "all_answers": [
+        "something about remembering your password",
+        "next",
+        "if you need help will show you hint for your password",
+        "you remember you passwords will show you your hint next",
+        "hint for password",
+        "password setup screen",
+        "unanswerable",
+        "next",
+        "no not image full screen",
+        "no"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000134.jpg",
+      "question": "What is this?",
+      "top_answer": "computer screen",
+      "all_answers": [
+        "computer screen",
+        "laptop skype logo",
+        "help page for apple",
+        "unanswerable",
+        "skype",
+        "app store screen",
+        "iphone app store obama pacman",
+        "skype",
+        "computer screen",
+        "cannot see full screen"
+      ]
+    },
+    {
+      "image": "VizWiz_val_00000135.jpg",
+      "question": "Can you please tell me what is displayed on the screen?",
+      "top_answer": "startup repair",
+      "all_answers": [
+        "words",
+        "error message",
+        "unanswerable",
+        "start up error",
+        "machine repair progress bar",
+        "loading screen",
+        "startup repair",
+        "bar",
+        "startup repair",
+        "startup repair your computer was unable to start"
+      ]
+    }
+  ]
+}
