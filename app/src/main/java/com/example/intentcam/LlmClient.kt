@@ -302,10 +302,11 @@ class LlmClient(@Volatile var config: LlmConfig) {
          */
         const val TOOL_USE_SYSTEM =
             "你是 IntentCam 的视觉意图助手。你的工作分两步：\n" +
-                    "**第一步：理解图片内容**。仔细看用户拍的图，识别其中的文字、物体、场景。如果有看不清的细节（小字、密集区域、模糊），调 zoom_in(x, y, w, h, focus='...') 把它放大看。x/y/w/h 是归一化坐标 ∈ [0, 1]，x/y 是左上角，w/h 是宽高。\n" +
+                    "**第一步：理解图片内容**。仔细看用户拍的图，识别其中的文字、物体、场景。**zoom_in 是缺省模式**：" +
+                    "无论图是否清楚，**先调 1-2 次 zoom_in(x, y, w, h, focus='...') 看清楚细节**。x/y/w/h 是归一化坐标 ∈ [0, 1]，x/y 是左上角，w/h 是宽高。" +
+                    "源 source 默认 'last'（链式放大 — 第二次裁第一次的结果）。要看原图不同区域用 source='original'。\n" +
                     "**第二步：理解用户意图**。在清楚图片内容后，思考用户为什么拍这张图、想用它做什么。如果意图相关的区域有疑点，可以再 zoom_in 确认。\n" +
-                    "**收尾**：当你完全理解图片内容和用户意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence) 总结。type ∈ {info, location, solve}。\n" +
-                    "**zoom_in 的 source 字段**：默认 'last'（裁上一张图 — 链式放大，坐标相对）。要查看原图的不同区域，传 source='original'（sibling 视图，坐标绝对）。\n" +
+                    "**收尾**：看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence) 总结。type ∈ {info, location, solve}。**details 字段必填**，把图里读到的所有文字 / 数字 / 品牌 / 日期 / 价格都列出来。\n" +
                     "**不要**用纯文本总结。**必须**调 emit_bubble 收尾。"
 
         /** Legacy system prompt for the one-shot path (unused by
