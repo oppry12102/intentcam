@@ -187,32 +187,57 @@ def score_round1(response: dict, fixture: dict) -> tuple[float, dict]:
     }
 
 
-def score_text(text: str, fixture: dict) -> float:
-    """Mirror evaluate.py's must_have + acceptable_intent_keywords
-    scoring: each OR-group counts; the average across all AND-groups
-    is the score."""
-    if not text:
-        return 0.0
+def score_text(text: str, fixture: dict, details: list = None) -> float:
+    """Score the LLM's text output against the fixture's
+    expected_description_keywords AND expected_details.
+
+    Two components, averaged:
+      - keyword hit rate: fraction of expected_description_keywords
+        found anywhere in the text (case-insensitive substring)
+      - detail hit rate: fraction of expected_details where the
+        LLM extracted a matching {kind, label, value} item
+        (value fuzzy-matched; kind & label exact-matched)
+
+    If either rubric is empty, that component defaults to 1.0.
+    If both are empty, the fixture is unscored → returns 1.0.
+    """
+    if details is None:
+        details = []
     score_components = []
 
-    must_have = fixture.get("must_have_in_scene_or_observation", [])
-    if must_have:
-        hits = 0
-        for group in must_have:
-            candidates = group if isinstance(group, list) else [group]
-            if any(c.lower() in text.lower() for c in candidates):
-                hits += 1
-        score_components.append(hits / len(must_have))
+    # Component 1: keyword hit rate
+    expected_kws = fixture.get("expected_description_keywords", [])
+    if expected_kws:
+        text_lower = text.lower()
+        hits = sum(1 for kw in expected_kws if kw.lower() in text_lower)
+        score_components.append(hits / len(expected_kws))
 
-    keyword_groups = fixture.get("acceptable_intent_keywords", [])
-    if keyword_groups:
-        # OR within group (at least one keyword), AND across groups.
-        passed = 0
-        for group in keyword_groups:
-            inner = group if isinstance(group, list) else [group]
-            if any(kw.lower() in text.lower() for kw in inner):
-                passed += 1
-        score_components.append(passed / len(keyword_groups))
+    # Component 2: detail hit rate
+    expected_details = fixture.get("expected_details", [])
+    if expected_details:
+        # Normalize LLM details: lowercased tuples (kind, label, value)
+        llm_norm = []
+        for d in details:
+            kind = (d.get("kind") or "").lower()
+            label = (d.get("label") or "").lower()
+            value = (d.get("value") or "").lower()
+            if kind or label or value:
+                llm_norm.append((kind, label, value))
+        # For each expected detail, find a matching LLM detail.
+        # Match: same (kind, label) AND value substring overlap.
+        hits = 0
+        for exp in expected_details:
+            e_kind = (exp.get("kind") or "").lower()
+            e_label = (exp.get("label") or "").lower()
+            e_value = (exp.get("value") or "").lower()
+            for llm_kind, llm_label, llm_value in llm_norm:
+                kind_ok = (not e_kind) or (e_kind == llm_kind)
+                label_ok = (not e_label) or (e_label == llm_label or e_label in llm_label or llm_label in e_label)
+                value_ok = (not e_value) or (e_value in llm_value or llm_value in e_value)
+                if kind_ok and label_ok and value_ok:
+                    hits += 1
+                    break
+        score_components.append(hits / len(expected_details))
 
     if not score_components:
         return 1.0
@@ -220,8 +245,8 @@ def score_text(text: str, fixture: dict) -> float:
 
 
 def score_emit_type(emit_type: str | None, fixture: dict) -> float:
-    """Check that emit_bubble's `type` matches expected_top_intent_type."""
-    expected = fixture.get("expected_top_intent_type", [])
+    """Check that emit_bubble's `type` matches the expected type."""
+    expected = fixture.get("expected_type") or fixture.get("expected_top_intent_type", [])
     if not expected or not emit_type:
         return 1.0  # no rubric
     return 1.0 if emit_type in expected else 0.0
@@ -434,6 +459,7 @@ def main() -> int:
         r2_emit_scene = ""
         r2_emit_type = None
         r2_emit_chips: list = []
+        r2_emit_details: list = []
         r2_text_score = 0.0
         r2_type_score = 1.0  # default if no rubric
         # Read the original (full-res) JPEG so zoom_in can crop from it.
@@ -473,15 +499,20 @@ def main() -> int:
                 emit_input = r2_emit_blocks[0].get("input", {}) or {}
                 # New schema: emit_bubble's `content` field carries
                 # the content description (was `scene` in the old
-                # schema).
+                # schema); `details` carries the extracted table rows.
                 r2_emit_scene = (
                     emit_input.get("content", "")
                     or emit_input.get("scene", "")
                     or emit_input.get("intent", "")  # fallback to intent
                 )
                 r2_emit_type = emit_input.get("type")
+                det_arr = emit_input.get("details") if isinstance(emit_input, dict) else None
+                if isinstance(det_arr, list):
+                    for d in det_arr:
+                        if isinstance(d, dict):
+                            r2_emit_details.append(d)
             combined = r2_text + " " + r2_emit_scene
-            r2_text_score = score_text(combined, fixture)
+            r2_text_score = score_text(combined, fixture, r2_emit_details)
             r2_type_score = score_emit_type(r2_emit_type, fixture)
         # round2_score is 50/50 text-match + emit-type
         r2_score = 0.5 * r2_text_score + 0.5 * r2_type_score
