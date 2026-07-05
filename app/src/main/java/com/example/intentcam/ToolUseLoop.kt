@@ -252,7 +252,6 @@ class ToolUseLoop(
                     imageBytes = fullRes,
                     createdAtMs = System.currentTimeMillis(),
                     toolName = def.name,
-                    chips = tb.chips,
                 )
             )
         }
@@ -466,12 +465,18 @@ class ToolUseLoop(
             for (i in 0 until toolResults.length()) {
                 nextContent.put(toolResults.get(i))
             }
+            // If the model didn't emit_bubble this round, nudge it
+            // to wrap up.  Keeps the loop bounded: the model can
+            // zoom_in as many times as it likes, but at the end of
+            // each round we ask for a final summary.
+            if (anyFinalBubble == null) {
+                nextContent.put(JSONObject().put("type", "text").put(
+                    "text",
+                    "你已经 zoom_in ${followUps.size} 次。如果还有看不清的，可以再 zoom_in；如果内容已经清楚，" +
+                        "**必须**调 emit_bubble 总结 (content / intent / type / confidence)。"
+                ))
+            }
             messages.put(JSONObject().put("role", "user").put("content", nextContent))
-            messages.put(
-                JSONObject()
-                    .put("role", "user")
-                    .put("content", toolResults)
-            )
 
             if (anyFinalBubble != null) {
                 val tb = anyFinalBubble
@@ -485,7 +490,7 @@ class ToolUseLoop(
                         imageBytes = fullRes,
                         createdAtMs = System.currentTimeMillis(),
                         toolName = chosenToolName,
-                        chips = tb.chips,
+                        intentFocus = null,  // emit_bubble body doesn't carry it yet
                     )
                 )
             }
@@ -495,18 +500,18 @@ class ToolUseLoop(
             }
         }
 
-        // No more tool_use → fall through to text answer.
+        // Hit MAX_ROUNDS without the model emitting_bubble.  Take
+        // whatever the last round's text said as the description, and
+        // synthesize a default emit_bubble from it.  Better than
+        // failing the whole cycle.
         val finalText = lastRound?.text.orEmpty()
-        val parsed = parseFinalAnswer(finalText)
-        val title = parsed.intent.ifBlank { "未识别" }
-        val detail = if (parsed.scene.isNotBlank()) parsed.scene else finalText.take(200)
         return Outcome.Bubble(
             com.example.intentcam.Bubble(
                 id = "bubble-${System.currentTimeMillis()}",
-                type = parsed.type,
-                title = title,
-                detail = detail,
-                confidence = parsed.confidence,
+                type = "info",
+                title = finalText.take(40).ifBlank { "未识别" },
+                detail = finalText.take(200).ifBlank { "（模型未给出内容描述）" },
+                confidence = 0.5f,
                 imageBytes = fullRes,
                 createdAtMs = System.currentTimeMillis(),
                 toolName = chosenToolName,
@@ -601,10 +606,12 @@ class ToolUseLoop(
     }
 
     private companion object {
-        /** Hard cap on round-trips per recognition cycle.  Anthropic
-         *  tool-use is two rounds (pick tool → emit answer); 4 leaves
-         *  headroom for tools that need a clarifying follow-up. */
-        const val MAX_ROUNDS = 4
+        /** Soft cap on rounds per recognition cycle.  With the
+         *  two-stage content-then-intent flow + iterative zoom_in,
+         *  the model can need 5-10 rounds to converge on dense
+         *  images.  30 is plenty for normal use; bigger is fine for
+         *  debugging. */
+        const val MAX_ROUNDS = 30
 
         /** The tool name the model uses to emit the final Bubble.
          *  Tracked separately so we don't overwrite the interpreting
