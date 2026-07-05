@@ -41,6 +41,15 @@ data class CapturedFrame(
 class FrameAnalyzer(
     private val isArmed: () -> Boolean,
     private val onFrame: (CapturedFrame) -> Unit,
+    /**
+     * Invoked from the analyzer thread when [analyze] swallows an exception
+     * (e.g. `OutOfMemoryError` on bitmap allocation under heavy heap pressure
+     * after several recognitions).  Defaulted to no-op so existing call sites
+     * keep working.  Wired to `viewModel.logDebug("ANALYZER", ...)` in the UI
+     * so the user sees the actual cause in the in-app debug overlay, not just
+     * the coroutine's "500ms 内没拿到帧" timeout message.
+     */
+    private val onError: (String) -> Unit = {},
 ) : ImageAnalysis.Analyzer {
 
     override fun analyze(image: ImageProxy) {
@@ -67,11 +76,15 @@ class FrameAnalyzer(
             )
             if (frame != null) onFrame(frame)
         } catch (e: Throwable) {
+            // Both logcat (stack trace for `adb logcat`) and the in-app
+            // callback (visible in the debug overlay) — the latter is what
+            // the user actually sees.
             android.util.Log.w(
                 "IntentCam",
                 "analyze() swallowed: ${e.javaClass.simpleName}: ${e.message?.take(200) ?: ""}",
                 e
             )
+            onError("${e.javaClass.simpleName}: ${e.message?.take(160) ?: "无消息"}")
         } finally {
             image.close()
         }

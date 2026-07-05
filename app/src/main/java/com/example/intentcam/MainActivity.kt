@@ -242,6 +242,12 @@ private fun CameraPreview(viewModel: AppViewModel) {
                             FrameAnalyzer(
                                 isArmed = viewModel::tryArmCapture,
                                 onFrame = { frame -> viewModel.onFrame(frame) },
+                                // Surface analyzer exceptions (typically OOM under
+                                // heap pressure after several recognitions) to the
+                                // in-app debug overlay so the user sees the actual
+                                // cause instead of just the coroutine's
+                                // "500ms 内没拿到帧" timeout.
+                                onError = { msg -> viewModel.logAnalyzerError(msg) },
                             )
                         )
                     }
