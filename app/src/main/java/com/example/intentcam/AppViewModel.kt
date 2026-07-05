@@ -123,6 +123,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * Public surface for the camera analyzer to surface exceptions into the
+     * in-app debug overlay.  Lives next to [logDebug] (private) so the only
+     * way external callers reach the debug log is through named wrappers
+     * that hard-code the tag.
+     */
+    fun logAnalyzerError(message: String) {
+        logDebug("ANALYZER", message)
+    }
+
+    /**
      * Append one entry to the debug log.  No-ops when [UiState.debugEnabled]
      * is false so the toggle actually saves the cost of string formatting.
      * Newlines are stripped and the message is capped at 160 chars so a
