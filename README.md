@@ -1,22 +1,16 @@
 # IntentCam
 
-A real-time Android app that points the back camera at something and
-produces a structured **"image details"** answer: text content,
-numbers, brand, dates, prices, contact info — all in a table the user
-can read.
+Camera-based intent recognition Android app: ML Kit OCR + object
+detection + 3-round LLM protocol with streamed SSE.
 
-The system is **LLM-driven end-to-end**. The model sees the photo,
-calls `zoom_in` for unclear details, then `emit_bubble` with the
-final answer. There is **no on-device CV** — no ML Kit, no OCR, no
-barcode detector. The model does it all.
+The system combines on-device vision (ML Kit OCR for text, object
+detection for labels/bounding boxes) with a multi-round LLM
+protocol. Each round picks the next tool (zoom_in for detail,
+emit_bubble for the final structured answer). The current
+benchmark scores **0.652** average composite on 100 real RCTW-17
+street-view photos.
 
-The current benchmark scores **0.652** average composite on 100 real
-RCTW-17 street-view photos (default intent = image description,
-single action = tap bubble → see image + details table).
-
-See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design
-(2-tool architecture, multi-round protocol, bubble model, eval
-scoring, tunables).
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design.
 
 ---
 
