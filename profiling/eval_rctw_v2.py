@@ -67,7 +67,9 @@ TOOLS = [
     },
     {
         "name": "emit_bubble",
-        "description": "当你完全理解了图片内容和用户意图后，调这个工具结束识别循环。content: 图片内容描述。intent: 用户想做什么。type: info/location/solve。confidence: 0-1。",
+        "description": "当你完全理解了图片内容和用户意图后，调这个工具结束识别循环。"
+                     "content: 图片内容描述。intent: 用户想做什么。type: info/location/solve。"
+                     "details: array of {kind, label, value}，详情页表格行。confidence: 0-1。",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -75,6 +77,18 @@ TOOLS = [
                 "intent": {"type": "string"},
                 "type": {"type": "string", "enum": ["info", "location", "solve"]},
                 "intent_focus": {"type": "string"},
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "kind": {"type": "string"},
+                            "label": {"type": "string"},
+                            "value": {"type": "string"},
+                        },
+                        "required": ["kind", "label", "value"],
+                    },
+                },
                 "confidence": {"type": "number"},
             },
             "required": ["content", "intent", "type", "confidence"],
@@ -83,10 +97,6 @@ TOOLS = [
     },
 ]
 
-# Category → expected primary tool.  Many categories have multiple
-# reasonable picks (a menu is read_manual OR translate_text); we
-# accept any of the listed tools at full credit, similar to the
-# synth eval's also_accept mechanism.
 # Expected intent `type` per category.  Used to score the
 # emit_bubble.type field.  For the default (image-description)
 # regression test, all fixtures map to type=info.
@@ -95,8 +105,13 @@ CATEGORY_EXPECTED_TYPE: dict[str, str] = {
 }
 
 SYSTEM_PROMPT = (
-    "你是 IntentCam 的视觉意图助手。看到画面后调 zoom_in 看清楚细节，看清后调 emit_bubble 总结。"
-    "不要直接用文字描述画面内容。最终必须调 emit_bubble 给出意图摘要。"
+    "你是 IntentCam 的视觉意图助手。你的工作分两步：\n"
+    "**第一步：理解图片内容**。仔细看用户拍的图，识别其中的文字、物体、场景。**zoom_in 是缺省模式**："
+    "无论图是否清楚，**先调 1-2 次 zoom_in(x, y, w, h, focus='...') 看清楚细节**。x/y/w/h 是归一化坐标 ∈ [0, 1]，x/y 是左上角，w/h 是宽高。"
+    "源 source 默认 'last'（链式放大 — 第二次裁第一次的结果）。要看原图不同区域用 source='original'。\n"
+    "**第二步：理解用户意图**。在清楚图片内容后，思考用户为什么拍这张图、想用它做什么。\n"
+    "**收尾**：看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。type ∈ {info, location, solve}。**details 字段必填**，把图里读到的所有文字 / 数字 / 品牌 / 日期 / 价格都列出来。\n"
+    "**不要**用纯文本总结。**必须**调 emit_bubble 收尾。"
 )
 
 RESIZE_MAX_DIM = 0
@@ -308,19 +323,24 @@ def crop_region(src_bytes: bytes, x: float, y: float, w: float, h: float,
 
 
 def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
-                      max_rounds=2):
-    """Multi-round orchestrator that mirrors the app's ToolUseLoop.
+                      max_rounds=3):
+    """Multi-round orchestrator.  zoom_in is the default — the
+    model is nudged to zoom in 1-2 times before emit_bubbling.
 
-    Round 1:  model sees the thumbnail, picks tool(s) (incl. zoom_in).
-    Round 2:  zoom_in crops are real (cropped from the original
-              or the previous crop), sent back as followUpJpegs.
-              Other tool calls get a stub tool_result.  Then the
-              LLM is asked to give the final emit_bubble.
+    Default flow (3 rounds):
+      Round 1:  model sees thumbnail; expected to call zoom_in
+                (chain default).  If the model emits emit_bubble
+                without any zoom_in, we still respect it (some
+                images don't need zooming).
+      Round 2:  zoom_in crop is real; model can zoom_in again
+                (chain) or call emit_bubble.
+      Round 3:  model should now emit_bubble.  We nudge if it
+                doesn't.
 
-    Caps at max_rounds (default 2) to keep the eval bounded.  We
-    only allow up to 1 zoom_in per round (chain semantics — the
-    next round's zoom_in crops the result).  This matches the
-    intent of zoom_in: progressive drill-down, not a fan-out.
+    All zoom_in calls chain (default source='last'): the next
+    zoom_in crops the result of the previous one.  Only the
+    first zoom_in per round is honored; additional ones get a
+    "duplicate skipped" message.
 
     The final response is whatever the LLM produced last; if the
     model never emits emit_bubble we fall back to its free text.
@@ -334,13 +354,20 @@ def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
     final_resp = response1
     for round_i in range(1, max_rounds + 1):
         tool_uses = [b for b in final_resp.get("content", []) if b.get("type") == "tool_use"]
-        if not tool_uses:
-            break
         if any(b.get("name") == "emit_bubble" for b in tool_uses):
             break
-        # Cap zoom_in to 1 per round (chain, not fan-out).  The first
-        # zoom_in wins; the rest are returned as a "duplicate skipped"
-        # message so the model learns.
+        # Round 1 special case: if no zoom_in was called, nudge the
+        # model to use the default (zoom first).
+        is_first_round = round_i == 1
+        if not tool_uses:
+            if is_first_round:
+                # No tool use at all in round 1 — push hard for zoom
+                messages.append({"role": "user", "content": [
+                    {"type": "text", "text": "请先调 zoom_in(x, y, w, h, focus='...') 放大看 1-2 个区域（这是缺省模式），看清后再调 emit_bubble 总结。"}
+                ]})
+                final_resp = call_model(messages, max_tokens=800)
+                continue
+            break
         zoom_in_call = next((b for b in tool_uses if b["name"] == "zoom_in"), None)
         tool_results = []
         round_follow_ups = []
@@ -394,19 +421,30 @@ def run_orchestrator(user_msg, response1, original_jpeg, thumbnail_jpeg,
             next_content.append({"type": "text", "text": hint})
         for tr in tool_results:
             next_content.append(tr)
-        # Round 2 is the final round: explicitly nudge the model
-        # to call emit_bubble if it didn't already.
-        next_content.append({
-            "type": "text",
-            "text": "请调用 emit_bubble 给出最终意图摘要（scene/intent/type/confidence），不要再调其它工具。",
-        })
+        # End-of-round nudge.  After the first zoom, push the model
+        # toward emit_bubble (it has seen the high-detail crop).
+        if is_first_round and zoom_in_call is not None:
+            # The model used zoom_in in round 1; in the next round
+            # it will see the crop and should emit_bubble (after
+            # optionally one more zoom).
+            next_content.append({
+                "type": "text",
+                "text": "（已 zoom_in 一次。还可以再 zoom_in 一次看更细的细节；或者直接调 emit_bubble 总结：content 描述图、intent 用户意图、type ∈ {info,location,solve}、details 必填）",
+            })
+        elif zoom_in_call is None and all_follow_ups:
+            # Second zoom happened in earlier round; nudge emit_bubble
+            next_content.append({
+                "type": "text",
+                "text": "（已 zoom_in 多次。**现在必须调 emit_bubble** 总结：content 描述图、intent 用户意图、type ∈ {info,location,solve}、details 必填）",
+            })
+        else:
+            next_content.append({
+                "type": "text",
+                "text": "请调用 emit_bubble 给出最终意图摘要（content/intent/type/confidence/details），不要再调其它工具。",
+            })
         messages.append({"role": "user", "content": next_content})
         all_follow_ups.extend(round_follow_ups)
         final_resp = call_model(messages, max_tokens=800)
-        if any(b.get("name") == "emit_bubble"
-               for b in final_resp.get("content", [])
-               if b.get("type") == "tool_use"):
-            break
     return final_resp, all_follow_ups
 
 
@@ -484,7 +522,7 @@ def main() -> int:
                 response1=r1,
                 original_jpeg=original_jpeg,
                 thumbnail_jpeg=original_jpeg,
-                max_rounds=4,
+                max_rounds=3,
             )
             r2_text = " ".join(
                 b.get("text", "")
