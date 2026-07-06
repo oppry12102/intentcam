@@ -28,6 +28,7 @@ private fun androidCropJpegRegion(
     y: Float,
     w: Float,
     h: Float,
+    quality: Int,
 ): ByteArray? {
     return try {
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -57,7 +58,7 @@ private fun androidCropJpegRegion(
                 .also { if (it !== cropped) cropped.recycle() }
         } else cropped
         val out = ByteArrayOutputStream()
-        val ok = finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+        val ok = finalBitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
         if (finalBitmap !== cropped) finalBitmap.recycle()
         if (ok) out.toByteArray() else null
     } catch (_: Throwable) {
@@ -79,7 +80,15 @@ private fun androidEncodeThumbnail(
         val scale = maxDim.toFloat() / maxOf(fullW, fullH)
         val targetW = if (scale < 1f) (fullW * scale).toInt().coerceAtLeast(1) else fullW
         val targetH = if (scale < 1f) (fullH * scale).toInt().coerceAtLeast(1) else fullH
-        val opts2 = BitmapFactory.Options().apply { inSampleSize = 1 }
+        // Compute inSampleSize so we don't decode ~48 MB of pixels for a
+        // 12 MP JPEG only to downscale to 768 max-dim.  BitmapFactory
+        // only honours powers of two (1, 2, 4, 8, ...), so we round down
+        // the nearest power-of-two that still gives us enough pixels.
+        var sample = 1
+        while (sample * 2 <= maxOf(fullW, fullH) / maxOf(targetW, targetH)) {
+            sample *= 2
+        }
+        val opts2 = BitmapFactory.Options().apply { inSampleSize = sample }
         val bitmap = BitmapFactory.decodeByteArray(
             fullResJpeg, 0, fullResJpeg.size, opts2
         ) ?: return null

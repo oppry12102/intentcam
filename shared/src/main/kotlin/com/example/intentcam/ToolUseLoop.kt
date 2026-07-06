@@ -31,19 +31,31 @@ class ToolUseLoop(
 
     /** Outcome of one [runCycle].  Exactly one of these is set per call. */
     sealed class Outcome {
+        /** The name of the first non-[FINAL_BUBBLE_TOOL] tool the model
+         *  invoked this cycle, if any.  Exposed so callers (notably the
+         *  eval) can tell "model did reconnaissance before answering"
+         *  apart from "model went straight to emit_bubble". */
+        abstract val firstToolName: String?
+
         /** A regular final bubble (no more rounds needed). */
-        data class Bubble(val bubble: com.example.intentcam.Bubble) : Outcome()
+        data class Bubble(
+            val bubble: com.example.intentcam.Bubble,
+            override val firstToolName: String? = null,
+        ) : Outcome()
 
         /** A placeholder bubble plus a request for user input.
          *  Resume by calling [runCycle] again with non-null [userText]. */
         data class PendingUserInput(
             val placeholder: com.example.intentcam.Bubble,
             val request: UserInputRequest,
+            override val firstToolName: String? = null,
         ) : Outcome()
 
         /** The cycle errored out (LLM timeout, parse failure, etc.).
          *  Caller surfaces a fallback bubble. */
-        data class Error(val message: String) : Outcome()
+        data class Error(val message: String) : Outcome() {
+            override val firstToolName: String? = null
+        }
     }
 
     /**
@@ -253,7 +265,8 @@ class ToolUseLoop(
                     createdAtMs = System.currentTimeMillis(),
                     toolName = def.name,
                     details = tb.details,
-                )
+                ),
+                firstToolName = def.name,
             )
         }
         val finalText = lastRound?.text.orEmpty()
@@ -499,12 +512,17 @@ class ToolUseLoop(
                         createdAtMs = System.currentTimeMillis(),
                         toolName = chosenToolName,
                         intentFocus = null,  // emit_bubble body doesn't carry it yet
-                    )
+                    ),
+                    firstToolName = chosenToolName,
                 )
             }
             if (anyNeedsInput && pendingUserInput != null) {
                 val pui = pendingUserInput
-                return Outcome.PendingUserInput(pui.bubble, UserInputRequest(pui.toolName, pui.prompt))
+                return Outcome.PendingUserInput(
+                    pui.bubble,
+                    UserInputRequest(pui.toolName, pui.prompt),
+                    firstToolName = chosenToolName,
+                )
             }
         }
 
@@ -523,7 +541,8 @@ class ToolUseLoop(
                 imageBytes = fullRes,
                 createdAtMs = System.currentTimeMillis(),
                 toolName = chosenToolName,
-            )
+            ),
+            firstToolName = chosenToolName,
         )
     }
 

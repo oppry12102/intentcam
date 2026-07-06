@@ -33,6 +33,11 @@ tasks.register<JavaExec>("eval") {
     group = "verification"
     mainClass.set("com.example.intentcam.eval.EvalMainKt")
     classpath = sourceSets["main"].runtimeClasspath
+    // Run from the project root so the default relative paths
+    // ("profiling/...", "img/rctw") resolve.  Otherwise gradle
+    // JavaExec defaults to the subproject's directory (shared/) and
+    // the eval aborts with "missing ground truth".
+    workingDir = rootDir
     // Default to 20 fixtures, matches the previous Python default.
     args = listOf("--limit", "20")
 }

@@ -48,8 +48,6 @@ class LlmClient(@Volatile var config: LlmConfig) {
 
     // ── tool-use path ─────────────────────────────────────────────────
 
-    // ── tool-use path ─────────────────────────────────────────────────
-
     /**
      * Send a tool-aware request and accumulate both text and tool_use
      * blocks.  Returns [ToolUseResponse] on success.
@@ -284,8 +282,27 @@ class LlmClient(@Volatile var config: LlmConfig) {
                         }
                     }
 
-                    val source = sseFactory.newEventSource(request, listener)
-                    cont.invokeOnCancellation { source.cancel() }
+                    // Register the cancellation handler BEFORE creating
+                    // the EventSource so a cancellation landing between
+                    // newEventSource() returning and the next statement
+                    // still cancels the in-flight SSE.  Without this, the
+                    // EventSource + HTTP connection leak (readTimeout /
+                    // callTimeout are both 0 → infinite).  The handler
+                    // captures `source` by reference so a cancellation
+                    // arriving before source is assigned is a no-op (we
+                    // then call cancel() ourselves once source is set).
+                    var source: EventSource? = null
+                    cont.invokeOnCancellation { source?.cancel() }
+                    val src = sseFactory.newEventSource(request, listener)
+                    source = src
+                    // Belt-and-suspenders: if cancellation landed during
+                    // the two statements above, the handler fired with a
+                    // null source.  Cancel the just-created source now so
+                    // it doesn't leak until OkHttp eventually closes it.
+                    if (cont.isCancelled) {
+                        src.cancel()
+                        return@suspendCancellableCoroutine
+                    }
                 }
             }
         } catch (e: TimeoutCancellationException) {
@@ -371,7 +388,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
             "你是 IntentCam 的视觉意图助手。你有三个工具：\n" +
                     "\n" +
                     "## 第 1 步：读懂图（你最擅长这个）\n" +
-                    "你一次会看到 5 张图：1 张全图概览 + 4 张四象限裁剪（左上 / 右上 / 左下 / 右下）。" +
+                    "你一次会看到 **1-5 张图**：1 张全图概览 + 最多 4 张四象限裁剪（左上 / 右上 / 左下 / 右下）。" +
                     "四象限裁剪和原图是同一个像素预算下的不同区域——意味着你能直接看清每个角落的小字、细节、价格、电话号码，**不需要先调工具**。\n" +
                     "\n" +
                     "## 工具 1: zoom_in —— 定位（看清细节）\n" +
@@ -392,7 +409,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "type ∈ {info, location, solve}。\n" +
                     "\n" +
                     "## 工作流程\n" +
-                    "1. 一次看 5 张图（已附），定位大致内容 + 找到所有文字区域（通常四象限裁剪已经够清楚）。\n" +
+                    "1. 一次看 1-5 张图（已附，1 张概览 + 最多 4 张四象限裁剪），定位大致内容 + 找到所有文字区域（通常四象限裁剪已经够清楚）。\n" +
                     "2. 如果四象限还看不清某块，调 zoom_in 放大。\n" +
                     "3. **文字靠 zoom_in 一遍遍看清**——印刷体一次能看清；小字 / 艺术字 / 模糊调多次，每次聚焦更小的子区域。\n" +
                     "4. 思考用户为什么拍这张图（意图）。\n" +

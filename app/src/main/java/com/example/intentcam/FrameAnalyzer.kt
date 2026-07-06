@@ -129,6 +129,18 @@ class FrameAnalyzer(
             encodeQuadrant(work, 0f, 0.5f, 0.5f, 0.5f),   // bottom-left
             encodeQuadrant(work, 0.5f, 0.5f, 0.5f, 0.5f), // bottom-right
         ).filterNotNull()
+        if (quadrants.size < 4) {
+            // encodeQuadrant returned null for at least one crop —
+            // usually OOM under heavy heap pressure after the
+            // fullRes + thumbnail encodes.  The LLM will see fewer
+            // than 5 images; surface this so the user / debug overlay
+            // can see why, instead of silently degrading the model's
+            // round-1 input.
+            val msg = "FrameAnalyzer: ${4 - quadrants.size}/4 quadrant(s) failed to encode; " +
+                "LLM will see ${quadrants.size + 1} image(s) instead of 5"
+            android.util.Log.w("IntentCam", msg)
+            onError(msg)
+        }
         work.recycle()
         if (fullRes == null || thumbnail == null) return null
         return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes, quadrants = quadrants)

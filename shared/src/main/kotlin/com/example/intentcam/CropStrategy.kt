@@ -12,7 +12,8 @@ fun cropJpegRegion(
     y: Float,
     w: Float,
     h: Float,
-): ByteArray? = ImageOps.cropJpegRegion(fullResJpeg, x, y, w, h)
+    quality: Int = ImageOps.DEFAULT_CROP_QUALITY,
+): ByteArray? = ImageOps.cropJpegRegion(fullResJpeg, x, y, w, h, quality)
 
 /**
  * Same for thumbnail-style downscale + re-encode.  Used by the eval to
