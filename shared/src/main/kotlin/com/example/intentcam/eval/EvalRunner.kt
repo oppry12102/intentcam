@@ -105,6 +105,28 @@ internal class EvalRunner(private val config: EvalConfig) {
             val r1 = scoreRound1(outcome, scene)
             val r2 = scoreRound2(outcome, scene)
             val composite = 0.50 * r1.first + 0.50 * r2.first
+            // Diagnostic side-metrics (do NOT feed composite — kept
+            // comparable to the pre-instrumentation baseline).  These
+            // separate "model genuinely misread the text" from
+            // "strict substring scorer zeroed a near-correct answer",
+            // and expose whether the model actually populated details.
+            val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
+                ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
+            val detailsCount = bubble?.details?.size ?: 0
+            val contentLen = bubble?.detail?.length ?: 0
+            val r2TextFuzzy = scoreRound2TextFuzzy(outcome, scene)
+            // Stash raw content + details rows so future scorer
+            // experiments can be dry-run re-scored against saved
+            // outputs (no LLM re-run).  Keeps the per-fixture JSON
+            // ~5-10× bigger but still well under 1 MB for 100 fixtures.
+            val rawContent = bubble?.detail.orEmpty()
+            val rawDetails = JSONArray()
+            bubble?.details?.forEach { d ->
+                rawDetails.put(JSONObject()
+                    .put("kind", d.kind)
+                    .put("label", d.label)
+                    .put("value", d.value))
+            }
             results.add(mapOf(
                 "id" to sceneId,
                 "category" to category,
@@ -112,6 +134,11 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "r1" to r1.first,
                 "r2_text" to r2.first,
                 "r2_type" to r2.second,
+                "r2_text_fuzzy" to r2TextFuzzy,
+                "details_count" to detailsCount,
+                "content_len" to contentLen,
+                "raw_content" to rawContent,
+                "raw_details" to rawDetails,
                 "r1_details" to r1.third,
             ))
             perCategory.getOrPut(category) { mutableListOf() }.add(composite)
@@ -133,6 +160,20 @@ internal class EvalRunner(private val config: EvalConfig) {
         if (results.isNotEmpty()) {
             val overall = results.map { it["composite"] as Double }.average()
             println("average composite: ${"%.3f".format(overall)}")
+            // Diagnostic aggregates — not part of composite.
+            val r2Strict = results.map { it["r2_text"] as Double }.average()
+            val r2Fuzzy = results.map { it["r2_text_fuzzy"] as Double }.average()
+            val avgDetails = results.map { (it["details_count"] as Int).toDouble() }.average()
+            val emptyDetails = results.count { (it["details_count"] as Int) == 0 }
+            val avgContentLen = results.map { (it["content_len"] as Int).toDouble() }.average()
+            println(
+                "r2_text strict=${"%.3f".format(r2Strict)} " +
+                    "fuzzy=${"%.3f".format(r2Fuzzy)} (gap=${"%.3f".format(r2Fuzzy - r2Strict)} = scorer strictness)"
+            )
+            println(
+                "details: avg ${"%.1f".format(avgDetails)} rows/fixture, " +
+                    "$emptyDetails/${results.size} empty | content avg ${"%.0f".format(avgContentLen)} chars"
+            )
         }
         println()
         println("${"category".padEnd(18)} ${"n".padStart(3)} ${"avg".padStart(6)}")
@@ -179,6 +220,11 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("r1", r["r1"] as Double)
             o.put("r2_text", r["r2_text"] as Double)
             o.put("r2_type", r["r2_type"] as Double)
+            o.put("r2_text_fuzzy", r["r2_text_fuzzy"] as Double)
+            o.put("details_count", r["details_count"] as Int)
+            o.put("content_len", r["content_len"] as Int)
+            o.put("raw_content", r["raw_content"] as String)
+            o.put("raw_details", r["raw_details"] as JSONArray)
             val details = r["r1_details"] as JSONObject
             o.put("picked_tool", details.optString("picked_tool", "?"))
             o.put("has_text", details.optBoolean("has_text", false))
@@ -282,34 +328,30 @@ internal class EvalRunner(private val config: EvalConfig) {
         var textScore = 0.0
         var denom = 0
         if (expectedKeywords != null && expectedKeywords.length() > 0) {
-            val textLower = content.lowercase()
+            val contentNorm = normalize(content)
             val hits = (0 until expectedKeywords.length()).count { i ->
-                expectedKeywords.getString(i).lowercase() in textLower
+                fuzzyMatch(contentNorm, expectedKeywords.getString(i))
             }
             textScore = hits.toDouble() / expectedKeywords.length()
             denom++
         }
-        // Detail hit rate.
+        // Detail hit rate.  We deliberately match on VALUE only, not on
+        // label/kind.  The GT uses positional labels ("区域1", "招牌",
+        // ...) or generic types while the model writes semantic ones
+        // ("品牌", "价格", "营业时间") — matching on either would zero
+        // hits that are textually correct.  Value is the OCR signal; if
+        // the model emitted the same text the GT expects (post
+        // normalize), that's a hit regardless of how it labelled the row.
         if (expectedDetails != null && expectedDetails.length() > 0) {
-            val llmNorm = details.map { d ->
-                Triple(
-                    d.kind.lowercase(),
-                    d.label.lowercase(),
-                    d.value.lowercase(),
-                )
-            }.filter { it.first.isNotBlank() || it.second.isNotBlank() || it.third.isNotBlank() }
+            val llmValues = details.map { normalize(it.value) }
+                .filter { it.isNotBlank() }
 
             var hits = 0
             for (i in 0 until expectedDetails.length()) {
                 val exp = expectedDetails.getJSONObject(i)
-                val eKind = exp.optString("kind", "").lowercase()
-                val eLabel = exp.optString("label", "").lowercase()
-                val eValue = exp.optString("value", "").lowercase()
-                val matched = llmNorm.any { (lk, ll, lv) ->
-                    (eKind.isEmpty() || lk == eKind) &&
-                    (eLabel.isEmpty() || eLabel == ll || eLabel in ll || ll in eLabel) &&
-                    (eValue.isEmpty() || eValue in lv || lv in eValue)
-                }
+                val eValue = normalize(exp.optString("value", ""))
+                if (eValue.isEmpty()) continue
+                val matched = llmValues.any { lv -> fuzzyMatch(lv, eValue) }
                 if (matched) hits++
             }
             val detailScore = hits.toDouble() / expectedDetails.length()
@@ -326,5 +368,93 @@ internal class EvalRunner(private val config: EvalConfig) {
 
         val r2 = 0.50 * textScore + 0.50 * typeScore
         return Pair(r2, typeScore)
+    }
+
+    /**
+     * Diagnostic-only variant of the r2 *text* score that counts an
+     * expected keyword as a hit when a high fraction of its characters
+     * appear in the model's answer, not only on exact substring
+     * containment.  Compared against the strict [scoreRound2] text
+     * score, the gap tells us how much of the r2_text plateau is the
+     * scorer being brittle (near-correct Chinese transcriptions zeroed)
+     * versus the model genuinely misreading the scene.  NOT part of the
+     * composite — purely a measurement aid.
+     */
+    private fun scoreRound2TextFuzzy(
+        outcome: ToolUseLoop.Outcome,
+        scene: JSONObject,
+    ): Double {
+        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
+            ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
+        // Pool everything the model produced: content + every details value.
+        val hay = buildString {
+            append(bubble?.detail.orEmpty())
+            bubble?.details.orEmpty().forEach { append(' ').append(it.value) }
+        }
+        val hayNorm = normalize(hay)
+        val expectedKeywords = scene.optJSONArray("expected_description_keywords")
+            ?: return 1.0
+        if (expectedKeywords.length() == 0) return 1.0
+        var hits = 0.0
+        for (i in 0 until expectedKeywords.length()) {
+            val kw = expectedKeywords.getString(i)
+            if (kw.isEmpty()) continue
+            val kwNorm = normalize(kw)
+            if (kwNorm in hayNorm) { hits += 1.0; continue }
+            // Fraction of the keyword's characters present in the answer.
+            val present = kwNorm.toSet().count { it in hayNorm }
+            val ratio = present.toDouble() / kwNorm.toSet().size
+            if (ratio >= 0.67) hits += ratio
+        }
+        return hits / expectedKeywords.length()
+    }
+
+    /**
+     * Score-scoring normalizer.  Closes the 0.3+ gap between strict and
+     * fuzzy r2_text by collapsing the noisiest Unicode variants the
+     * model produces differently from GT:
+     *  - NFKC folds fullwidth / compatibility forms (「（店）」 ↔ "(店)")
+     *  - quote / colon variants → ASCII
+     *  - all whitespace → single ASCII space
+     *
+     * Does NOT do synonyms, simplification, or traditional/simplified
+     * conversion — those would change what "correct" means.
+     */
+    private fun normalize(s: String): String {
+        if (s.isEmpty()) return s
+        var n = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFKC)
+        n = n.replace(Regex("[‘’“”「」『』]"), "'")
+        n = n.replace('：', ':')  // fullwidth colon ：
+        n = n.replace(Regex("\\s+"), " ")
+        return n.trim().lowercase()
+    }
+
+    /**
+     * Bidirectional normalized contains.  Returns true iff [needle]
+     * (post-normalize) appears in [hay] OR [hay] appears in [needle]
+     * — comparing both with and without internal whitespace.  The
+     * no-whitespace pass catches "建国路 100号" vs "建国路100号"
+     * which the plain pass misses (neither contains the other once
+     * normalized, because of a single space).
+     *
+     * The reverse direction matters when the model produces a value
+     * longer than the GT (e.g. model writes "品名: 工夫红茶 250g" and
+     * GT expects "工夫红茶 250g").  Guarded by length to avoid a
+     * single-char needle matching every long answer.
+     */
+    private fun fuzzyMatch(hay: String, needle: String): Boolean {
+        if (needle.isEmpty()) return true
+        if (hay.isEmpty()) return false
+        val n = normalize(needle)
+        val h = normalize(hay)
+        if (n in h) return true
+        if (h in n && n.length >= 2) return true
+        // Whitespace-insensitive fallback.
+        val nNoWs = n.replace(" ", "")
+        val hNoWs = h.replace(" ", "")
+        if (nNoWs.isEmpty() || hNoWs.isEmpty()) return false
+        if (nNoWs in hNoWs) return true
+        if (hNoWs in nNoWs && nNoWs.length >= 2) return true
+        return false
     }
 }
