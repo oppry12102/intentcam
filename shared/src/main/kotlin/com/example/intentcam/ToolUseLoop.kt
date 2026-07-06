@@ -210,7 +210,7 @@ class ToolUseLoop(
             val nextContent = JSONArray()
             if (followUps.isNotEmpty()) {
                 followUps.forEachIndexed { i, img ->
-                    val b64 = android.util.Base64.encodeToString(img, android.util.Base64.NO_WRAP)
+                    val b64 = java.util.Base64.getEncoder().encodeToString(img)
                     nextContent.put(
                         JSONObject()
                             .put("type", "image")
@@ -219,7 +219,7 @@ class ToolUseLoop(
                                 JSONObject()
                                     .put("type", "base64")
                                     .put("media_type", "image/jpeg")
-                                    .put("data", b64)
+                                    .put("data", b64 as Any)
                             )
                     )
                     val hint = if (followUps.size == 1) {
@@ -275,7 +275,13 @@ class ToolUseLoop(
     /**
      * Run one cycle.
      *
-     * @param jpeg the captured image
+     * @param thumbnail the small JPEG sent to the LLM as the
+     *   round-1 overview.
+     * @param quadrants four high-detail crops (top-left, top-right,
+     *   bottom-left, bottom-right) bundled with the thumbnail in
+     *   round 1.  Empty list falls back to the single-image message.
+     * @param fullRes the original full-resolution JPEG; preserved
+     *   across rounds so zoom_in can crop from it on demand.
      * @param userText optional follow-up text from a prior
      *   [Outcome.PendingUserInput]; pass "" on round 1.
      */
@@ -283,12 +289,16 @@ class ToolUseLoop(
         thumbnail: ByteArray,
         fullRes: ByteArray,
         userText: String,
+        quadrants: List<ByteArray> = emptyList(),
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
         val toolsJson = registry.toAnthropicToolsJson()
         val messages = JSONArray()
-            .put(client.userImageMessage(thumbnail, userText))
+            .put(
+                if (quadrants.isEmpty()) client.userImageMessage(thumbnail, userText)
+                else client.userImageWithQuadrants(thumbnail, quadrants, userText)
+            )
 
         var lastRound: RoundSnapshot? = null
         var pendingUserInput: PendingUserInput? = null
@@ -436,7 +446,7 @@ class ToolUseLoop(
             val nextContent = JSONArray()
             if (followUps.isNotEmpty()) {
                 followUps.forEachIndexed { i, img ->
-                    val b64 = android.util.Base64.encodeToString(img, android.util.Base64.NO_WRAP)
+                    val b64 = java.util.Base64.getEncoder().encodeToString(img)
                     nextContent.put(
                         JSONObject()
                             .put("type", "image")
@@ -445,7 +455,7 @@ class ToolUseLoop(
                                 JSONObject()
                                     .put("type", "base64")
                                     .put("media_type", "image/jpeg")
-                                    .put("data", b64)
+                                    .put("data", b64 as Any)
                             )
                     )
                     val hint = if (followUps.size == 1) {

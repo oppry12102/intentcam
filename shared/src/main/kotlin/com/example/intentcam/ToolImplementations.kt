@@ -99,7 +99,88 @@ fun ToolRegistry.registerDefaultTools() {
         )
     )
 
-    // ── 2. emit_bubble ───────────────────────────────────────────
+    // ── 2. read_text ────────────────────────────────────────────
+    // **Fallback OCR — the LLM should normally read text itself.**
+    //
+    // Round 1 already bundles 4 high-detail quadrant crops so the
+    // model can read small text directly.  This tool exists as a
+    // last resort when the model has zoomed-in multiple times and
+    // STILL can't read the text, AND the text looks like clear
+    // printed type (menu prices, receipt digits, door numbers).
+    //
+    // Why not primary: on-device OCR is unreliable on calligraphy,
+    // handwriting, artistic fonts, blurry text — and the model's
+    // confident-but-wrong OCR output pollutes emit_bubble.content
+    // worse than no OCR at all.  The LLM's own reading (with the
+    // quadrant crops + zoom_in) is the primary path; this tool is
+    // a deterministic backup for printed text.
+    register(
+        ToolDef(
+            name = "read_text",
+            description = "[**默认不要用 — 本地 OCR 兜底**] 读取图像某区域的逐字文字内容（on-device 中英 OCR，完全离线）。" +
+                "**什么时候调**：你已经 zoom_in 多次还看不清，且文字看起来像清晰的**印刷体**（菜单价签、收据数字、门牌号、说明书标题）。" +
+                "**什么时候不要调**：书法、手写、艺术字、模糊图、远景——OCR 在这些场景不可靠，调了会把噪声喂进你的答案。" +
+                "**默认靠你自己读**——round 1 已经附了 4 张四象限裁剪，你直接读图比 OCR 更可控、更准。" +
+                "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；source 默认 'last'（链式），要扫原图不同区域用 'original'。",
+            inputSchema = JSONObject().apply {
+                put("type", "object")
+                put("properties", JSONObject().apply {
+                    put("x", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0); put("maximum", 1)
+                        put("description", "左边缘归一化坐标 [0, 1]（相对于 source 指定的图）")
+                    })
+                    put("y", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0); put("maximum", 1)
+                        put("description", "上边缘归一化坐标 [0, 1]")
+                    })
+                    put("w", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0); put("maximum", 1)
+                        put("description", "宽度归一化坐标 [0, 1]")
+                    })
+                    put("h", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0); put("maximum", 1)
+                        put("description", "高度归一化坐标 [0, 1]")
+                    })
+                    put("source", JSONObject().apply {
+                        put("type", "string")
+                        put("enum", JSONArray().put("last").put("original"))
+                        put("description", "扫哪张图。last=上一张你看到的（链式），original=原图（绝对坐标）")
+                    })
+                })
+                put("required", JSONArray().put("x").put("y").put("w").put("h"))
+                put("additionalProperties", false)
+            },
+            body = { ctx, input ->
+                val x = input.optDouble("x", 0.0).toFloat()
+                val y = input.optDouble("y", 0.0).toFloat()
+                val w = input.optDouble("w", 0.0).toFloat().coerceAtLeast(0.05f)
+                val h = input.optDouble("h", 0.0).toFloat().coerceAtLeast(0.05f)
+                val source = input.optString("source", "last")
+                val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
+                val cropBytes = cropJpegRegion(sourceJpeg, x, y, w, h)
+                if (cropBytes == null) {
+                    ToolResult(
+                        toolSummary = "read_text 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})"
+                    )
+                } else {
+                    try {
+                        val text = OcrEngine.recognize(cropBytes).trim()
+                        if (text.isEmpty()) {
+                            ToolResult(toolSummary = "OCR: 该区域未识别到文字")
+                        } else {
+                            ToolResult(toolSummary = "OCR (${text.length}字): $text")
+                        }
+                    } catch (e: Throwable) {
+                        ToolResult(
+                            toolSummary = "read_text 失败：${e.javaClass.simpleName}: ${e.message ?: "未知错误"}"
+                        )
+                    }
+                }
+            },
+        )
+    )
+
+    // ── 3. emit_bubble ───────────────────────────────────────────
     // End the cycle with a structured final answer.  Two stages:
     //   - content:        what you see in the image (after any zoom_ins)
     //   - intent:         what the user probably wants to do with it

@@ -242,9 +242,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         logDebug(
             "TOOL",
             "→ runCycle (thumb=${frame.thumbnail.size / 1024}KB " +
-                "full=${frame.fullRes.size / 1024}KB userText='${userText.take(40)}')"
+                "full=${frame.fullRes.size / 1024}KB " +
+                "quads=${frame.quadrants.size} userText='${userText.take(40)}')"
         )
-        val outcome = toolUseLoop.runCycle(frame.thumbnail, frame.fullRes, userText)
+        val outcome = toolUseLoop.runCycle(
+            thumbnail = frame.thumbnail,
+            fullRes = frame.fullRes,
+            userText = userText,
+            quadrants = frame.quadrants,
+        )
         when (outcome) {
             is ToolUseLoop.Outcome.Bubble -> {
                 val merged = (_state.value.bubbles + outcome.bubble).takeLast(UiState.BUBBLE_MAX)
@@ -405,40 +411,4 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 }
 
-/**
- * Format a [Throwable] for the in-app debug log: top-level class+message,
- * followed by the cause chain (one level is usually enough), followed by
- * the first few stack frames.  Newlines are stripped so the result still
- * fits one [DebugLogEntry] row.  DEBUG mode is for hunting crashes; the
- * caller wants to see WHERE it threw, not just WHAT.
- *
- * Example:
- *   IllegalStateException: streamToolUse: 模型 20000ms 内未完成
- *     caused by kotlinx.coroutines.TimeoutCancellationException
- *     at com.example.intentcam.LlmClient.streamToolUseBody$lambda...
- */
-fun formatThrowable(t: Throwable): String {
-    val sb = StringBuilder()
-    sb.append(t.javaClass.simpleName)
-    sb.append(": ")
-    sb.append(t.message ?: "(no message)")
-    var cause: Throwable? = t.cause
-    var depth = 0
-    while (cause != null && depth < 3) {
-        sb.append(" | caused by ")
-        sb.append(cause.javaClass.simpleName)
-        sb.append(": ")
-        sb.append(cause.message ?: "(no message)")
-        cause = cause.cause
-        depth++
-    }
-    // Top 3 frames are usually enough to identify the failing call site
-    // without dumping hundreds of frames of androidx / kotlin coroutine
-    // machinery into the panel.
-    t.stackTrace.take(3).forEach { f ->
-        sb.append(" | at ")
-        sb.append(f.className).append('.').append(f.methodName)
-        sb.append('(').append(f.fileName ?: "?").append(':').append(f.lineNumber).append(')')
-    }
-    return sb.toString()
-}
+// formatThrowable moved to :shared/FormatThrowable.kt

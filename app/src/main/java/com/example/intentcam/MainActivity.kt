@@ -54,6 +54,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Wire the platform-specific image ops + OCR strategies into
+        // the shared module.  Must happen before the first
+        // ToolUseLoop.runCycle call — i.e. before the user taps the
+        // shutter for the first time.  Doing it here (instead of in
+        // AppViewModel.init) keeps the JVM eval able to install its
+        // own ImageIO-based impl without touching Android code.
+        installAndroidImageOps()
+        installAndroidOcr(application)
         setContent {
             IntentCamTheme {
                 Surface(color = Color.Black) {
@@ -121,7 +129,7 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
             // here so the user sees the still image they tapped on,
             // not a live feed.
             DetailScreen(
-                bubble = state.selectedBubble,
+                bubble = state.selectedBubble!!,
                 onRestart = viewModel::clearBubbleSelection,
                 modifier = Modifier.fillMaxSize()
             )
@@ -403,9 +411,10 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
                             modifier = Modifier.weight(1f, fill = false),
                         )
                     }
-                    if (bubble.toolName != null) {
+                    val toolName = bubble.toolName
+                    if (toolName != null) {
                         Spacer(Modifier.width(6.dp))
-                        ToolChip(toolName = bubble.toolName)
+                        ToolChip(toolName = toolName)
                     }
                 }
                 if (bubble.detail.isNotBlank()) {

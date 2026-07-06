@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "IntentCam"
 include(":app")
+include(":shared")
