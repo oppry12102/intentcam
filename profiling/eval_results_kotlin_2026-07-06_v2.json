@@ -1,0 +1,1016 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 100,
+  "overall_composite": 0.6759781746031748,
+  "description": "Kotlin eval results — calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 768,
+  "fixture_count": 100,
+  "version": 1,
+  "quality": 80,
+  "per_category": {
+    "default": 0.6759781746031748
+  },
+  "fixtures": [
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.6428571428571428,
+      "composite": 0.8214285714285714,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_02",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_03",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0,
+      "composite": 0.32499999999999996,
+      "picked_tool": "(none)",
+      "id": "rctw_default_04",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_05",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_06",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_07",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_08",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_09",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.7,
+      "picked_tool": "(none)",
+      "id": "rctw_default_11",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_12",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_13",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_14",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.175,
+      "composite": 0.4125,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_16",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_17",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_18",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_19",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_20",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.125,
+      "composite": 0.5625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_22",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_23",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_24",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.7,
+      "picked_tool": "(none)",
+      "id": "rctw_default_25",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.125,
+      "composite": 0.5625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_26",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_27",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_28",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_29",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.05,
+      "composite": 0.525,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_30",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_31",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_32",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_33",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_34",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_35",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.7,
+      "picked_tool": "(none)",
+      "id": "rctw_default_36",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_37",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_38",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0,
+      "composite": 0.15,
+      "picked_tool": "(error)",
+      "id": "rctw_default_39",
+      "category": "default",
+      "r1": 0.3,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.65,
+      "composite": 0.825,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_40",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.625,
+      "composite": 0.6375,
+      "picked_tool": "(none)",
+      "id": "rctw_default_41",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_42",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.6111111111111112,
+      "composite": 0.8055555555555556,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_43",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_44",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_45",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.7,
+      "picked_tool": "(none)",
+      "id": "rctw_default_46",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_47",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_48",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.7,
+      "composite": 0.85,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_50",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.15,
+      "composite": 0.575,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_51",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.44999999999999996,
+      "picked_tool": "(none)",
+      "id": "rctw_default_52",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_53",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_54",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0,
+      "composite": 0.15,
+      "picked_tool": "(error)",
+      "id": "rctw_default_55",
+      "category": "default",
+      "r1": 0.3,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_56",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.125,
+      "composite": 0.38749999999999996,
+      "picked_tool": "(none)",
+      "id": "rctw_default_57",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_58",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0,
+      "composite": 0.15,
+      "picked_tool": "(error)",
+      "id": "rctw_default_59",
+      "category": "default",
+      "r1": 0.3,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0,
+      "composite": 0.15,
+      "picked_tool": "(error)",
+      "id": "rctw_default_60",
+      "category": "default",
+      "r1": 0.3,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_61",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_62",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_63",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_64",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_65",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.7,
+      "composite": 0.85,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_66",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0,
+      "composite": 0.5,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_67",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_68",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_69",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_70",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_71",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5833333333333334,
+      "composite": 0.7916666666666667,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_72",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_73",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.44999999999999996,
+      "picked_tool": "(none)",
+      "id": "rctw_default_74",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_75",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_76",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_77",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_78",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_79",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.16666666666666666,
+      "composite": 0.5833333333333334,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_80",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_81",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_82",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.1,
+      "composite": 0.37499999999999994,
+      "picked_tool": "(none)",
+      "id": "rctw_default_83",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_84",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_85",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.25,
+      "composite": 0.625,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_86",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.7,
+      "picked_tool": "(none)",
+      "id": "rctw_default_87",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_88",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_89",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_90",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.875,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_91",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_92",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_93",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_94",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.75,
+      "composite": 0.7,
+      "picked_tool": "(none)",
+      "id": "rctw_default_95",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_96",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.575,
+      "picked_tool": "(none)",
+      "id": "rctw_default_97",
+      "category": "default",
+      "r1": 0.6499999999999999,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.6,
+      "composite": 0.8,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_98",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 0,
+      "r2_text": 0.16666666666666666,
+      "composite": 0.5833333333333334,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_99",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    },
+    {
+      "r2_type": 1,
+      "r2_text": 0.5,
+      "composite": 0.75,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_100",
+      "category": "default",
+      "r1": 1,
+      "has_text": true
+    }
+  ]
+}
