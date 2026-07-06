@@ -81,7 +81,7 @@ fun ToolRegistry.registerDefaultTools() {
                 val focus = input.optString("focus", "").ifBlank { "细节" }
                 val source = input.optString("source", "last")
                 val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
-                val crop = cropJpegRegion(sourceJpeg, x, y, w, h)
+                val crop = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 80)
                 if (crop == null) {
                     ToolResult(
                         toolSummary = "zoom_in 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})",
@@ -120,7 +120,7 @@ fun ToolRegistry.registerDefaultTools() {
             description = "[**默认不要用 — 本地 OCR 兜底**] 读取图像某区域的逐字文字内容（on-device 中英 OCR，完全离线）。" +
                 "**什么时候调**：你已经 zoom_in 多次还看不清，且文字看起来像清晰的**印刷体**（菜单价签、收据数字、门牌号、说明书标题）。" +
                 "**什么时候不要调**：书法、手写、艺术字、模糊图、远景——OCR 在这些场景不可靠，调了会把噪声喂进你的答案。" +
-                "**默认靠你自己读**——round 1 已经附了 4 张四象限裁剪，你直接读图比 OCR 更可控、更准。" +
+                "**默认靠你自己读**——round 1 已经附了 1 张概览 + 最多 4 张四象限裁剪，你直接读图比 OCR 更可控、更准。" +
                 "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；source 默认 'last'（链式），要扫原图不同区域用 'original'。",
             inputSchema = JSONObject().apply {
                 put("type", "object")
@@ -157,7 +157,7 @@ fun ToolRegistry.registerDefaultTools() {
                 val h = input.optDouble("h", 0.0).toFloat().coerceAtLeast(0.05f)
                 val source = input.optString("source", "last")
                 val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
-                val cropBytes = cropJpegRegion(sourceJpeg, x, y, w, h)
+                val cropBytes = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 80)
                 if (cropBytes == null) {
                     ToolResult(
                         toolSummary = "read_text 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})"

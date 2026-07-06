@@ -2,7 +2,6 @@ package com.example.intentcam.eval
 
 import com.example.intentcam.CapturedFrame
 import com.example.intentcam.LlmClient
-import com.example.intentcam.ToolContext
 import com.example.intentcam.ToolRegistry
 import com.example.intentcam.ToolUseLoop
 import com.example.intentcam.encodeThumbnail
@@ -66,10 +65,16 @@ internal class EvalRunner(private val config: EvalConfig) {
             // would produce on-device: 1 thumbnail + 1 fullRes + 4
             // quadrant crops.  The ImageIO-based thumbnail/crop impls
             // (installed by EvalMain) are the JVM equivalent of
-            // BitmapFactory + BitmapRegionDecoder.
+            // BitmapFactory + BitmapRegionDecoder.  Thumbnail sizing
+            // comes from --resize/--quality; quadrant quality stays at
+            // 85 (matches Android FrameAnalyzer.QUADRANT_QUALITY).
             val rawBytes = imgPath.readBytes()
             val fullRes = encodeThumbnail(rawBytes, maxDim = 4096, quality = 95) ?: rawBytes
-            val thumbnail = encodeThumbnail(rawBytes, maxDim = 768, quality = 80) ?: rawBytes
+            val thumbnail = encodeThumbnail(
+                rawBytes,
+                maxDim = config.resize,
+                quality = config.quality,
+            ) ?: rawBytes
             val quadrants = listOf(
                 encodeQuadrant(rawBytes, 0f, 0f, 0.5f, 0.5f),
                 encodeQuadrant(rawBytes, 0.5f, 0f, 0.5f, 0.5f),
@@ -107,6 +112,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "r1" to r1.first,
                 "r2_text" to r2.first,
                 "r2_type" to r2.second,
+                "r1_details" to r1.third,
             ))
             perCategory.getOrPut(category) { mutableListOf() }.add(composite)
 
@@ -130,21 +136,78 @@ internal class EvalRunner(private val config: EvalConfig) {
         }
         println()
         println("${"category".padEnd(18)} ${"n".padStart(3)} ${"avg".padStart(6)}")
-        for ((cat, scores) in perCategory.toSortedMap()) {
-            val avg = scores.average()
-            println("${cat.padEnd(18)} ${scores.size.toString().padStart(3)} ${"%.3f".format(avg).padStart(6)}")
+        val categoryAvgs = perCategory.toSortedMap().mapValues { it.value.average() }
+        for ((cat, avg) in categoryAvgs) {
+            val n = perCategory.getValue(cat).size
+            println("${cat.padEnd(18)} ${n.toString().padStart(3)} ${"%.3f".format(avg).padStart(6)}")
         }
+        config.jsonOut?.let { writeJsonReport(it, results, categoryAvgs) }
         return 0
+    }
+
+    /** Write a structured JSON report (per-fixture scores + category
+     *  averages + overall) so runs can be diffed across commits. */
+    private fun writeJsonReport(
+        file: File,
+        results: List<Map<String, Any>>,
+        categoryAvgs: Map<String, Double>,
+    ) {
+        val root = JSONObject()
+        root.put("version", 1)
+        root.put("description", "Kotlin eval results — calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)")
+        root.put("ground_truth", config.groundTruth.name)
+        root.put("img_dir", config.imgDir.path)
+        root.put("limit", config.limit)
+        root.put("resize", config.resize)
+        root.put("quality", config.quality)
+        val overall = if (results.isNotEmpty()) {
+            results.map { it["composite"] as Double }.average()
+        } else 0.0
+        root.put("overall_composite", overall)
+        root.put("fixture_count", results.size)
+        val perCategory = JSONObject()
+        for ((cat, avg) in categoryAvgs) {
+            perCategory.put(cat, avg)
+        }
+        root.put("per_category", perCategory)
+        val fixtures = JSONArray()
+        for (r in results) {
+            val o = JSONObject()
+            o.put("id", r["id"])
+            o.put("category", r["category"])
+            o.put("composite", r["composite"] as Double)
+            o.put("r1", r["r1"] as Double)
+            o.put("r2_text", r["r2_text"] as Double)
+            o.put("r2_type", r["r2_type"] as Double)
+            val details = r["r1_details"] as JSONObject
+            o.put("picked_tool", details.optString("picked_tool", "?"))
+            o.put("has_text", details.optBoolean("has_text", false))
+            fixtures.put(o)
+        }
+        root.put("fixtures", fixtures)
+        file.writeText(root.toString(2))
+        println("wrote ${results.size} fixture results to ${file.path}")
     }
 
     private fun encodeQuadrant(
         raw: ByteArray,
         fx: Float, fy: Float, fw: Float, fh: Float,
     ): ByteArray? {
-        // Use cropJpegRegion with full-size (raw) to extract quadrant,
-        // then re-encode at 768 max-dim.
-        val cropped = com.example.intentcam.cropJpegRegion(raw, fx, fy, fw, fh) ?: return null
-        return encodeThumbnail(cropped, maxDim = 768, quality = 85)
+        // Single-encode crop + downscale (matches Android's
+        // FrameAnalyzer.encodeQuadrant which crops the Bitmap in memory
+        // and re-encodes once at q85).  Previously this was two
+        // encodes — crop-thumbnail at default q75, then encodeThumbnail
+        // at q85 — which made eval JPEG quality drift from prod.
+        return com.example.intentcam.cropJpegRegion(
+            raw, fx, fy, fw, fh, quality = QUADRANT_QUALITY,
+        )
+    }
+
+    private companion object {
+        /** Matches Android's FrameAnalyzer.QUADRANT_QUALITY — quadrants
+         *  are encoded at higher quality than the overview thumbnail
+         *  because each crop uses the full pixel budget. */
+        const val QUADRANT_QUALITY = 85
     }
 
     private fun scoreRound1(
@@ -152,30 +215,51 @@ internal class EvalRunner(private val config: EvalConfig) {
         scene: JSONObject,
     ): Triple<Double, JSONObject, JSONObject> {
         val empty = JSONObject()
-        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
         val r1Details = JSONObject()
-        // We need the model's first tool_use — but we don't get that
-        // directly from Outcome.  The orchestrator's return value is
-        // post-cycle; we'd have to re-run to inspect intermediate
-        // rounds.  For the eval, the proxy is: did the model emit
-        // emit_bubble? If so, r1 = 1.0 (it picked emit_bubble in some
-        // round).  If outcome is Error, r1 = 0.0.  If outcome is a
-        // PendingUserInput bubble, treat as emit_bubble.
+        // ToolUseLoop.Outcome exposes firstToolName — the first
+        // non-final tool the model invoked (zoom_in / read_text if it
+        // did reconnaissance, emit_bubble if it went straight to the
+        // final summary, null if the model just emitted text without
+        // any tool call).  Score the choice directly so the metric
+        // reflects "did the model think before answering?" instead of
+        // collapsing to "did the cycle end with a bubble?".
+        //
+        // The penalty for skipping reconnaissance depends on whether
+        // the fixture has text content: for text-heavy fixtures
+        // (ground truth lists expected_description_keywords /
+        // expected_details) the model really should zoom_in or
+        // read_text to verify text; for non-text fixtures the 5
+        // round-1 images already let the model answer correctly.
+        val firstTool = outcome.firstToolName
+        val hasText = scene.optJSONArray("expected_description_keywords")?.length()?.let { it > 0 } == true ||
+            scene.optJSONArray("expected_details")?.length()?.let { it > 0 } == true
+        val skipReconScore = if (hasText) 0.5 else 1.0
         val pickScore: Double
-        when (outcome) {
-            is ToolUseLoop.Outcome.Bubble -> {
-                pickScore = if (bubble != null) 1.0 else 0.0
-                r1Details.put("picked_tool", "emit_bubble")
-            }
-            is ToolUseLoop.Outcome.PendingUserInput -> {
-                pickScore = 0.7
-                r1Details.put("picked_tool", "emit_bubble_pending")
-            }
-            is ToolUseLoop.Outcome.Error -> {
+        val pickedLabel: String
+        when {
+            outcome is ToolUseLoop.Outcome.Error -> {
                 pickScore = 0.0
-                r1Details.put("picked_tool", JSONObject.NULL)
+                pickedLabel = "(error)"
+            }
+            firstTool == null -> {
+                pickScore = skipReconScore
+                pickedLabel = "(none)"
+            }
+            firstTool == "emit_bubble" -> {
+                pickScore = skipReconScore
+                pickedLabel = "emit_bubble"
+            }
+            firstTool == "zoom_in" || firstTool == "read_text" -> {
+                pickScore = 1.0
+                pickedLabel = firstTool
+            }
+            else -> {
+                pickScore = 0.7
+                pickedLabel = firstTool
             }
         }
+        r1Details.put("picked_tool", pickedLabel)
+        r1Details.put("has_text", hasText)
         val inputOk = 1.0
         val composite = 0.70 * pickScore + 0.30 * inputOk
         return Triple(composite, empty, r1Details)
@@ -234,8 +318,10 @@ internal class EvalRunner(private val config: EvalConfig) {
         }
         if (denom == 0) textScore = 1.0
 
-        // Type match: default category expects type=info.
-        val expectedType = "info"
+        // Type match: read per-scene expected_type so a fixture with
+        // "location" or "solve" isn't silently scored 0 against a
+        // hardcoded "info".
+        val expectedType = scene.optString("expected_type", "info")
         val typeScore = if (type == expectedType) 1.0 else 0.0
 
         val r2 = 0.50 * textScore + 0.50 * typeScore

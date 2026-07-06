@@ -20,8 +20,16 @@ package com.example.intentcam
  * tool sees a "crop failed" result — fail-closed rather than NPE.
  */
 object ImageOps {
+    /**
+     * Crop + downscale to thumbnail sizing + re-encode.  [quality] is
+     * the JPEG quality (0-100) the impl should use for the re-encode;
+     * Android and JVM impls must accept the same range.  Without
+     * per-call quality the eval's quadrant path was double-encoding
+     * (default q75 → q85) while the app's was single-encoding (q85),
+     * so eval scores drifted from prod.
+     */
     @JvmStatic
-    var cropImpl: ((jpeg: ByteArray, x: Float, y: Float, w: Float, h: Float) -> ByteArray?)? = null
+    var cropImpl: ((jpeg: ByteArray, x: Float, y: Float, w: Float, h: Float, quality: Int) -> ByteArray?)? = null
 
     @JvmStatic
     var thumbnailImpl: ((jpeg: ByteArray, maxDim: Int, quality: Int) -> ByteArray?)? = null
@@ -32,7 +40,8 @@ object ImageOps {
         y: Float,
         w: Float,
         h: Float,
-    ): ByteArray? = cropImpl?.invoke(jpeg, x, y, w, h)
+        quality: Int = DEFAULT_CROP_QUALITY,
+    ): ByteArray? = cropImpl?.invoke(jpeg, x, y, w, h, quality)
 
     /**
      * Encode the JPEG as a thumbnail (max-dim cap + JPEG re-encode).
@@ -41,4 +50,8 @@ object ImageOps {
      */
     fun encodeThumbnail(jpeg: ByteArray, maxDim: Int, quality: Int): ByteArray? =
         thumbnailImpl?.invoke(jpeg, maxDim, quality)
+
+    /** Default quality for `cropJpegRegion` callers (zoom_in, read_text).
+     *  Matches the Android app's previous hardcoded q80. */
+    const val DEFAULT_CROP_QUALITY = 80
 }
