@@ -8,13 +8,12 @@ text / number / brand / date / price the model read.
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design.
 
----
-
 ## Quick start
 
 ```bash
 # Build (JDK17 + Gradle 8.5)
 JAVA_HOME=/path/to/jdk17 /path/to/gradle clean :app:assembleDebug
+```
 
 ## Run on device
 
