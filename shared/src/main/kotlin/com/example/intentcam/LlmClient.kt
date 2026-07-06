@@ -1,6 +1,5 @@
 package com.example.intentcam
 
-import android.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -16,6 +15,7 @@ import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -88,10 +88,12 @@ class LlmClient(@Volatile var config: LlmConfig) {
 
     /**
      * Append a user-role message carrying a single JPEG plus optional
-     * text.  Used by [ToolUseLoop] to seed round 1.
+     * text.  Used by [ToolUseLoop] for the resume path (re-using a
+     * bubble's stored imageBytes) where quadrant crops aren't
+     * available.
      */
     fun userImageMessage(jpeg: ByteArray, text: String = ""): JSONObject {
-        val b64 = Base64.encodeToString(jpeg, Base64.NO_WRAP)
+        val b64 = Base64.getEncoder().encodeToString(jpeg)
         val imageSource = JSONObject()
             .put("type", "base64")
             .put("media_type", "image/jpeg")
@@ -102,6 +104,43 @@ class LlmClient(@Volatile var config: LlmConfig) {
             content.put(JSONObject().put("type", "text").put("text", text))
         }
         return JSONObject().put("role", "user").put("content", content)
+    }
+
+    /**
+     * Round-1 user message that bundles the thumbnail + 4 quadrant
+     * crops + an optional text prompt.  Sending 5 images up front
+     * gives the LLM high-detail coverage of every quadrant without
+     * paying for a 1-2 round zoom_in cycle, and is the LLM-native
+     * substitute for on-device OCR — the model reads the small text
+     * in each crop directly rather than calling a separate OCR tool
+     * whose noise often pollutes the answer.
+     *
+     * Order matters: thumbnail first (overview), then the four
+     * quadrants in reading order (top-left, top-right, bottom-left,
+     * bottom-right).
+     */
+    fun userImageWithQuadrants(
+        thumbnail: ByteArray,
+        quadrants: List<ByteArray>,
+        text: String = "",
+    ): JSONObject {
+        val content = JSONArray()
+        content.put(imageBlock(thumbnail))
+        for (q in quadrants) {
+            content.put(imageBlock(q))
+        }
+        val promptText = text.ifBlank { "调用工具。" }
+        content.put(JSONObject().put("type", "text").put("text", promptText))
+        return JSONObject().put("role", "user").put("content", content)
+    }
+
+    private fun imageBlock(jpeg: ByteArray): JSONObject {
+        val b64 = Base64.getEncoder().encodeToString(jpeg)
+        val source = JSONObject()
+            .put("type", "base64")
+            .put("media_type", "image/jpeg")
+            .put("data", b64)
+        return JSONObject().put("type", "image").put("source", source)
     }
 
     // ── SSE parsers ───────────────────────────────────────────────────
@@ -300,21 +339,78 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  drill-down.  Use source=original for sibling views of
          *  different parts of the original photo.
          */
+        /**
+         * System prompt for the tool-use path.  Three tools, three roles:
+         *
+         *  - `zoom_in`   — crop a region at native pixels so you can see
+         *                 detail you couldn't before (positioning tool).
+         *  - `read_text` — on-device OCR (ML Kit Chinese + Latin, fully
+         *                 offline). Returns verbatim characters, not your
+         *                 paraphrase. The model's memory of dense / small
+         *                 text is unreliable — always re-read with
+         *                 read_text before quoting into emit_bubble.
+         *  - `emit_bubble` — structured final answer.  Ends the cycle.
+         *
+         * Flow:
+         *  Stage 1 — locate the interesting regions.  Use zoom_in to
+         *            drill into each one.
+         *  Stage 2 — for any region that contains text, call read_text
+         *            to get verbatim characters.  Quote those into
+         *            emit_bubble verbatim — never paraphrase.
+         *  Stage 3 — infer the user's intent (why did they take this
+         *            photo) and call emit_bubble with content + intent
+         *            + type.
+         *
+         *  No fixed round limit; the model can iterate as long as it
+         *  needs.  No "default" tool — the model is expected to look
+         *  at the image directly.  Round 1 sends 5 images (thumbnail
+         *  + 4 quadrant crops) so the model has high-detail coverage
+         *  of every corner from the start.
+         */
         const val TOOL_USE_SYSTEM =
-            "你是 IntentCam 的视觉意图助手。你的工作分两步：\n" +
-                    "**第一步：理解图片内容**。仔细看用户拍的图，识别其中的文字、物体、场景。**zoom_in 是缺省模式**：" +
-                    "无论图是否清楚，**先调 1-2 次 zoom_in(x, y, w, h, focus='...') 看清楚细节**。x/y/w/h 是归一化坐标 ∈ [0, 1]，x/y 是左上角，w/h 是宽高。" +
-                    "源 source 默认 'last'（链式放大 — 第二次裁第一次的结果）。要看原图不同区域用 source='original'。\n" +
-                    "**第二步：理解用户意图**。在清楚图片内容后，思考用户为什么拍这张图、想用它做什么。如果意图相关的区域有疑点，可以再 zoom_in 确认。\n" +
-                    "**收尾**：看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。type ∈ {info, location, solve}。\n" +
+            "你是 IntentCam 的视觉意图助手。你有三个工具：\n" +
                     "\n" +
-                    "**关键 — content 字段必须包含图里所有可见文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式**（用户要看的）：\n" +
-                    "  例如：茶叶包装 → content 写\"包装文字：'品名: 工夫红茶', '净含量: 250g', '生产日期: 2020-12-01'\"\n" +
-                    "  路牌 → \"建国路 100号\"\n" +
-                    "  收据 → \"合计 ¥168.50, 微信支付\"\n" +
-                    "  菜单 → \"宫保鸡丁 ¥38, 鱼香肉丝 ¥42\"\n" +
-                    "  门牌 → \"1203\"\n" +
-                    "  漏一个字 = 漏一个关键信息。**content 必须把图里所有可见文字原样写出来**。\n" +
+                    "## 第 1 步：读懂图（你最擅长这个）\n" +
+                    "你一次会看到 5 张图：1 张全图概览 + 4 张四象限裁剪（左上 / 右上 / 左下 / 右下）。" +
+                    "四象限裁剪和原图是同一个像素预算下的不同区域——意味着你能直接看清每个角落的小字、细节、价格、电话号码，**不需要先调工具**。\n" +
+                    "\n" +
+                    "## 工具 1: zoom_in —— 定位（看清细节）\n" +
+                    "把图里某区域裁出来放大，返回裁剪后的图供你下一轮查看。\n" +
+                    "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；x/y 是左上角，w/h 是宽高。" +
+                    "source 字段默认 \'last\'（链式放大 — 第二次裁第一次的结果，坐标相对）。要看原图不同区域用 source=\'original\'（绝对坐标，兄弟视图）。" +
+                    "**用途**：当四象限裁剪还看不清楚某一块（极小字、远景、特定细节）时再调。\n" +
+                    "\n" +
+                    "## 工具 2: read_text —— 本地 OCR（**默认不要用**）\n" +
+                    "对图里某区域跑 on-device OCR，**离线、完全在设备上**，返回**逐字字符串**。" +
+                    "参数和 zoom_in 一样：x, y, w, h, source。\n" +
+                    "**默认不要用**。OCR 在书法、手写、艺术字、模糊图上**不可靠**，调了反而把噪声喂进你的答案——" +
+                    "大多数情况下你直接读四象限裁剪就够了，**更可控、更准**。" +
+                    "**仅在以下情况考虑调**：已经 zoom_in 多次仍看不清、且文字看起来像清晰印刷体（菜单价格、收据数字、门牌号）时。\n" +
+                    "\n" +
+                    "## 工具 3: emit_bubble —— 收尾（结构化总结）\n" +
+                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。" +
+                    "type ∈ {info, location, solve}。\n" +
+                    "\n" +
+                    "## 工作流程\n" +
+                    "1. 一次看 5 张图（已附），定位大致内容 + 找到所有文字区域（通常四象限裁剪已经够清楚）。\n" +
+                    "2. 如果四象限还看不清某块，调 zoom_in 放大。\n" +
+                    "3. **文字靠 zoom_in 一遍遍看清**——印刷体一次能看清；小字 / 艺术字 / 模糊调多次，每次聚焦更小的子区域。\n" +
+                    "4. 思考用户为什么拍这张图（意图）。\n" +
+                    "5. 调 emit_bubble 收尾。\n" +
+                    "\n" +
+                    "## content 字段要求（**最严格**）\n" +
+                    "content 必须包含图里**所有可见**文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式，**原样**写出来：\n" +
+                    "  - 茶叶包装 → content 写\"包装文字：\'品名: 工夫红茶\', \'净含量: 250g\', \'生产日期: 2020-12-01\'\"\n" +
+                    "  - 路牌 → \"建国路 100号\"\n" +
+                    "  - 收据 → \"合计 ¥168.50, 微信支付\"\n" +
+                    "  - 菜单 → \"宫保鸡丁 ¥38, 鱼香肉丝 ¥42\"\n" +
+                    "  - 门牌 → \"1203\"\n" +
+                    "\n" +
+                    "## 反幻觉（**关键**）\n" +
+                    "**看不清的字宁可不写也别瞎猜**。content 漏一个字符比写错一个好——用户会按你写的内容去做事，错字比漏字危险得多。" +
+                    "对不确定的字可以写 \'?\' 占位（比如\'??路 100号\'），但**绝不要发明文字**。" +
+                    "书法 / 手写 / 模糊字宁可空着也别假装读出来。\n" +
+                    "\n" +
                     "**不要**用纯文本总结。**必须**调 emit_bubble 收尾。"
 
         /** Legacy system prompt for the one-shot path (unused by

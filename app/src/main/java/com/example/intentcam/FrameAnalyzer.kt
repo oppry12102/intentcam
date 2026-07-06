@@ -10,22 +10,15 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import java.io.ByteArrayOutputStream
 
-/**
- * One captured frame, in two encodings:
- *  - [thumbnail] is sized for the LLM (768 max-dim, q80).  Sent as
- *    the round-1 image so the model can pick a tool + scan the scene.
- *  - [fullRes] is the original photo at high quality.  Stays in
- *    memory in case the model's `zoom_in` tool needs to crop a
- *    region at native resolution.
- *
- * Keeping both lets the LLM trade off bandwidth (small thumbnail by
- * default) for detail (a 1/4-region crop at full native pixels on
- * demand) without re-shooting the photo.
- */
-data class CapturedFrame(
-    val thumbnail: ByteArray,
-    val fullRes: ByteArray,
-)
+// CapturedFrame lives in :shared so the eval can build frames from
+// raw JPEGs the same way FrameAnalyzer does on-device.
+
+// One captured frame, in three encodings (see [CapturedFrame]).
+
+// cropJpegRegion used to live here but moved to :shared/CropStrategy.kt
+// so the JVM eval can call the same top-level function.  The Android
+// implementation is wired in via `installAndroidImageOps()` at app
+// startup.
 
 /**
  * CameraX analyzer that emits a captured frame at a fixed cadence.
@@ -125,9 +118,36 @@ class FrameAnalyzer(
         // is the small payload that ships to the LLM.
         val fullRes = encodeBitmap(work, quality = FULL_QUALITY, maxDim = MAX_FULL_DIM)
         val thumbnail = encodeBitmap(work, quality = QUALITY, maxDim = MAX_DIM)
+        // Four quadrant crops at QUADRANT_MAX_DIM — sent in round 1
+        // alongside the thumbnail so the LLM sees high-detail in
+        // every corner from the start, instead of having to round-trip
+        // 1-2 zoom_ins before it can read small text.  Each crop is
+        // 50% × 50% of the upright full-res image.
+        val quadrants = listOf(
+            encodeQuadrant(work, 0f, 0f, 0.5f, 0.5f),     // top-left
+            encodeQuadrant(work, 0.5f, 0f, 0.5f, 0.5f),   // top-right
+            encodeQuadrant(work, 0f, 0.5f, 0.5f, 0.5f),   // bottom-left
+            encodeQuadrant(work, 0.5f, 0.5f, 0.5f, 0.5f), // bottom-right
+        ).filterNotNull()
         work.recycle()
         if (fullRes == null || thumbnail == null) return null
-        return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes)
+        return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes, quadrants = quadrants)
+    }
+
+    private fun encodeQuadrant(src: Bitmap, fx: Float, fy: Float, fw: Float, fh: Float): ByteArray? {
+        val W = src.width
+        val H = src.height
+        val left = (fx * W).toInt().coerceAtLeast(0)
+        val top = (fy * H).toInt().coerceAtLeast(0)
+        val right = ((fx + fw) * W).toInt().coerceAtMost(W)
+        val bot = ((fy + fh) * H).toInt().coerceAtMost(H)
+        if (right <= left || bot <= top) return null
+        val crop = Bitmap.createBitmap(src, left, top, right - left, bot - top)
+        try {
+            return encodeBitmap(crop, quality = QUADRANT_QUALITY, maxDim = QUADRANT_MAX_DIM)
+        } finally {
+            crop.recycle()
+        }
     }
 
     private fun encodeBitmap(src: Bitmap, quality: Int, maxDim: Int): ByteArray? {
@@ -155,61 +175,16 @@ class FrameAnalyzer(
         // subsequent crop is also visually lossless.
         const val MAX_FULL_DIM = 4096
         const val FULL_QUALITY = 95
+        // Quadrant crops sent in round 1 with the thumbnail.  Same
+        // max-dim as the original thumbnail (so the LLM sees them at
+        // a comparable scale) but slightly higher quality since each
+        // crop has the full pixel budget.
+        const val QUADRANT_MAX_DIM = 768
+        const val QUADRANT_QUALITY = 85
     }
 }
 
-/**
- * Crop a normalized rectangle out of a JPEG and re-encode it as a
- * thumbnail-sized JPEG.  Used by the `zoom_in` tool body so the model
- * can ask for a region of interest at near-native pixel density.
- *
- * @param fullResJpeg the high-quality JPEG the analyzer kept
- * @param x left edge in [0, 1] (image-width normalized)
- * @param y top edge in [0, 1]
- * @param w width in [0, 1]
- * @param h height in [0, 1]
- * @return cropped + resized JPEG, or null if the JPEG is unreadable
- */
-fun cropJpegRegion(
-    fullResJpeg: ByteArray,
-    x: Float, y: Float, w: Float, h: Float,
-): ByteArray? {
-    return try {
-        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeByteArray(fullResJpeg, 0, fullResJpeg.size, opts)
-        val fullW = opts.outWidth
-        val fullH = opts.outHeight
-        if (fullW <= 0 || fullH <= 0) return null
-        val left = (x.coerceIn(0f, 1f) * fullW).toInt().coerceAtLeast(0)
-        val top = (y.coerceIn(0f, 1f) * fullH).toInt().coerceAtLeast(0)
-        val right = ((x + w).coerceIn(0f, 1f) * fullW).toInt()
-            .coerceAtMost(fullW)
-        val bot = ((y + h).coerceIn(0f, 1f) * fullH).toInt()
-            .coerceAtMost(fullH)
-        val rect = Rect(left, top, right, bot)
-        if (rect.width() <= 0 || rect.height() <= 0) return null
-        val regionDecoder = BitmapRegionDecoder.newInstance(
-            fullResJpeg, 0, fullResJpeg.size, false
-        )
-        val cropped = regionDecoder.decodeRegion(rect, null)
-        regionDecoder.recycle()
-        if (cropped == null) return null
-        val out = ByteArrayOutputStream()
-        // Re-encode the crop at the thumbnail sizing the LLM is
-        // expecting.  We pass MAX_DIM=768 so the crop arrives at the
-        // same resolution the LLM is used to; the *content* is
-        // higher-fidelity because the crop is ~1/4 of the source.
-        val scale = 768f / maxOf(cropped.width, cropped.height)
-        val finalBitmap = if (scale < 1f) {
-            val sw = (cropped.width * scale).toInt().coerceAtLeast(1)
-            val sh = (cropped.height * scale).toInt().coerceAtLeast(1)
-            Bitmap.createScaledBitmap(cropped, sw, sh, true)
-                .also { if (it !== cropped) cropped.recycle() }
-        } else cropped
-        val ok = finalBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
-        if (finalBitmap !== cropped) finalBitmap.recycle()
-        if (ok) out.toByteArray() else null
-    } catch (_: Throwable) {
-        null
-    }
-}
+// cropJpegRegion moved to :shared/CropStrategy.kt as a free function
+// that delegates to ImageOps.cropJpegRegion.  The Android
+// implementation lives in app/.../AndroidImageOps.kt and is wired in
+// from MainActivity.onCreate via [installAndroidImageOps].

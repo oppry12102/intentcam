@@ -13,6 +13,12 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        // Limit native libs to phone ABIs.  x86 / x86_64 are emulator-only
+        // and would add ~25 MB of unused libmlkit_google_ocr_pipeline.so.
+        // arm64-v8a + armeabi-v7a covers ~all real devices.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     buildTypes {
@@ -46,6 +52,11 @@ android {
 }
 
 dependencies {
+    // Pure-Kotlin / JVM recognition pipeline (ToolUseLoop, LlmClient,
+    // ToolImplementations, Models).  The eval in :shared reuses the
+    // exact same classes — no parallel implementation to drift.
+    implementation(project(":shared"))
+
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
@@ -70,4 +81,10 @@ dependencies {
     // Networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
+
+    // ML Kit on-device OCR (Chinese + Latin).  Bundled — no Google Play
+    // Services dependency, ~5 MB APK overhead.  Drives the `read_text`
+    // tool so the model gets verbatim text instead of paraphrasing it
+    // (was the main r2_text regression in the 100-fixture eval).
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
 }
