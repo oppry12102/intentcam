@@ -1,17 +1,10 @@
 # IntentCam
 
 A camera-based Android app that recognises intent from a single
-phone photo. The LLM looks at the image, **calls `zoom_in` for
-unclear details** (cropping the original at native pixels), then
-**calls `emit_bubble`** with a structured answer: a one-line
-content summary plus a `details` table of every visible piece of
-text, number, brand, date, or price the model can read. The user
-taps the bubble to see the original image and the extracted table.
-
-Only **two tools** — `zoom_in` and `emit_bubble`. The LLM does the
-OCR / object recognition / intent inference itself; there is no
-on-device CV. The current 100-fixture RCTW-17 benchmark scores
-**0.652** average composite.
+phone photo using a 2-tool LLM protocol (`zoom_in` for detail,
+`emit_bubble` for the structured answer). The user taps the
+bubble to see the image and a `details` table of every visible
+text / number / brand / date / price the model read.
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design.
 
@@ -41,6 +34,31 @@ Output: `intentcam.apk` (~10 MB). Default settings assume
 4. Tap the resulting bubble to see the image + details table
 5. Tap **退出** to dismiss and start a new capture
 
+## Debug overlay & log capture
+
+The on-screen debug overlay (green bug icon, top-right) streams the
+recognition pipeline live: `[CAP]` capture timing, `[TOOL]` per-round
+dispatch, `[TOOL_ERR]` / `[FATAL]` / `[ANALYZER]` exceptions, `[BUBBLE]`
+state transitions.  Each entry is auto-wrapped — long stack traces are
+not truncated.
+
+Exception logs use the helper `formatThrowable(t)` and look like:
+
+```
+[BUBBLE] select id=abc123 title='菜单识别'    ← state transition
+[TOOL_ERR] read_text: IllegalStateException: 模型 20000ms 内未完成 | caused by kotlinx.coroutines.TimeoutCancellationException | at com.example.intentcam.LlmClient.streamToolUseBody(LlmClient.kt:253)
+```
+
+To capture logs to a file while reproducing a bug on a real device:
+
+```bash
+./scripts/capture_logs.sh                # install + filtered logcat
+./scripts/capture_logs.sh --no-install   # capture only
+```
+
+Filter includes `IntentCam:V`, `AndroidRuntime:E`, `System.err:W`, and
+`DEBUG:V` (in-app overlay entries).  Output lands in `./intentcam.log`.
+
 ## Eval benchmark (100 real RCTW-17 photos)
 
 ```
@@ -68,6 +86,9 @@ app/src/main/java/com/example/intentcam/   — app source
   Tools.kt                 ToolDef / ToolRegistry / ToolContext
   ToolImplementations.kt   zoom_in + emit_bubble bodies
   ToolUseLoop.kt           multi-round orchestrator
+
+scripts/
+  capture_logs.sh          adb install + filtered logcat to file
 
 profiling/
   eval_rctw_v2.py          100-fixture benchmark
