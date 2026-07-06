@@ -78,13 +78,10 @@ class FrameAnalyzer(
         } catch (e: Throwable) {
             // Both logcat (stack trace for `adb logcat`) and the in-app
             // callback (visible in the debug overlay) — the latter is what
-            // the user actually sees.
-            android.util.Log.w(
-                "IntentCam",
-                "analyze() swallowed: ${e.javaClass.simpleName}: ${e.message?.take(200) ?: ""}",
-                e
-            )
-            onError("${e.javaClass.simpleName}: ${e.message?.take(160) ?: "无消息"}")
+            // the user actually sees.  Pass the full message + cause
+            // chain; the overlay now auto-wraps so we no longer truncate.
+            android.util.Log.w("IntentCam", "analyze() swallowed", e)
+            onError(formatThrowable(e))
         } finally {
             image.close()
         }

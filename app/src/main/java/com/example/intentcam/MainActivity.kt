@@ -624,9 +624,10 @@ private fun DetailsTable(details: List<Detail>) {
 /**
  * Translucent scrolling panel that shows the recognition-pipeline log.
  * One row per [DebugLogEntry]; the list auto-scrolls to the newest entry
- * whenever [logs] grows.  Each row is capped at 3 lines so a runaway
- * long message can't blow past the visible area — the developer sees
- * the full message at the top, and the tail gets truncated with "…".
+ * whenever [logs] grows.  No per-row line cap — entries with long stack
+ * traces or exception messages render at full length and the LazyColumn
+ * auto-wraps them.  DEBUG mode is for hunting crashes; truncating is the
+ * opposite of useful here.
  *
  * Sits above the bubble list (camera preview stays partially visible
  * below the top overlay) with a thin dark background so the text stays
@@ -673,8 +674,6 @@ private fun DebugLogRow(entry: DebugLogEntry) {
         color = Color(0xFFB9C4DE),
         style = MaterialTheme.typography.labelSmall,
         fontFamily = FontFamily.Monospace,
-        maxLines = 3,
-        overflow = TextOverflow.Ellipsis,
         modifier = Modifier.padding(vertical = 1.dp),
     )
 }
