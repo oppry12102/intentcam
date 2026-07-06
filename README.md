@@ -15,16 +15,6 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design.
 ```bash
 # Build (JDK17 + Gradle 8.5)
 JAVA_HOME=/path/to/jdk17 /path/to/gradle clean :app:assembleDebug
-cp app/build/outputs/apk/debug/app-debug.apk ./intentcam.apk
-
-# Run the 100-fixture benchmark
-python3 -u profiling/eval_rctw_v2.py --resize 768 --quality 80
-```
-
-Output: `intentcam.apk` (~10 MB). Default settings assume
-`ANTHROPIC_BASE_URL=https://api.minimaxi.com/anthropic` and a
-`MiniMax-M3` model. Override via the Settings screen or replace
-`Models.kt` `DEFAULT_TOKEN` placeholder before building.
 
 ## Run on device
 
@@ -42,13 +32,6 @@ dispatch, `[TOOL_ERR]` / `[FATAL]` / `[ANALYZER]` exceptions, `[BUBBLE]`
 state transitions.  Each entry is auto-wrapped — long stack traces are
 not truncated.
 
-Exception logs use the helper `formatThrowable(t)` and look like:
-
-```
-[BUBBLE] select id=abc123 title='菜单识别'    ← state transition
-[TOOL_ERR] read_text: IllegalStateException: 模型 20000ms 内未完成 | caused by kotlinx.coroutines.TimeoutCancellationException | at com.example.intentcam.LlmClient.streamToolUseBody(LlmClient.kt:253)
-```
-
 To capture logs to a file while reproducing a bug on a real device:
 
 ```bash
@@ -58,21 +41,6 @@ To capture logs to a file while reproducing a bug on a real device:
 
 Filter includes `IntentCam:V`, `AndroidRuntime:E`, `System.err:W`, and
 `DEBUG:V` (in-app overlay entries).  Output lands in `./intentcam.log`.
-
-## Eval benchmark (100 real RCTW-17 photos)
-
-```
-$ python3 -u profiling/eval_rctw_v2.py --resize 768 --quality 80
-fixtures: 100
-average composite: 0.652
-```
-
-- `r1_score 0.79` — model reliably picks `zoom_in` first
-- `r2_type 1.00` — `emit_bubble.type = 'info'` consistent
-- `r2_text 0.00-0.50` — model paraphrases instead of transcribing
-  visible text verbatim; next iteration will close this gap
-
-See ARCHITECTURE.md "Eval benchmark" for full details.
 
 ## Repository layout
 
@@ -98,21 +66,6 @@ profiling/
   runs/                    measurement trail of past eval runs
 ```
 
-## Build
-
-```bash
-# standard
-JAVA_HOME=/path/to/jdk17 /path/to/gradle clean :app:assembleDebug
-cp app/build/outputs/apk/debug/app-debug.apk ./intentcam.apk
-```
-
-APK is ~10 MB at 768/q80 + native-q95 for zoom crops. Run `clean`
-before measuring size — incremental builds accumulate stale native
-libs and inflate the artifact.
-
 ## License
 
-Public repository — no license file yet. The LLM API token in
-`Models.kt` is a placeholder (`REPLACE_AT_RUNTIME`); real builds
-need either a runtime Settings entry or an env-var-injected
-default.
+Public repository — no license file yet. 
