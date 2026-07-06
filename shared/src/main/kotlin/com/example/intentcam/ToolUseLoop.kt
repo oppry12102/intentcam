@@ -512,6 +512,13 @@ class ToolUseLoop(
                         createdAtMs = System.currentTimeMillis(),
                         toolName = chosenToolName,
                         intentFocus = null,  // emit_bubble body doesn't carry it yet
+                        // emit_bubble body populates tb.details from
+                        // the model's details[] JSON array.  Without
+                        // this, every Bubble from runCycle has an
+                        // empty details list even when the model did
+                        // emit the rows — the r2_text plateau's
+                        // companion symptom.
+                        details = tb.details,
                     ),
                     firstToolName = chosenToolName,
                 )
