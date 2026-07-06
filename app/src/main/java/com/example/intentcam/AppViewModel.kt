@@ -93,10 +93,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun isBusy(): Boolean {
         if (analyzing.get()) return true
-        if (_state.value.phase != Phase.SCANNING) return true
         // When the user is looking at a bubble's detail view, the camera
         // pipeline must stay quiet so the displayed image doesn't go stale.
-        if (_state.value.selectedBubble != null) return true
+        // SelectedBubble and phase are kept in sync by [selectBubble] /
+        // [clearBubbleSelection], so checking phase alone is enough.
+        if (_state.value.phase != Phase.SCANNING) return true
         return false
     }
 
@@ -135,12 +136,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Append one entry to the debug log.  No-ops when [UiState.debugEnabled]
      * is false so the toggle actually saves the cost of string formatting.
-     * Newlines are stripped and the message is capped at 160 chars so a
-     * rogue caller can't blow past the 3-line render cap.
+     * Newlines are stripped so each entry renders as one LazyColumn row,
+     * but no character cap — callers pass full exception messages / stack
+     * traces and we let the panel auto-wrap.  DEBUG mode is for hunting
+     * crashes; truncation defeats the purpose.
      */
     private fun logDebug(tag: String, message: String) {
         if (!_state.value.debugEnabled) return
-        val safe = message.replace('\n', ' ').take(160)
+        val safe = message.replace('\n', ' ').replace('\r', ' ')
         val entry = DebugLogEntry(
             timestampMs = System.currentTimeMillis(),
             seq = debugLogSeq.incrementAndGet(),
@@ -168,7 +171,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // up a stale frame if/when it wakes up.
             return
         }
-        if (_state.value.selectedBubble != null) return
         latestFrame = frame
     }
 
@@ -209,10 +211,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 runRecognitionCycle(frame)
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
-                logDebug(
-                    "FATAL",
-                    "${e.javaClass.simpleName}: ${e.message?.take(160) ?: "无消息"}"
-                )
+                logDebug("FATAL", formatThrowable(e))
                 _state.value = _state.value.copy(error = e.message)
             } finally {
                 analyzing.set(false)
@@ -275,7 +274,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     analyzing = false,
                     error = outcome.message,
                 )
-                logDebug("FINAL_ERR", outcome.message.take(160))
+                logDebug("FINAL_ERR", outcome.message)
             }
         }
     }
@@ -331,18 +330,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * User tapped a bubble.  Show its detail (full image + title + detail).
-     * The camera pipeline stays quiet until [clearBubbleSelection] runs.
+     * User tapped a bubble.  Show its detail (full image + title + detail)
+     * AND flip phase to SHOWING_DETAIL — the two must move together.  The
+     * previous version only set [selectedBubble], which left phase=SCANNING
+     * and broke the UI (DetailScreen's gate is `phase==SHOWING_DETAIL &&
+     * selectedBubble!=null`) AND silently dropped every captured frame via
+     * `onFrame`'s selectedBubble guard.  Symptom: tap a bubble (nothing
+     * visible happens), tap shutter again → "[CAP] 500ms 内没拿到帧".
      */
     fun selectBubble(bubble: Bubble) {
         if (_state.value.selectedBubble?.id == bubble.id) return
-        _state.value = _state.value.copy(selectedBubble = bubble)
+        logDebug("BUBBLE", "select id=${bubble.id} title='${bubble.title.take(40)}'")
+        _state.value = _state.value.copy(
+            selectedBubble = bubble,
+            phase = Phase.SHOWING_DETAIL,
+        )
     }
 
     /** User dismissed the detail view; rearm the capture pipeline. */
     fun clearBubbleSelection() {
         if (_state.value.selectedBubble == null) return
-        _state.value = _state.value.copy(selectedBubble = null)
+        logDebug("BUBBLE", "clearSelection")
+        _state.value = _state.value.copy(
+            selectedBubble = null,
+            phase = Phase.SCANNING,
+        )
     }
 
     /**
@@ -391,4 +403,42 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         settings.reset()
         client.config = settings.load()
     }
+}
+
+/**
+ * Format a [Throwable] for the in-app debug log: top-level class+message,
+ * followed by the cause chain (one level is usually enough), followed by
+ * the first few stack frames.  Newlines are stripped so the result still
+ * fits one [DebugLogEntry] row.  DEBUG mode is for hunting crashes; the
+ * caller wants to see WHERE it threw, not just WHAT.
+ *
+ * Example:
+ *   IllegalStateException: streamToolUse: 模型 20000ms 内未完成
+ *     caused by kotlinx.coroutines.TimeoutCancellationException
+ *     at com.example.intentcam.LlmClient.streamToolUseBody$lambda...
+ */
+fun formatThrowable(t: Throwable): String {
+    val sb = StringBuilder()
+    sb.append(t.javaClass.simpleName)
+    sb.append(": ")
+    sb.append(t.message ?: "(no message)")
+    var cause: Throwable? = t.cause
+    var depth = 0
+    while (cause != null && depth < 3) {
+        sb.append(" | caused by ")
+        sb.append(cause.javaClass.simpleName)
+        sb.append(": ")
+        sb.append(cause.message ?: "(no message)")
+        cause = cause.cause
+        depth++
+    }
+    // Top 3 frames are usually enough to identify the failing call site
+    // without dumping hundreds of frames of androidx / kotlin coroutine
+    // machinery into the panel.
+    t.stackTrace.take(3).forEach { f ->
+        sb.append(" | at ")
+        sb.append(f.className).append('.').append(f.methodName)
+        sb.append('(').append(f.fileName ?: "?").append(':').append(f.lineNumber).append(')')
+    }
+    return sb.toString()
 }

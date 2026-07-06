@@ -91,7 +91,7 @@ class ToolUseLoop(
         val toolResult = try {
             def.body(ToolContext(jpeg = fullRes, originalFullRes = fullRes, thumbnail = thumbnail, userText = "", config = config), parsedInput)
         } catch (e: Throwable) {
-            log("TOOL_ERR", "${def.name}: ${e.javaClass.simpleName}: ${e.message?.take(160) ?: ""}")
+            log("TOOL_ERR", "${def.name}: ${formatThrowable(e)}")
             ToolResult(toolSummary = "工具执行失败：${e.message?.take(80) ?: "未知错误"}")
         }
         val seedUser = JSONObject()
@@ -131,7 +131,7 @@ class ToolUseLoop(
                     toolsJson = toolsJson,
                 )
             } catch (e: Throwable) {
-                log("TOOL_ERR", "${e.javaClass.simpleName}: ${e.message?.take(160) ?: ""}")
+                log("TOOL_ERR", formatThrowable(e))
                 return Outcome.Error(e.message ?: "LLM 失败")
             }
             log(
@@ -303,7 +303,7 @@ class ToolUseLoop(
                     toolsJson = toolsJson,
                 )
             } catch (e: Throwable) {
-                log("TOOL_ERR", "${e.javaClass.simpleName}: ${e.message?.take(160) ?: ""}")
+                log("TOOL_ERR", formatThrowable(e))
                 return Outcome.Error(e.message ?: "LLM 失败")
             }
             log(
@@ -387,10 +387,7 @@ class ToolUseLoop(
                         parsedInput,
                     )
                 } catch (e: Throwable) {
-                    log(
-                        "TOOL_ERR",
-                        "${def.name}: ${e.javaClass.simpleName}: ${e.message?.take(160) ?: ""}"
-                    )
+                    log("TOOL_ERR", "${def.name}: ${formatThrowable(e)}")
                     ToolResult(toolSummary = "工具执行失败：${e.message?.take(80) ?: "未知错误"}")
                 }
                 log("TOOL", "← ${def.name} final=${toolResult.finalBubble} needsInput=${toolResult.needsUserInput} followUp=${toolResult.followUpJpeg != null}")
