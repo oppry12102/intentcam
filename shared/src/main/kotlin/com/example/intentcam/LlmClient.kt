@@ -328,9 +328,22 @@ class LlmClient(@Volatile var config: LlmConfig) {
     companion object {
         val JSON_MEDIA = "application/json; charset=utf-8".toMediaType()
 
-        /** Hard cap on output tokens per call.  Recognition answers are
-         *  short JSON blobs; 256 is plenty. */
-        const val MAX_TOKENS = 256
+        /** Hard cap on output tokens per call.
+         *
+         *  Was 256, which silently truncated `emit_bubble` on dense
+         *  scenes: the tool is required to put *all* visible text in
+         *  `content` **and** emit one `details[]` row per text region.
+         *  A busy storefront / receipt / menu blows past 256 tokens
+         *  (~150 CJK chars once you count the JSON scaffolding), so the
+         *  stream got cut mid-`details`, dropping both keywords and
+         *  rows — the dominant cause of the r2_text 0.46 plateau and
+         *  the 56-fixture cluster stuck at exactly 0.5.
+         *
+         *  1024 covers the largest real answers with headroom; short
+         *  answers still stop early (the model emits `stop_reason=
+         *  end_turn` well before the cap), so the cost is only paid on
+         *  scenes that actually need it. */
+        const val MAX_TOKENS = 1024
 
         /** Lock at 0 to keep intent classification deterministic. */
         const val REQUEST_TEMPERATURE = 0.0
@@ -412,8 +425,11 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "1. 一次看 1-5 张图（已附，1 张概览 + 最多 4 张四象限裁剪），定位大致内容 + 找到所有文字区域（通常四象限裁剪已经够清楚）。\n" +
                     "2. 如果四象限还看不清某块，调 zoom_in 放大。\n" +
                     "3. **文字靠 zoom_in 一遍遍看清**——印刷体一次能看清；小字 / 艺术字 / 模糊调多次，每次聚焦更小的子区域。\n" +
-                    "4. 思考用户为什么拍这张图（意图）。\n" +
-                    "5. 调 emit_bubble 收尾。\n" +
+                    "4. **图里有小字 / 模糊字 / 手写体 / 艺术字时，至少 zoom_in 一次确认**再收尾；" +
+                        "纯印刷大字 / 招牌 / 路牌 / 表格四象限看清后可直接收尾。" +
+                        "（早期无条件强制 zoom_in 把 r2 拉下来：多花了 20s 预算却没换回更准的答案，所以现在按需。）\n" +
+                    "5. 思考用户为什么拍这张图（意图）。\n" +
+                    "6. 调 emit_bubble 收尾。\n" +
                     "\n" +
                     "## content 字段要求（**最严格**）\n" +
                     "content 必须包含图里**所有可见**文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式，**原样**写出来：\n" +
@@ -422,6 +438,15 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "  - 收据 → \"合计 ¥168.50, 微信支付\"\n" +
                     "  - 菜单 → \"宫保鸡丁 ¥38, 鱼香肉丝 ¥42\"\n" +
                     "  - 门牌 → \"1203\"\n" +
+                    "\n" +
+                    "## details 字段要求（**和 content 同等重要**）\n" +
+                    "**图里每一处独立的文字 / 数字 / 品牌 / 日期 / 价格，都要在 details 里对应一行**，" +
+                    "value 写**逐字原文**（不要意译、不要概括）：\n" +
+                    "  - {kind:\'brand\', label:\'品名\', value:\'工夫红茶\'}\n" +
+                    "  - {kind:\'number\', label:\'净含量\', value:\'250g\'}\n" +
+                    "  - {kind:\'price\', label:\'合计\', value:\'¥168.50\'}\n" +
+                    "  - {kind:\'text\', label:\'招牌\', value:\'大懒人冒菜\'}\n" +
+                    "**能看清多少文字就写多少行**——details 为空 = 没完成任务。宁可多写几行，也别漏。\n" +
                     "\n" +
                     "## 反幻觉（**关键**）\n" +
                     "**看不清的字宁可不写也别瞎猜**。content 漏一个字符比写错一个好——用户会按你写的内容去做事，错字比漏字危险得多。" +
