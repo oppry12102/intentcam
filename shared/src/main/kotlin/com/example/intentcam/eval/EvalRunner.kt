@@ -274,12 +274,13 @@ internal class EvalRunner(private val config: EvalConfig) {
         val empty = JSONObject()
         val r1Details = JSONObject()
         // ToolUseLoop.Outcome exposes firstToolName — the first
-        // non-final tool the model invoked (zoom_in / read_text if it
-        // did reconnaissance, emit_bubble if it went straight to the
-        // final summary, null if the model just emitted text without
-        // any tool call).  Score the choice directly so the metric
-        // reflects "did the model think before answering?" instead of
-        // collapsing to "did the cycle end with a bubble?".
+        // non-final tool the model invoked (zoom_in / read_text /
+        // compare_text if it did reconnaissance, emit_bubble if it
+        // went straight to the final summary, null if the model just
+        // emitted text without any tool call).  Score the choice
+        // directly so the metric reflects "did the model think
+        // before answering?" instead of collapsing to "did the
+        // cycle end with a bubble?".
         //
         // The penalty for skipping reconnaissance depends on whether
         // the fixture has text content: for text-heavy fixtures
@@ -287,10 +288,18 @@ internal class EvalRunner(private val config: EvalConfig) {
         // expected_details) the model really should zoom_in or
         // read_text to verify text; for non-text fixtures the 5
         // round-1 images already let the model answer correctly.
+        //
+        // End-cloud (2026-07-07+): the round-1 OCR hint is the
+        // verbatim character source — a model that trusts OCR enough
+        // to skip zoom_in and still nails the text is doing the
+        // right thing, not lazy.  Bumped skipReconScore from 0.5 to
+        // 0.85 to reflect this; we keep a small penalty so a model
+        // that skips recon AND drops text still loses points (r2
+        // covers the "did you actually get the text right" half).
         val firstTool = outcome.firstToolName
         val hasText = scene.optJSONArray("expected_description_keywords")?.length()?.let { it > 0 } == true ||
             scene.optJSONArray("expected_details")?.length()?.let { it > 0 } == true
-        val skipReconScore = if (hasText) 0.5 else 1.0
+        val skipReconScore = if (hasText) 0.85 else 1.0
         val pickScore: Double
         val pickedLabel: String
         when {
@@ -306,7 +315,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 pickScore = skipReconScore
                 pickedLabel = "emit_bubble"
             }
-            firstTool == "zoom_in" || firstTool == "read_text" -> {
+            firstTool == "zoom_in" || firstTool == "read_text" || firstTool == "compare_text" -> {
                 pickScore = 1.0
                 pickedLabel = firstTool
             }

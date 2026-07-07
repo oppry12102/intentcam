@@ -99,31 +99,136 @@ fun ToolRegistry.registerDefaultTools() {
         )
     )
 
-    // ── 2. read_text ────────────────────────────────────────────
-    // **Fallback OCR — the LLM should normally read text itself.**
+    // ── 2. compare_text ────────────────────────────────────────────
+    // Pure on-device diff between the model's own reading and the
+    // round-1 OCR hint.  No LLM round-trip — runs in-process on the
+    // cached [OcrResult] from [ToolContext.ocrCache].
     //
-    // 1-only image strategy (since 2026-07-06): round 1 ships the
-    // thumbnail alone.  The model's primary path is "look at the
-    // thumbnail → call zoom_in for regions it can't read → emit
-    // bubble when content is captured".  This tool exists as a last
-    // resort when zoom_in still hasn't yielded legible text, AND
-    // the text looks like clear printed type (menu prices, receipt
-    // digits, door numbers).
+    // Why: the round-1 OCR hint ships as the "first opinion" on
+    // verbatim characters; the model still looks at the image
+    // itself and may spot mismatches (OCR missed a line, OCR
+    // misread a character, OCR hallucinated a word).  Instead of
+    // the model re-reading the whole image, it sends its own
+    // reading as `claim` and gets back a per-row conflict map
+    // (agreed / ocr_only / llm_only / disagree) + a recommendation
+    // (trust_ocr / trust_llm / zoom_in_required).  Cheaper than
+    // another LLM call, and the structured output is easier for
+    // the model to reason about than a free-form re-read.
     //
-    // Why not primary: on-device OCR is unreliable on calligraphy,
-    // handwriting, artistic fonts, blurry text — and the model's
-    // confident-but-wrong OCR output pollutes emit_bubble.content
-    // worse than no OCR at all.  The LLM's own reading (thumbnail +
-    // zoom_in) is the primary path; this tool is a deterministic
-    // backup for printed text.
+    // Implementation: pure Kotlin string diff.  We don't need a
+    // heavy NLP dependency for this — the OCR blocks are already
+    // sentence/word granularity and `claim` is what the model
+    // emitted verbatim into its own reasoning.  Match by normalized
+    // Levenshtein similarity per block, classify the relationship,
+    // emit JSON.
+    register(
+        ToolDef(
+            name = "compare_text",
+            description = "把**你**从图上读到的字符 vs 第 1 轮 OCR hint 里的字符做端侧 diff（不调云端，省 round-trip）。\n" +
+                "**什么时候调**：你看完图后发现 OCR hint 的某些行和你自己读的不一致——OCR 漏字 / 错字 / 编字 / 你对某行不确定。\n" +
+                "**参数**：\n" +
+                "  - claim: 你从图上**自己读到的**字符串（一段文字，整段或部分）\n" +
+                "  - ocr_text: （可选）你想对比的 OCR hint 某行 / 某几行文字。如果不传，默认对**全部** OCR hint 做 diff。\n" +
+                "**返回值**：每行的 conflict 标记 + 推荐动作 —\n" +
+                "  - agreed: 你俩读的字一致 → trust_ocr（直接 verbatim 用 OCR 字符）\n" +
+                "  - ocr_only: OCR 有但你没提到 → zoom_in_required（可能 OCR 错或你漏看）\n" +
+                "  - llm_only: 你有但 OCR 没有 → zoom_in_required（可能你幻觉或 OCR 漏）\n" +
+                "  - disagree: 你俩都有但内容不一样 → trust_llm（你图上看到的优先）或 zoom_in_required\n" +
+                "**用法**：调完一次拿到的 diff 结果决定哪些行要 zoom_in / read_text 重扫 / 直接 drop。",
+            inputSchema = JSONObject().apply {
+                put("type", "object")
+                put("properties", JSONObject().apply {
+                    put("claim", JSONObject().apply {
+                        put("type", "string")
+                        put("description", "你从图上读到的字符串（整段或部分）")
+                    })
+                    put("ocr_text", JSONObject().apply {
+                        put("type", "string")
+                        put("description", "（可选）OCR hint 的某行 / 某几行文字。不传则对全部 OCR hint 做 diff。")
+                    })
+                })
+                put("required", JSONArray().put("claim"))
+                put("additionalProperties", false)
+            },
+            body = { ctx, input ->
+                val claim = input.optString("claim", "").trim()
+                if (claim.isBlank()) {
+                    ToolResult(
+                        toolSummary = "compare_text: claim 为空，没有可对比的内容"
+                    )
+                } else {
+                    val ocrText = input.optString("ocr_text", "").trim()
+                    // Select OCR blocks: explicit ocr_text → substring
+                    // match against OCR blocks; otherwise full cache.
+                    val ocrBlocks: List<OcrBlock> = if (ocrText.isNotBlank()) {
+                        val needle = ocrText.lowercase()
+                        ctx.ocrCache.blocks.filter { it.text.lowercase().contains(needle) }
+                            .ifEmpty { ctx.ocrCache.blocks }
+                    } else {
+                        ctx.ocrCache.blocks
+                    }
+                    if (ocrBlocks.isEmpty()) {
+                        ToolResult(
+                            toolSummary = "compare_text: OCR cache 为空（OCR 后端未安装或图上无文字）。" +
+                                " 你读到的 claim 是：'$claim'。"
+                        )
+                    } else {
+                        val diffs = compareClaimAgainstBlocks(claim, ocrBlocks)
+                        val sb = StringBuilder()
+                        sb.append("compare_text diff:\n")
+                        for (d in diffs) {
+                            sb.append("  • [${d.conflict}] ${d.text}")
+                            if (d.ocrBlock != null) {
+                                val c = d.ocrBlock
+                                sb.append(" | conf=${"%.2f".format(c.confidence)}")
+                                if (c.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD) sb.append(" [LOW]")
+                            }
+                            sb.append(" → ${d.recommendation}\n")
+                        }
+                        val summary = "agreed=${diffs.count { it.conflict == "agreed" }} " +
+                            "ocr_only=${diffs.count { it.conflict == "ocr_only" }} " +
+                            "llm_only=${diffs.count { it.conflict == "llm_only" }} " +
+                            "disagree=${diffs.count { it.conflict == "disagree" }}"
+                        sb.append("summary: ").append(summary)
+                        ToolResult(toolSummary = sb.toString())
+                    }
+                }
+            },
+        )
+    )
+
+    // ── 3. read_text ────────────────────────────────────────────
+    // Sub-region OCR re-scan.  Reserved for two scenarios where the
+    // round-1 OCR hint isn't enough on its own:
+    //
+    //   1. OCR hint has a [LOW]-confidence line the model wants to
+    //      verify by re-scanning at higher fidelity.
+    //   2. OCR hint missed a region entirely (small text the engine
+    //      dropped, occluded area the LLM spotted in the image).
+    //
+    // NOT for routine text reading: round 1 already shipped the OCR
+    // hint (top-30 blocks sorted by confidence with [LOW] tags) as
+    // the **first opinion** on verbatim characters.  Calling
+    // read_text on text the OCR hint already nailed wastes a
+    // round-trip.
+    //
+    // Returns per-line OCR with **normalized [0,1] 4-corner
+    // coordinates** so the model can map each text line back to its
+    // position in the image (top-left / top-right / bottom-right /
+    // bottom-left vertex order).
     register(
         ToolDef(
             name = "read_text",
-            description = "[**默认不要用 — 本地 OCR 兜底**] 读取图像某区域的逐字文字内容（on-device 中英 OCR，完全离线）。" +
-                "**什么时候调**：你已经 zoom_in 多次还看不清，且文字看起来像清晰的**印刷体**（菜单价签、收据数字、门牌号、说明书标题）。" +
-                "**什么时候不要调**：书法、手写、艺术字、模糊图、远景——OCR 在这些场景不可靠,调了会把噪声喂进你的答案。" +
-                "**默认靠你自己读**——round 1 已经附了 1 张概览;要看清就用 zoom_in 放大区域。你直接读图比 OCR 更可控、更准。" +
-                "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；source 默认 'last'（链式），要扫原图不同区域用 'original'。",
+            description = "对图里某区域重新跑 on-device OCR（中英离线，HMS ML Kit），返回**逐字字符串 + 4 点坐标 + 可信度**。\n" +
+                "**什么时候调**：\n" +
+                "  1. **OCR hint 里有 [LOW] 行**（conf<0.5）你想验证——直接用 OCR hint 给的 bbox 作为 x/y/w/h 重扫。\n" +
+                "  2. **OCR hint 没识别到的区域**，但你在图上看到有文字（菜单小字、被遮挡行）——用你看到的 bbox 重扫。\n" +
+                "**什么时候不要调**：\n" +
+                "  - OCR hint 已经清晰识别（conf>=0.5）的印刷体——重复 OCR 是浪费 round-trip。\n" +
+                "  - 书法、手写、艺术字、模糊图——OCR 在这些场景不可靠，调了会把噪声喂进你的答案。\n" +
+                "**参数**：x, y, w, h 是归一化坐标 ∈ [0, 1]（直接 verbatim 用 OCR hint 给的 bbox）。" +
+                "source 默认 'last'（链式），要扫原图不同区域用 'original'。\n" +
+                "**返回值**：每行 text + 4 个角点坐标 (归一化 [0,1]) + 可信度。坐标顺序：左上 → 右上 → 右下 → 左下。",
             inputSchema = JSONObject().apply {
                 put("type", "object")
                 put("properties", JSONObject().apply {
@@ -165,22 +270,45 @@ fun ToolRegistry.registerDefaultTools() {
                         toolSummary = "read_text 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})"
                     )
                 } else if (OcrEngine.impl == null) {
-                    // Fail-closed: no OCR backend installed in this build
-                    // (ML Kit was removed for APK-size reasons; see
-                    // app/build.gradle.kts).  Surface a clear
-                    // "backend missing" message so it's distinguishable
-                    // from "OCR ran but found nothing".
+                    // Fail-closed: no OCR backend installed in this build.
+                    // Surface a clear "backend missing" message so it's
+                    // distinguishable from "OCR ran but found nothing".
                     ToolResult(
                         toolSummary = "read_text: 当前构建未安装 OCR 后端 (read_text 兜底不可用)。" +
                             "请直接通过 zoom_in 放大看清,或调 emit_bubble 自行读图。"
                     )
                 } else {
                     try {
-                        val text = OcrEngine.recognize(cropBytes).trim()
-                        if (text.isEmpty()) {
+                        val result = OcrEngine.recognize(cropBytes)
+                        if (result.blocks.isEmpty()) {
                             ToolResult(toolSummary = "OCR: 该区域未识别到文字")
                         } else {
-                            ToolResult(toolSummary = "OCR (${text.length}字): $text")
+                            // Build a multi-line tool result.  Each line:
+                            // "text | bbox=[(x1,y1),(x2,y2),(x3,y3),(x4,y4)] conf=0.xx"
+                            // Coordinates are normalized [0,1] in the
+                            // CROPPED region's frame, matching what the
+                            // model asked for (so it can map back to the
+                            // source image by offsetting with the
+                            // x/y/w/h it passed in).
+                            val sb = StringBuilder()
+                            sb.append("OCR (${result.blocks.size} 行):\n")
+                            for (b in result.blocks) {
+                                val corners = b.corners
+                                val bbox = if (corners.size >= 4) {
+                                    val tl = corners[0]; val tr = corners[1]
+                                    val br = corners[2]; val bl = corners[3]
+                                    "[(${"%.2f".format(tl.x)},${"%.2f".format(tl.y)})," +
+                                        "(${"%.2f".format(tr.x)},${"%.2f".format(tr.y)})," +
+                                        "(${"%.2f".format(br.x)},${"%.2f".format(br.y)})," +
+                                        "(${"%.2f".format(bl.x)},${"%.2f".format(bl.y)})]"
+                                } else "[]"
+                                sb.append("  • \"${b.text}\" bbox=$bbox " +
+                                    "conf=${"%.2f".format(b.confidence)}\n")
+                            }
+                            // Trailing plain-text dump for easy quoting
+                            // into emit_bubble.content.
+                            sb.append("\nfull_text: ").append(result.fullText)
+                            ToolResult(toolSummary = sb.toString().trimEnd())
                         }
                     } catch (e: Throwable) {
                         ToolResult(
@@ -192,7 +320,7 @@ fun ToolRegistry.registerDefaultTools() {
         )
     )
 
-    // ── 3. emit_bubble ───────────────────────────────────────────
+    // ── 4. emit_bubble ───────────────────────────────────────────
     // End the cycle with a structured final answer.  Two stages:
     //   - content:        what you see in the image (after any zoom_ins)
     //   - intent:         what the user probably wants to do with it
@@ -249,7 +377,23 @@ fun ToolRegistry.registerDefaultTools() {
                                 })
                                 put("value", JSONObject().apply {
                                     put("type", "string")
-                                    put("description", "从图中读到的值")
+                                    put("description", "从图中读到的值（verbatim 复制 OCR hint 的字符）")
+                                })
+                                put("bbox", JSONObject().apply {
+                                    put("type", "array")
+                                    put("description", "（可选）4 个角点坐标 [(x1,y1),(x2,y2),(x3,y3),(x4,y4)] 归一化 [0,1]，" +
+                                        "顺序: 左上→右上→右下→左下。直接 verbatim 复制 OCR hint 给的 bbox，" +
+                                        "详情页可高亮该行在原图的位置。")
+                                    put("items", JSONObject().apply {
+                                        put("type", "array")
+                                        put("minItems", 2)
+                                        put("maxItems", 2)
+                                        put("items", JSONObject().apply {
+                                            put("type", "number"); put("minimum", 0); put("maximum", 1)
+                                        })
+                                    })
+                                    put("minItems", 4)
+                                    put("maxItems", 4)
                                 })
                             })
                             put("required", JSONArray().put("kind").put("label").put("value"))
@@ -273,9 +417,15 @@ fun ToolRegistry.registerDefaultTools() {
                         val kind = d.optString("kind", "text").ifBlank { "text" }
                         val label = d.optString("label", "").trim()
                         val value = d.optString("value", "").trim()
-                        if (label.isNotEmpty() && value.isNotEmpty()) {
-                            details.add(Detail(kind = kind, label = label, value = value))
-                        }
+                        if (label.isEmpty() || value.isEmpty()) continue
+                        // Parse bbox: 4 corners × 2 coords.  Optional —
+                        // when the model didn't echo the OCR hint's
+                        // bbox (e.g. generic visual details with no
+                        // textual anchor) we just leave it null.
+                        val bbox = parseBbox(d.optJSONArray("bbox"))
+                        details.add(
+                            Detail(kind = kind, label = label, value = value, bbox = bbox)
+                        )
                     }
                 }
                 ToolResult(
@@ -290,4 +440,187 @@ fun ToolRegistry.registerDefaultTools() {
             },
         )
     )
+}
+
+// ── emit_bubble bbox helper ────────────────────────────────────────
+
+/** Parse the optional `bbox` field from an emit_bubble details[]
+ *  item.  Returns null if the field is missing / malformed /
+ *  wrong-length so the model can leave it blank for visual rows
+ *  without positional anchors. */
+private fun parseBbox(arr: org.json.JSONArray?): List<OcrPoint>? {
+    if (arr == null || arr.length() != 4) return null
+    val points = mutableListOf<OcrPoint>()
+    for (i in 0 until 4) {
+        val pair = arr.optJSONArray(i) ?: return null
+        if (pair.length() != 2) return null
+        val x = pair.optDouble(0, Double.NaN).toFloat()
+        val y = pair.optDouble(1, Double.NaN).toFloat()
+        if (x.isNaN() || y.isNaN()) return null
+        points.add(OcrPoint(x = x.coerceIn(0f, 1f), y = y.coerceIn(0f, 1f)))
+    }
+    return points
+}
+
+// ── compare_text helpers ───────────────────────────────────────────
+
+/** One row in the compare_text diff result.  Pure data; the tool
+ *  body formats it as a multi-line string the model reads. */
+private data class CompareDiff(
+    /** "agreed" | "ocr_only" | "llm_only" | "disagree" */
+    val conflict: String,
+    /** The text fragment this row is about.  For "ocr_only" / "disagree"
+     *  this is the OCR block's text; for "llm_only" it's a substring
+     *  of `claim` not matched by any OCR block; for "agreed" it's
+     *  the (normalized-equal) shared fragment. */
+    val text: String,
+    /** The OCR block this row corresponds to, if any.  Null for
+     *  "llm_only" rows. */
+    val ocrBlock: OcrBlock?,
+    /** "trust_ocr" | "trust_llm" | "zoom_in_required" — what the
+     *  model should do next for this row. */
+    val recommendation: String,
+)
+
+/**
+ * Compute per-row diff between the model's `claim` and a list of
+ * OCR blocks.  Pure Kotlin string algorithm — no LLM call.
+ *
+ * Heuristics (intentionally simple):
+ *  - Normalize whitespace + lowercase for matching only.
+ *  - For each OCR block, check if `claim` contains the block text
+ *    (after normalization) → "agreed".
+ *  - If `claim` is fully consumed → done.
+ *  - Remaining OCR blocks → "ocr_only" (OCR has but LLM didn't).
+ *  - Remaining `claim` fragments → "llm_only" (LLM has but OCR didn't).
+ *  - "disagree" is reserved for the rare case where an OCR block
+ *    has high similarity (>=0.5) to a `claim` fragment but they
+ *    aren't substring-equal.
+ *
+ * Returns: ordered list of [CompareDiff] (OCR blocks in order,
+ * followed by LLM-only fragments).
+ */
+private fun compareClaimAgainstBlocks(
+    claim: String,
+    ocrBlocks: List<OcrBlock>,
+): List<CompareDiff> {
+    val claimNorm = normalizeForMatch(claim)
+    if (claimNorm.isEmpty() || ocrBlocks.isEmpty()) return emptyList()
+    val results = mutableListOf<CompareDiff>()
+    var remainingClaim = claimNorm
+
+    for (block in ocrBlocks) {
+        val blockNorm = normalizeForMatch(block.text)
+        if (blockNorm.isEmpty()) continue
+        when {
+            // OCR text is fully inside the claim → agreed
+            remainingClaim.contains(blockNorm) -> {
+                results.add(
+                    CompareDiff(
+                        conflict = "agreed",
+                        text = block.text,
+                        ocrBlock = block,
+                        recommendation = "trust_ocr",
+                    )
+                )
+                // Strip the matched fragment so we don't double-count.
+                remainingClaim = remainingClaim.replace(blockNorm, " ", ignoreCase = true)
+            }
+            // OCR text is high-similarity to a claim fragment (>=0.5)
+            // → disagree (LLM and OCR both have something here but
+            // the wording diverges).
+            similarity(blockNorm, remainingClaim) >= 0.5 -> {
+                results.add(
+                    CompareDiff(
+                        conflict = "disagree",
+                        text = block.text,
+                        ocrBlock = block,
+                        recommendation = if (block.confidence >= OcrResult.LOW_CONFIDENCE_THRESHOLD) {
+                            "zoom_in_required"
+                        } else {
+                            "trust_llm"
+                        },
+                    )
+                )
+            }
+            // OCR text is unique to OCR (not in claim) → ocr_only
+            else -> {
+                results.add(
+                    CompareDiff(
+                        conflict = "ocr_only",
+                        text = block.text,
+                        ocrBlock = block,
+                        // High-conf OCR: model probably missed this
+                        // line → zoom_in_required.  Low-conf OCR:
+                        // don't trust it, let the model decide
+                        // whether to drop → trust_llm.
+                        recommendation = if (block.confidence >= OcrResult.LOW_CONFIDENCE_THRESHOLD) {
+                            "zoom_in_required"
+                        } else {
+                            "trust_llm"
+                        },
+                    )
+                )
+            }
+        }
+    }
+
+    // Remaining `claim` content → llm_only (model hallucinated or
+    // OCR missed).  We collapse whitespace and report as a single
+    // fragment; the model can drill down on the specific span if
+    // it cares.
+    remainingClaim = remainingClaim.trim().replace(Regex("\\s+"), " ")
+    if (remainingClaim.isNotEmpty()) {
+        results.add(
+            CompareDiff(
+                conflict = "llm_only",
+                text = remainingClaim,
+                ocrBlock = null,
+                recommendation = "zoom_in_required",
+            )
+        )
+    }
+    return results
+}
+
+/** Strip whitespace and lowercase for substring matching.  We
+ *  intentionally do NOT normalize Unicode / punctuation — the goal
+ *  is to catch verbatim differences, not paper over them. */
+private fun normalizeForMatch(s: String): String =
+    s.trim().lowercase()
+
+/** Quick similarity ratio: 1 - (levenshtein / max(len)).  O(n*m)
+ *  but fine for short claim / block strings (typically < 100 chars). */
+private fun similarity(a: String, b: String): Float {
+    if (a.isEmpty() && b.isEmpty()) return 1f
+    if (a.isEmpty() || b.isEmpty()) return 0f
+    val dist = levenshtein(a, b)
+    val maxLen = maxOf(a.length, b.length)
+    return 1f - dist.toFloat() / maxLen
+}
+
+/** Iterative Levenshtein distance.  Returns the number of single-
+ *  character edits needed to turn `a` into `b`. */
+private fun levenshtein(a: String, b: String): Int {
+    if (a == b) return 0
+    if (a.isEmpty()) return b.length
+    if (b.isEmpty()) return a.length
+    var prev = IntArray(b.length + 1) { it }
+    var curr = IntArray(b.length + 1)
+    for (i in 1..a.length) {
+        curr[0] = i
+        for (j in 1..b.length) {
+            val cost = if (a[i - 1] == b[j - 1]) 0 else 1
+            curr[j] = minOf(
+                curr[j - 1] + 1,        // insertion
+                prev[j] + 1,            // deletion
+                prev[j - 1] + cost,     // substitution
+            )
+        }
+        // Swap rows: prev becomes the row we just computed.
+        val tmp = prev
+        prev = curr
+        curr = tmp
+    }
+    return prev[b.length]
 }

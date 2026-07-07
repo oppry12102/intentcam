@@ -80,8 +80,16 @@ class ToolUseLoop(
         val parsedInput = runCatching { JSONObject(toolInputJson) }
             .getOrElse { JSONObject() }
         val config = client.config
+        // Round-1 OCR pre-pass (chip path): the chip is a follow-up
+        // tool invocation, so the OCR hint is recomputed against
+        // fullRes and appended to the round-1 user message.  Same
+        // structured blocks format as runCycle so the model sees
+        // text + bbox + confidence, not a flat text dump.
+        val ocrResult = runCatching { OcrEngine.recognize(fullRes) }
+            .getOrDefault(OcrResult.EMPTY)
+        val ocrHint = OcrResult.formatHint(ocrResult.blocks)
         val messages = JSONArray()
-            .put(client.userImageMessage(thumbnail, ""))
+            .put(client.userImageMessage(thumbnail, "", ocrHint))
         // Synthesize round 1: assistant emits a tool_use for the chip's
         // tool, then user returns the tool_result.  The model then
         // sees a complete prior round and calls emit_bubble in round 2.
@@ -101,7 +109,17 @@ class ToolUseLoop(
             )
         messages.put(seedAssistant)
         val toolResult = try {
-            def.body(ToolContext(jpeg = fullRes, originalFullRes = fullRes, thumbnail = thumbnail, userText = "", config = config), parsedInput)
+            def.body(
+                ToolContext(
+                    jpeg = fullRes,
+                    originalFullRes = fullRes,
+                    thumbnail = thumbnail,
+                    userText = "",
+                    config = config,
+                    ocrCache = ocrResult,
+                ),
+                parsedInput,
+            )
         } catch (e: Throwable) {
             log("TOOL_ERR", "${def.name}: ${formatThrowable(e)}")
             ToolResult(toolSummary = "工具执行失败：${e.message?.take(80) ?: "未知错误"}")
@@ -212,6 +230,7 @@ class ToolUseLoop(
                             thumbnail = thumbnail,
                             userText = "",
                             config = config,
+                            ocrCache = ocrResult,
                         ),
                         bpInput,
                     )
@@ -335,15 +354,41 @@ class ToolUseLoop(
         val config = client.config
         val maxRounds = MAX_ROUNDS
         val toolsJson = registry.toAnthropicToolsJson()
+        // Round-1 OCR pre-pass: run OcrEngine on the full-resolution
+        // photo so the model has verbatim text + 4-corner coords +
+        // confidence per line, before deciding whether to call
+        // `read_text` for a sub-region.  We use fullRes (not the
+        // downscaled thumbnail) because OCR quality on small text
+        // drops sharply with input resolution.  Failures are silent
+        // — read_text still works as a manual fallback.
+        //
+        // The full [OcrResult] is cached for the whole cycle and
+        // passed into every [ToolContext] so `compare_text` can
+        // diff the LLM's own reading against round-1's OCR output
+        // without re-running OCR on every tool call.
+        val ocrResult = runCatching { OcrEngine.recognize(fullRes) }
+            .getOrDefault(OcrResult.EMPTY)
+        val ocrHint = OcrResult.formatHint(ocrResult.blocks)
         val messages = JSONArray()
             .put(
-                if (quadrants.isEmpty()) client.userImageMessage(thumbnail, userText)
-                else client.userImageWithQuadrants(thumbnail, quadrants, userText)
+                if (quadrants.isEmpty()) client.userImageMessage(thumbnail, userText, ocrHint)
+                else client.userImageWithQuadrants(thumbnail, quadrants, userText, ocrHint)
             )
 
         var lastRound: RoundSnapshot? = null
         var pendingUserInput: PendingUserInput? = null
         var chosenToolName: String? = null
+
+        // Multi-round drill-down chain: persists across rounds so
+        // round-N's `zoom_in(source="last")` crops round-N-1's
+        // last followUpJpeg, not fullRes.  Bug fix: previously
+        // reset to fullRes at the top of every round, so chained
+        // zoom_in would only ever crop fullRes regardless of how
+        // many zooms deep we were.  This persistence is what
+        // makes the [LOW]-line re-OCR workflow (round-1 OCR →
+        // round-2 zoom_in the [LOW] bbox → round-3 read_text on
+        // that crop) actually work end-to-end.
+        var currentImage: ByteArray = fullRes
 
         for (round in 1..maxRounds) {
             log("TOOL", "→ 第 $round 轮（messages=${messages.length()}）")
@@ -418,8 +463,10 @@ class ToolUseLoop(
             var anyFinalBubble: ToolResult? = null
             // Chain state: each zoom_in (with default source="last")
             // crops the previously produced image, allowing iterative
-            // zoom-in.  We start with the original full-res photo.
-            var currentImage: ByteArray = fullRes
+            // zoom-in.  `currentImage` is declared OUTSIDE the for-
+            // round loop so it persists across rounds — the round-N
+            // default-source zoom_in crops round-N-1's last
+            // followUpJpeg, not fullRes.
             // All follow-up images in call order, attached to the
             // next user message in the same order.  Multi-zoom in
             // one round produces a list of N images.
@@ -460,6 +507,10 @@ class ToolUseLoop(
                     // sees the chain-up-to-this-point via ctx.jpeg;
                     // the original is always available via
                     // ctx.originalFullRes for source="original" mode.
+                    // ocrCache carries the round-1 OCR result so
+                    // compare_text and read_text can reuse it
+                    // instead of re-running OCR on already-scanned
+                    // regions.
                     def.body(
                         ToolContext(
                             jpeg = currentImage,
@@ -467,6 +518,7 @@ class ToolUseLoop(
                             thumbnail = thumbnail,
                             userText = userText,
                             config = config,
+                            ocrCache = ocrResult,
                         ),
                         parsedInput,
                     )
@@ -712,5 +764,11 @@ class ToolUseLoop(
          *  Tracked separately so we don't overwrite the interpreting
          *  tool's name in the Bubble's `toolName` field. */
         const val FINAL_BUBBLE_TOOL = "emit_bubble"
+
+        /** Legacy constant kept for back-compat with prior eval
+         *  dumps; replaced by [OcrResult.MAX_OCR_HINT_LINES] (line-
+         *  based cap) + [OcrResult.formatHint] (structured blocks
+         *  format).  No longer referenced by ToolUseLoop. */
+        const val MAX_OCR_HINT_CHARS = 1500
     }
 }
