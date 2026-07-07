@@ -105,15 +105,18 @@ class LlmClient(@Volatile var config: LlmConfig) {
     }
 
     /**
-     * Round-1 user message that bundles the thumbnail + 4 quadrant
-     * crops + an optional text prompt.  Sending 5 images up front
-     * gives the LLM high-detail coverage of every quadrant without
-     * paying for a 1-2 round zoom_in cycle, and is the LLM-native
-     * substitute for on-device OCR — the model reads the small text
-     * in each crop directly rather than calling a separate OCR tool
-     * whose noise often pollutes the answer.
+     * Round-1 user message that bundles the thumbnail + the four
+     * quadrant crops + an optional text prompt.  Used only when the
+     * FrameAnalyzer is in legacy "1+4" mode (eval `--quadrants` flag).
      *
-     * Order matters: thumbnail first (overview), then the four
+     * Production default since 2026-07-06 is the 1-only mode —
+     * round 1 ships the thumbnail alone via [userImageMessage] and
+     * the model calls zoom_in for regions it can't read.  The 1+4
+     * path is kept here so:
+     *   - the eval can flip back for A/B testing with `--quadrants`
+     *   - older saved runs (eval_tier1..4 dumps) remain reproducible
+     *
+     * Order when used: thumbnail first (overview), then the four
      * quadrants in reading order (top-left, top-right, bottom-left,
      * bottom-right).
      */
@@ -348,8 +351,17 @@ class LlmClient(@Volatile var config: LlmConfig) {
         /** Lock at 0 to keep intent classification deterministic. */
         const val REQUEST_TEMPERATURE = 0.0
 
-        /** Hard ceiling for one recognition round-trip. */
-        const val TOTAL_TIMEOUT_MS = 20_000L
+        /** Hard ceiling for one recognition round-trip.
+         *
+         *  Was 20s: dense-text fixtures (产品包装/收据/金融 app 截图 with
+         *  10+ GT keywords) need 1024-token emit_bubble; at ~30 tok/s that's
+         *  ~34s of generation + 5s first-byte latency = 38s+ on overload.
+         *  12/100 fixtures in the 2026-07-06 1-only @100 run timed out
+         *  exactly here — every dense-text scene locked the cycle to
+         *  Outcome.Error and zeroed its composite.  60s buys the worst
+         *  case one full buffer; OkHttp's readTimeout/callTimeout are
+         *  still 0 (infinite) so a true hang will still be caught. */
+        const val TOTAL_TIMEOUT_MS = 60_000L
 
         /** System prompt for the tool-use path.  Two-stage flow:
          *  Stage 1 — content understanding.  Look at the image; if any
@@ -446,7 +458,9 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "  - {kind:\'number\', label:\'净含量\', value:\'250g\'}\n" +
                     "  - {kind:\'price\', label:\'合计\', value:\'¥168.50\'}\n" +
                     "  - {kind:\'text\', label:\'招牌\', value:\'大懒人冒菜\'}\n" +
-                    "**能看清多少文字就写多少行**——details 为空 = 没完成任务。宁可多写几行，也别漏。\n" +
+                    "**能看清多少文字就写多少行**——但**有上限**：场景上文字 > 8 处时，" +
+                    "按重要性把 details 裁到 **最值得高亮的 5-8 行**（品牌、价格、日期、地址、电话、关键警示），" +
+                    "其余的合并到 content 里。这能避免 answer 过长被 token 截断 / round-trip 撞超时。\n" +
                     "\n" +
                     "## 反幻觉（**关键**）\n" +
                     "**看不清的字宁可不写也别瞎猜**。content 漏一个字符比写错一个好——用户会按你写的内容去做事，错字比漏字危险得多。" +

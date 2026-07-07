@@ -144,7 +144,35 @@ class ToolUseLoop(
                 )
             } catch (e: Throwable) {
                 log("TOOL_ERR", formatThrowable(e))
-                return Outcome.Error(e.message ?: "LLM 失败")
+                // Same fallback as runCycle (line 320+): don't drop the
+                // whole chip-flow to Outcome.Error if the follow-up
+                // round trips over the timeout.  Synthesize from
+                // whatever lastRound had so the caller still gets a
+                // parseable Bubble.
+                val partial = lastRound
+                return if (partial != null && partial.text.isNotBlank()) {
+                    log(
+                        "TOOL_FALLBACK",
+                        "runLoopFromRound round $round failed (${e.message?.take(60) ?: "?"}); " +
+                            "recovering with partial text from round ${partial.round} " +
+                            "(${partial.text.length}字)"
+                    )
+                    Outcome.Bubble(
+                        com.example.intentcam.Bubble(
+                            id = "bubble-${System.currentTimeMillis()}",
+                            type = "info",
+                            title = partial.text.take(40).ifBlank { "未识别" },
+                            detail = partial.text.take(200).ifBlank { "（识别超时，已用部分结果）" },
+                            confidence = 0.4f,
+                            imageBytes = fullRes,
+                            createdAtMs = System.currentTimeMillis(),
+                            toolName = toolName,
+                        ),
+                        firstToolName = toolName,
+                    )
+                } else {
+                    Outcome.Error(e.message ?: "LLM 失败")
+                }
             }
             log(
                 "TOOL",
@@ -327,7 +355,40 @@ class ToolUseLoop(
                 )
             } catch (e: Throwable) {
                 log("TOOL_ERR", formatThrowable(e))
-                return Outcome.Error(e.message ?: "LLM 失败")
+                // Timeout / HTTP / SSE failure mid-cycle.  Don't drop the
+                // entire cycle's work — synthesize a Bubble from
+                // `lastRound` (whichever round's text we last saw) so
+                // the caller still gets a parseable, scoreable answer.
+                // Without this, the eval/scoring sees Outcome.Error and
+                // pins composite to 0.15 forever (12/100 fixtures in
+                // 2026-07-06 1-only @100 were lost this way).
+                val partial = lastRound
+                return if (partial != null && partial.text.isNotBlank()) {
+                    log(
+                        "TOOL_FALLBACK",
+                        "round $round failed (${e.message?.take(60) ?: "?"}); " +
+                            "recovering with partial text from round ${partial.round} " +
+                            "(${partial.text.length}字)"
+                    )
+                    Outcome.Bubble(
+                        com.example.intentcam.Bubble(
+                            id = "bubble-${System.currentTimeMillis()}",
+                            type = "info",
+                            title = partial.text.take(40).ifBlank { "未识别" },
+                            detail = partial.text.take(200).ifBlank { "（识别超时，已用部分结果）" },
+                            // Lower than the normal 0.7 so the UI knows
+                            // this answer is incomplete; eval doesn't
+                            // gate on confidence.
+                            confidence = 0.4f,
+                            imageBytes = fullRes,
+                            createdAtMs = System.currentTimeMillis(),
+                            toolName = null,
+                        ),
+                        firstToolName = null,
+                    )
+                } else {
+                    Outcome.Error(e.message ?: "LLM 失败")
+                }
             }
             log(
                 "TOOL",
