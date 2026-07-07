@@ -41,3 +41,7 @@ Thumbs.db
 # scrubbed) is still in git history.
 app/src/main/java/com/example/intentcam/Models.kt
 __pycache__/
+
+# --- AGC credentials (Huawei AppGallery Connect) ---
+# NEVER commit this — it's bundled into the APK and contains OAuth secrets.
+app/src/main/assets/agconnect-services.json

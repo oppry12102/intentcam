@@ -3,6 +3,13 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// Huawei AGC plugin — applied via legacy syntax because it's loaded
+// via buildscript classpath (see root build.gradle.kts).  Reads
+// app/src/main/assets/agconnect-services.json and writes credentials
+// into BuildConfig + manifest metadata so MLApplication.initialize()
+// can find them; without it HMS 3.x NPEs on getAppId() in local mode.
+apply(plugin = "com.huawei.agconnect")
+
 android {
     namespace = "com.example.intentcam"
     compileSdk = 34
@@ -104,14 +111,23 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
 
-    // ── On-device OCR: temporarily removed.
-    // The `read_text` tool remains registered and is wired against
-    // OcrEngine (a backend-agnostic strategy holder in :shared), but
-    // no Android-side impl is installed in this build.  Calling
-    // read_text now fails-closed with "[OCR backend not installed]".
-    // This drops ~13 MB (ML Kit Chinese + Latin .so + 6 .tflite/.fb
-    // model files) from the APK.  To restore on-device OCR: add a new
-    // dependency here + an AndroidOcrEngine.kt that implements
-    // OcrEngine.Impl + call installAndroidOcr(application) in
-    // MainActivity.onCreate.
+    // ── On-device OCR: Huawei HMS ML Kit (offline, Chinese + Latin) ──
+    // The `read_text` tool calls OcrEngine.recognize(); the impl is
+    // installed in MainActivity.onCreate via installAndroidOcr().
+    //
+    // * ml-computer-vision-ocr — public OCR AAR (transitively pulls
+    //   in ml-computer-vision-ocr-base + ml-computer-vision-cloud,
+    //   which holds the actual MLTextAnalyzer / MLText / MLTextBase
+    //   classes we use at `com.huawei.hms.mlsdk.text.*`).
+    // * ml-computer-vision-ocr-cn-model — Chinese offline model
+    //   pack.  The Latin model is bundled in the ocr AAR itself.
+    //   Models download on first use via HMS Core Services; the
+    //   analyzer transparently downloads on first asyncAnalyseFrame
+    //   call when the cache is cold.
+    //
+    // Version 3.18.1.302 is the latest available on
+    // developer.huawei.com/repo as of 2026-03 (confirmed via
+    // maven-metadata.xml).
+    implementation("com.huawei.hms:ml-computer-vision-ocr:3.18.1.302")
+    implementation("com.huawei.hms:ml-computer-vision-ocr-cn-model:3.18.1.302")
 }

@@ -83,9 +83,16 @@ class FrameAnalyzer(
     /**
      * Decode the camera buffer into a [Bitmap], rotate to upright,
      * and emit TWO JPEGs:
-     *  - thumbnail: scaled to [MAX_DIM], quality [QUALITY] — for LLM.
+     *  - thumbnail: scaled to [MAX_DIM], quality [QUALITY] — for LLM
+     *    round 1.
      *  - fullRes:   at native resolution, quality [FULL_QUALITY] —
      *    kept in memory so zoom_in can crop from it.
+     *
+     * Quadrants used to be encoded here as 4 sub-JPEGs and shipped
+     * alongside the thumbnail (round-1 "1+4" mode).  That strategy was
+     * retired 2026-07-06 — see [bufferToFrame]'s comment + the eval
+     * dumps under profiling/.  Quadrants now round-trip as empty list;
+     * the model relies on zoom_in when the thumbnail isn't enough.
      */
     private fun bufferToFrame(
         buffer: java.nio.ByteBuffer,
@@ -118,29 +125,14 @@ class FrameAnalyzer(
         // is the small payload that ships to the LLM.
         val fullRes = encodeBitmap(work, quality = FULL_QUALITY, maxDim = MAX_FULL_DIM)
         val thumbnail = encodeBitmap(work, quality = QUALITY, maxDim = MAX_DIM)
-        // Four quadrant crops at QUADRANT_MAX_DIM — sent in round 1
-        // alongside the thumbnail so the LLM sees high-detail in
-        // every corner from the start, instead of having to round-trip
-        // 1-2 zoom_ins before it can read small text.  Each crop is
-        // 50% × 50% of the upright full-res image.
-        val quadrants = listOf(
-            encodeQuadrant(work, 0f, 0f, 0.5f, 0.5f),     // top-left
-            encodeQuadrant(work, 0.5f, 0f, 0.5f, 0.5f),   // top-right
-            encodeQuadrant(work, 0f, 0.5f, 0.5f, 0.5f),   // bottom-left
-            encodeQuadrant(work, 0.5f, 0.5f, 0.5f, 0.5f), // bottom-right
-        ).filterNotNull()
-        if (quadrants.size < 4) {
-            // encodeQuadrant returned null for at least one crop —
-            // usually OOM under heavy heap pressure after the
-            // fullRes + thumbnail encodes.  The LLM will see fewer
-            // than 5 images; surface this so the user / debug overlay
-            // can see why, instead of silently degrading the model's
-            // round-1 input.
-            val msg = "FrameAnalyzer: ${4 - quadrants.size}/4 quadrant(s) failed to encode; " +
-                "LLM will see ${quadrants.size + 1} image(s) instead of 5"
-            android.util.Log.w("IntentCam", msg)
-            onError(msg)
-        }
+        // 1-only image strategy (default since 2026-07-06).  The model
+        // sees the thumbnail alone in round 1 and zooms_in on regions
+        // it can't read.  Sending 1+4 (5 images up front) was tried
+        // and benchmarked worse on RCTW-17 (composite 0.68 vs 0.77
+        // on a 20-fixture sample) — the 5-image burst blew past the
+        // 20s round budget on dense scenes.  See CHANGELOG/SECOND-LAYER.md
+        // details in the eval tier dumps under profiling/.
+        val quadrants = emptyList<ByteArray>()
         work.recycle()
         if (fullRes == null || thumbnail == null) return null
         return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes, quadrants = quadrants)
