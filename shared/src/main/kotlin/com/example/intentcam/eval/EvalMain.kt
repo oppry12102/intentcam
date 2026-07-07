@@ -47,6 +47,7 @@ fun main(args: Array<String>) {
         resize = opts.resize,
         quality = opts.quality,
         jsonOut = opts.jsonOut,
+        quadrants = opts.quadrants,
     )
     val exit = EvalRunner(config).run()
     exitProcess(exit)
@@ -171,6 +172,7 @@ internal data class EvalOpts(
     val resize: Int,
     val quality: Int,
     val jsonOut: File?,
+    val quadrants: Boolean = false,
 )
 
 internal fun parseArgs(args: Array<String>): EvalOpts {
@@ -180,6 +182,7 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
     var resize = 768
     var quality = 80
     var jsonOut: String? = null
+    var quadrants = false
     var i = 0
     while (i < args.size) {
         when (args[i]) {
@@ -189,8 +192,9 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
             "--resize"       -> { resize = args[++i].toInt() }
             "--quality"      -> { quality = args[++i].toInt() }
             "--json-out"     -> { jsonOut = args[++i] }
+            "--quadrants"    -> { quadrants = true }
             "--help", "-h"   -> {
-                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH]")
+                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH] [--quadrants (off by default; matches prod 1-only mode)]")
                 exitProcess(0)
             }
             else -> System.err.println("Unknown arg: ${args[i]}")
@@ -204,6 +208,7 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
         resize = resize,
         quality = quality,
         jsonOut = jsonOut?.let { File(it) },
+        quadrants = quadrants,
     )
 }
 
@@ -216,6 +221,7 @@ internal data class EvalConfig(
     val resize: Int,
     val quality: Int,
     val jsonOut: File?,
+    val quadrants: Boolean = false,
 )
 
 // Stub for the app's LlmConfig — only the model name + URL are used.

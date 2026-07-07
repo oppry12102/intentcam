@@ -85,9 +85,32 @@ class ToolUseLoop(
         // fullRes and appended to the round-1 user message.  Same
         // structured blocks format as runCycle so the model sees
         // text + bbox + confidence, not a flat text dump.
-        val ocrResult = runCatching { OcrEngine.recognize(fullRes) }
+        var ocrException: Throwable? = null
+        val ocrResult: OcrResult = runCatching { OcrEngine.recognize(fullRes) }
+            .onFailure { e ->
+                ocrException = e
+                log("OCR_ERR", formatThrowable(e))
+            }
             .getOrDefault(OcrResult.EMPTY)
         val ocrHint = OcrResult.formatHint(ocrResult.blocks)
+        // Surface OCR pre-pass status (see runCycle for rationale).
+        // Local copy because Kotlin can't smart-cast a var captured
+        // by a changing closure (the onFailure lambda reassigns it).
+        val ocrEx = ocrException
+        val ocrStatus = when {
+            OcrEngine.impl == null -> "OCR 后端未安装（impl == null）"
+            ocrEx != null -> "OCR 异常（见 OCR_ERR 行）：${ocrEx.javaClass.simpleName}: " +
+                (ocrEx.message?.take(80) ?: "?")
+            ocrResult.blocks.isEmpty() -> "OCR 跑了但 0 块识别到（图上无文字 / 模型未下完）"
+            else -> {
+                val lowCount = ocrResult.blocks.count {
+                    it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD
+                }
+                "OCR ${ocrResult.blocks.size} 行（${lowCount} [LOW]），" +
+                    "hint ${ocrHint.length} 字符"
+            }
+        }
+        log("OCR", ocrStatus)
         val messages = JSONArray()
             .put(client.userImageMessage(thumbnail, "", ocrHint))
         // Synthesize round 1: assistant emits a tool_use for the chip's
@@ -366,9 +389,42 @@ class ToolUseLoop(
         // passed into every [ToolContext] so `compare_text` can
         // diff the LLM's own reading against round-1's OCR output
         // without re-running OCR on every tool call.
-        val ocrResult = runCatching { OcrEngine.recognize(fullRes) }
+        var ocrException: Throwable? = null
+        val ocrResult: OcrResult = runCatching { OcrEngine.recognize(fullRes) }
+            .onFailure { e ->
+                // Surface the actual exception in the debug overlay
+                // so backend-init failures (cachedMlApplication ==
+                // null on non-Huawei, MLApplicationSetting.fromResource
+                // throwing on a build without agconnect-services,
+                // asyncAnalyseFrame race, etc.) aren't silently
+                // swallowed and reported as "0 块识别到".  Without
+                // this log, an HMS Core missing device looks
+                // identical to "no text in scene".
+                ocrException = e
+                log("OCR_ERR", formatThrowable(e))
+            }
             .getOrDefault(OcrResult.EMPTY)
         val ocrHint = OcrResult.formatHint(ocrResult.blocks)
+        // Surface OCR pre-pass result in the debug overlay so we
+        // can tell at a glance whether HMS OCR ran successfully,
+        // returned 0 blocks (e.g. no text in the scene), threw an
+        // exception (init failure), or was never installed (impl
+        // == null — e.g. non-Huawei device).
+        val ocrEx = ocrException
+        val ocrStatus = when {
+            OcrEngine.impl == null -> "OCR 后端未安装（impl == null）"
+            ocrEx != null -> "OCR 异常（见 OCR_ERR 行）：${ocrEx.javaClass.simpleName}: " +
+                (ocrEx.message?.take(80) ?: "?")
+            ocrResult.blocks.isEmpty() -> "OCR 跑了但 0 块识别到（图上无文字 / 模型未下完）"
+            else -> {
+                val lowCount = ocrResult.blocks.count {
+                    it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD
+                }
+                "OCR ${ocrResult.blocks.size} 行（${lowCount} [LOW]），" +
+                    "hint ${ocrHint.length} 字符"
+            }
+        }
+        log("OCR", ocrStatus)
         val messages = JSONArray()
             .put(
                 if (quadrants.isEmpty()) client.userImageMessage(thumbnail, userText, ocrHint)
