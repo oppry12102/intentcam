@@ -54,14 +54,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Wire the platform-specific image ops + OCR strategies into
-        // the shared module.  Must happen before the first
-        // ToolUseLoop.runCycle call — i.e. before the user taps the
-        // shutter for the first time.  Doing it here (instead of in
-        // AppViewModel.init) keeps the JVM eval able to install its
-        // own ImageIO-based impl without touching Android code.
+        // Wire the platform-specific image ops into the shared
+        // module.  Must happen before the first ToolUseLoop.runCycle
+        // call — i.e. before the user taps the shutter for the first
+        // time.  Doing it here (instead of in AppViewModel.init) keeps
+        // the JVM eval able to install its own ImageIO-based impl
+        // without touching Android code.
+        //
+        // OCR: currently no backend installed (ML Kit was removed for
+        // APK-size reasons on 2026-07-07; see app/build.gradle.kts).
+        // The read_text tool stays registered and fails closed with
+        // "[OCR backend not installed]" when invoked.  To re-enable
+        // on-device OCR, install an OcrEngine.Impl here the same way
+        // installAndroidImageOps wires ImageOps below.
         installAndroidImageOps()
-        installAndroidOcr(application)
         setContent {
             IntentCamTheme {
                 Surface(color = Color.Black) {
