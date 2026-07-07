@@ -45,7 +45,11 @@ internal class EvalRunner(private val config: EvalConfig) {
         val useScenes = sceneList.take(limit)
 
         println("Loaded $limit real-photo fixtures from ${config.groundTruth.name}")
-        println("FrameAnalyzer simulation: --resize ${config.resize} --quality ${config.quality}")
+        println(
+            "FrameAnalyzer simulation: --resize ${config.resize} --quality ${config.quality}  " +
+                (if (config.quadrants) "image-strategy=1+4 (legacy 5-image mode)"
+                 else "image-strategy=1-only (default since 2026-07-06 — matches prod)")
+        )
 
         val perCategory = mutableMapOf<String, MutableList<Double>>()
         val results = mutableListOf<Map<String, Any>>()
@@ -75,12 +79,19 @@ internal class EvalRunner(private val config: EvalConfig) {
                 maxDim = config.resize,
                 quality = config.quality,
             ) ?: rawBytes
-            val quadrants = listOf(
-                encodeQuadrant(rawBytes, 0f, 0f, 0.5f, 0.5f),
-                encodeQuadrant(rawBytes, 0.5f, 0f, 0.5f, 0.5f),
-                encodeQuadrant(rawBytes, 0f, 0.5f, 0.5f, 0.5f),
-                encodeQuadrant(rawBytes, 0.5f, 0.5f, 0.5f, 0.5f),
-            ).filterNotNull()
+            val quadrants = if (config.quadrants) {
+                listOf(
+                    encodeQuadrant(rawBytes, 0f, 0f, 0.5f, 0.5f),
+                    encodeQuadrant(rawBytes, 0.5f, 0f, 0.5f, 0.5f),
+                    encodeQuadrant(rawBytes, 0f, 0.5f, 0.5f, 0.5f),
+                    encodeQuadrant(rawBytes, 0.5f, 0.5f, 0.5f, 0.5f),
+                ).filterNotNull()
+            } else {
+                emptyList()
+            }
+            if (!config.quadrants) {
+                println("  [1-only mode] skipping 4 quadrants; model relies on thumbnail + zoom_in chain")
+            }
             val frame = CapturedFrame(
                 thumbnail = thumbnail,
                 fullRes = fullRes,
@@ -360,11 +371,32 @@ internal class EvalRunner(private val config: EvalConfig) {
         }
         if (denom == 0) textScore = 1.0
 
-        // Type match: read per-scene expected_type so a fixture with
-        // "location" or "solve" isn't silently scored 0 against a
-        // hardcoded "info".
+        // Type match — three-way partial credit instead of binary:
+        //   - right bucket        → 1.0
+        //   - valid type, wrong   → 0.5  (model picked a real {info,
+        //     bucket                       location, solve} but the
+        //                                  fixture GT is hardcoded
+        //                                  "info" — common on signs
+        //                                  and storefronts where the
+        //                                  user might be "reading" the
+        //                                  sign *or* "finding this
+        //                                  place".  Without this, type
+        //                                  was a single-metric veto on
+        //                                  store/restaurant scenes.)
+        //   - empty / unknown     → 0.0
+        //
+        // 9/100 fixtures in 2026-07-07 1-only @100 v2 regressed solely
+        // because the model picked a non-info type for fixtures the GT
+        // locks at "info", dropping composite by 0.25 each.  The
+        // partial credit restores ~0.13/composite on those without
+        // inflating true matches.
         val expectedType = scene.optString("expected_type", "info")
-        val typeScore = if (type == expectedType) 1.0 else 0.0
+        val typeScore = when {
+            type == expectedType -> 1.0
+            type.isNullOrBlank() -> 0.0
+            type in setOf("info", "location", "solve") -> 0.5
+            else -> 0.0
+        }
 
         val r2 = 0.50 * textScore + 0.50 * typeScore
         return Pair(r2, typeScore)

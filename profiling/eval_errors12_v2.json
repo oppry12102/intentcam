@@ -1,0 +1,591 @@
+{
+  "ground_truth": "ground_truth_errors12.json",
+  "img_dir": "img/rctw_errors12",
+  "limit": 12,
+  "overall_composite": 0.7579861111111111,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 768,
+  "fixture_count": 12,
+  "version": 1,
+  "quality": 80,
+  "per_category": {"default": 0.7579861111111111},
+  "fixtures": [
+    {
+      "raw_content": "这是\"中国能量堡垒\"公众号/小程序的消息通知页面，时间为晚上7:58。页面显示两条扫描产品二维码获取能量币的通知：第一条告知用户通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币；第二条\"能量堡垒维生素C片\"卡片（1月13日发布）显示扫描该产品二维码[1420519580860218]获得了108能量币。产品广告图含代言人、画面上的广告语\"全家营养 健康配得\"、\"能量大使·营养家\"，以及SC许可号\"SC10640058100??\"。底部导航为\"能量资讯 / 营养商学院 / 扫一扫\"。",
+      "r2_text": 0.85,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "时间",
+          "value": "晚上7:58"
+        },
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "text",
+          "label": "消息1",
+          "value": "您好，通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币"
+        },
+        {
+          "kind": "text",
+          "label": "消息1操作",
+          "value": "查看全文"
+        },
+        {
+          "kind": "text",
+          "label": "卡片标题",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "text",
+          "label": "卡片日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "全家营养 健康配得"
+        },
+        {
+          "kind": "text",
+          "label": "能量大使·营养家",
+          "value": "能量大使·营养家"
+        },
+        {
+          "kind": "number",
+          "label": "SC许可证号",
+          "value": "SC10640058100??"
+        },
+        {
+          "kind": "text",
+          "label": "消息2",
+          "value": "您好，通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航-左",
+          "value": "能量资讯"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航-中",
+          "value": "营养商学院"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航-右",
+          "value": "扫一扫"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.925,
+      "r2_text_fuzzy": 0.58,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 268,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是中百商城的宣传海报/易拉宝：顶部依次列出\"家居一体 / 完美保障 / 摆放到位\"等服务图标；中部红色大字写着\"中百商城 中百集团旗下购物网站 www.zon100.com\"；下方紫色横幅标注\"诚信 正品 便捷 无忧\"，紫色按钮\"订购热线：96518\"；底部手写寄语\"中百电器 在您生活的每一天\"。",
+      "r2_text": 0.95,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "顶部图标标语1",
+          "value": "家居一体"
+        },
+        {
+          "kind": "text",
+          "label": "顶部图标标语2",
+          "value": "完美保障"
+        },
+        {
+          "kind": "text",
+          "label": "顶部图标标语3",
+          "value": "摆放到位"
+        },
+        {
+          "kind": "brand",
+          "label": "网站名",
+          "value": "中百商城"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "中百集团旗下购物网站"
+        },
+        {
+          "kind": "text",
+          "label": "网址",
+          "value": "www.zon100.com"
+        },
+        {
+          "kind": "text",
+          "label": "品牌口号",
+          "value": "诚信 正品 便捷 无忧"
+        },
+        {
+          "kind": "number",
+          "label": "订购热线",
+          "value": "96518"
+        },
+        {
+          "kind": "text",
+          "label": "底部书法寄语",
+          "value": "中百电器 在您生活的每一天"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.975,
+      "r2_text_fuzzy": 0.975,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_12",
+      "category": "default",
+      "content_len": 150,
+      "r1": 1
+    },
+    {
+      "raw_content": "微信发红包界面，设置了5个、总金额10元的拼手气红包（本群共11人），点击\"塞钱进红包\"按钮后弹出提示：\"银行处理中，请查询确认银行卡是否已扣款，避免重复操作。\"，需要点击\"确定\"。",
+      "r2_text": 0.11666666666666667,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "发红包"
+        },
+        {
+          "kind": "text",
+          "label": "支付方式",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "number",
+          "label": "红包个数",
+          "value": "5 个"
+        },
+        {
+          "kind": "text",
+          "label": "群人数",
+          "value": "本群共11人"
+        },
+        {
+          "kind": "text",
+          "label": "红包类型提示",
+          "value": "当前为拼手气红包，改为普通红包"
+        },
+        {
+          "kind": "price",
+          "label": "总金额",
+          "value": "10 元"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗提示",
+          "value": "银行处理中，请查询确认银行卡是否已扣款，避免重复操作。"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗按钮",
+          "value": "确定"
+        },
+        {
+          "kind": "text",
+          "label": "主按钮",
+          "value": "塞钱进红包"
+        },
+        {
+          "kind": "text",
+          "label": "底部提示",
+          "value": "未领取的红包，将于24小时后发起退款"
+        }
+      ],
+      "r2_type": 0,
+      "composite": 0.5583333333333333,
+      "r2_text_fuzzy": 0.5,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 91,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面中央是一块竖立的青花瓷主题装饰立牌，白底上有蓝色竖排\"青花瓷\"三字（作\"花\"\"年\"合体艺术字效果），右侧饰以蓝色青花卷草纹样，底部为带滚轮的金属底座。背景是商业步行街灰白方砖铺地，可见行人（穿短裤的成人和一个穿黄色衣裤的小孩）、远处灯箱广告牌（文字太远不清）和石柱建筑，整体为某商业街/步行街的青花瓷主题景观小品。",
+      "r2_text": 0.5,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "立牌主文字",
+          "value": "青花瓷"
+        },
+        {
+          "kind": "object",
+          "label": "立牌形制",
+          "value": "白色弧形立牌，白底蓝字，右侧青花纹样装饰，底部金属底座带滚轮"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_27",
+      "category": "default",
+      "content_len": 159,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是某商业楼栋入口：左侧是\"漫·地酒店\"的旋转玻璃门（门里可见一位背双肩包的人），右侧店铺顶部悬红底黄字招牌，能看清\"旺铺\"二字，后续文字因镜头偏右被画面截断，店前是带嵌入式台阶灯的台阶，门面目前卷帘半关、店内百叶帘紧闭、疑似未营业/招租状态。",
+      "r2_text": 0.20833333333333331,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "红色招牌（可见部分）",
+          "value": "旺铺\u2026（最右侧字符被画面截断）"
+        },
+        {
+          "kind": "brand",
+          "label": "旋转门贴纸（酒店品牌）",
+          "value": "漫·地酒店"
+        },
+        {
+          "kind": "text",
+          "label": "右侧店铺状态",
+          "value": "卷帘门半开、门内百叶帘紧闭，似未营业"
+        }
+      ],
+      "r2_type": 0,
+      "composite": 0.6041666666666666,
+      "r2_text_fuzzy": 0.5,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_28",
+      "category": "default",
+      "content_len": 123,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片是一间美容整形店面的入口：上方红色 LED 跑马屏滚动显示「、吸脂瘦身，拉皮除皱等。 美容\u2026」；店面招牌横贴于玻璃门上，写着「Meimi 伊之美整形 2652 5555」（电话号码 2652 5555 多次重复）。门口有两只金色大象摆件、几盆绿植，地面铺有绿色迎宾地垫；门边立一块蓝色告示牌，字较小，仅可辨「联同 防治 ??保护」等字。拍摄意图应该是定位/了解这家美容整形门店，并查询其联系电话。",
+      "r2_text": 0.15833333333333333,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "LED 跑马屏文字（左侧）",
+          "value": "、吸脂瘦身，拉皮除皱等。"
+        },
+        {
+          "kind": "text",
+          "label": "LED 跑马屏文字（右侧，部分被截）",
+          "value": "美容"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门横幅",
+          "value": "Meimi 伊之美整形 2652 5555（重复多次）"
+        },
+        {
+          "kind": "number",
+          "label": "电话",
+          "value": "2652 5555"
+        },
+        {
+          "kind": "brand",
+          "label": "店名",
+          "value": "Meimi 伊之美整形"
+        },
+        {
+          "kind": "text",
+          "label": "门口蓝色告示牌（部分可见）",
+          "value": "联同 防治 ??保护（字迹较小，仅部分可辨）"
+        },
+        {
+          "kind": "object",
+          "label": "门口陈设",
+          "value": "两只金色大象摆件、绿植盆栽、黑色遮光窗帘、店内吊灯"
+        }
+      ],
+      "r2_type": 0,
+      "composite": 0.5791666666666666,
+      "r2_text_fuzzy": 0.4,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_30",
+      "category": "default",
+      "content_len": 200,
+      "r1": 1
+    },
+    {
+      "raw_content": "道路路口的交通标志组合：红色倒三角\"让\"字让行标志为主标志，其下方有两个圆形禁令标志\"禁止畜力车\"和\"禁止货车\"，右侧蓝色方框内为\"人行横道\"指示标志，左侧远处有一块蓝色公益广告牌，上书\"生命无返程 切莫逆向行\"，配卡通兔子图案。背景为高压输电塔、远山与城市道路。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标志",
+          "value": "让（倒三角让行标志）"
+        },
+        {
+          "kind": "text",
+          "label": "禁令标志1",
+          "value": "禁止畜力车"
+        },
+        {
+          "kind": "text",
+          "label": "禁令标志2",
+          "value": "禁止货车"
+        },
+        {
+          "kind": "text",
+          "label": "蓝色指示标志",
+          "value": "人行横道"
+        },
+        {
+          "kind": "text",
+          "label": "公益广告",
+          "value": "生命无返程 切莫逆向行"
+        },
+        {
+          "kind": "object",
+          "label": "背景物体",
+          "value": "高压输电塔、山丘、路灯、道路"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_35",
+      "category": "default",
+      "content_len": 132,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块不锈钢边框的社区宣传栏，左侧是\"复州花园居务公开\"竖标题，配三张社区活动照片及说明：①复州花园社区与实验三小开展创城万人签名活动 ②仙桃市\"周末大舞台\"送戏下基层文艺演出，复州花园社区与包挂单位市商务局、市保险公司开展\"周末大舞台\"文艺进社区 ③复州花园社区代表队在体育馆参加仙桃市第11届太极拳剑交流赛。右下角有华表/天安门装饰图案及\"复州花园居务公开\"金色字样。右侧是红色基调的文字宣传栏，背景有金色华表浮雕，内容涉及党的作风、廉洁、为政等段落（部分字被边框遮挡，部分字迹反光难以完全辨清，如\"澡、治\"\"群众期盼\"\"作风、廉\"\"性修养正\"\"持共产党人\"\"评和自我批\"\"本\"\"治病\"\"对症下药\"\"提醒,对问题严\"\"项治理\"\"照\"\"12个字,简洁明\"\"整体;概括起来\"\"提高\"）。",
+      "r2_text": 0.8416666666666667,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "公告栏竖标题",
+          "value": "复州花园居务公开"
+        },
+        {
+          "kind": "text",
+          "label": "左上图片说明",
+          "value": "复州花园社区与实验三小 开展创城万人签名活动"
+        },
+        {
+          "kind": "text",
+          "label": "右上舞台横幅",
+          "value": "仙桃市\"周末大舞台\"送戏下基层文艺演出"
+        },
+        {
+          "kind": "text",
+          "label": "右上图片说明",
+          "value": "复州花园社区与包挂单位市商务局、 市保险公司开展\"周末大舞台\"文艺进社区"
+        },
+        {
+          "kind": "text",
+          "label": "左下图片说明(部分可读)",
+          "value": "复州花园社区代表队在体育馆参加 仙桃市第11届太极拳剑交流赛"
+        },
+        {
+          "kind": "text",
+          "label": "右下红色条幅文字",
+          "value": "复州花园居务公开 (竖排标题)"
+        },
+        {
+          "kind": "text",
+          "label": "右栏正文(片段)",
+          "value": "\u2026\u2026澡、治\u2026\u2026 群众期盼\u2026\u2026 作风、廉\u2026\u2026 是按照为民\u2026\u2026 性修养正\u2026\u2026 持共产党人\u2026\u2026 评和自我批\u2026\u2026 本色。治病\u2026\u2026 况、对症下药\u2026\u2026 提醒,对问题严\u2026\u2026 项治理。照\u2026\u2026 12个字,简洁明\u2026\u2026 整体;概括起来\u2026\u2026 提高。"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9208333333333334,
+      "r2_text_fuzzy": 0.9567821067821068,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_40",
+      "category": "default",
+      "content_len": 344,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片是一所学校大门的石碑/立柱式校牌，右侧石柱上以金色竖排字体刻着「武汉市第三十九中学」八个字。石柱为灰色花岗岩材质，顶部呈分叉造型，左侧对称立着另一根相同的石柱，共同构成一个 H 形门式入口。背景为阴天天空，右侧有树木和部分楼房，下方可见铁艺栅栏。",
+      "r2_text": 0.5,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校名",
+          "value": "武汉市第三十九中学"
+        },
+        {
+          "kind": "object",
+          "label": "主体",
+          "value": "校门石碑/立柱式门牌，灰色花岗岩材质，上方为分叉造型"
+        },
+        {
+          "kind": "color",
+          "label": "文字颜色",
+          "value": "金色（贴金/鎏金效果）"
+        },
+        {
+          "kind": "shape",
+          "label": "形制",
+          "value": "两根方形石柱构成门形入口，金字竖排从右上至右下排列"
+        }
+      ],
+      "r2_type": 0,
+      "composite": 0.75,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_42",
+      "category": "default",
+      "content_len": 125,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺外墙上的招牌写着\"蹋章明珠\"四个字（艺术字体，蓝底黄边）。招牌下方有三张展示图：左侧大图为中式风格走廊（红墙 + 镂空木雕隔断），右上一张图为卡拉 OK / 餐厅包间（沙发、长桌、吊灯），右下一张图为小型会客 / KTV 包间（沙发茶几、电视墙、星空顶灯），整体应为\"蹋章明珠\"KTV 或娱乐会所的店面招贴。招牌文字\"蹋章明珠\"读音上存疑，\"蹋\"和\"章\"两字笔画略模糊。",
+      "r2_text": 0,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "招牌",
+          "value": "蹋章明珠"
+        },
+        {
+          "kind": "scene",
+          "label": "左侧大图",
+          "value": "中式风格走廊（镂空木雕隔断）"
+        },
+        {
+          "kind": "scene",
+          "label": "右上一图",
+          "value": "卡拉 OK / 餐厅包间（带沙发、长桌、吊灯）"
+        },
+        {
+          "kind": "scene",
+          "label": "右下二图",
+          "value": "小型会客 / KTV 包间（沙发茶几、电视墙、星空顶灯）"
+        }
+      ],
+      "r2_type": 0,
+      "composite": 0.5,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_63",
+      "category": "default",
+      "content_len": 187,
+      "r1": 1
+    },
+    {
+      "raw_content": "武汉东湖景区内一道白色木栅栏门入口，门柱上挂着一块木制告示牌：左上角印有\"east lake 武汉东湖 Wuhan East Lake\"标识，中部是禁止行人通行的图标（黑底白行人与红色斜杠），下方用中、英、日、韩四种文字写着\"请勿通过 / No Thoroughfare / 通さないでください / 채택 하지\"。门紧闭，提示此处不允许游客从此进入。",
+      "r2_text": 0.9,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "景点标志",
+          "value": "east lake 武汉东湖 Wuhan East Lake"
+        },
+        {
+          "kind": "text",
+          "label": "中文警示",
+          "value": "请勿通过"
+        },
+        {
+          "kind": "text",
+          "label": "英文警示",
+          "value": "No Thoroughfare"
+        },
+        {
+          "kind": "text",
+          "label": "日文警示",
+          "value": "通さないでください"
+        },
+        {
+          "kind": "text",
+          "label": "韩文警示",
+          "value": "채택 하지"
+        },
+        {
+          "kind": "object",
+          "label": "图标",
+          "value": "禁止行人通行（黑色方块+白色行人+红色斜杠）"
+        },
+        {
+          "kind": "object",
+          "label": "场景",
+          "value": "东湖景区内的白色木栅栏门与水泥门柱，远处为树木和草坪"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.95,
+      "r2_text_fuzzy": 0.9714285714285715,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_83",
+      "category": "default",
+      "content_len": 175,
+      "r1": 1
+    },
+    {
+      "raw_content": "夜间街景，画面为路口人行横道前，可见两家相邻店铺：左侧黄色招牌写着\"皮皮蛋\"，副标含\"享受余日本店皮皮蛋店\"字样；右侧橙色招牌写着\"广隆蛋挞王\"，店内灯光暖黄色，有行人站立。两店前停着一辆银色面包车，街对面有行道树和停车。",
+      "r2_text": 0.16666666666666666,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店铺招牌1",
+          "value": "皮皮蛋"
+        },
+        {
+          "kind": "text",
+          "label": "店铺招牌1副标",
+          "value": "享受余日本店皮蛋店"
+        },
+        {
+          "kind": "text",
+          "label": "店铺招牌2",
+          "value": "广隆蛋挞王"
+        },
+        {
+          "kind": "object",
+          "label": "停靠车辆",
+          "value": "银色面包车"
+        },
+        {
+          "kind": "object",
+          "label": "场景",
+          "value": "夜间街边店铺 + 人行横道"
+        }
+      ],
+      "r2_type": 0,
+      "composite": 0.5833333333333334,
+      "r2_text_fuzzy": 0.3333333333333333,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_85",
+      "category": "default",
+      "content_len": 111,
+      "r1": 1
+    }
+  ]
+}
