@@ -63,6 +63,12 @@ data class ToolContext(
      *  calls (e.g. default_describe wrapping the BROAD prompt) read
      *  this. */
     val config: LlmConfig,
+    /** Round-1 OCR result (full image).  Populated by
+     *  [ToolUseLoop] from [OcrEngine.recognize]; empty when the
+     *  OCR backend isn't installed (e.g. JVM eval).  Tools like
+     *  `compare_text` and `read_text` look up here instead of
+     *  re-running OCR on already-scanned regions. */
+    val ocrCache: OcrResult = OcrResult.EMPTY,
 )
 
 /**

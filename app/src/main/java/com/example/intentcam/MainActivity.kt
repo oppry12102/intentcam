@@ -61,13 +61,15 @@ class MainActivity : ComponentActivity() {
         // the JVM eval able to install its own ImageIO-based impl
         // without touching Android code.
         //
-        // OCR: currently no backend installed (ML Kit was removed for
-        // APK-size reasons on 2026-07-07; see app/build.gradle.kts).
-        // The read_text tool stays registered and fails closed with
-        // "[OCR backend not installed]" when invoked.  To re-enable
-        // on-device OCR, install an OcrEngine.Impl here the same way
-        // installAndroidImageOps wires ImageOps below.
+        // OCR: install the HMS ML Kit (Huawei) offline OCR backend.
+        // `installAndroidOcr` registers an `OcrEngine.Impl` and
+        // pre-warms the analyzer so the first read_text call doesn't
+        // pay the cold-cache model-fetch cost.  The Chinese + Latin
+        // language packs are bundled as transitive dependencies
+        // (`ml-computer-vision-ocr-cn-model`); HMS handles the
+        // first-run download on its own scheduler.
         installAndroidImageOps()
+        installAndroidOcr(application)
         setContent {
             IntentCamTheme {
                 Surface(color = Color.Black) {
@@ -583,7 +585,12 @@ private fun DetailScreen(
 
 /** Renders a small (kind, label, value) table for the detail view.
  *  Used by DetailScreen when the LLM extracted structured details
- *  via emit_bubble. */
+ *  via emit_bubble.
+ *
+ *  When a row carries a `bbox` (4-corner normalized coords from the
+ *  round-1 OCR hint), a small accent dot is appended to the right of
+ *  the value — a visual cue that "this row has a positional anchor
+ *  in the photo" (future enhancement: tap-to-zoom on the dot). */
 @Composable
 private fun DetailsTable(details: List<Detail>) {
     Column(
@@ -617,6 +624,18 @@ private fun DetailsTable(details: List<Detail>) {
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f),
                 )
+                if (!d.bbox.isNullOrEmpty()) {
+                    Spacer(Modifier.width(6.dp))
+                    // Accent dot marking rows with positional OCR
+                    // anchors.  8dp emerald to match the bubble
+                    // location accent (sub-system consistency).
+                    Box(
+                        Modifier
+                            .size(8.dp)
+                            .align(Alignment.CenterVertically)
+                            .background(Color(0xFF37D399), shape = CircleShape)
+                    )
+                }
             }
             if (i < details.size - 1) {
                 Box(

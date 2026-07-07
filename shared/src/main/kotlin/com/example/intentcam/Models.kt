@@ -4,11 +4,20 @@ package com.example.intentcam
  * One row in the detail-view table.  Each detail is something the
  * LLM extracted from the image (text, number, object, color, etc.)
  * and the table renders them in (kind, label, value) columns.
+ *
+ * [bbox] is the optional 4-corner normalized [0,1] coordinates of
+ * the row's text region in the source image (TL → TR → BR → BL).
+ * Populated by `emit_bubble` when the model copied the bbox from
+ * the round-1 OCR hint so the detail view can highlight the row's
+ * position in the photo.  Null for rows whose source the LLM
+ * described from memory (no positional anchor).  Backward
+ * compatible — old bubbles with `bbox = null` render unchanged.
  */
 data class Detail(
     val kind: String,    // "text" | "number" | "object" | "color" | "shape" | ...
     val label: String,   // human-friendly name, e.g. "Brand name"
     val value: String,   // the extracted content
+    val bbox: List<OcrPoint>? = null,  // 4-corner normalized [0,1]; null = no anchor
 )
 
 /**
