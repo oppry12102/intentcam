@@ -7,17 +7,38 @@ android {
     namespace = "com.example.intentcam"
     compileSdk = 34
 
+    // ── Signing ──
+    // Release is currently signed with the SDK debug keystore for
+    // local-dev / sideload testing only.  Do NOT distribute this APK
+    // to end users — debug keystore has well-known credentials and
+    // would not satisfy Play Store key requirements.
+    //
+    // To switch to a real release key: replace `debugKeystoreConfig`
+    // with a real `signingConfigs.create("release") { storeFile = ...;
+    // storePassword = ...; keyAlias = ...; keyPassword = ... }`, then
+    // point release.signingConfig at it.  See AGP docs.
+    signingConfigs {
+        create("debugKeystore") {
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.intentcam"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        // Limit native libs to phone ABIs.  x86 / x86_64 are emulator-only
-        // and would add ~25 MB of unused libmlkit_google_ocr_pipeline.so.
-        // arm64-v8a + armeabi-v7a covers ~all real devices.
+        // Native libs: arm64-v8a only.  x86 / x86_64 are emulator-only
+        // (emulator uses host CPU); armeabi-v7a (32-bit ARM) is < 1% of
+        // 2024+ Play Store devices and the ML Kit OCR .so for it adds
+        // ~6.8 MB to the APK.  minSdk=26 covers the same device range
+        // without paying for the legacy ABI.
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            abiFilters += listOf("arm64-v8a")
         }
     }
 
@@ -28,6 +49,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debugKeystore")
         }
     }
 
@@ -82,9 +104,14 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
 
-    // ML Kit on-device OCR (Chinese + Latin).  Bundled — no Google Play
-    // Services dependency, ~5 MB APK overhead.  Drives the `read_text`
-    // tool so the model gets verbatim text instead of paraphrasing it
-    // (was the main r2_text regression in the 100-fixture eval).
-    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    // ── On-device OCR: temporarily removed.
+    // The `read_text` tool remains registered and is wired against
+    // OcrEngine (a backend-agnostic strategy holder in :shared), but
+    // no Android-side impl is installed in this build.  Calling
+    // read_text now fails-closed with "[OCR backend not installed]".
+    // This drops ~13 MB (ML Kit Chinese + Latin .so + 6 .tflite/.fb
+    // model files) from the APK.  To restore on-device OCR: add a new
+    // dependency here + an AndroidOcrEngine.kt that implements
+    // OcrEngine.Impl + call installAndroidOcr(application) in
+    // MainActivity.onCreate.
 }
