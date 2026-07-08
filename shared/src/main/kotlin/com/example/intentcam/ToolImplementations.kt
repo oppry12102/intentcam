@@ -36,10 +36,12 @@ fun ToolRegistry.registerDefaultTools() {
             description = "画面里某个区域你看不清/需要更细的细节时调这个。" +
                 "用归一化坐标 (x, y, w, h) ∈ [0, 1] 给出区域，x/y 是左上角，w/h 是宽高。" +
                 "右上角四分之一 = {x: 0.5, y: 0, w: 0.5, h: 0.5}。" +
-                "**source 字段**：默认 \"last\"（裁上一张你看到的图 — 链式放大，坐标相对）；" +
-                "选 \"original\" 时裁原始照片（sibling 视图，坐标绝对）。" +
+                "**source 字段**：默认 \"original\"（裁**原始照片**——坐标绝对，永远从最高分辨率开始放大）；" +
+                "选 \"last\" 时裁上一张你看到的图（链式放大 — 坐标相对，适合继续在 zoom_in 结果里钻细节）。" +
                 "focus 字段是你想在那个区域找什么（一句话，便于在工具结果里复读）。" +
-                "**链式放大**：连续调 zoom_in（用默认 source），第二次会裁第一次的结果，可以无限迭代。" +
+                "**为什么不默认链式**：round 1 你看到的是 768-px 缩略图，链式放大会从这张小图再裁，裁出来的反而比原图更糊。" +
+                "默认 source=\"original\" 是因为 zoom_in 99% 的用法是『让我看看图上某块的细节』，从 4096-px 原图裁出来总是比从 768-px 缩略图裁更清晰。" +
+                "**链式放大**：想继续在上一张裁剪结果上钻（同一区域更深一层的细节），调第二次时显式传 source=\"last\"。" +
                 "**不要**用纯文本说『让我再看看』 — 必须用 tool_use 触发真正的裁剪。",
             inputSchema = JSONObject().apply {
                 put("type", "object")
@@ -62,8 +64,8 @@ fun ToolRegistry.registerDefaultTools() {
                     })
                     put("source", JSONObject().apply {
                         put("type", "string")
-                        put("enum", JSONArray().put("last").put("original"))
-                        put("description", "裁哪张图。last=上一张你看到的（链式，坐标相对），original=原图（sibling，坐标绝对）")
+                        put("enum", JSONArray().put("original").put("last"))
+                        put("description", "裁哪张图。original=原始照片（默认，坐标绝对，最高分辨率）；last=上一张你看到的（链式，坐标相对）")
                     })
                     put("focus", JSONObject().apply {
                         put("type", "string")
@@ -79,9 +81,18 @@ fun ToolRegistry.registerDefaultTools() {
                 val w = input.optDouble("w", 0.0).toFloat().coerceAtLeast(0.05f)
                 val h = input.optDouble("h", 0.0).toFloat().coerceAtLeast(0.05f)
                 val focus = input.optString("focus", "").ifBlank { "细节" }
-                val source = input.optString("source", "last")
+                // Default to "original" (crop the 4096-wide fullRes),
+                // not "last" (crop the 768-wide thumbnail).  With
+                // "last" as the default a 50% region on a 768 thumbnail
+                // gave the LLM a 384-wide crop — strictly less detail
+                // than round 1's view.  Defaulting to "original" makes
+                // zoom_in always a true magnifier: any region you ask
+                // for comes from the full-resolution original (capped
+                // at 1568 on output so the LLM still gets a single-
+                // resolution payload).
+                val source = input.optString("source", "original")
                 val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
-                val crop = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 80)
+                val crop = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 90)
                 if (crop == null) {
                     ToolResult(
                         toolSummary = "zoom_in 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})",
@@ -264,7 +275,7 @@ fun ToolRegistry.registerDefaultTools() {
                 val h = input.optDouble("h", 0.0).toFloat().coerceAtLeast(0.05f)
                 val source = input.optString("source", "last")
                 val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
-                val cropBytes = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 80)
+                val cropBytes = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 90)
                 if (cropBytes == null) {
                     ToolResult(
                         toolSummary = "read_text 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})"

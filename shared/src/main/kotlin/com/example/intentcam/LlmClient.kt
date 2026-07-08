@@ -86,9 +86,10 @@ class LlmClient(@Volatile var config: LlmConfig) {
 
     /**
      * Append a user-role message carrying a single JPEG plus optional
-     * text.  Used by [ToolUseLoop] for the resume path (re-using a
-     * bubble's stored imageBytes) where quadrant crops aren't
-     * available.
+     * text.  This is the only round-1 message shape we ship — 1-only
+     * image strategy since 2026-07-06.  If the model needs to drill
+     * into a region of the original photo, it calls `zoom_in` and
+     * gets a follow-up image in round 2+.
      *
      * @param ocrHint optional pre-computed OCR hint (output of
      *   [com.example.intentcam.OcrResult.formatHint]).  When
@@ -115,44 +116,6 @@ class LlmClient(@Volatile var config: LlmConfig) {
         if (text.isNotBlank()) {
             content.put(JSONObject().put("type", "text").put("text", text))
         }
-        return JSONObject().put("role", "user").put("content", content)
-    }
-
-    /**
-     * Round-1 user message that bundles the thumbnail + the four
-     * quadrant crops + an optional text prompt.  Used only when the
-     * FrameAnalyzer is in legacy "1+4" mode (eval `--quadrants` flag).
-     *
-     * Production default since 2026-07-06 is the 1-only mode —
-     * round 1 ships the thumbnail alone via [userImageMessage] and
-     * the model calls zoom_in for regions it can't read.  The 1+4
-     * path is kept here so:
-     *   - the eval can flip back for A/B testing with `--quadrants`
-     *   - older saved runs (eval_tier1..4 dumps) remain reproducible
-     *
-     * Order when used: thumbnail first (overview), then the four
-     * quadrants in reading order (top-left, top-right, bottom-left,
-     * bottom-right).
-     *
-     * @param ocrHint optional pre-computed OCR text.  Same injection
-     *   semantics as [userImageMessage].
-     */
-    fun userImageWithQuadrants(
-        thumbnail: ByteArray,
-        quadrants: List<ByteArray>,
-        text: String = "",
-        ocrHint: String = "",
-    ): JSONObject {
-        val content = JSONArray()
-        content.put(imageBlock(thumbnail))
-        for (q in quadrants) {
-            content.put(imageBlock(q))
-        }
-        if (ocrHint.isNotBlank()) {
-            content.put(JSONObject().put("type", "text").put("text", ocrHint))
-        }
-        val promptText = text.ifBlank { "调用工具。" }
-        content.put(JSONObject().put("type", "text").put("text", promptText))
         return JSONObject().put("role", "user").put("content", content)
     }
 
@@ -422,8 +385,10 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "## 工具 1: zoom_in —— 看清细节\n" +
                     "把图里某区域裁出来放大，返回裁剪后的图供你下一轮查看。\n" +
                     "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；x/y 是左上角，w/h 是宽高。" +
-                    "source 默认 'last'（链式放大 — 第二次裁第一次的结果，坐标相对）。要看原图不同区域用 source='original'（绝对坐标，兄弟视图）。\n" +
-                    "**用途**：OCR hint 里 [LOW] 行的 bbox，你想自己看清确认；或对**不在 OCR hint 里**的视觉区域（比如招牌图案、产品外观）你看不到的细节。\n" +
+                    "source 默认 'original'（裁**原始照片**——坐标绝对，永远从 4096-px 原图裁，永远比 round-1 缩略图更清晰）。" +
+                    "看上一张 zoom_in 结果里更深层细节用 source='last'（链式，坐标相对）；想看原图另一区域保持 source='original'。\n" +
+                    "**为什么不默认 last**：round-1 缩略图是 1568-px 降采样版（不是 4096-px 原图），从缩略图再裁只会得到比 round-1 还糊的图；zoom_in 的全部价值在于『放大看清原图细节』，所以从原图开始。\n" +
+                    "**用途**：OCR hint 里 [LOW] 行的 bbox，你想自己看清确认；或对**不在 OCR hint 里**的视觉区域（比如招牌图案、产品外观）你看不到的细节；或 round-1 缩略图上看不清字（密集文字 / 小字 / 模糊字），**必须**调 zoom_in 才能逐字确认。\n" +
                     "\n" +
                     "## 工具 2: read_text —— 局部 OCR 重扫\n" +
                     "对图里某区域重新跑 on-device OCR（**仅在以下场景调**）：\n" +
@@ -443,15 +408,20 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "type ∈ {info, location, solve}。\n" +
                     "\n" +
                     "## 工作流程\n" +
-                    "1. 读 user message 里的 OCR 全图扫描结果——这是文字基准，直接 verbatim 引用。\n" +
-                    "2. 看图，确认场景 / 结构 / 布局（OCR 不会告诉你图里**非文字**的东西）。\n" +
-                    "3. **冲突检查**：OCR hint 里的字和你图上看到的字对得上吗？" +
+                    "1. 读 user message 里的 OCR 全图扫描结果——这是文字**第一意见**（不是唯一意见）。\n" +
+                    "2. 看图，确认场景 / 结构 / 布局（OCR 不会告诉你图里**非文字**的东西；也可能漏掉 OCR 没识别的文字）。\n" +
+                    "3. **thumbnail 不是原图**：你看到的是 1568-px 降采样版（原图 4096-px）。视觉结构 / 颜色 / 整体布局够用，但**密集文字 / 小字 / 模糊字**在缩略图上会糊——" +
+                        "如果你看到图上有字但**逐字看不清楚**（不是「知道大概是什么」而是「看不清每个字符」），**必须**调 zoom_in 用 bbox 看清楚再写进 content / details。" +
+                        "不要因为缩略图看起来够大就跳过 zoom_in——1568 还不到原图的 40%，密集文字经常糊。\n" +
+                    "4. **冲突检查**：OCR hint 里的字和你图上看到的字对得上吗？" +
                         "对不上 → 调 compare_text 让端侧告诉你差异，对 [LOW] / 冲突行 → 调 zoom_in 用 bbox 看细节 → 如果是高保真印刷体可考虑 read_text 重扫。\n" +
-                    "4. 思考用户为什么拍这张图（意图）。\n" +
-                    "5. 调 emit_bubble：content 写原样 OCR 字符（不要意译、不要重写），details[] 填每一行 OCR 高亮（带 bbox 字段供详情页高亮）。\n" +
+                    "5. 思考用户为什么拍这张图（意图）。\n" +
+                    "6. 调 emit_bubble：content + details 都要填，**不要因为 OCR 不完美就空 emit**。\n" +
                     "\n" +
-                    "## content 字段要求（**最严格**）\n" +
-                    "content 必须包含图里**所有可见**文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式，**原样**写出来（直接 verbatim 复制 OCR hint 的字符）：\n" +
+                    "## content 字段要求\n" +
+                    "content 必须包含图里**所有可见**文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式，**原样**写出来。\n" +
+                    "OCR hint 是**优先**来源（直接 verbatim 复制）；**但 OCR 漏掉的字 / OCR 没覆盖的区域**，" +
+                    "你**自己从图上读到的字符也要写进 content**——OCR 是辅助，不是限制。\n" +
                     "  - 茶叶包装 → content 写\"包装文字：'品名: 工夫红茶', '净含量: 250g', '生产日期: 2020-12-01'\"\n" +
                     "  - 路牌 → \"建国路 100号\"\n" +
                     "  - 收据 → \"合计 ¥168.50, 微信支付\"\n" +
@@ -460,23 +430,24 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "\n" +
                     "## details 字段要求（**和 content 同等重要**）\n" +
                     "**图里每一处独立的文字 / 数字 / 品牌 / 日期 / 价格，都要在 details 里对应一行**，" +
-                    "value 写**逐字原文**（直接 verbatim 复制 OCR hint 的字符，不要意译、不要概括），" +
-                    "**bbox 字段填 OCR hint 给的 4 点坐标**（让详情页能高亮该行在原图的位置）：\n" +
+                    "value 写**逐字原文**（OCR hint 优先，OCR 漏的用你自己读的；不要意译、不要概括），" +
+                    "**bbox 字段填 OCR hint 给的 4 点坐标**（让详情页能高亮该行在原图的位置；OCR 漏掉的行可以留空 bbox）：\n" +
                     "  - {kind:'brand', label:'品名', value:'工夫红茶', bbox:[(0.10,0.20),(0.30,0.20),(0.30,0.25),(0.10,0.25)]}\n" +
                     "  - {kind:'number', label:'净含量', value:'250g', bbox:[(0.10,0.26),(0.30,0.26),(0.30,0.31),(0.10,0.31)]}\n" +
                     "  - {kind:'price', label:'合计', value:'¥168.50', bbox:[(0.40,0.50),(0.60,0.50),(0.60,0.55),(0.40,0.55)]}\n" +
-                    "**OCR hint 没识别到 / [LOW] 的行**别写进 details（宁可不写也别编），可以放在 content 里写 \"其它文字无法辨认\"。\n" +
+                    "**OCR hint [LOW] 行**（conf<0.5）**仍然写进 details**（带低置信标记或在 content 里注 \"(OCR 模糊)\"）；" +
+                    "**不要因为 OCR [LOW] 就整行 drop**——drop = 用户看不到字。\n" +
                     "**能看清多少文字就写多少行**——但**有上限**：场景上文字 > 8 处时，" +
                     "按重要性把 details 裁到 **最值得高亮的 5-8 行**（品牌、价格、日期、地址、电话、关键警示），" +
                     "其余的合并到 content 里。这能避免 answer 过长被 token 截断 / round-trip 撞超时。\n" +
                     "\n" +
-                    "## 反幻觉（**关键**）\n" +
-                    "**看不清的字宁可不写也别瞎猜**。content 漏一个字符比写错一个好——用户会按你写的内容去做事，错字比漏字危险得多。" +
-                    "对不确定的字可以写 '?' 占位（比如'??路 100号'），但**绝不要发明文字**。" +
-                    "**OCR hint [LOW] 行不要 verbatim 复制**——这是 OCR 自己都不确定的行，复制等于把噪声喂给用户；要么 zoom_in 确认后再写，要么直接 drop。" +
-                    "书法 / 手写 / 模糊字宁可空着也别假装读出来。\n" +
+                    "## 反幻觉（**关键，但不要矫枉过正**）\n" +
+                    "**看不清的字宁可不写也别瞎猜**——但**不要把这个理解成「不确定就空 emit」**。" +
+                    "看不清的字可以写 '?' 占位（比如'??路 100号'），但**绝不要发明文字**。" +
+                    "OCR hint 是参考，**但 OCR [LOW] 仍然是有用的信息**——写进 details，让用户在 UI 看到「这一行 OCR 不太确定」。" +
+                    "书法 / 手写 / 模糊字**自己读到的**也可以写（带 '?' 占位），不要假装完全没看见。\n" +
                     "\n" +
-                    "**不要**用纯文本总结。**必须**调 emit_bubble 收尾。"
+                    "**不要**用纯文本总结。**必须**调 emit_bubble 收尾——**永远不要因为 OCR 不完美就跳过 emit_bubble**。"
 
         /** Legacy system prompt for the one-shot path (unused by
          *  ToolUseLoop but kept for the /v1/messages fallthrough in

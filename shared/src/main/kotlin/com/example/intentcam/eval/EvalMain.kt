@@ -20,13 +20,14 @@ import kotlin.system.exitProcess
  * by the Android app, so eval and prod stay in sync by construction.
  * No parallel Python orchestrator to drift.
  *
- * The two things that differ from the app:
+ * The things that differ from the app:
  *  1. [ImageOps.cropImpl] + [ImageOps.thumbnailImpl] are installed as
  *     ImageIO-based impls (no Android Bitmap on the JVM).
- *  2. [OcrEngine.impl] is left null — read_text returns "" so the model
- *     sees "[OCR unavailable in eval]" and falls back to its own
- *     reading of the quadrant crops.  This mirrors the on-device
- *     behaviour when the recognizer hasn't been installed yet.
+ *  2. [OcrEngine.impl] is wired to [JvmHuaweiCloudOcrEngine] when the
+ *     `HUAWEICLOUD_SDK_AK/SK/PROJECT_ID` env vars are all set — the
+ *     round-1 OCR hint then mirrors what HMS ML Kit produces on-device.
+ *     Falls back to a no-backend stub when env vars are missing (eval
+ *     runs, just without the hint).
  *
  * Run via `gradle :shared:eval` (or `gradle :shared:eval --args=...` to
  * pass through).  Default args match the previous Python eval: 20
@@ -34,10 +35,20 @@ import kotlin.system.exitProcess
  */
 fun main(args: Array<String>) {
     installJvmImageOps()
-    // OcrEngine.impl is intentionally left null: read_text returns a
-    // "[OCR unavailable]" stub since the eval machine has no on-device
-    // OCR.  The system prompt steers the model to NOT call read_text
-    // by default anyway.
+    // OCR backend.  Tries Huawei Cloud first (env vars must all be set);
+    // silently falls back to no-backend (read_text returns "[OCR
+    // unavailable]") when the env is missing.  With the cloud backend
+    // installed the round-1 pre-pass populates the same OCR hint the
+    // Android app ships via HMS ML Kit — keeping eval and prod truly
+    // aligned, so thumbnail / crop experiments aren't biased by the
+    // "blind LLM" baseline (no hint → reads dense text off a single
+    // low-res overview → favours smaller images by accident).
+    val ocrInstalled = JvmHuaweiCloudOcrEngine.installIfConfigured()
+    System.err.println(
+        if (ocrInstalled) "[OCR] Huawei Cloud backend installed (env vars OK)"
+        else "[OCR] Huawei Cloud env vars missing — running without OCR hint " +
+            "(set HUAWEICLOUD_SDK_AK/SK/PROJECT_ID for prod-mirror mode)"
+    )
 
     val opts = parseArgs(args)
     val config = EvalConfig(
@@ -47,7 +58,6 @@ fun main(args: Array<String>) {
         resize = opts.resize,
         quality = opts.quality,
         jsonOut = opts.jsonOut,
-        quadrants = opts.quadrants,
     )
     val exit = EvalRunner(config).run()
     exitProcess(exit)
@@ -77,7 +87,11 @@ private fun jvmCropJpegRegion(
         val bot = ((y + h).coerceIn(0f, 1f) * fullH).toInt().coerceAtMost(fullH)
         if (right <= left || bot <= top) return null
         val cropped = src.getSubimage(left, top, right - left, bot - top)
-        val scale = 768f / maxOf(cropped.width, cropped.height)
+        // Cap at CROP_OUTPUT_MAX_DIM (1568, Claude vision encoder's
+        // internal grid max).  The previous 768 cap meant a zoom crop
+        // was lower-resolution than the LLM's first view of the
+        // original, defeating the purpose of zoom_in.
+        val scale = ImageOps.CROP_OUTPUT_MAX_DIM.toFloat() / maxOf(cropped.width, cropped.height)
         val out = java.io.ByteArrayOutputStream()
         val finalImage = if (scale < 1f) {
             val tw = (cropped.width * scale).toInt().coerceAtLeast(1)
@@ -96,8 +110,9 @@ private fun jvmCropJpegRegion(
         } else cropped
         // Use the per-call quality so this impl matches Android's
         // Bitmap.compress(JPEG, quality, ...) instead of ImageIO's
-        // default (~0.75).  Otherwise eval quadrants were double-encoded
-        // (q75 crop → q85 thumbnail) while prod was single-encoded (q85).
+        // default (~0.75).  Without this, the per-call quality arg
+        // was ignored and crops were encoded at ImageIO's default
+        // q0.75 — drifting the eval's crop quality from prod.
         val writers = ImageIO.getImageWritersByFormatName("jpeg")
         if (!writers.hasNext()) return null
         val writer = writers.next()
@@ -172,17 +187,22 @@ internal data class EvalOpts(
     val resize: Int,
     val quality: Int,
     val jsonOut: File?,
-    val quadrants: Boolean = false,
 )
 
 internal fun parseArgs(args: Array<String>): EvalOpts {
     var gt = "profiling/ground_truth_rctw.json"
     var imgDir = "img/rctw"
     var limit = 20
-    var resize = 768
-    var quality = 80
+    // Defaults: --resize 1568 --quality 90.  Mirrors FrameAnalyzer.MAX_DIM.
+    // 1568 was tried on 2026-07-10 and regressed -0.050 in the no-OCR
+    // eval (LLM spreads attention over the larger image and reads
+    // dense text worse; zoom_in default="last" turned from "magnifier"
+    // into "downsample" because 50% of 1568 = 784 < 1568).  Both root
+    // causes mitigated 2026-07-10 round 2: real OCR hint + zoom_in
+    // default=original.  1568 also matches Claude vision's native grid.
+    var resize = 1568
+    var quality = 90
     var jsonOut: String? = null
-    var quadrants = false
     var i = 0
     while (i < args.size) {
         when (args[i]) {
@@ -192,9 +212,9 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
             "--resize"       -> { resize = args[++i].toInt() }
             "--quality"      -> { quality = args[++i].toInt() }
             "--json-out"     -> { jsonOut = args[++i] }
-            "--quadrants"    -> { quadrants = true }
             "--help", "-h"   -> {
-                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH] [--quadrants (off by default; matches prod 1-only mode)]")
+                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH]")
+                println("  defaults: --resize 768 --quality 90 (1-only mode; matches prod)")
                 exitProcess(0)
             }
             else -> System.err.println("Unknown arg: ${args[i]}")
@@ -208,7 +228,6 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
         resize = resize,
         quality = quality,
         jsonOut = jsonOut?.let { File(it) },
-        quadrants = quadrants,
     )
 }
 
@@ -221,7 +240,6 @@ internal data class EvalConfig(
     val resize: Int,
     val quality: Int,
     val jsonOut: File?,
-    val quadrants: Boolean = false,
 )
 
 // Stub for the app's LlmConfig — only the model name + URL are used.

@@ -52,6 +52,18 @@ object ImageOps {
         thumbnailImpl?.invoke(jpeg, maxDim, quality)
 
     /** Default quality for `cropJpegRegion` callers (zoom_in, read_text).
-     *  Matches the Android app's previous hardcoded q80. */
-    const val DEFAULT_CROP_QUALITY = 80
+     *  Bumped from 80 → 90 (2026-07-10): at q80, small text glyphs in
+     *  the crop start to smudge on the 1568-cap re-encode; q90 keeps
+     *  the edge detail the LLM needs to read dense-text fixtures. */
+    const val DEFAULT_CROP_QUALITY = 90
+
+    /** Max-dim cap on the JPEG bytes produced by `cropJpegRegion`.
+     *  Matches Claude vision encoder's internal grid (1568), so crops
+     *  above this get downscaled by the model anyway — capping here
+     *  keeps the per-round payload bounded.  Also the lower bound on
+     *  "useful zoom": any crop output is ≥ this, so the LLM always
+     *  sees strictly more detail than the 768-px round-1 thumbnail
+     *  (when source="original", a 100% zoom is 1568 = 2× thumbnail
+     *  in each axis, 4× area). */
+    const val CROP_OUTPUT_MAX_DIM = 1568
 }
