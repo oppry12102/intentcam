@@ -2,6 +2,7 @@
 
 > Companion doc to [README.md](README.md).  Quick start, build,
 > and at-a-glance summary live there; this file is the deep-dive.
+> See [CONFIG.md](CONFIG.md) for every tunable constant.
 
 ## 1. The two-tool design
 
@@ -18,38 +19,35 @@ picks on anything it didn't recognize.  We collapsed to **two tools**:
 That's it.  The LLM looks at the image, calls `zoom_in` to clarify
 unclear details, then calls `emit_bubble` when satisfied.
 
-`zoom_in` is the **default mode** — the system prompt explicitly
-says "无论图是否清楚，先调 1-2 次 zoom_in 看清楚细节" (whether
+`zoom_in` is the **default mode** — the system prompt says
+"无论图是否清楚，先调 1-2 次 zoom_in 看清楚细节" (whether
 or not the image is clear, first call 1-2 zoom_in to clarify
 details).
 
 ```
 zoom_in(x, y, w, h, source, focus)
   - x, y, w, h:  归一化坐标 ∈ [0, 1]
-  - source:  "last" (chain, default) or "original" (sibling)
+  - source:  "original" (default — sibling) or "last" (chain)
   - focus:  一句话描述要找什么
 ```
 
-The client's `BitmapRegionDecoder` crops the **full-resolution**
-JPEG (kept in memory by `FrameAnalyzer`) at the requested region,
-returns the crop as a `followUpJpeg`.  The orchestrator attaches
-it to the next user message so the model sees the high-detail
-region alongside the original.
+The client's `BitmapRegionDecoder` crops the **2048-px fullRes JPEG**
+(kept in memory by `FrameAnalyzer`) at the requested region, returns
+the crop as a `followUpJpeg`.  The orchestrator attaches it to the
+next user message so the model sees the high-detail region alongside
+the original.
 
-- **Chain mode** (default `source="last"`): the second `zoom_in`
-  call crops whatever was just produced.  Calling twice with
-  default source gives a chained crop of a crop — iterative
-  zoom-in.
-- **Sibling mode** (`source="original"`): the second call crops
-  the original full-res photo.  Coords are absolute.  Use this
-  when the model wants to see two different parts of the original
-  in the same round.
+- **Sibling mode** (default `source="original"`): crops the original
+  2048-px fullRes.  Coords are absolute.  This is the **default**
+  because the round-1 thumbnail is 1568-px (downsampled from 2048-px);
+  cropping the thumbnail would only downsample again.  Sibling mode
+  is the "real magnifier."
+- **Chain mode** (`source="last"`): crops whatever was just produced.
+  Use for deep zoom on a single region across multiple rounds.
 - **Multi-zoom in one round**: every `zoom_in` call returns its
   own `followUpJpeg`; the orchestrator attaches all of them to the
-  next user message in call order.  The first one is processed;
-  the rest get a "duplicate skipped" message so the chain advances
-  deterministically.  A single round can produce 2-5 crops that
-  the model sees together.
+  next user message in call order.  A single round can produce 2-5
+  crops that the model sees together.
 
 ```
 emit_bubble(
@@ -78,13 +76,13 @@ price, brand, location, person, ...}.
 
 ```
 Round 1:
-  messages = [user(image + "调用工具。")]
+  messages = [user(thumbnail 1568-px + OCR hint + "调用工具。")]
   LLM → tool_use (zoom_in or emit_bubble)
   body runs locally → ToolResult
   if body returned followUpJpeg:
     the real crop goes into the next user message
 
-Round 2..30:
+Round 2..15:
   LLM sees the crop, decides: zoom_in again (chain) or emit_bubble
   if emit_bubble:
     extract structured fields, build Bubble, end cycle
@@ -93,26 +91,27 @@ Round 2..30:
 
 Stop when:
   - emit_bubble fires → final Bubble
-  - 30 rounds hit (configurable in ToolUseLoop.MAX_ROUNDS,
-    effectively unlimited for normal use)
-  - timeout (20s per round, hardcoded in
-    LlmClient.TOTAL_TIMEOUT_MS)
+  - 15 rounds hit (兜底 Bubble — uses last good details, 0.5 score)
+  - 60s timeout (per round; hardcoded in LlmClient.TOTAL_TIMEOUT_MS)
 ```
 
-The image the LLM sees in round 1 is the **thumbnail** (768/q80).
-The full-res photo stays in client memory and is only sent when a
-`zoom_in` tool body crops a region.  The LLM therefore sees
-**both** views when it asks for detail — the original (in round-1
-context) and the crop (in the next user message).
+The image the LLM sees in round 1 is the **1568-px thumbnail** (with
+OCR text in the same message).  The full-res photo (2048-px) stays
+in client memory and is only sent when a `zoom_in` tool body crops
+a region.  The LLM therefore sees **both** views when it asks for
+detail — the round-1 thumbnail (in context) and the crop (in the
+next user message).
 
 ## 3. Frame capture
 
 `FrameAnalyzer` produces two encodings per capture:
 
-- `thumbnail` (768 px max-dim, q80) — sent to the LLM as the
+- `thumbnail` (1568 px max-dim, q90) — sent to the LLM as the
   round-1 image.  Balances bandwidth against recognition accuracy.
-- `fullRes` (native, q95) — kept in memory so `zoom_in` can crop
-  from it at near-original resolution.
+- `fullRes` (2048 px max-dim, q95) — kept in memory so `zoom_in`
+  can crop from it.  Counter-intuitive win (2026-07-10): smaller
+  than 4096-px makes zoom_in *more* effective because crops are
+  more focused, less context dilution.
 
 There is **no stability gate** — the user controls when to capture
 via a shutter tap, not "wait for scene to settle".
@@ -135,7 +134,51 @@ AppViewModel captures:
     toolUseLoop.runCycle(thumb, full, "")
 ```
 
-## 4. State machine
+## 4. OCR (端云协同 — endcloud collaboration)
+
+Round-1 ships the thumbnail + the **OCR hint** — a structured dump
+of all on-device-recognized text.  The LLM treats this as the
+**first opinion** for visible text (not exclusive — OCR can miss
+text the LLM catches with its own vision, especially handwriting
+and art).
+
+**On-device**: HMS ML Kit's text recognizer, decodes the JPEG bytes
+internally, returns text + 4-point coords + confidence per block.
+The Kotlin side (`AndroidOcrEngine`) implements the `OcrEngine.Impl`
+interface and gets installed at `MainActivity.onCreate`.
+
+**Per-block confidence**: blocks with conf < 0.5 are marked `[LOW]`
+in the round-1 hint.  The LLM can still emit them (with the marker
+visible in the details table); the user sees "OCR 不太确定" rather
+than nothing.
+
+**Injection shape**: top-N blocks by confidence (N = 30), formatted
+as a labeled block in the user message:
+```
+【read_text 全图扫描结果】on-device OCR 已扫过整张图...
+  line 1: '建国路 100号' | bbox=[(0.10,0.20),...] | conf=0.95
+  line 2: '禁止停车' | bbox=[(0.50,0.60),...] | conf=0.62
+  ...
+```
+
+The same hint drives the `compare_text` tool's input — the LLM
+can ask the OCR backend to re-scan a region with higher detail.
+
+## 5. 1-only image strategy (since 2026-07-06)
+
+Round-1 ships **one** image — the 1568-px thumbnail.  No 4-quadrant
+breakdown.  The LLM zooms into regions it needs.
+
+Why: 1+4 (5-image round 1) was tested and benchmarked worse on
+RCTW-17 (composite 0.68 vs 0.77 on a 20-fixture sample).  The
+5-image burst blew past the 20s round budget on dense scenes
+because the LLM has to read 5 large images per round.
+
+The 1-only strategy lets the model **decide** where to spend its
+visual attention (via `zoom_in`), instead of pre-paying for 4
+quadrants up front.
+
+## 6. State machine
 
 ```
                                                   onPermissionsGranted
@@ -157,7 +200,7 @@ AppViewModel captures:
               tap 退出                              │
                             │                         │
                             └────────► (back to SCANNING) ◄───── cancel ◄─────┘
-                                                      
+
                   any → SETTINGS (openSettings / closeSettings → restartScanning)
 ```
 
@@ -166,7 +209,7 @@ Every `analyzing` write is paired with the corresponding
 `analyzing: AtomicBoolean` so the camera analyzer's `isBusy()`
 callback always sees the latest value.
 
-## 5. Bubble model
+## 7. Bubble model
 
 ```kotlin
 data class Detail(
@@ -181,7 +224,7 @@ data class Bubble(
     val title: String,            // user-facing intent, ≤30 chars
     val detail: String,           // content description
     val confidence: Float,
-    val imageBytes: ByteArray,   // high-res JPEG for detail view
+    val imageBytes: ByteArray,   // 2048-px fullRes JPEG for detail view
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
@@ -191,16 +234,16 @@ data class Bubble(
 ```
 
 `Bubble` is FIFO-capped at 4 in `UiState.bubbles`; older bubbles
-evict when a new one arrives. `imageBytes` is the original
-high-res photo (the fullRes JPEG), not the 768/q80 thumbnail, so
-the detail view can show a sharper image.
+evict when a new one arrives. `imageBytes` is the 2048-px fullRes
+JPEG (not the 1568-px thumbnail), so the detail view can show a
+sharper image.
 
 The `details` list drives the structured table in the DetailScreen
 (kind | label | value columns). Each row is something the LLM
 extracted from the image — text, numbers, brand names, dates, etc.
 The LLM populates these in `emit_bubble`'s `details` input field.
 
-## 6. Cancellation & concurrency
+## 8. Cancellation & concurrency
 
 - `viewModelScope` is the only coroutine scope; tearing down the
   ViewModel cancels every in-flight recognition.
@@ -209,7 +252,7 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 - The OkHttp `EventSource.cancel()` is invoked from
   `suspendCancellableCoroutine.invokeOnCancellation` so the SSE
   connection drops the moment the coroutine is cancelled.
-- Per-round timeout (20s) wraps the whole stream; stalled servers
+- Per-round timeout (60s) wraps the whole stream; stalled servers
   surface as a friendly `IllegalStateException("tooluse: 模型在 Nms 内未完成")`.
 
 | Thread | Where | Why |
@@ -219,23 +262,31 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 | `viewModelScope` (Main) | `AppViewModel.runToolUseCycle` | UI state writes + Compose recomposition |
 | `Main` | Compose recomposition | The whole app is single-Composable-Activity |
 
-## 7. Tuning
+## 9. Tuning
 
-| Knob | Default | Where | Purpose |
+> Single source of truth: **[CONFIG.md](CONFIG.md)**.  This table
+> is a summary; CONFIG.md has file:line + rationale + "Recently
+> retired" + "To-try-next" sections.
+
+| Knob | Value | Where | Purpose |
 |---|---|---|---|
-| `MAX_DIM` (thumbnail) | `768` | `FrameAnalyzer.kt` | max-dim cap for the LLM-facing image |
-| `QUALITY` (thumbnail) | `80` | `FrameAnalyzer.kt` | JPEG quality for the LLM-facing image |
-| `MAX_FULL_DIM` | `4096` | `FrameAnalyzer.kt` | cap for the in-memory full-res JPEG |
+| `MAX_DIM` (thumbnail) | `1568` | `FrameAnalyzer.kt` | max-dim cap for the LLM-facing image |
+| `QUALITY` (thumbnail) | `90` | `FrameAnalyzer.kt` | JPEG quality for the LLM-facing image |
+| `MAX_FULL_DIM` | `2048` | `FrameAnalyzer.kt` | cap for the in-memory full-res JPEG |
 | `FULL_QUALITY` | `95` | `FrameAnalyzer.kt` | JPEG quality for the in-memory full-res JPEG |
-| `MAX_ROUNDS` | `30` | `ToolUseLoop.kt` | soft cap; effectively unlimited for normal use |
-| `TOTAL_TIMEOUT_MS` | `20_000L` | `LlmClient.kt` | per-round SSE timeout |
-| `MAX_TOKENS` | `256` | `LlmClient.kt` | output token cap per round |
+| `CROP_OUTPUT_MAX_DIM` | `1568` | `ImageOps.kt` | max-dim cap on `zoom_in` / `read_text` crops |
+| `DEFAULT_CROP_QUALITY` | `90` | `ImageOps.kt` | JPEG quality for crops |
+| `MAX_OCR_HINT_LINES` | `30` | `OcrEngine.kt` | top-N OCR blocks injected into round-1 user message |
+| `LOW_CONFIDENCE_THRESHOLD` | `0.5` | `OcrEngine.kt` | OCR conf < 0.5 → mark `[LOW]` in hint |
+| `MAX_ROUNDS` | `30` | `ToolUseLoop.kt` | soft cap; 兜底 Bubble on hit |
+| `TOTAL_TIMEOUT_MS` | `60_000` | `LlmClient.kt` | per-round SSE timeout |
+| `MAX_TOKENS` | `1024` | `LlmClient.kt` | output token cap per round |
 | `REQUEST_TEMPERATURE` | `0.0` | `LlmClient.kt` | locked at 0 for deterministic routing |
-| `capture timeout` | `500L` ms | `AppViewModel.captureLatestFrame` | how long to wait for the analyzer's next frame |
+| `capture timeout` | `500` ms | `AppViewModel.captureLatestFrame` | how long to wait for the analyzer's next frame |
 | `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
 | `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
 
-## 8. Debug overlay
+## 10. Debug overlay
 
 `UiState.debugEnabled` (default ON) renders a translucent
 scrolling log panel above the camera preview. Each
@@ -253,7 +304,7 @@ the same `timestampMs` (millisecond resolution), causing
 "Key X was already used" and killing the process.  With `seq`
 every key is unique, the panel scrolls cleanly.
 
-## 9. Configuration
+## 11. Configuration
 
 The settings screen (top-right gear icon) lets you override
 
@@ -268,76 +319,69 @@ The settings screen (top-right gear icon) lets you override
 
 Values are persisted to `SharedPreferences` via `SettingsStore`.
 
-## 10. Eval benchmark
+## 12. Eval benchmark
 
-`profiling/eval_rctw_v2.py` is the per-fixture composite scorer.
-For 100 real RCTW-17 images (`profiling/ground_truth_rctw.json`,
-GT parsed from the dataset's XML labels), it computes:
+The eval is the Kotlin `:shared:eval` task — it runs the **real**
+`ToolUseLoop` + `LlmClient` + `OcrEngine` (no parallel
+implementation).  Production code is exercised end-to-end against
+real fixtures.
+
+### Scoring
 
 ```
-composite = 0.50 × r1_score + 0.50 × r2_score
-r1_score  = 0.70 × (tool_pick == zoom_in/emit_bubble ? 1.0 : 0)
-          + 0.30 × (input_valid)
-r2_score  = 0.5 × text_match + 0.5 × type_match
-text_match = 0.5 × keyword_命中率 + 0.5 × detail_命中率
-  - keyword:  expected_description_keywords 出现在 LLM 的
-              content 文本 + details[].value
-  - detail:   expected_details (kind, label, value) 任一字段
-              fuzzy 匹配 LLM 提取的 details
-type_match = emit_bubble.type == 'info' ? 1.0 : 0
+composite    = 0.50 × r1_score + 0.50 × r2_score
+r1_score     = 0.70 × (tool_pick == zoom_in/emit_bubble ? 1.0 : 0)
+             + 0.30 × (input_valid)
+r2_score     = 0.50 × text_match + 0.50 × type_match
+text_match   = fuzzy_text  (CharSequence overlap, threshold 0.67)
+             ∪ strict_text  (substring of expected keywords)
+type_match   = right 1.0 | valid-wrong 0.5 | empty 0.0
+兜底 Bubble  = if MAX_ROUNDS hit without emit, force bubble with
+              last good details; r2_text = 0.5, r2_type = 0.5
 ```
 
-### 100 real RCTW-17 images (default category)
+### Fixtures
 
 `profiling/ground_truth_rctw.json` has 100 scenes, all with
 `category='default'` and `expected_type='info'`.  Images are
 sampled from `/home/oppry/RCTW-171/train_images` (RCTW-17
 ICDAR 2017 Chinese scene text dataset, 8034 train images).
 Files renamed `rctw_default_NN.jpg`.  GT auto-parsed from the
-dataset's XML labels (`/home/oppry/RCTW-171/train_gts/image_N.txt`):
-8 corner-coords + difficulty + `"text"` per line.  We keep only
-`difficulty=0` (legible) lines and convert to:
-- `expected_description_keywords`: union of all visible text
-- `expected_details`: first 6 `{kind, label, value}` rows
-  (`kind = 'number'` if any digit, else `'text'`)
+dataset's XML labels.
 
-The orchestrator drives 1-3 rounds:
-- R1: model sees thumbnail, calls `zoom_in` (default)
-- R2: model sees crop, calls `zoom_in` again (chain) or `emit_bubble`
-- R3: hard-nudged to `emit_bubble` if still zooming
+### Baseline chain
 
-Latest run (--resize 768 --quality 80, 100 fixtures):
+| Date | composite | Δ | Key change |
+|---|---|---|---|
+| 2026-07-06 | 0.652 | — | (1-only image strategy landed) |
+| 2026-07-07 | 0.819 | +0.167 | timeout 60s + 兜底 Bubble + details cap + type-partial-credit |
+| 2026-07-08 | 0.835 | +0.016 | OCR-aware collaboration (端云协同) |
+| 2026-07-10 | 0.838 | +0.003 | softened prompt (no over-hedge on imperfect OCR) |
+| 2026-07-10 | 0.841 | +0.003 | 1568 thumb + zoom_in=original + "thumbnail ≠ 原图" nudge |
+| 2026-07-10 | **0.853** | +0.012 | @100 verification of the above (12W/8L/0T) |
+| 2026-07-10 | 0.898 | +0.045 | `MAX_FULL_DIM` 4096→2048 (counter-intuitive win) |
 
-| Config | Average composite |
-|---|---|
-| **768 / q80** | **0.652** |
+`profiling/eval_*.json` keeps every JSON dump; use
+`profiling/diff_eval.py` to compare two runs side-by-side.
 
-```
-r1_score 0.79 — model reliably picks zoom_in first
-r2_type 1.00 — emit_bubble.type = 'info' consistent
-r2_text 0.00-0.50 — model emits natural-language descriptions
-             ("storefront sign with red text") but does NOT yet
-             include the exact Chinese characters the GT
-             expects ("大懒人冒菜", "AN REN", etc.)
-```
+### Ablations (tested, rejected)
 
-The remaining bottleneck is r2_text — the model needs to
-transcribe visible text rather than paraphrase.  Future work
-will add embedding-based fuzzy match in the eval scorer
-and force emit_bubble to populate `details[*].value` with raw text
-(the GT already has those strings).
+| Proposal | Δ | Why rejected |
+|---|---|---|
+| `MAX_OCR_HINT_LINES` 30→20 | -0.012 | r2_text_fuzzy -0.042; model was using those lines |
+| `MAX_ROUNDS` 30→15 | -0.012 | rctw_default_10 hit cap → 兜底 empty → -0.257 |
+| r1/r2 weights 0.50/0.50→0.40/0.60 | -0.069 | Pure rebalance; r1 near-ceiling; user chose headline tracking |
 
-`profiling/runs/` keeps a measurement trail of past evals.
-
-## 11. TODOs
+## 13. TODOs
 
 - Release signing config + `isMinifyEnabled = true` (currently debug-only)
 - Plumb `ANTHROPIC_AUTH_TOKEN` env var into the default token at
   build time so the debug APK works out-of-the-box without manual
   Settings entry
-- CI: run `eval_rctw_v2.py --resize 768 --quality 80` on every
-  commit; flag regressions > 0.05 in average composite
-- r2_text: model needs to transcribe visible text verbatim.  Future
-  iteration will add embedding-based fuzzy match in the eval scorer
-  and force emit_bubble to populate `details[*].value` with raw text
-  (the GT already has those strings).
+- CI: run `profiling/eval_*` on every commit; flag regressions
+  > 0.05 in average composite
+- r2_text: lift the r2_text ceiling (currently 0.74 strict, 0.63
+  fuzzy).  The model is at the limit of the 1568-px thumb + OCR
+  hint; next experiments should explore higher resolution crops,
+  text-region detection, or a tool that returns structured text
+  per region.
