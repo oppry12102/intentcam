@@ -1,0 +1,43 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 1,
+  "overall_composite": 0.75,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 768,
+  "fixture_count": 1,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.75},
+  "fixtures": [{
+    "raw_content": "",
+    "r2_text": 0.5,
+    "details_count": 3,
+    "raw_details": [
+      {
+        "kind": "text",
+        "label": "第一行（隶书）",
+        "value": "空山新雨後"
+      },
+      {
+        "kind": "text",
+        "label": "第二行（隶书）",
+        "value": "天氣晚來秋"
+      },
+      {
+        "kind": "text",
+        "label": "第三行（隶书）",
+        "value": "明月松間照"
+      }
+    ],
+    "r2_type": 1,
+    "composite": 0.75,
+    "r2_text_fuzzy": 0,
+    "has_text": true,
+    "picked_tool": "zoom_in",
+    "id": "rctw_default_01",
+    "category": "default",
+    "content_len": 0,
+    "r1": 1
+  }]
+}
