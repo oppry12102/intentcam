@@ -1,0 +1,548 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.7908333333333333,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.7908333333333333},
+  "fixtures": [
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "放大后看清楚了：主招牌是\"Gazan雅山\"（Gazan 后跟\"雅山\"两个字，最后那个字左半边像\"山\"旁），副标题是\"牛满碗·奇道中式料理\"。我注意到\"山\"字右边似乎还有被裁掉的部分，再确认一下最右边的字。",
+      "r2_text": 0.75,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 102,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一幅室内墙绘/壁画，画面主体为云南元阳哈尼梯田风格的插画（深色背景配以金黄色梯田、红色背篓、绿色植物叶脉等元素），用白色艺术字写着两行文字：\"李弯曲曲的水稻梯田，在阳光下，水波粼粼。\" 整幅画下方有一条LED灯带照明。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "墙面文字第一行",
+          "value": "李弯曲曲的水稻梯田，"
+        },
+        {
+          "kind": "text",
+          "label": "墙面文字第二行",
+          "value": "在阳光下，水波粼粼。"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_05",
+      "category": "default",
+      "content_len": 111,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "医院走廊内一个科室的入口，上方挂着绿色椭圆形标牌，中文写着「疤痕治疗与康复中心」，下方英文「Anti-Scar Treatment Rehabilitation Center」。深棕色木门半开着，门内可见储物架和一把蓝色雨伞。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "科室名称（中文）",
+          "value": "疤痕治疗与康复中心"
+        },
+        {
+          "kind": "text",
+          "label": "科室名称（英文）",
+          "value": "Anti-Scar Treatment Rehabilitation Center"
+        },
+        {
+          "kind": "object",
+          "label": "门牌形态",
+          "value": "绿色椭圆形科室标牌（带黄色描边），白字中英文双语"
+        },
+        {
+          "kind": "object",
+          "label": "门的开合状态",
+          "value": "深棕色木质双扇门，左扇关闭、右扇半开，可看到室内储物柜和一把蓝色雨伞"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_06",
+      "category": "default",
+      "content_len": 113,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一张红色调的活动海报，主标题为\"仟仟有礼\"，副标题为\"随机立减\"，左上有\"2016\"年份标识。海报中央说明文字为\"支付宝付款消费满20元即可享受随机立减优惠\"。下方有小吃美食的图片（包含葱油饼",
+      "r2_text": 0.9166666666666667,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "date",
+          "label": "年份标识",
+          "value": "2016"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "仟仟有礼"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "随机立减"
+        },
+        {
+          "kind": "text",
+          "label": "活动说明",
+          "value": "支付宝付款消费满20元即可享受随机立减优惠"
+        },
+        {
+          "kind": "object",
+          "label": "底部图片",
+          "value": "小吃拼盘图（含葱油饼、饺子、糍粑、蘸酱等）"
+        },
+        {
+          "kind": "text",
+          "label": "底部细则",
+          "value": "底部含活动细则小字（多行，模糊无法逐字辨识）"
+        },
+        {
+          "kind": "logo",
+          "label": "底部支付logo",
+          "value": "支付宝/口碑等支付方式logo"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9583333333333334,
+      "r2_text_fuzzy": 0.8333333333333334,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_07",
+      "category": "default",
+      "content_len": 98,
+      "r1": 1
+    },
+    {
+      "raw_content": "医院走廊墙面上的方向指示牌，绿色椭圆形底配橙色边框，白色字写着\"CT检查 DR拍片\"并带一个向右的橙色箭头（→），指示该方向通往CT检查和DR拍片室。背景是浅色瓷砖墙面，反光中隐约可见走廊。",
+      "r2_text": 0.75,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "text",
+        "label": "指示牌文字",
+        "value": "CT检查 DR拍片 →"
+      }],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_08",
+      "category": "default",
+      "content_len": 95,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "一扇红色门框的玻璃门，门上方挂着一块黑色标牌，上面用中英双语写着「管理间 / Management Room」。墙面是米色大理石瓷砖。",
+      "r2_text": 0.5833333333333333,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标牌中文",
+          "value": "管 理 间"
+        },
+        {
+          "kind": "text",
+          "label": "标牌英文",
+          "value": "Management Room"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7391666666666666,
+      "r2_text_fuzzy": 0.6666666666666666,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_09",
+      "category": "default",
+      "content_len": 67,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是微信公众号\"中国能量堡垒\"的消息通知页面（晚上7:58），包含两条扫码获得能量币的通知：\n\n1. 第一条：扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得118能量币。\n2. 第二条（1月13日）：扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得108能量币。\n\n页面中部有一条产品广告横幅：品牌\"能量堡垒 ENERGY FORTNESS\"，宣传语\"全家优营养 健康正能量\"，代言人\"能量大使：田亮\"，展示产品包括DHA蛋白质粉、乳清蛋白质粉等，右下角防伪码4000581008。\n\n底部菜单栏：能量资讯 / 营养商学院 / 扫一扫。",
+      "r2_text": 0.9333333333333333,
+      "details_count": 14,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "公众号名称",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "number",
+          "label": "系统时间",
+          "value": "晚上7:58"
+        },
+        {
+          "kind": "text",
+          "label": "第一条消息内容",
+          "value": "您好，通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币"
+        },
+        {
+          "kind": "number",
+          "label": "葛根提取物软胶囊扫码编号",
+          "value": "1420279160816506"
+        },
+        {
+          "kind": "number",
+          "label": "葛根胶囊获得能量币",
+          "value": "118能量币"
+        },
+        {
+          "kind": "text",
+          "label": "第一条消息标题",
+          "value": "能量堡垒葛根提取物软胶囊"
+        },
+        {
+          "kind": "date",
+          "label": "第二条消息日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "第二条消息标题",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "text",
+          "label": "第二条消息内容",
+          "value": "您好，通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币"
+        },
+        {
+          "kind": "number",
+          "label": "维生素C片扫码编号",
+          "value": "1420519580860218"
+        },
+        {
+          "kind": "number",
+          "label": "维生素C片获得能量币",
+          "value": "108能量币"
+        },
+        {
+          "kind": "brand",
+          "label": "广告横幅品牌/宣传语",
+          "value": "能量堡垒 ENERGY FORTNESS 全家优营养 健康正能量 能量大使：田亮 DHA蛋白质粉 乳清蛋白质粉"
+        },
+        {
+          "kind": "number",
+          "label": "广告防伪码",
+          "value": "4000581008"
+        },
+        {
+          "kind": "text",
+          "label": "底部菜单",
+          "value": "能量资讯 / 营养商学院 / 扫一扫"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9666666666666667,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 298,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是立在人行道上的一块金属A字型禁停告示牌，上方为蓝色\"P\"字加红色禁止圆圈与斜杠的通用禁停标志（表面似有红色涂抹痕迹），下方中文写着\"请勿泊车\"，英文写着\"NO PARKING\"，提示此处禁止停车。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "中文提示",
+          "value": "请勿泊车"
+        },
+        {
+          "kind": "text",
+          "label": "英文提示",
+          "value": "NO PARKING"
+        },
+        {
+          "kind": "logo",
+          "label": "禁停标志",
+          "value": "蓝色P字加红色禁止圆圈与斜杠"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_11",
+      "category": "default",
+      "content_len": 100,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_12",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_13",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5833333333333334,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "关闭按钮",
+          "value": "关闭"
+        },
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "发红包"
+        },
+        {
+          "kind": "text",
+          "label": "支付方式",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "number",
+          "label": "红包个数",
+          "value": "5 个"
+        },
+        {
+          "kind": "text",
+          "label": "群成员数",
+          "value": "本群共11人"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.7391666666666667,
+      "r2_text_fuzzy": 0.4,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一处老建筑（白墙黛瓦、传统瓦当）的入口，门洞上方挂着一块深色（紫檀色）木匾，匾上以金色楷书自右向左题写四个大字\"長留客棧\"，匾面左侧另有红色小字落款（字迹模糊难以辨认，疑为书写者署名）。匾下是一道狭长的石砌门洞通道，门外左侧有木栅栏空调外机，右侧墙面有电线管；通道入口处有石阶。\"長留客棧\"即\"长留客栈\"，是古时供旅客长住的旅店。OCR hint 把字符顺序读反了（给出\"接客留長\"），正确顺序应是从右至左读作\"長留客棧\"。",
+      "r2_text": 0.5,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "匾额大字（从右至左）",
+          "value": "長留客棧"
+        },
+        {
+          "kind": "text",
+          "label": "匾额左侧小字落款",
+          "value": "（红色小字，模糊难以辨认，疑似书写者署名）"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.75,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_16",
+      "category": "default",
+      "content_len": 214,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_17",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_18",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑外墙上的红色艺术字招牌，左侧有红色心形 logo，文字为\"中国华源网\"，安装在大理石纹外墙的铝合金门头上方，上方是玻璃窗和白色墙体。",
+      "r2_text": 0.5,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "logo",
+          "value": "红色心形图案"
+        },
+        {
+          "kind": "text",
+          "label": "招牌文字",
+          "value": "中国华源网"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_19",
+      "category": "default",
+      "content_len": 68,
+      "r1": 1
+    },
+    {
+      "raw_content": "夜景街景：一个大型石材拱形窗内嵌有竖排白色发光大字\"观光电梯\"，窗外可见室内\"明珠大厦 羲之堂\"霓虹招牌。画面右侧远处楼上亮着\"FJLI健身\"招牌，下方能看到街上有行人撑伞，地面湿润，像是刚下过雨。",
+      "r2_text": 0.41666666666666663,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "拱形窗内主标",
+          "value": "观光电梯"
+        },
+        {
+          "kind": "logo",
+          "label": "右上角发光招牌",
+          "value": "FJLI健身"
+        },
+        {
+          "kind": "text",
+          "label": "拱形窗内副标(霓虹)",
+          "value": "明珠大厦 羲之堂"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7083333333333333,
+      "r2_text_fuzzy": 0.3333333333333333,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_20",
+      "category": "default",
+      "content_len": 99,
+      "r1": 1
+    }
+  ]
+}
