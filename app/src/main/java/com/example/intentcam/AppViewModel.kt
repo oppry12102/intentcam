@@ -362,15 +362,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    /**
-     * User tapped an action chip in the detail view.  Runs a
-     * Reserved for action_chips.  Deferred — emit_bubble in the
-     * new architecture doesn't carry chips, so runChip has no
-     * triggers in the UI.  Kept as a stub for future re-enablement.
-     */
-    fun runChip(jpeg: ByteArray, @Suppress("UNUSED_PARAMETER") chip: Any) {
-        // no-op until action_chips are re-enabled
-    }
+    // NOTE: `runChip` and `runCycleWithPrePickedTool` removed 2026-07-10
+    // — both were stubs for the deferred action_chips feature.
+    // ActionChipButton in MainActivity was already removed; these
+    // were the only other references.  Re-add when action_chips
+    // come back to the emit_bubble schema.
 
     /** User explicitly tapped "重新扫描" — full reset including bubble history. */
     fun restartScanning() {

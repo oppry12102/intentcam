@@ -43,7 +43,7 @@ private fun androidCropJpegRegion(
         val rect = Rect(left, top, right, bot)
         if (rect.width() <= 0 || rect.height() <= 0) return null
         val regionDecoder = BitmapRegionDecoder.newInstance(
-            fullResJpeg, 0, fullResJpeg.size, false
+            fullResJpeg, 0, fullResJpeg.size
         )
         val cropped = regionDecoder.decodeRegion(rect, null)
         regionDecoder.recycle()
