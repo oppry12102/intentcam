@@ -243,13 +243,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             "TOOL",
             "→ runCycle (thumb=${frame.thumbnail.size / 1024}KB " +
                 "full=${frame.fullRes.size / 1024}KB " +
-                "quads=${frame.quadrants.size} userText='${userText.take(40)}')"
+                "userText='${userText.take(40)}')"
         )
         val outcome = toolUseLoop.runCycle(
             thumbnail = frame.thumbnail,
             fullRes = frame.fullRes,
             userText = userText,
-            quadrants = frame.quadrants,
         )
         when (outcome) {
             is ToolUseLoop.Outcome.Bubble -> {

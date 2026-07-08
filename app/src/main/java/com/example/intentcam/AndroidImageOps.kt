@@ -50,7 +50,13 @@ private fun androidCropJpegRegion(
         if (cropped == null) return null
         // Re-encode the crop at thumbnail sizing so the LLM gets a
         // single-resolution payload it can compare across rounds.
-        val scale = 768f / maxOf(cropped.width, cropped.height)
+        // Cap at CROP_OUTPUT_MAX_DIM (1568, Claude vision encoder's
+        // internal grid max) so a zoom crop isn't *less* detailed
+        // than the LLM's first view of the original.  The prior
+        // 768 cap threw away 50%+ linear pixels for any crop larger
+        // than that, which is why the model "zoomed in" and then
+        // struggled to read fine text.
+        val scale = ImageOps.CROP_OUTPUT_MAX_DIM.toFloat() / maxOf(cropped.width, cropped.height)
         val finalBitmap = if (scale < 1f) {
             val sw = (cropped.width * scale).toInt().coerceAtLeast(1)
             val sh = (cropped.height * scale).toInt().coerceAtLeast(1)
