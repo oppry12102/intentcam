@@ -47,8 +47,7 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("Loaded $limit real-photo fixtures from ${config.groundTruth.name}")
         println(
             "FrameAnalyzer simulation: --resize ${config.resize} --quality ${config.quality}  " +
-                (if (config.quadrants) "image-strategy=1+4 (legacy 5-image mode)"
-                 else "image-strategy=1-only (default since 2026-07-06 — matches prod)")
+                "image-strategy=1-only (matches prod since 2026-07-06)"
         )
 
         val perCategory = mutableMapOf<String, MutableList<Double>>()
@@ -66,36 +65,22 @@ internal class EvalRunner(private val config: EvalConfig) {
             }
 
             // Build a CapturedFrame that mirrors what FrameAnalyzer
-            // would produce on-device: 1 thumbnail + 1 fullRes + 4
-            // quadrant crops.  The ImageIO-based thumbnail/crop impls
-            // (installed by EvalMain) are the JVM equivalent of
-            // BitmapFactory + BitmapRegionDecoder.  Thumbnail sizing
-            // comes from --resize/--quality; quadrant quality stays at
-            // 85 (matches Android FrameAnalyzer.QUADRANT_QUALITY).
+            // produces on-device: 1 thumbnail + 1 fullRes (1-only
+            // image strategy, default since 2026-07-06).  The
+            // ImageIO-based thumbnail/crop impls (installed by
+            // EvalMain) are the JVM equivalent of BitmapFactory +
+            // BitmapRegionDecoder.  Thumbnail sizing comes from
+            // --resize/--quality.
             val rawBytes = imgPath.readBytes()
-            val fullRes = encodeThumbnail(rawBytes, maxDim = 4096, quality = 95) ?: rawBytes
+            val fullRes = encodeThumbnail(rawBytes, maxDim = 2048, quality = 95) ?: rawBytes
             val thumbnail = encodeThumbnail(
                 rawBytes,
                 maxDim = config.resize,
                 quality = config.quality,
             ) ?: rawBytes
-            val quadrants = if (config.quadrants) {
-                listOf(
-                    encodeQuadrant(rawBytes, 0f, 0f, 0.5f, 0.5f),
-                    encodeQuadrant(rawBytes, 0.5f, 0f, 0.5f, 0.5f),
-                    encodeQuadrant(rawBytes, 0f, 0.5f, 0.5f, 0.5f),
-                    encodeQuadrant(rawBytes, 0.5f, 0.5f, 0.5f, 0.5f),
-                ).filterNotNull()
-            } else {
-                emptyList()
-            }
-            if (!config.quadrants) {
-                println("  [1-only mode] skipping 4 quadrants; model relies on thumbnail + zoom_in chain")
-            }
             val frame = CapturedFrame(
                 thumbnail = thumbnail,
                 fullRes = fullRes,
-                quadrants = quadrants,
             )
 
             // Run the real orchestrator.  This calls into the same
@@ -106,7 +91,6 @@ internal class EvalRunner(private val config: EvalConfig) {
                     thumbnail = frame.thumbnail,
                     fullRes = frame.fullRes,
                     userText = "",
-                    quadrants = frame.quadrants,
                 )
             }
             if (outcome is ToolUseLoop.Outcome.Error) {
@@ -246,25 +230,7 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("wrote ${results.size} fixture results to ${file.path}")
     }
 
-    private fun encodeQuadrant(
-        raw: ByteArray,
-        fx: Float, fy: Float, fw: Float, fh: Float,
-    ): ByteArray? {
-        // Single-encode crop + downscale (matches Android's
-        // FrameAnalyzer.encodeQuadrant which crops the Bitmap in memory
-        // and re-encodes once at q85).  Previously this was two
-        // encodes — crop-thumbnail at default q75, then encodeThumbnail
-        // at q85 — which made eval JPEG quality drift from prod.
-        return com.example.intentcam.cropJpegRegion(
-            raw, fx, fy, fw, fh, quality = QUADRANT_QUALITY,
-        )
-    }
-
     private companion object {
-        /** Matches Android's FrameAnalyzer.QUADRANT_QUALITY — quadrants
-         *  are encoded at higher quality than the overview thumbnail
-         *  because each crop uses the full pixel budget. */
-        const val QUADRANT_QUALITY = 85
         /** Char-overlap threshold for [hybridMatch]'s secondary
          *  fallback.  Mirrors Kotlin's own `scoreRound2TextFuzzy`
          *  ≥0.67 ratio and Python aligned4's `_hybrid_match`.  Below

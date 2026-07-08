@@ -360,9 +360,6 @@ class ToolUseLoop(
      *
      * @param thumbnail the small JPEG sent to the LLM as the
      *   round-1 overview.
-     * @param quadrants four high-detail crops (top-left, top-right,
-     *   bottom-left, bottom-right) bundled with the thumbnail in
-     *   round 1.  Empty list falls back to the single-image message.
      * @param fullRes the original full-resolution JPEG; preserved
      *   across rounds so zoom_in can crop from it on demand.
      * @param userText optional follow-up text from a prior
@@ -372,7 +369,6 @@ class ToolUseLoop(
         thumbnail: ByteArray,
         fullRes: ByteArray,
         userText: String,
-        quadrants: List<ByteArray> = emptyList(),
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
@@ -427,8 +423,7 @@ class ToolUseLoop(
         log("OCR", ocrStatus)
         val messages = JSONArray()
             .put(
-                if (quadrants.isEmpty()) client.userImageMessage(thumbnail, userText, ocrHint)
-                else client.userImageWithQuadrants(thumbnail, quadrants, userText, ocrHint)
+                client.userImageMessage(thumbnail, userText, ocrHint)
             )
 
         var lastRound: RoundSnapshot? = null
@@ -813,18 +808,15 @@ class ToolUseLoop(
          *  two-stage content-then-intent flow + iterative zoom_in,
          *  the model can need 5-10 rounds to converge on dense
          *  images.  30 is plenty for normal use; bigger is fine for
-         *  debugging. */
+         *  debugging.  Tested 15 (2026-07-10 round 2): at least one
+         *  fixture (rctw_default_10) hit the cap and the 兜底 Bubble
+         *  fired with empty content → r2_text_fuzzy 0.0, composite
+         *  -0.257.  Tighter cap = not safe.  Reverted. */
         const val MAX_ROUNDS = 30
 
         /** The tool name the model uses to emit the final Bubble.
          *  Tracked separately so we don't overwrite the interpreting
          *  tool's name in the Bubble's `toolName` field. */
         const val FINAL_BUBBLE_TOOL = "emit_bubble"
-
-        /** Legacy constant kept for back-compat with prior eval
-         *  dumps; replaced by [OcrResult.MAX_OCR_HINT_LINES] (line-
-         *  based cap) + [OcrResult.formatHint] (structured blocks
-         *  format).  No longer referenced by ToolUseLoop. */
-        const val MAX_OCR_HINT_CHARS = 1500
     }
 }

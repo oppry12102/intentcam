@@ -79,12 +79,14 @@ data class OcrResult(
         const val LOW_CONFIDENCE_THRESHOLD = 0.5f
 
         /** Hard cap on the number of OCR blocks injected into the
-         *  round-1 user message.  Replaces the prior
-         *  `MAX_OCR_HINT_CHARS = 1500` byte cap — by selecting the
-         *  top-30 by confidence we keep the prompt bounded (~2 KB)
-         *  while keeping higher info density than a flat text dump.
+         *  round-1 user message.  By selecting the top-N by
+         *  confidence we keep the prompt bounded (~2 KB) while
+         *  keeping higher info density than a flat text dump.
          *  30 fits the "details: 5-8 row" guidance from the system
-         *  prompt plus headroom for compare_text follow-ups. */
+         *  prompt plus headroom for compare_text follow-ups.
+         *  Tested 20 (2026-07-10 round 2): regressed r2_text_fuzzy
+         *  -0.042 vs 30 lines; some text the model was verifying
+         *  got truncated out of the hint.  Reverted. */
         const val MAX_OCR_HINT_LINES = 30
 
         /** Format the structured [blocks] list as the round-1 hint
