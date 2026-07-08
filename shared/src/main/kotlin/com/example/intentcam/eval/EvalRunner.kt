@@ -265,6 +265,12 @@ internal class EvalRunner(private val config: EvalConfig) {
          *  are encoded at higher quality than the overview thumbnail
          *  because each crop uses the full pixel budget. */
         const val QUADRANT_QUALITY = 85
+        /** Char-overlap threshold for [hybridMatch]'s secondary
+         *  fallback.  Mirrors Kotlin's own `scoreRound2TextFuzzy`
+         *  ≥0.67 ratio and Python aligned4's `_hybrid_match`.  Below
+         *  this threshold we declare no hit (avoid over-credit on
+         *  trivial 1-2 char matches). */
+        const val CHAR_OVERLAP_THRESHOLD = 0.67
     }
 
     private fun scoreRound1(
@@ -344,13 +350,17 @@ internal class EvalRunner(private val config: EvalConfig) {
         val expectedKeywords = scene.optJSONArray("expected_description_keywords")
         val expectedDetails = scene.optJSONArray("expected_details")
 
-        // Text keyword hit rate.
+        // Text keyword hit rate.  Uses [hybridMatch] (fuzzyMatch +
+        // ≥0.67 char-overlap fallback) so that near-correct transcriptions
+        // like "建国路 100 号" matching GT "建国路100号" count as hits —
+        // mirrors Python aligned4's `_hybrid_match`.  See hybridMatch's
+        // docstring for the rationale.
         var textScore = 0.0
         var denom = 0
         if (expectedKeywords != null && expectedKeywords.length() > 0) {
             val contentNorm = normalize(content)
             val hits = (0 until expectedKeywords.length()).count { i ->
-                fuzzyMatch(contentNorm, expectedKeywords.getString(i))
+                hybridMatch(contentNorm, expectedKeywords.getString(i))
             }
             textScore = hits.toDouble() / expectedKeywords.length()
             denom++
@@ -371,7 +381,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 val exp = expectedDetails.getJSONObject(i)
                 val eValue = normalize(exp.optString("value", ""))
                 if (eValue.isEmpty()) continue
-                val matched = llmValues.any { lv -> fuzzyMatch(lv, eValue) }
+                val matched = llmValues.any { lv -> hybridMatch(lv, eValue) }
                 if (matched) hits++
             }
             val detailScore = hits.toDouble() / expectedDetails.length()
@@ -497,5 +507,29 @@ internal class EvalRunner(private val config: EvalConfig) {
         if (nNoWs in hNoWs) return true
         if (hNoWs in nNoWs && nNoWs.length >= 2) return true
         return false
+    }
+
+    /**
+     * Two-stage match.  Tries [fuzzyMatch] first (bidirectional
+     * substring contains), then falls back to a ≥[CHAR_OVERLAP_THRESHOLD]
+     * char-overlap ratio (mirrors Python `eval_rctw_v2._hybrid_match`).
+     *
+     * Without the char-overlap fallback, strict substring misses many
+     * near-correct Chinese transcriptions where the model split a
+     * multi-character token with whitespace ("建国路100号" vs
+     * "建国路 100 号").  Python aligned4 found this lifted r2_text
+     * by +0.021 on @100 with no over-credit risk at 0.67.
+     */
+    private fun hybridMatch(hay: String, needle: String): Boolean {
+        if (fuzzyMatch(hay, needle)) return true
+        val n = normalize(needle).replace(" ", "")
+        if (n.isEmpty()) return true
+        val h = normalize(hay).replace(" ", "")
+        if (h.isEmpty()) return false
+        val nChars = n.toSet()
+        if (nChars.isEmpty()) return true
+        if (nChars.size == 1) return nChars.first() in h
+        val present = nChars.count { it in h }
+        return present.toDouble() / nChars.size >= CHAR_OVERLAP_THRESHOLD
     }
 }
