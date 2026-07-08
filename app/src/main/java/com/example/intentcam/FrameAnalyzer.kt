@@ -88,11 +88,12 @@ class FrameAnalyzer(
      *  - fullRes:   at native resolution, quality [FULL_QUALITY] —
      *    kept in memory so zoom_in can crop from it.
      *
-     * Quadrants used to be encoded here as 4 sub-JPEGs and shipped
-     * alongside the thumbnail (round-1 "1+4" mode).  That strategy was
-     * retired 2026-07-06 — see [bufferToFrame]'s comment + the eval
-     * dumps under profiling/.  Quadrants now round-trip as empty list;
-     * the model relies on zoom_in when the thumbnail isn't enough.
+     * **1-only image strategy** (default since 2026-07-06).  The model
+     * sees the thumbnail alone in round 1 and calls zoom_in for
+     * regions it can't read.  Sending 1+4 (5 images up front) was
+     * tried and benchmarked worse on RCTW-17 (composite 0.68 vs 0.77
+     * on a 20-fixture sample) — the 5-image burst blew past the 20s
+     * round budget on dense scenes.
      */
     private fun bufferToFrame(
         buffer: java.nio.ByteBuffer,
@@ -125,33 +126,9 @@ class FrameAnalyzer(
         // is the small payload that ships to the LLM.
         val fullRes = encodeBitmap(work, quality = FULL_QUALITY, maxDim = MAX_FULL_DIM)
         val thumbnail = encodeBitmap(work, quality = QUALITY, maxDim = MAX_DIM)
-        // 1-only image strategy (default since 2026-07-06).  The model
-        // sees the thumbnail alone in round 1 and zooms_in on regions
-        // it can't read.  Sending 1+4 (5 images up front) was tried
-        // and benchmarked worse on RCTW-17 (composite 0.68 vs 0.77
-        // on a 20-fixture sample) — the 5-image burst blew past the
-        // 20s round budget on dense scenes.  See CHANGELOG/SECOND-LAYER.md
-        // details in the eval tier dumps under profiling/.
-        val quadrants = emptyList<ByteArray>()
         work.recycle()
         if (fullRes == null || thumbnail == null) return null
-        return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes, quadrants = quadrants)
-    }
-
-    private fun encodeQuadrant(src: Bitmap, fx: Float, fy: Float, fw: Float, fh: Float): ByteArray? {
-        val W = src.width
-        val H = src.height
-        val left = (fx * W).toInt().coerceAtLeast(0)
-        val top = (fy * H).toInt().coerceAtLeast(0)
-        val right = ((fx + fw) * W).toInt().coerceAtMost(W)
-        val bot = ((fy + fh) * H).toInt().coerceAtMost(H)
-        if (right <= left || bot <= top) return null
-        val crop = Bitmap.createBitmap(src, left, top, right - left, bot - top)
-        try {
-            return encodeBitmap(crop, quality = QUADRANT_QUALITY, maxDim = QUADRANT_MAX_DIM)
-        } finally {
-            crop.recycle()
-        }
+        return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes)
     }
 
     private fun encodeBitmap(src: Bitmap, quality: Int, maxDim: Int): ByteArray? {
@@ -168,23 +145,27 @@ class FrameAnalyzer(
     }
 
     private companion object {
-        // Thumbnail (initial LLM image): 768 px max-dim, q80.  Picked
-        // after benchmarking — see eval-history note in
-        // profiling/eval_resize.py.
-        const val MAX_DIM = 768
-        const val QUALITY = 80
-        // Full-res kept in memory for zoom_in crops.  No downscale;
-        // the JPEG is at native phone-photo size (e.g. 1920x1440 for
-        // a 4:3 sensor).  q95 is "visually lossless" so each
-        // subsequent crop is also visually lossless.
-        const val MAX_FULL_DIM = 4096
+        // Thumbnail (initial LLM image): 1568 px max-dim, q90.
+        // Bumped 768→1568 on 2026-07-10 (round 2) after the eval
+        // got real OCR hint + zoom_in=original + softened prompt
+        // (see [[eval-softened-prompt-2026-07-10]]).  The original
+        // 2026-07-10 1568 regression was a no-OCR eval, where
+        // (a) the LLM read dense text from vision and "spread
+        // attention" at 1568; (b) zoom_in=last cropped the 1568
+        // thumbnail (50% = 784 < 1568 = downsample).  Both
+        // mitigated now: OCR handles text, zoom_in=original crops
+        // 4096-wide fullRes directly.  1568 also matches Claude
+        // vision's native internal grid — no internal downsample.
+        const val MAX_DIM = 1568
+        const val QUALITY = 90
+        // Full-res kept in memory for zoom_in crops (sibling views).
+        // No downscale; the JPEG is at native phone-photo size
+        // (e.g. 1920x1440 for a 4:3 sensor, or 4032x3024 for higher-end
+        // sensors — the 4096 cap just bounds memory).  q95 is
+        // "visually lossless" so each subsequent crop is also
+        // visually lossless.
+        const val MAX_FULL_DIM = 2048
         const val FULL_QUALITY = 95
-        // Quadrant crops sent in round 1 with the thumbnail.  Same
-        // max-dim as the original thumbnail (so the LLM sees them at
-        // a comparable scale) but slightly higher quality since each
-        // crop has the full pixel budget.
-        const val QUADRANT_MAX_DIM = 768
-        const val QUADRANT_QUALITY = 85
     }
 }
 
