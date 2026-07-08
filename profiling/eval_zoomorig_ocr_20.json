@@ -1,0 +1,508 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.8198333333333332,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 768,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.8198333333333332},
+  "fixtures": [
+    {
+      "raw_content": "",
+      "r2_text": 0.55,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "篆书第1行",
+          "value": "閒路書每輝"
+        },
+        {
+          "kind": "text",
+          "label": "篆书第2行",
+          "value": "閒門深堂白"
+        },
+        {
+          "kind": "text",
+          "label": "篆书第3行",
+          "value": "閒問茆幽日"
+        },
+        {
+          "kind": "text",
+          "label": "篆书第4行",
+          "value": "閒讀山映清裳"
+        },
+        {
+          "kind": "text",
+          "label": "落款小字",
+          "value": "唐柳宗元诗一首"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.775,
+      "r2_text_fuzzy": 0.16,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺招牌：主标 \"Gazan 雅山\"，副标 \"牛满碗·奇道中式料理\"，左侧有一个戴白色厨师帽的卡通厨师图标，招牌背景为深红色，上方为玻璃幕墙建筑外墙。",
+      "r2_text": 0.75,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "主招牌",
+          "value": "Gazan 雅山"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "牛满碗·奇道中式料理"
+        },
+        {
+          "kind": "object",
+          "label": "卡通图标",
+          "value": "厨师卡通形象（白色厨师帽、围裙）位于主招牌左侧"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "compare_text",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 75,
+      "r1": 1
+    },
+    {
+      "raw_content": "一面装饰墙/墙贴的局部照片，背景为深色，配有黄色南瓜、橙色蔬果、绿色菜叶等卡通插画。墙面上有两行白色艺术字体中文：**\"弯弯曲曲的水稻梯田，在阳光下，水波粼粼。\"**（第一行末尾带逗号，第二行末尾带句号）",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "第一行",
+          "value": "弯弯曲曲的水稻梯田，"
+        },
+        {
+          "kind": "text",
+          "label": "第二行",
+          "value": "在阳光下，水波粼粼。"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "compare_text",
+      "id": "rctw_default_05",
+      "category": "default",
+      "content_len": 102,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一扇双开木门入口（左侧门打开，右侧关闭），门上方悬挂绿底白字科室铭牌，中文「疤痕治疗与康复中心」，英文「Anti-Scar Treatment Rehabilitation Center」。门内隐约可见储物架与蓝色物（疑为治疗床/床垫）。位于医院走廊墙面正中位置。",
+      "r2_text": 0.75,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "科室中文名",
+          "value": "疤痕治疗与康复中心"
+        },
+        {
+          "kind": "text",
+          "label": "科室英文名",
+          "value": "Anti-Scar Treatment Rehabilitation Center"
+        },
+        {
+          "kind": "object",
+          "label": "门牌位置",
+          "value": "双开木门入口（左侧门开，右侧关），上方挂绿底白字科室铭牌"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_06",
+      "category": "default",
+      "content_len": 135,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "支付宝2016年春节营销活动海报，主标题\"仟仟有礼\"，副标题\"随机立减\"，宣传使用支付宝钱包消费可享20元封顶的随机立减优惠，左上角标注年份\"2016\"，底部有支付宝品牌标识。底部详细活动规则文字因模糊无法辨认。",
+      "r2_text": 0.9166666666666667,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "date",
+          "label": "年份",
+          "value": "2016"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "仟仟有礼"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "随机立减"
+        },
+        {
+          "kind": "logo",
+          "label": "支付品牌",
+          "value": "支付宝"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9583333333333334,
+      "r2_text_fuzzy": 0.7999999999999999,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_07",
+      "category": "default",
+      "content_len": 106,
+      "r1": 1
+    },
+    {
+      "raw_content": "医院走廊墙面上的绿底白字指示牌，写有「CT检查 DR拍片」，右侧带箭头指向右方，指示放射科/影像科室方向。",
+      "r2_text": 0.75,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "text",
+        "label": "指示牌文字",
+        "value": "CT检查 DR拍片"
+      }],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_08",
+      "category": "default",
+      "content_len": 53,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "门上方黑色铭牌显示「管 理 间 / Management Room」。门口为红色门框、玻璃门，墙面为米黄色仿大理石瓷砖。铭牌下方有部分文字模糊不清，无法辨认。",
+      "r2_text": 0.5833333333333333,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "中文标牌",
+          "value": "管 理 间"
+        },
+        {
+          "kind": "text",
+          "label": "英文标牌",
+          "value": "Management Room"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7916666666666666,
+      "r2_text_fuzzy": 0.6666666666666666,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_09",
+      "category": "default",
+      "content_len": 79,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "金属框立式警示牌（放在石板人行道上）。牌面上方是国际通用禁停图形标志\u2014\u2014红色圆圈+斜杠覆盖蓝色字母\"P\"；下方中英双语警示文字：\"请勿泊车\" / \"NO PARKING\"，中间有黑色横线分隔。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "中文警示语",
+          "value": "请勿泊车"
+        },
+        {
+          "kind": "text",
+          "label": "英文警示语",
+          "value": "NO PARKING"
+        },
+        {
+          "kind": "logo",
+          "label": "图形标志",
+          "value": "红圈斜杠覆盖蓝色\"P\""
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_11",
+      "category": "default",
+      "content_len": 96,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_12",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺招牌：'川吉道'（CHUAN JI DAO），'创意餐厅'，'新派川菜'。招牌为深色大理石背景配白色发光字，上方有一个圆形 logo（疑为\"8\"或葫芦形图案）。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "品牌名",
+          "value": "川吉道"
+        },
+        {
+          "kind": "text",
+          "label": "拼音",
+          "value": "CHUAN JI DAO"
+        },
+        {
+          "kind": "text",
+          "label": "餐厅类型",
+          "value": "创意餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "菜系",
+          "value": "新派川菜"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_13",
+      "category": "default",
+      "content_len": 82,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "一座旧式民居/客栈入口，灰瓦白墙，门口有一条石板小路通向黑漆木门，门楣上方悬挂紫底金字的木匾，按传统从右向左读为「长留客栈」。匾额左侧有竖排小字落款，字太小无法辨认。OCR 原始返回「接客留長」是按左→右读的，且把\"楼\"误识为\"接\"，请按「长留客栈」为准。",
+      "r2_text": 1,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "text",
+        "label": "匾额",
+        "value": "长留客栈（自右向左读）"
+      }],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_16",
+      "category": "default",
+      "content_len": 128,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_17",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.6666666666666666,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "机构名",
+          "value": "武汉名仕男科研究院"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "名仕男科 只为男人"
+        },
+        {
+          "kind": "text",
+          "label": "服务标签",
+          "value": "男科"
+        },
+        {
+          "kind": "text",
+          "label": "服务标签",
+          "value": "咨询"
+        },
+        {
+          "kind": "number",
+          "label": "咨询电话",
+          "value": "8832 8666"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8333333333333333,
+      "r2_text_fuzzy": 0.7,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_18",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑物外墙上的红色立体招牌，左侧为心形套三角形的红色 logo，中间为红色立体字\"中国伴侣网\"，安装在白色大理石纹外墙上，上方有玻璃窗。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "公司 logo",
+          "value": "红色心形套三角形图案"
+        },
+        {
+          "kind": "brand",
+          "label": "公司名称",
+          "value": "中国伴侣网"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.8,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_19",
+      "category": "default",
+      "content_len": 68,
+      "r1": 1
+    },
+    {
+      "raw_content": "夜间室内商场场景，中央拱形玻璃门内亮着白色竖排灯牌\"观光电梯\"。右上方远处有一个亮着的英文灯牌，OCR 识别为\"FlNIà\"（可信度较低，可能是模糊或艺术字，看不清）。玻璃上还有一个模糊的\"名\"字（OCR 极低置信度，无法辨认）。下方可见商场中庭及行人。",
+      "r2_text": 0.41666666666666663,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "观光电梯标牌",
+          "value": "观光电梯"
+        },
+        {
+          "kind": "text",
+          "label": "右上灯牌",
+          "value": "FlNIà"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7083333333333333,
+      "r2_text_fuzzy": 0.3333333333333333,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_20",
+      "category": "default",
+      "content_len": 127,
+      "r1": 1
+    }
+  ]
+}

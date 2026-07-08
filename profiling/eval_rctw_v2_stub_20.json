@@ -1,0 +1,173 @@
+{
+  "fixtures": [
+    {
+      "id": "rctw_default_01",
+      "category": "default",
+      "composite": 0.645,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.0,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_02",
+      "category": "default",
+      "composite": 0.77,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.5,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_03",
+      "category": "default",
+      "composite": 0.77,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.5,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_04",
+      "category": "default",
+      "composite": 0.5,
+      "r1": 1.0,
+      "r2_text": 0.0,
+      "r2_type": 0.0
+    },
+    {
+      "id": "rctw_default_05",
+      "category": "default",
+      "composite": 0.77,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.5,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_06",
+      "category": "default",
+      "composite": 0.77,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.5,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_07",
+      "category": "default",
+      "composite": 0.645,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.0,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_08",
+      "category": "default",
+      "composite": 0.645,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.0,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_09",
+      "category": "default",
+      "composite": 0.4783333333333333,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.3333333333333333,
+      "r2_type": 0.0
+    },
+    {
+      "id": "rctw_default_10",
+      "category": "default",
+      "composite": 0.695,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.2,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_11",
+      "category": "default",
+      "composite": 0.875,
+      "r1": 1.0,
+      "r2_text": 0.5,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_12",
+      "category": "default",
+      "composite": 0.7575,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.45,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_13",
+      "category": "default",
+      "composite": 0.625,
+      "r1": 1.0,
+      "r2_text": 0.5,
+      "r2_type": 0.0
+    },
+    {
+      "id": "rctw_default_14",
+      "category": "default",
+      "composite": 0.645,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.0,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_15",
+      "category": "default",
+      "composite": 0.6824999999999999,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.15,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_16",
+      "category": "default",
+      "composite": 0.5,
+      "r1": 1.0,
+      "r2_text": 0.0,
+      "r2_type": 0.0
+    },
+    {
+      "id": "rctw_default_17",
+      "category": "default",
+      "composite": 0.645,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.0,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_18",
+      "category": "default",
+      "composite": 0.7449999999999999,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.4,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_19",
+      "category": "default",
+      "composite": 0.645,
+      "r1": 0.7899999999999999,
+      "r2_text": 0.0,
+      "r2_type": 1.0
+    },
+    {
+      "id": "rctw_default_20",
+      "category": "default",
+      "composite": 0.5416666666666666,
+      "r1": 1.0,
+      "r2_text": 0.16666666666666666,
+      "r2_type": 0.0
+    }
+  ],
+  "overall": 0.6675,
+  "per_category": {
+    "default": 0.6675
+  },
+  "args": {
+    "resize": 768,
+    "quality": 80,
+    "limit": 20
+  }
+}
