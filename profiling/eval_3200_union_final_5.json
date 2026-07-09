@@ -1,0 +1,201 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.691,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.691},
+  "fixtures": [
+    {
+      "raw_content": "这是「中国能量堡垒」公众号页面，展示两笔产品扫码获得能量币的记录。第一条：扫描\"能量堡垒葛根提取物软胶囊\"产品二维码[1420279160816506]，获得118能量币。第二条（1月13日）：扫描\"能量堡垒维生素C片\"产品二维码[1420519580860218]，获得108能量币。中间配图为代言人田亮手持产品全家福（葛根提取物软胶囊、蛋白质粉、DHA蛋白酶等），左上有\"全家优营养 健康正能量\"标语，右上品牌英文\"EICRGS +DRTNESS\"，右下角编号\"524000581008\"。底部导航：能量资讯、营养商学院、扫一扫。状态栏显示晚上7:58。",
+      "r2_text": 0.825,
+      "details_count": 12,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "text",
+          "label": "扫描记录1产品",
+          "value": "能量堡垒葛根提取物软胶囊"
+        },
+        {
+          "kind": "number",
+          "label": "扫描记录1二维码",
+          "value": "1420279160816506"
+        },
+        {
+          "kind": "number",
+          "label": "扫描记录1获得能量币",
+          "value": "118能量币"
+        },
+        {
+          "kind": "text",
+          "label": "扫描记录2产品",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "date",
+          "label": "扫描记录2日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "number",
+          "label": "扫描记录2二维码",
+          "value": "1420519580860218"
+        },
+        {
+          "kind": "number",
+          "label": "扫描记录2获得能量币",
+          "value": "108能量币"
+        },
+        {
+          "kind": "text",
+          "label": "品牌大使",
+          "value": "能量大使：田亮"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌英文",
+          "value": "EICRGS +DRTNESS"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航",
+          "value": "能量资讯 / 营养商学院 / 扫一扫"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏时间",
+          "value": "晚上7:58"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.86,
+      "r2_text_fuzzy": 0.8,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 279,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "I'll analyze this image which shows a blue sign with Chinese text and car theft prevention rules. Let me check the details and any unclear parts.",
+      "r2_text": 0.6,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.7475,
+      "r2_text_fuzzy": 0.4,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 145,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "店铺门口两块蓝色告示牌（米黄色大理石墙面）：上牌为「瑞缇咖啡 Rettycoffee」温馨提示，写着「咖啡厅谢绝自带食品、酒水、饮料入内！Cafe with food, drinks, beverages refused entry!」以及「咖啡厅谢绝摄像、拍照、宠物入内！Cafe declined, photographed, pets in camera!」，落款「谢谢您的合作 Thank you for you cooperation」。下牌同样印有「瑞缇咖啡 Rettycoffee」logo，主标题「营业时间 Business hours」：上午 9:00 \u2014 凌晨 01:00；底部「预约热线 Reservation hotline.」电话 028-26183333 / 028-26780888。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌（上牌）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示 Reminder",
+          "value": "温馨提示：Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "规则1（中）",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "规则2（中）",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "致谢",
+          "value": "谢谢您的合作 Thank you for you cooperation"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌（下牌）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时段",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线标题",
+          "value": "预约热线：Reservation hotline."
+        },
+        {
+          "kind": "number",
+          "label": "预约电话",
+          "value": "028-26183333  028-26780888"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 357,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 0,
+      "composite": 0.15,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(error)",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.3
+    }
+  ]
+}

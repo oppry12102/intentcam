@@ -1,0 +1,255 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.8261666666666667,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.8261666666666667},
+  "fixtures": [
+    {
+      "raw_content": "",
+      "r2_text": 0.5416666666666666,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "text",
+        "label": "状态栏时间",
+        "value": "晚上7:58"
+      }],
+      "r2_type": 1,
+      "composite": 0.7708333333333333,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "瑞缇咖啡（Retty coffee）店门口的温馨提示牌与营业时间牌：营业时间 上午 9:00 至凌晨 01:00；预约热线 028-26183333 / 028-26780888；谢绝自带食品酒水饮料、摄像拍照及携带宠物入内。",
+      "r2_text": 0.85,
+      "details_count": 16,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店铺 logo (顶部)",
+          "value": "瑞缇咖啡 Retty coffee"
+        },
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "温馨提示："
+        },
+        {
+          "kind": "text",
+          "label": "英文标题",
+          "value": "Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "提示 1",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！"
+        },
+        {
+          "kind": "text",
+          "label": "提示 1 英文",
+          "value": "Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "提示 2",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！"
+        },
+        {
+          "kind": "text",
+          "label": "提示 2 英文",
+          "value": "Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "结尾感谢",
+          "value": "谢谢您的合作"
+        },
+        {
+          "kind": "text",
+          "label": "结尾感谢英文",
+          "value": "Thank you for you cooperation"
+        },
+        {
+          "kind": "logo",
+          "label": "店铺 logo (下方)",
+          "value": "瑞缇咖啡 Retty coffee"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间标题",
+          "value": "营业时间"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间英文",
+          "value": "Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线标题",
+          "value": "预约热线："
+        },
+        {
+          "kind": "text",
+          "label": "预约热线英文",
+          "value": "Reservation hotline."
+        },
+        {
+          "kind": "number",
+          "label": "预约电话",
+          "value": "028-26183333   028-26780888"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.925,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 113,
+      "r1": 1
+    },
+    {
+      "raw_content": "建行安阳分行投票页面，显示3位候选人得票：周登祥153票(2%)、王立波11票(0%)、陈静591票(8%)，用户已投票给陈静。",
+      "r2_text": 0.975,
+      "details_count": 16,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "时间",
+          "value": "21:08"
+        },
+        {
+          "kind": "text",
+          "label": "23号候选人",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "周登祥票数",
+          "value": "153票"
+        },
+        {
+          "kind": "number",
+          "label": "周登祥得票率",
+          "value": "2%"
+        },
+        {
+          "kind": "text",
+          "label": "24号候选人",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "王立波票数",
+          "value": "11票"
+        },
+        {
+          "kind": "number",
+          "label": "王立波得票率",
+          "value": "0%"
+        },
+        {
+          "kind": "text",
+          "label": "25号候选人",
+          "value": "25、陈静（已选）"
+        },
+        {
+          "kind": "number",
+          "label": "陈静票数",
+          "value": "591票"
+        },
+        {
+          "kind": "number",
+          "label": "陈静得票率",
+          "value": "8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "广告标题1",
+          "value": "安阳建行,"
+        },
+        {
+          "kind": "text",
+          "label": "广告标题2",
+          "value": "与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享提示",
+          "value": "独享不如与众分享"
+        },
+        {
+          "kind": "text",
+          "label": "分享说明",
+          "value": "点击右上角 分享到朋友圈"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 64,
+      "r1": 1
+    }
+  ]
+}

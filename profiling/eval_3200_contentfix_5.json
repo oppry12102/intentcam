@@ -1,0 +1,329 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.9298333333333334,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.9298333333333334},
+  "fixtures": [
+    {
+      "raw_content": "微信公众号\"中国能量堡垒\"页面，晚上7:58。两条扫码得能量币通知：①扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得118能量币；②1月13日\"能量堡垒维生素C片\"，扫描产品二维码[1420519580860218]，获得108能量币。中间配图为代言人田亮（\"能量大使：田亮\"）展示多种产品（乳清蛋白质粉、DHA蛋白预到 等），品牌logo\"能量堡垒 ENERGY FORTRESS\"，条码\"24000581008\"，宣传语\"全家优启养 健康正能量\"。底部Tab：能量资讯 / 营养商学院 / 扫一扫。",
+      "r2_text": 0.9333333333333333,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "状态栏时间",
+          "value": "晚上7:58"
+        },
+        {
+          "kind": "text",
+          "label": "公众号名称",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "text",
+          "label": "第一条通知",
+          "value": "您好，通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币"
+        },
+        {
+          "kind": "text",
+          "label": "第二条标题+日期",
+          "value": "能量堡垒维生素C片 1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "第二条通知",
+          "value": "您好，通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币"
+        },
+        {
+          "kind": "logo",
+          "label": "产品图品牌logo",
+          "value": "能量堡垒 ENERGY FORTRESS"
+        },
+        {
+          "kind": "text",
+          "label": "代言人署名",
+          "value": "能量大使：田亮"
+        },
+        {
+          "kind": "text",
+          "label": "产品名",
+          "value": "乳清蛋白质粉"
+        },
+        {
+          "kind": "text",
+          "label": "条码",
+          "value": "24000581008"
+        },
+        {
+          "kind": "text",
+          "label": "底部Tab",
+          "value": "能量资讯 / 营养商学院 / 扫一扫"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9666666666666667,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 268,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.7083333333333334,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "禁令1",
+          "value": "严禁鸣叫"
+        },
+        {
+          "kind": "text",
+          "label": "禁令2",
+          "value": "请轻关门"
+        },
+        {
+          "kind": "text",
+          "label": "禁令3",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "禁令4",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "禁令5",
+          "value": "请排"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8016666666666667,
+      "r2_text_fuzzy": 0.2,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "微信发红包页面（下午8:54，中国联通4G，30% 电量），当前为拼手气红包，红包个数 5 个（本群共11人），总金额 10 元。页面中央弹出提示框：\"恭喜发 银行处理中，请查询确认银行卡是否已扣款，避免重复操作。\"，需用户点击\"确定\"；下方主操作按钮\"塞钱进红包\"被遮挡暂不可用。底部说明\"未领取的红包，将于24小时后发起退款\"。类型提示\"当前为拼手气红包，改为普通红包\"可切换红包类型。",
+      "r2_text": 0.8666666666666667,
+      "details_count": 12,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "状态栏运营商",
+          "value": "中国联通 4G"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏时间/电量",
+          "value": "下午8:54 30%"
+        },
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "发红包 微信安全支付"
+        },
+        {
+          "kind": "text",
+          "label": "红包个数",
+          "value": "5 个"
+        },
+        {
+          "kind": "text",
+          "label": "群人数提示",
+          "value": "本群共11人"
+        },
+        {
+          "kind": "text",
+          "label": "总金额",
+          "value": "10 元"
+        },
+        {
+          "kind": "text",
+          "label": "红包类型提示",
+          "value": "当前为拼手气红包，改为普通红包"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗提示标题",
+          "value": "恭喜发"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗提示正文",
+          "value": "银行处理中，请查询确认银行卡是否已扣款，避免重复操作。"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗按钮",
+          "value": "确定"
+        },
+        {
+          "kind": "text",
+          "label": "主操作按钮",
+          "value": "塞钱进红包"
+        },
+        {
+          "kind": "text",
+          "label": "底部说明",
+          "value": "未领取的红包，将于24小时后发起退款"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8808333333333334,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 195,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "瑞缇咖啡（Retty coffee）店外的两块告示牌。\n\n上方为「温馨提示：Reminder」：\n- 咖啡厅谢绝自带食品、酒水、饮料入内！ / Cafe with food, drinks, beverages refused entry!\n- 咖啡厅谢绝摄像、拍照、宠物入内！ / Cafe declined, photographed, pets in camera!\n- 谢谢您的合作 / Thank you for you cooperation\n\n下方为「营业时间 Business hours」：\n- 上午：9:00\u2014凌晨：01：00\n- 预约热线：Reservation hotline.\n- 028-26183333   028-26780888\n\n底部红色横幅上为品牌 logo「瑞缇咖啡 Retty coffee」（与上方 logo 相同）。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名",
+          "value": "瑞缇咖啡 Retty coffee"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示标题",
+          "value": "温馨提示：Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "禁止自带食品饮料",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！ / Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "禁止摄像宠物",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！ / Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "致谢",
+          "value": "谢谢您的合作 / Thank you for you cooperation"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时段",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线标题",
+          "value": "预约热线：Reservation hotline."
+        },
+        {
+          "kind": "number",
+          "label": "预约电话号码",
+          "value": "028-26183333  028-26780888"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 底部边缘文字",
+          "value": "文镇（OCR 模糊）"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 381,
+      "r1": 1
+    },
+    {
+      "raw_content": "建行安阳分行投票页面截图。页面标题\"建行安阳分行\"，列出 3 位候选人及其得票：23、周登祥 153票 2%；24、王立波 11票 0%；25、陈静(已选）591票 8%（标注\"已选\"说明用户已投票给陈静）。底部显示\"你已投票\"状态确认。下方为安阳建行宣传广告：\"安阳建行，与同业不一样的银行！\"，底部分享提示：\"独享不如与众分享，点击右上角 分享到朋友圈\"。状态栏时间 21:08。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "得票数",
+          "value": "153票 2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "得票数",
+          "value": "11票 0%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人(已选)",
+          "value": "25、陈静(已选）"
+        },
+        {
+          "kind": "number",
+          "label": "得票数",
+          "value": "591票 8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "广告标题",
+          "value": "安阳建行,与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享文案",
+          "value": "独享不如与众分享，点击右上角 分享到朋友圈"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 192,
+      "r1": 1
+    }
+  ]
+}
