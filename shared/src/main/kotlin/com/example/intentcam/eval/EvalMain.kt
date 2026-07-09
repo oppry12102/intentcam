@@ -58,6 +58,8 @@ fun main(args: Array<String>) {
         quality = opts.quality,
         jsonOut = opts.jsonOut,
         cropOcrCap = opts.cropOcrCap,
+        debugFixtures = opts.debugFixtures,
+        fixtures = opts.fixtures,
     )
     val exit = EvalRunner(config).run()
     exitProcess(exit)
@@ -191,6 +193,16 @@ internal data class EvalOpts(
     // cycle.  0 = unlimited (prod default).  Iter runs use small
     // values to keep wall-time at ~2-min/20-fixture pace.
     val cropOcrCap: Int,
+    // Phase 2b debug (2026-07-12): when non-empty, ToolUseLoop logs
+    // (round/OCR/tool dispatch) are forwarded to stderr for any
+    // fixture whose `id` is in this set.  Used to investigate why
+    // MAX_FULL_DIM=4096 produces empty bubbles on rctw_01/03/10/18.
+    val debugFixtures: Set<String> = emptySet(),
+    // Phase 2b debug (2026-07-12): when non-empty, restrict the run
+    // to just these fixture ids (order preserved).  Used together
+    // with --debug-fixtures to run targeted diagnostic iterations
+    // without rebuilding the whole 20-fixture set.
+    val fixtures: Set<String> = emptySet(),
 )
 
 internal fun parseArgs(args: Array<String>): EvalOpts {
@@ -211,6 +223,8 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
     // unlimited (prod).  Set e.g. 1 for ~2-min/20-fixture pace:
     // round-1 OCR + first zoom crop OCR; subsequent crops skipped.
     var cropOcrCap = 0
+    var debugFixtures: Set<String> = emptySet()
+    var fixtures: Set<String> = emptySet()
     var i = 0
     while (i < args.size) {
         when (args[i]) {
@@ -221,10 +235,18 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
             "--quality"      -> { quality = args[++i].toInt() }
             "--json-out"     -> { jsonOut = args[++i] }
             "--crop-ocr-cap" -> { cropOcrCap = args[++i].toInt() }
+            "--debug-fixtures" -> {
+                debugFixtures = args[++i].split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+            }
+            "--fixtures" -> {
+                fixtures = args[++i].split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+            }
             "--help", "-h"   -> {
-                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH] [--crop-ocr-cap N]")
+                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH] [--crop-ocr-cap N] [--debug-fixtures id1,id2,...] [--fixtures id1,id2,...]")
                 println("  defaults: --resize 768 --quality 90 (1-only mode; matches prod)")
                 println("  --crop-ocr-cap N: max followUpJpeg OCRs per cycle (0 = unlimited; default 0)")
+                println("  --debug-fixtures id1,id2: forward ToolUseLoop logs to stderr for these fixture ids")
+                println("  --fixtures id1,id2: restrict the run to just these fixture ids")
                 exitProcess(0)
             }
             else -> System.err.println("Unknown arg: ${args[i]}")
@@ -239,6 +261,8 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
         quality = quality,
         jsonOut = jsonOut?.let { File(it) },
         cropOcrCap = cropOcrCap,
+        debugFixtures = debugFixtures,
+        fixtures = fixtures,
     )
 }
 
@@ -253,6 +277,10 @@ internal data class EvalConfig(
     val jsonOut: File?,
     // Phase 2a (2026-07-11): see EvalOpts.cropOcrCap.
     val cropOcrCap: Int,
+    // Phase 2b debug (2026-07-12): see EvalOpts.debugFixtures.
+    val debugFixtures: Set<String> = emptySet(),
+    // Phase 2b debug (2026-07-12): see EvalOpts.fixtures.
+    val fixtures: Set<String> = emptySet(),
 )
 
 // Stub for the app's LlmConfig — only the model name + URL are used.

@@ -317,20 +317,29 @@ class LlmClient(@Volatile var config: LlmConfig) {
 
         /** Hard cap on output tokens per call.
          *
-         *  Was 256, which silently truncated `emit_bubble` on dense
-         *  scenes: the tool is required to put *all* visible text in
-         *  `content` **and** emit one `details[]` row per text region.
-         *  A busy storefront / receipt / menu blows past 256 tokens
-         *  (~150 CJK chars once you count the JSON scaffolding), so the
-         *  stream got cut mid-`details`, dropping both keywords and
-         *  rows — the dominant cause of the r2_text 0.46 plateau and
-         *  the 56-fixture cluster stuck at exactly 0.5.
+         *  Was 256 (silently truncated `emit_bubble` on dense scenes —
+         *  see 2026-07-06 baseline at r2_text 0.46 plateau with 56
+         *  fixtures stuck at 0.5).
          *
-         *  1024 covers the largest real answers with headroom; short
-         *  answers still stop early (the model emits `stop_reason=
-         *  end_turn` well before the cap), so the cost is only paid on
-         *  scenes that actually need it. */
-        const val MAX_TOKENS = 1024
+         *  Bumped to 1024 (2026-07-07): covered the largest real
+         *  answers with headroom; short answers still stopped early
+         *  (`stop_reason=end_turn` well before the cap).
+         *
+         *  Bumped to 2048 (2026-07-12, Phase 2 + MAX_FULL_DIM=4096
+         *  retest): with auto-OCR on every zoom crop, the round-1 hint
+         *  is richer and the model emits longer thinking (1182 chars of
+         *  pre-tool text in rctw_01) before writing emit_bubble.
+         *  Combined with details[].bbox (4 corners × 2 coords per row)
+         *  the JSON for dense-text fixtures (5-10 detail rows) plus the
+         *  reasoning text exceeded 1024 → `stop_reason=max_tokens`
+         *  truncated mid-`details[]` → content + remaining details
+         *  dropped → 4 empty bubbles (rctw_01/03/10/18), composite
+         *  floored at 0.75.  2048 leaves headroom for the worst case
+         *  (1182 chars pre-tool text ≈ 600-900 BPE tokens + 8 detail
+         *  rows with bbox ≈ 400 tokens + content ≈ 200 tokens = ~1500
+         *  BPE tokens).  Short answers still stop early so the cost is
+         *  only paid on scenes that need it. */
+        const val MAX_TOKENS = 2048
 
         /** Lock at 0 to keep intent classification deterministic. */
         const val REQUEST_TEMPERATURE = 0.0
@@ -338,14 +347,15 @@ class LlmClient(@Volatile var config: LlmConfig) {
         /** Hard ceiling for one recognition round-trip.
          *
          *  Was 20s: dense-text fixtures (产品包装/收据/金融 app 截图 with
-         *  10+ GT keywords) need 1024-token emit_bubble; at ~30 tok/s that's
-         *  ~34s of generation + 5s first-byte latency = 38s+ on overload.
-         *  12/100 fixtures in the 2026-07-06 1-only @100 run timed out
-         *  exactly here — every dense-text scene locked the cycle to
-         *  Outcome.Error and zeroed its composite.  60s buys the worst
-         *  case one full buffer; OkHttp's readTimeout/callTimeout are
-         *  still 0 (infinite) so a true hang will still be caught. */
-        const val TOTAL_TIMEOUT_MS = 60_000L
+         *  10+ GT keywords) need a long emit_bubble; with MAX_TOKENS
+         *  bumped to 2048 (2026-07-12), worst-case generation is now
+         *  ~2048 tokens at ~30 tok/s = ~68s + 5s first-byte latency =
+         *  ~73s on overload.  90s buys that case one full buffer plus
+         *  headroom; OkHttp's readTimeout/callTimeout are still 0
+         *  (infinite) so a true hang will still be caught.  60s was
+         *  the right value for MAX_TOKENS=1024 (~38s worst case); 90s
+         *  matches the new ceiling. */
+        const val TOTAL_TIMEOUT_MS = 90_000L
 
         /** System prompt for the tool-use path.  Two-stage flow:
          *  Stage 1 — content understanding.  Look at the image; if any

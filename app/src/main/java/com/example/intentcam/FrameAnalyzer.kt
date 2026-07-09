@@ -164,7 +164,16 @@ class FrameAnalyzer(
         // sensors — the 4096 cap just bounds memory).  q95 is
         // "visually lossless" so each subsequent crop is also
         // visually lossless.
-        const val MAX_FULL_DIM = 2048
+        // TEST 2026-07-12 (revisit): bump 2048→4096 back to test
+        // against the Phase 2 architecture (auto-OCR on every
+        // zoom crop + 4-step trust-crop-OCR workflow).  The
+        // 2026-07-10 round 3 #5 result (2048 winning +0.057) was
+        // measured WITHOUT Phase 2 — extra source pixels were
+        // wasted on the cap.  With Phase 2, more pixels → more
+        // raw chars the crop OCR recognises → 'trust verbatim'
+        // step can surface them.  See [[user-decision-4096-2026-07-12]]
+        // for tracking; revert if composite regresses > noise.
+        const val MAX_FULL_DIM = 4096
         const val FULL_QUALITY = 95
     }
 }

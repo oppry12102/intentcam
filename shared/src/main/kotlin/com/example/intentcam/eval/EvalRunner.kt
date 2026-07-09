@@ -8,6 +8,7 @@ import com.example.intentcam.encodeThumbnail
 import com.example.intentcam.registerDefaultTools
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
+import java.util.concurrent.atomic.AtomicReference
 import org.json.JSONObject
 import java.io.File
 
@@ -31,7 +32,19 @@ internal class EvalRunner(private val config: EvalConfig) {
 
     private val client = LlmClient(evalLlmConfig)
     private val registry = ToolRegistry().also { it.registerDefaultTools() }
-    private val orchestrator = ToolUseLoop(client = client, registry = registry, log = { _, _ -> })
+    // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
+    // when --debug-fixtures is set, otherwise stay silent like before.
+    // The orchestrator's log callback runs in a hot loop so we don't
+    // want unconditional stderr — only emit for the fixtures we care
+    // about (currently the empty-bubble underperformers from the 4096
+    // retest: rctw_01/03/10/18).
+    private val debugFixtures: Set<String> = config.debugFixtures
+    private val currentSceneId = AtomicReference<String?>(null)
+    private val orchestrator = ToolUseLoop(client = client, registry = registry, log = { tag, msg ->
+        if (currentSceneId.get()?.let { it in debugFixtures } == true) {
+            System.err.println("[${currentSceneId.get()}][$tag] $msg")
+        }
+    })
 
     fun run(): Int {
         if (!config.groundTruth.exists()) {
@@ -41,8 +54,22 @@ internal class EvalRunner(private val config: EvalConfig) {
         val gt = JSONObject(config.groundTruth.readText())
         val scenes = gt.optJSONArray("scenes") ?: JSONArray()
         val sceneList = (0 until scenes.length()).map { scenes.getJSONObject(it) }
-        val limit = if (config.limit > 0) minOf(config.limit, sceneList.size) else sceneList.size
-        val useScenes = sceneList.take(limit)
+        // Phase 2b (2026-07-12): --fixtures restricts the run to a
+        // curated id set, preserving GT order so jsonOut is
+        // comparable to the 20-fixture baselines.  When the user
+        // passes --fixtures together with --limit, --fixtures wins.
+        val filtered = if (config.fixtures.isNotEmpty()) {
+            val wanted = config.fixtures
+            sceneList.filter { it.optString("id", "?") in wanted }
+                .also { check ->
+                    val missing = wanted - check.map { it.optString("id") }.toSet()
+                    if (missing.isNotEmpty()) {
+                        System.err.println("  WARN: --fixtures ids not in GT: $missing")
+                    }
+                }
+        } else sceneList
+        val limit = if (config.limit > 0) minOf(config.limit, filtered.size) else filtered.size
+        val useScenes = filtered.take(limit)
 
         println("Loaded $limit real-photo fixtures from ${config.groundTruth.name}")
         println(
@@ -55,6 +82,7 @@ internal class EvalRunner(private val config: EvalConfig) {
 
         for ((i, scene) in useScenes.withIndex()) {
             val sceneId = scene.optString("id", "?")
+            currentSceneId.set(sceneId)
             val category = scene.optString("category", "?")
             val imgName = scene.optString("file", "")
             if (imgName.isEmpty()) continue
@@ -72,7 +100,9 @@ internal class EvalRunner(private val config: EvalConfig) {
             // BitmapRegionDecoder.  Thumbnail sizing comes from
             // --resize/--quality.
             val rawBytes = imgPath.readBytes()
-            val fullRes = encodeThumbnail(rawBytes, maxDim = 2048, quality = 95) ?: rawBytes
+            // TEST 2026-07-12: mirror MAX_FULL_DIM 2048→4096
+            // (matches FrameAnalyzer.kt:167 retest).
+            val fullRes = encodeThumbnail(rawBytes, maxDim = 4096, quality = 95) ?: rawBytes
             val thumbnail = encodeThumbnail(
                 rawBytes,
                 maxDim = config.resize,
