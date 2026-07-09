@@ -4,20 +4,24 @@
 > and at-a-glance summary live there; this file is the deep-dive.
 > See [CONFIG.md](CONFIG.md) for every tunable constant.
 
-## 1. The two-tool design
+## 1. The three-tool design (Phase 2, 2026-07-11)
 
 The previous design had 12 specialized tools
 (`default_describe`, `identify_product`, `navigate_to_block`, ...).
 It forced the LLM to *categorize* the image first, leading to wrong
-picks on anything it didn't recognize.  We collapsed to **two tools**:
+picks on anything it didn't recognize.  Phase 2 (2026-07-11) collapsed
+to **three tools** — `read_text` was retired because every `zoom_in`
+crop now auto-runs OCR (see §4.2):
 
 | Tool | What it does |
 |---|---|
-| `zoom_in` | crop a region of the (current) image at native resolution |
+| `zoom_in` | crop a region of the (current) image at native resolution + auto-OCR |
+| `compare_text` | pure on-device string diff (model reading vs OCR hint) |
 | `emit_bubble` | end the cycle with a structured answer |
 
 That's it.  The LLM looks at the image, calls `zoom_in` to clarify
-unclear details, then calls `emit_bubble` when satisfied.
+unclear details (and gets verbatim OCR text from each crop), and
+ends with `emit_bubble` when satisfied.
 
 `zoom_in` is the **default mode** — the system prompt says
 "无论图是否清楚，先调 1-2 次 zoom_in 看清楚细节" (whether
@@ -33,9 +37,11 @@ zoom_in(x, y, w, h, source, focus)
 
 The client's `BitmapRegionDecoder` crops the **2048-px fullRes JPEG**
 (kept in memory by `FrameAnalyzer`) at the requested region, returns
-the crop as a `followUpJpeg`.  The orchestrator attaches it to the
-next user message so the model sees the high-detail region alongside
-the original.
+the crop as a `followUpJpeg`.  The orchestrator **auto-runs OCR on
+the crop** (via `OcrEngine.recognize(cropBytes)`) and attaches both
+the image and the formatted crop hint to the next user message —
+the model sees the high-detail region and the verbatim characters
+in one round-trip, with no need for a separate `read_text` call.
 
 - **Sibling mode** (default `source="original"`): crops the original
   2048-px fullRes.  Coords are absolute.  This is the **default**
@@ -45,9 +51,9 @@ the original.
 - **Chain mode** (`source="last"`): crops whatever was just produced.
   Use for deep zoom on a single region across multiple rounds.
 - **Multi-zoom in one round**: every `zoom_in` call returns its
-  own `followUpJpeg`; the orchestrator attaches all of them to the
-  next user message in call order.  A single round can produce 2-5
-  crops that the model sees together.
+  own `followUpJpeg`; the orchestrator auto-OCRs each one and
+  attaches all of them to the next user message in call order.
+  A single round can produce 2-5 crops that the model sees together.
 
 ```
 emit_bubble(
@@ -57,7 +63,7 @@ emit_bubble(
   intent_focus?,  // 可空
   confidence,     // 0.0~1.0
   details: [      // 详情页表格行
-    {kind, label, value}, ...
+    {kind, label, value, bbox?}, ...
   ]
 )
 ```
@@ -66,11 +72,32 @@ emit_bubble(
 list all visible text/numbers/brands/dates/prices in the content
 field.  Example: for a tea package, the model must write
 "包装文字: 品名 '工夫红茶', 净含量 '250g', 生产日期 '2020-12-01'".
+**Source priority for verbatim characters** (Phase 2 prompt):
+1. **zoom crop OCR** (highest fidelity — Phase 2 auto-OCR)
+2. **round-1 OCR** (full image, may be less precise on small text)
+3. **model's own vision** (for OCR-missed regions; "?" placeholder
+   for characters it can't read)
 
 **`details` is the structured table** rendered in the DetailScreen.
 Each `{kind, label, value}` row matches a real piece of text in the
 image.  `kind` ∈ {text, number, object, color, shape, logo, date,
-price, brand, location, person, ...}.
+price, brand, location, person, ...}.  `bbox` is the 4-corner
+position in the **original image frame** (zoom crop bboxes are in
+crop frame; the prompt tells the model to offset by zoom's x/y/w/h
+to map back to original).
+
+```
+compare_text(claim, ocr_text?)
+  - claim: 你从图上自己读到的字符串
+  - ocr_text: （可选）OCR hint 的某行文字
+  - 返回: 每行 conflict 标记 (agreed/ocr_only/llm_only/disagree) + 推荐动作
+```
+
+`compare_text` is a pure on-device string diff against the round-1
+OCR cache.  The LLM uses it when it has read the image differently
+from the round-1 OCR hint (e.g. spots a missing line) and wants
+confirmation before deciding whether to trust its own reading or
+zoom_in for a fresh re-scan.  No LLM round-trip — runs in ~1ms.
 
 ## 2. Multi-round protocol
 
@@ -136,6 +163,8 @@ AppViewModel captures:
 
 ## 4. OCR (端云协同 — endcloud collaboration)
 
+### 4.1 Round-1: full-image OCR pre-pass
+
 Round-1 ships the thumbnail + the **OCR hint** — a structured dump
 of all on-device-recognized text.  The LLM treats this as the
 **first opinion** for visible text (not exclusive — OCR can miss
@@ -155,14 +184,67 @@ than nothing.
 **Injection shape**: top-N blocks by confidence (N = 30), formatted
 as a labeled block in the user message:
 ```
-【read_text 全图扫描结果】on-device OCR 已扫过整张图...
+【read_text 全图扫描结果】on-device OCR 已扫过整张图... (marker name is historical — Phase 2 (2026-07-11) removed the `read_text` tool; OCR now runs automatically on round-1 + every zoom_in crop)
   line 1: '建国路 100号' | bbox=[(0.10,0.20),...] | conf=0.95
   line 2: '禁止停车' | bbox=[(0.50,0.60),...] | conf=0.62
   ...
 ```
 
-The same hint drives the `compare_text` tool's input — the LLM
-can ask the OCR backend to re-scan a region with higher detail.
+The round-1 OCR result is cached for the entire cycle and passed
+into every `ToolContext.ocrCache` so `compare_text` can diff
+against it without re-running OCR.
+
+### 4.2 Phase 2 (2026-07-11): auto-OCR on every zoom crop
+
+Every `zoom_in` crop auto-runs `OcrEngine.recognize(cropBytes)` and
+the formatted crop hint attaches to the next user message alongside
+the image.  The model gets:
+
+- The high-resolution crop (visual drill-down)
+- The verbatim OCR text from that crop (higher fidelity than round-1
+  for that region — round-1 ran on a downsampled thumbnail)
+
+The crop hint uses `OcrResult.formatHint(blocks, maxLines=10,
+isCropHint=true)` which:
+
+- Renders top-10 blocks by confidence (vs round-1's 30 — crops are
+  smaller regions, 10 lines is plenty)
+- Uses a different header: `【zoom_in crop OCR 高保真重扫】` (vs
+  round-1's `【read_text 全图扫描结果】扫过整张图`) so the model
+  knows which OCR this is
+- Echoes "**trust 这些字符 verbatim**" for [LOW] lines (vs
+  round-1's "workflow: 调 zoom_in 重扫") since this IS the high-
+  fidelity re-scan
+
+**Crop bboxes are in crop frame** (normalized 0-1 of the crop, not
+the original photo).  The system prompt tells the model:
+
+> zoom crop hint 的 bbox 是 crop frame，不是原图 frame — 要在
+> details[].bbox 里复用，offset 加回你传给 zoom_in 的 (x, y)
+
+So `original_bbox_corner = (zoom_x + crop_corner.x * zoom_w,
+zoom_y + crop_corner.y * zoom_h)`.
+
+**Workflow prompt** (`LlmClient.TOOL_USE_SYSTEM`):
+
+> **Step 1**: round-1 — read OCR full-image scan + look at thumbnail
+> **Step 2**: identify [LOW] / missed → call `zoom_in(bbox, source='original')`
+> **Step 3**: zoom_in crop auto-attaches OCR (trust verbatim)
+> **Step 4**: emit_bubble
+
+This workflow narrative is the **load-bearing piece** — without it
+(Phase 1 attempt, 2026-07-11) the model defaulted to hedging the
+auto-attached OCR ("free information paradox").  With it, the model
+trusts the crop OCR as much as OCR it would have requested via
+`read_text`.
+
+### 4.3 Eval-side backend
+
+On the JVM eval, the same `OcrEngine.Impl` interface is wired to
+`JvmHuaweiCloudOcrEngine` when `HUAWEICLOUD_SDK_AK/SK/PROJECT_ID`
+env vars are set.  The cloud backend mirrors HMS ML Kit semantics
+(text + 4-corner coords + confidence) and runs the same
+`formatHint` formatter, so eval and prod see the same hint shape.
 
 ## 5. 1-only image strategy (since 2026-07-06)
 
@@ -274,7 +356,7 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 | `QUALITY` (thumbnail) | `90` | `FrameAnalyzer.kt` | JPEG quality for the LLM-facing image |
 | `MAX_FULL_DIM` | `2048` | `FrameAnalyzer.kt` | cap for the in-memory full-res JPEG |
 | `FULL_QUALITY` | `95` | `FrameAnalyzer.kt` | JPEG quality for the in-memory full-res JPEG |
-| `CROP_OUTPUT_MAX_DIM` | `1568` | `ImageOps.kt` | max-dim cap on `zoom_in` / `read_text` crops |
+| `CROP_OUTPUT_MAX_DIM` | `1568` | `ImageOps.kt` | max-dim cap on `zoom_in` crops (Phase 2: read_text removed) |
 | `DEFAULT_CROP_QUALITY` | `90` | `ImageOps.kt` | JPEG quality for crops |
 | `MAX_OCR_HINT_LINES` | `30` | `OcrEngine.kt` | top-N OCR blocks injected into round-1 user message |
 | `LOW_CONFIDENCE_THRESHOLD` | `0.5` | `OcrEngine.kt` | OCR conf < 0.5 → mark `[LOW]` in hint |
@@ -330,7 +412,8 @@ real fixtures.
 
 ```
 composite    = 0.50 × r1_score + 0.50 × r2_score
-r1_score     = 0.70 × (tool_pick == zoom_in/emit_bubble ? 1.0 : 0)
+r1_score     = 0.70 × (tool_pick ∈ {zoom_in, compare_text, emit_bubble}
+                            ? 1.0 : 0)
              + 0.30 × (input_valid)
 r2_score     = 0.50 × text_match + 0.50 × type_match
 text_match   = fuzzy_text  (CharSequence overlap, threshold 0.67)
@@ -360,6 +443,8 @@ dataset's XML labels.
 | 2026-07-10 | 0.841 | +0.003 | 1568 thumb + zoom_in=original + "thumbnail ≠ 原图" nudge |
 | 2026-07-10 | **0.853** | +0.012 | @100 verification of the above (12W/8L/0T) |
 | 2026-07-10 | 0.898 | +0.045 | `MAX_FULL_DIM` 4096→2048 (counter-intuitive win) |
+| 2026-07-11 | 0.874 | +0.021 | **Phase 2a**: auto-OCR on every zoom_in crop + 4-step workflow prompt + `isCropHint` flag on `OcrResult.formatHint` |
+| 2026-07-11 | **0.868** | -0.006 | **Phase 2** (this release): `read_text` tool removed — auto-OCR + workflow prompt cover both [LOW] verification and missed-region re-scan. Net composite in noise; empty 27/100 → 19/100 (better); content 103 → 116 (better); per-fixture volatility +1/-1 (some Phase 2a successes go empty, some Phase 2a empties succeed). Ship. |
 
 `profiling/eval_*.json` keeps every JSON dump; use
 `profiling/diff_eval.py` to compare two runs side-by-side.
@@ -371,6 +456,7 @@ dataset's XML labels.
 | `MAX_OCR_HINT_LINES` 30→20 | -0.012 | r2_text_fuzzy -0.042; model was using those lines |
 | `MAX_ROUNDS` 30→15 | -0.012 | rctw_default_10 hit cap → 兜底 empty → -0.257 |
 | r1/r2 weights 0.50/0.50→0.40/0.60 | -0.069 | Pure rebalance; r1 near-ceiling; user chose headline tracking |
+| Phase 1: auto-OCR wiring only, no workflow prompt | -0.17 r2_text_fuzzy | "Free information paradox" — auto-attached OCR treated as low-confidence vs requested OCR.  Reverted.  Phase 2a fixed by adding 4-step workflow narrative. |
 
 ## 13. TODOs
 

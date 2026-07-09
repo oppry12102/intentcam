@@ -22,8 +22,8 @@ deltas are architectural, not noise.
 | `QUALITY` | 90 | `app/.../FrameAnalyzer.kt:184` | Round-1 thumbnail JPEG quality | q90 vs q80 +0.015-0.017 reproducible |
 | `MAX_FULL_DIM` | 2048 | `app/.../FrameAnalyzer.kt:167` | Full-res JPEG cap (source for `zoom_in=original`) | Bumped 4096→2048 on 2026-07-10 round 3. Counter-intuitive win: with 1568 thumb + 2048 fullRes, zoom_in crops are more focused (2× linear / 4× area magnifier still holds; 4096 source was over-resolving 1568-output crops). r2_text strict +0.042, r2_type +0.075 in eval @20 (12W/8L/0T). Eval-side hardcoded 4096 in `EvalRunner.kt:75` mirrored. |
 | `FULL_QUALITY` | 95 | `app/.../FrameAnalyzer.kt:192` | Full-res JPEG quality | Visually lossless → all subsequent crops also lossless |
-| `CROP_OUTPUT_MAX_DIM` | 1568 | `shared/.../ImageOps.kt:67` | Max-dim cap on `cropJpegRegion` output (zoom_in / read_text) | Claude vision encoder's internal grid max; going higher gets downscaled anyway. Also: ≥ 768 thumbnail (2× linear / 4× area) so zoom_in is always a real magnifier |
-| `DEFAULT_CROP_QUALITY` | 90 | `shared/.../ImageOps.kt:58` | Zoom/read crop output quality | q90 keeps edge detail for small text; q80 smudged at 1568-cap re-encode |
+| `CROP_OUTPUT_MAX_DIM` | 1568 | `shared/.../ImageOps.kt:67` | Max-dim cap on `cropJpegRegion` output (zoom_in) | Claude vision encoder's internal grid max; going higher gets downscaled anyway. Also: ≥ 768 thumbnail (2× linear / 4× area) so zoom_in is always a real magnifier |
+| `DEFAULT_CROP_QUALITY` | 90 | `shared/.../ImageOps.kt:58` | Zoom crop output quality | q90 keeps edge detail for small text; q80 smudged at 1568-cap re-encode |
 | Region min w/h | 0.05f | `shared/.../ToolImplementations.kt:79,80,263,264` | Min crop region (normalized) | Below 5% the crop has too little info to be useful |
 
 ## B. OCR pipeline
@@ -58,7 +58,6 @@ deltas are architectural, not noise.
 | Parameter | Value | File:line | What it controls | Why this value |
 |---|---|---|---|---|
 | zoom_in default source | "original" | `shared/.../ToolImplementations.kt:91` | First zoom crops 4096-px fullRes | Pre-2026-07-10 was "last" — broke because 50% of 768 = 384 < round-1 view; default="original" makes zoom always a magnifier |
-| read_text default source | "last" | `shared/.../ToolImplementations.kt:269` | First re-scan crops last image | Round-1 OCR hint already covers fullRes; "last" lets the model re-OCR a zoomed crop |
 | Region w/h minimum | 0.05f | (see A. above) | Same as crop min | Same |
 | details cap (prompt) | "5-8 行" | `shared/.../LlmClient.kt:466` | Hint to model on details array size | Prevents over-long answers; 8 covers most scenes |
 
@@ -92,10 +91,11 @@ These are paragraph-level behaviors in `TOOL_USE_SYSTEM` (LlmClient.kt:415-444),
 
 ## Recently retired (kept here for one cycle, then delete)
 
-| Constant | Was at | Removed 2026-07-10 | Why |
+| Constant | Was at | Removed | Why |
 |---|---|---|---|
-| `CROP_OUTPUT_MAX_DIM` (magic 1568) | inline in 2 files | `shared/.../ImageOps.kt:67` | Was duplicated; extracted |
-| `MAX_OCR_HINT_CHARS = 1500` | `shared/.../ToolUseLoop.kt:828` | gone | Replaced by `MAX_OCR_HINT_LINES` 2026-07-08; pure dead code |
+| `read_text` tool | `shared/.../ToolImplementations.kt:230-332` | 2026-07-11 (Phase 2) | Auto-OCR on every zoom_in crop covers both [LOW] verification and missed-region re-scan. System prompt now lists 3 tools: zoom_in, compare_text, emit_bubble. See [[eval-phase2a-autoocr-2026-07-11]]. |
+| `MAX_OCR_HINT_CHARS = 1500` | `shared/.../ToolUseLoop.kt:828` | 2026-07-08 | Replaced by `MAX_OCR_HINT_LINES`; pure dead code |
+| `CROP_OUTPUT_MAX_DIM` (magic 1568) | inline in 2 files | 2026-07-10 | Was duplicated; extracted |
 | `QUADRANT_MAX_DIM = 768` | `app/.../FrameAnalyzer.kt:197` | gone | 1-only mode since 2026-07-06; quadrants never produced |
 | `QUADRANT_QUALITY = 85` | `app/.../FrameAnalyzer.kt:198` + `shared/.../eval/EvalRunner.kt:267` | gone | Same |
 | `encodeQuadrant` (× 2) | `FrameAnalyzer.kt:141` + `EvalRunner.kt:234` | gone | Same |
@@ -110,5 +110,5 @@ These are paragraph-level behaviors in `TOOL_USE_SYSTEM` (LlmClient.kt:415-444),
 1. ~~**`MAX_OCR_HINT_LINES = 30` → 20`**~~ — **TESTED 2026-07-10 round 2, REJECTED.** r2_text_fuzzy -0.042 (real signal). The model was using those lines; cutting to 20 truncates text the model was verifying. Reverted.
 2. ~~**`MAX_ROUNDS = 30` → 15`**~~ — **TESTED 2026-07-10 round 2, REJECTED.** At least one fixture (rctw_default_10) hit the 15-round cap; 兜底 Bubble fired with empty content → r2_text_fuzzy 0.0, composite -0.257. Tighter cap not safe. Reverted.
 3. ~~**r1/r2 weights 0.50/0.50 → 0.40/0.60**~~ — **TESTED 2026-07-10 round 3, REVERTED.** Dropped headline 0.898→0.829 (-0.069) because r1=0.96 (near-ceiling) got less weight. Pure score rebalance, not behavior change. User chose headline tracking over honest r2 surfacing.
-4. **read_text default source → "original"** — round-1 hint already covers fullRes; "last" might miss regions. Risky: see eval reasoning in this file.
+4. ~~**read_text default source → "original"**~~ — REMOVED 2026-07-11 (Phase 2). read_text tool itself removed; auto-OCR on every zoom_in crop is now sufficient.
 5. ~~**`MAX_FULL_DIM = 4096` → 2048`**~~ — **TESTED 2026-07-10 round 3, KEPT.** Composite 0.841 → 0.898 with old weights (+0.057, 12W/8L/0T). r2_text strict +0.042, r2_type +0.075. Model is *better* with smaller fullRes — crops are more focused, less context dilution. Production code updated; eval-side hardcoded 4096 in `EvalRunner.kt:75` also updated.

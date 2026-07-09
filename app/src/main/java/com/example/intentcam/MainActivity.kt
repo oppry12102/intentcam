@@ -63,9 +63,11 @@ class MainActivity : ComponentActivity() {
         //
         // OCR: install the HMS ML Kit (Huawei) offline OCR backend.
         // `installAndroidOcr` registers an `OcrEngine.Impl` and
-        // pre-warms the analyzer so the first read_text call doesn't
-        // pay the cold-cache model-fetch cost.  The Chinese + Latin
-        // language packs are bundled as transitive dependencies
+        // pre-warms the analyzer so the first round-1 OCR pre-pass
+        // doesn't pay the cold-cache model-fetch cost.  Phase 2
+        // (2026-07-11) removed the `read_text` tool — OCR now runs
+        // automatically on round-1 + every zoom_in crop.  The Chinese
+        // + Latin language packs are bundled as transitive dependencies
         // (`ml-computer-vision-ocr-cn-model`); HMS handles the
         // first-run download on its own scheduler.
         installAndroidImageOps()

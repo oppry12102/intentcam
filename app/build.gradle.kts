@@ -37,8 +37,8 @@ android {
         applicationId = "com.example.intentcam"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
         // Native libs: arm64-v8a only.  x86 / x86_64 are emulator-only
         // (emulator uses host CPU); armeabi-v7a (32-bit ARM) is < 1% of
         // 2024+ Play Store devices and the ML Kit OCR .so for it adds
@@ -112,8 +112,9 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
 
     // ── On-device OCR: Huawei HMS ML Kit (offline, Chinese + Latin) ──
-    // The `read_text` tool calls OcrEngine.recognize(); the impl is
-    // installed in MainActivity.onCreate via installAndroidOcr().
+    // The auto-OCR path (round-1 pre-pass + per-zoom_in crop) calls
+    // OcrEngine.recognize(); the impl is installed in
+    // MainActivity.onCreate via installAndroidOcr().
     //
     // * ml-computer-vision-ocr — public OCR AAR (transitively pulls
     //   in ml-computer-vision-ocr-base + ml-computer-vision-cloud,

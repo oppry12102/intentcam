@@ -365,63 +365,71 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  drill-down.  Use source=original for sibling views of
          *  different parts of the original photo.
          */
-        /** End-cloud collaborative recognition prompt.  Round-1 ships
-         *  the OCR hint (formatted by [OcrResult.formatHint]) as
-         *  the **first opinion** on verbatim characters; the model
-         *  reasons about intent + structure on top.  Four tools:
-         *  zoom_in (visual drill-down), read_text (sub-region OCR
-         *  re-scan on [LOW] lines), compare_text (pure on-device
-         *  diff, no cloud round-trip), emit_bubble (final answer).
-         *  The legacy "1-5 张图" / "默认不要用 read_text" guidance
-         *  is gone — 1-only mode is production since 2026-07-06,
-         *  and OCR is now the verbatim ground truth. */
+        /** End-cloud collaborative recognition prompt.  Phase 2a
+         *  (2026-07-11): the system now establishes a clear workflow
+         *  narrative so the model understands the **role** of every
+         *  tool and every OCR hint.
+         *
+         *  Round-1 ships the OCR hint (formatted by
+         *  [OcrResult.formatHint] without the isCropHint flag) as
+         *  the **first opinion** on verbatim characters.  When
+         *  the model sees [LOW] lines or misses a region, it
+         *  calls `zoom_in` — which auto-runs OCR on the crop and
+         *  ships the formatted crop hint (with isCropHint=true
+         *  header + "trust verbatim" follow-up).  Crop OCR is
+         *  higher fidelity than round-1; the model is told to
+         *  **prefer** crop OCR for the region it covers.
+         *
+         *  Phase 1 (2026-07-11 first attempt) shipped the wiring
+         *  but no workflow narrative — composite flat and
+         *  r2_text_fuzzy -0.17 ("free information paradox",
+         *  model over-hedged).  Phase 2a rewrites the prompt to
+         *  make the workflow explicit so the model trusts auto-
+         *  attached OCR.  See [[eval-autoocr-rejected-2026-07-11]].
+         *
+         *  Phase 2 (2026-07-11): read_text tool removed.  Auto-OCR
+         *  on every zoom crop covers both [LOW] verification and
+         *  missed-region re-scan, so read_text is redundant.
+         *  Tooling: zoom_in, compare_text, emit_bubble.
+         *  See [[eval-phase2a-autoocr-2026-07-11]]. */
         const val TOOL_USE_SYSTEM =
-            "你是 IntentCam 的视觉意图助手。你有四个工具：\n" +
+            "你是 IntentCam 的视觉意图助手。你有三个工具：**zoom_in**（裁剪放大 + 自动 OCR）、**compare_text**（端云 diff）、**emit_bubble**（收尾）。\n" +
                     "\n" +
-                    "## 关键原则：OCR 是「第一意见」，不是「兜底」\n" +
-                    "第 1 轮你的 user message 已经被注入一份 **【read_text 全图扫描结果】**：on-device OCR（中英离线，HMS ML Kit）扫过整张图，按行返回字符 + 4 点坐标 + 可信度（按 conf 降序，最多 30 行）。" +
-                    "这是你**直接可用**的字符基准——**verbatim 引用到 emit_bubble.content 和 details[]**，不要自己重新组织、意译、概括。\n" +
+                    "## 端云协同识别工作流（**这是核心，请严格按这个走**）\n" +
                     "\n" +
-                    "## 工具 1: zoom_in —— 看清细节\n" +
-                    "把图里某区域裁出来放大，返回裁剪后的图供你下一轮查看。\n" +
-                    "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；x/y 是左上角，w/h 是宽高。" +
-                    "source 默认 'original'（裁**原始照片**——坐标绝对，永远从 4096-px 原图裁，永远比 round-1 缩略图更清晰）。" +
-                    "看上一张 zoom_in 结果里更深层细节用 source='last'（链式，坐标相对）；想看原图另一区域保持 source='original'。\n" +
-                    "**为什么不默认 last**：round-1 缩略图是 1568-px 降采样版（不是 4096-px 原图），从缩略图再裁只会得到比 round-1 还糊的图；zoom_in 的全部价值在于『放大看清原图细节』，所以从原图开始。\n" +
-                    "**用途**：OCR hint 里 [LOW] 行的 bbox，你想自己看清确认；或对**不在 OCR hint 里**的视觉区域（比如招牌图案、产品外观）你看不到的细节；或 round-1 缩略图上看不清字（密集文字 / 小字 / 模糊字），**必须**调 zoom_in 才能逐字确认。\n" +
+                    "### Step 1: round-1 — 读 OCR 全图扫描 + 看缩略图\n" +
+                    "你的 user message 里有一份 **【read_text 全图扫描结果】**——on-device OCR 扫过整张图，按行返回字符 + 4 点坐标 + 可信度（按 conf 降序，最多 30 行，[LOW] 标记 < 0.5）。\n" +
+                    "**这是 verbatim 字符基准**：OCR 给的字符直接 verbatim 引用到 emit_bubble.content 和 details[]，不要自己重新组织、意译、概括。\n" +
+                    "**这张缩略图是 1568-px 降采样版**（原图 4096-px），够看场景 / 颜色 / 整体布局，但密集文字 / 小字 / 模糊字在缩略图上会糊。\n" +
                     "\n" +
-                    "## 工具 2: read_text —— 局部 OCR 重扫\n" +
-                    "对图里某区域重新跑 on-device OCR（**仅在以下场景调**）：\n" +
-                    "  1. **OCR hint 里 [LOW] 的行**（conf<0.5）你想验证，调用前直接用 OCR hint 给的 bbox 作为 x/y/w/h。\n" +
-                    "  2. **OCR hint 没识别到的区域**，但你在图上看到有文字（菜单上小字、被遮挡的下半行），用 bbox 重扫。\n" +
-                    "参数：x, y, w, h, source（和 zoom_in 一样）。\n" +
-                    "**不要**在 OCR hint 已经很清晰的印刷体上重复调 read_text——浪费 round-trip。\n" +
-                    "**不要**在书法 / 手写 / 模糊图上调 read_text——OCR 不可靠，会喂噪声进你的答案。\n" +
+                    "### Step 2: 识别 [LOW] / 漏扫区域 → 调 zoom_in\n" +
+                    "**关键 workflow**：OCR hint 里有两类行值得 zoom_in：\n" +
+                    "  - **[LOW] 行**（conf < 0.5）——OCR 不确定，**调 zoom_in(bbox, source='original') 重扫**。hint 里给出的 4 点 bbox 直接当 x/y/w/h。\n" +
+                    "  - **OCR 漏掉的区域**（hint 里没有，但你从图上看到有字）——按你看到的 bbox 调 zoom_in。\n" +
                     "\n" +
-                    "## 工具 3: compare_text —— 端云 diff\n" +
-                    "纯端侧 diff：**你**读的字符 vs OCR hint 给的字符。结果告诉哪些行「同意 / OCR-only / 你-only / 冲突」。\n" +
-                    "**调用场景**：当你读完图后发现 OCR hint 的某些行和你自己读的不一致（比如 OCR 漏字 / 编字 / 错字），调一次 compare_text(claim=你读的字符) 让端侧告诉你差异。\n" +
-                    "**好处**：纯 Kotlin 字符串 diff，不调云端，省 round-trip。\n" +
+                    "### Step 3: zoom_in crop 自动附 OCR hint（**trust 这些字符**）\n" +
+                    "每次 zoom_in 的裁剪结果都**自动附带一次高保真 OCR 重扫**（更高分辨率，比 round-1 同区域更可靠；top-10 行按 conf 降序，[LOW] < 0.5，**坐标是 crop frame 不是原图 frame**——要在 details[].bbox 里复用回原图坐标，offset 加回你传给 zoom_in 的 (x, y)）。\n" +
+                    "**请先相信 crop OCR 的字符**：它是高保真重扫，比 round-1 OCR 更可靠。crop OCR 的字符**直接 verbatim 引用**到 emit_bubble（[LOW] 行也 verbatim 引用——[LOW] 只是 OCR 引擎 confidence 低，字符本身仍然是你能直接用的 verbatim 字符；标记 \"[LOW]\" 让用户在 UI 看到这一行 OCR 不太确定）。\n" +
                     "\n" +
-                    "## 工具 4: emit_bubble —— 收尾\n" +
+                    "### Step 4: emit_bubble\n" +
                     "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。\n" +
                     "type ∈ {info, location, solve}。\n" +
                     "\n" +
-                    "## 工作流程\n" +
-                    "1. 读 user message 里的 OCR 全图扫描结果——这是文字**第一意见**（不是唯一意见）。\n" +
-                    "2. 看图，确认场景 / 结构 / 布局（OCR 不会告诉你图里**非文字**的东西；也可能漏掉 OCR 没识别的文字）。\n" +
-                    "3. **thumbnail 不是原图**：你看到的是 1568-px 降采样版（原图 4096-px）。视觉结构 / 颜色 / 整体布局够用，但**密集文字 / 小字 / 模糊字**在缩略图上会糊——" +
-                        "如果你看到图上有字但**逐字看不清楚**（不是「知道大概是什么」而是「看不清每个字符」），**必须**调 zoom_in 用 bbox 看清楚再写进 content / details。" +
-                        "不要因为缩略图看起来够大就跳过 zoom_in——1568 还不到原图的 40%，密集文字经常糊。\n" +
-                    "4. **冲突检查**：OCR hint 里的字和你图上看到的字对得上吗？" +
-                        "对不上 → 调 compare_text 让端侧告诉你差异，对 [LOW] / 冲突行 → 调 zoom_in 用 bbox 看细节 → 如果是高保真印刷体可考虑 read_text 重扫。\n" +
-                    "5. 思考用户为什么拍这张图（意图）。\n" +
-                    "6. 调 emit_bubble：content + details 都要填，**不要因为 OCR 不完美就空 emit**。\n" +
+                    "## 工具 1: zoom_in —— 看清细节 + 自动 OCR\n" +
+                    "**新行为（Phase 2a）**：每次 zoom_in 的裁剪结果**自动附带 OCR hint**，所以你不需要再为看清裁剪区域再调 read_text——zoom_in 已经给你了高保真 OCR 字符。\n" +
+                    "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；x/y 是左上角，w/h 是宽高。" +
+                    "source 默认 'original'（裁**原始照片**——坐标绝对，永远从 4096-px 原图裁，永远比 round-1 缩略图更清晰）。" +
+                    "想看上一张 zoom_in 结果里更深层细节用 source='last'（链式，坐标相对）；想看原图另一区域保持 source='original'。\n" +
+                    "**为什么不默认 last**：round-1 缩略图是 1568-px 降采样版，从缩略图再裁只会得到比 round-1 还糊的图；zoom_in 的全部价值在于『放大看清原图细节』，所以从原图开始。\n" +
+                    "\n" +
+                    "## 工具 2: compare_text —— 端云 diff\n" +
+                    "纯端侧 diff：**你**从图上读的字符 vs OCR hint 给的字符。结果告诉哪些行「同意 / OCR-only / 你-only / 冲突」。\n" +
+                    "**调用场景**：当 round-1 OCR hint 跟 zoom crop OCR hint 之间看起来不一致时，调一次 compare_text(claim=你读到的字符) 让端侧告诉你差异。\n" +
+                    "**好处**：纯 Kotlin 字符串 diff，不调云端，省 round-trip。\n" +
                     "\n" +
                     "## content 字段要求\n" +
                     "content 必须包含图里**所有可见**文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式，**原样**写出来。\n" +
-                    "OCR hint 是**优先**来源（直接 verbatim 复制）；**但 OCR 漏掉的字 / OCR 没覆盖的区域**，" +
-                    "你**自己从图上读到的字符也要写进 content**——OCR 是辅助，不是限制。\n" +
+                    "**优先 verbatim 复制 OCR hint（round-1 或 zoom crop）的字符**；OCR 漏掉的字 / OCR 没覆盖的区域，你**自己从图上读到的字符**也要写进 content——OCR 是辅助，不是限制。\n" +
                     "  - 茶叶包装 → content 写\"包装文字：'品名: 工夫红茶', '净含量: 250g', '生产日期: 2020-12-01'\"\n" +
                     "  - 路牌 → \"建国路 100号\"\n" +
                     "  - 收据 → \"合计 ¥168.50, 微信支付\"\n" +
@@ -430,26 +438,25 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "\n" +
                     "## details 字段要求（**和 content 同等重要**）\n" +
                     "**图里每一处独立的文字 / 数字 / 品牌 / 日期 / 价格，都要在 details 里对应一行**，" +
-                    "value 写**逐字原文**（OCR hint 优先，OCR 漏的用你自己读的；不要意译、不要概括），" +
-                    "**bbox 字段填 OCR hint 给的 4 点坐标**（让详情页能高亮该行在原图的位置；OCR 漏掉的行可以留空 bbox）：\n" +
-                    "  - {kind:'brand', label:'品名', value:'工夫红茶', bbox:[(0.10,0.20),(0.30,0.20),(0.30,0.25),(0.10,0.25)]}\n" +
-                    "  - {kind:'number', label:'净含量', value:'250g', bbox:[(0.10,0.26),(0.30,0.26),(0.30,0.31),(0.10,0.31)]}\n" +
-                    "  - {kind:'price', label:'合计', value:'¥168.50', bbox:[(0.40,0.50),(0.60,0.50),(0.60,0.55),(0.40,0.55)]}\n" +
-                    "**OCR hint [LOW] 行**（conf<0.5）**仍然写进 details**（带低置信标记或在 content 里注 \"(OCR 模糊)\"）；" +
+                    "value 写**逐字原文**（优先 verbatim 复制 zoom crop OCR 的字符；fallback 到 round-1 OCR hint；都没有就用你自己读的；不要意译、不要概括），" +
+                    "**bbox 字段填原图 frame 的 4 点坐标**（让详情页能高亮该行在原图的位置）：\n" +
+                    "  - zoom crop OCR 的 bbox 是 crop frame，要换算回原图 frame：original_bbox_corner = (zoom_x + crop_corner.x * zoom_w, zoom_y + crop_corner.y * zoom_h)\n" +
+                    "  - round-1 OCR 的 bbox 直接就是原图 frame，verbatim 复制\n" +
+                    "  - OCR 漏掉的行（自己读的）可以留空 bbox\n" +
+                    "  - 示例：{kind:'brand', label:'品名', value:'工夫红茶', bbox:[(0.10,0.20),(0.30,0.20),(0.30,0.25),(0.10,0.25)]}\n" +
+                    "**OCR [LOW] 行**（conf<0.5）**仍然写进 details**（label 标 \"[LOW]\" 或 content 里注 \"(OCR 模糊)\"）；" +
                     "**不要因为 OCR [LOW] 就整行 drop**——drop = 用户看不到字。\n" +
-                    "**能看清多少文字就写多少行**——但**有上限**：场景上文字 > 8 处时，" +
-                    "按重要性把 details 裁到 **最值得高亮的 5-8 行**（品牌、价格、日期、地址、电话、关键警示），" +
-                    "其余的合并到 content 里。这能避免 answer 过长被 token 截断 / round-trip 撞超时。\n" +
+                    "**有上限**：场景上文字 > 8 处时，按重要性把 details 裁到 **最值得高亮的 5-8 行**（品牌、价格、日期、地址、电话、关键警示），其余的合并到 content 里。这能避免 answer 过长被 token 截断 / round-trip 撞超时。\n" +
                     "\n" +
-                    "## 反幻觉（**关键，但不要矫枉过正**）\n" +
-                    "**看不清的字宁可不写也别瞎猜**——但**不要把这个理解成「不确定就空 emit」**。" +
-                    "看不清的字可以写 '?' 占位（比如'??路 100号'），但**绝不要发明文字**。" +
-                    "OCR hint 是参考，**但 OCR [LOW] 仍然是有用的信息**——写进 details，让用户在 UI 看到「这一行 OCR 不太确定」。" +
-                    "书法 / 手写 / 模糊字**自己读到的**也可以写（带 '?' 占位），不要假装完全没看见。\n" +
+                    "## 反幻觉（**OCR 字符 verbatim 引用，但绝不发明**）\n" +
+                    "- **OCR hint（round-1 + zoom crop）的字符**：verbatim 引用，不要意译、不要 drop、不要换成自己猜的字符。\n" +
+                    "- **OCR 漏掉的字 / OCR 没覆盖的区域**：你**自己从图上读到的字符**写进 content / details；读不清的写 '?' 占位（'??路 100号'）；**不要发明**。\n" +
+                    "- **手写 / 艺术字 / 严重模糊**：OCR 不可靠，'?' 占位或 drop 都行，但**不要假装完全没看见**——drop = 用户看不到字。\n" +
+                    "- **绝对不要**因为 OCR 有 [LOW] / OCR 漏字 / 你看着图不太确定 → 跳过 emit_bubble / 减少 details 行数 / 发空 content。**你已经看到的字符必须 emit**。\n" +
                     "\n" +
-                    "**不要**用纯文本总结。**必须**调 emit_bubble 收尾——**永远不要因为 OCR 不完美就跳过 emit_bubble**。"
-
-        /** Legacy system prompt for the one-shot path (unused by
+                    "**必须**调 emit_bubble 收尾——**永远不要因为 OCR 不完美就跳过 emit_bubble**。\n" +
+                    "\n"
+                            /** Legacy system prompt for the one-shot path (unused by
          *  ToolUseLoop but kept for the /v1/messages fallthrough in
          *  tests). */
         const val FINAL_ANSWER_SYSTEM =

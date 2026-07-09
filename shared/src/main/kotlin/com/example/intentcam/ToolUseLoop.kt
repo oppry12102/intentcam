@@ -74,6 +74,7 @@ class ToolUseLoop(
         fullRes: ByteArray,
         toolName: String,
         toolInputJson: String,
+        cropOcrCap: Int = 0,
     ): Outcome {
         val def = registry.get(toolName)
             ?: return Outcome.Error("未知工具: $toolName")
@@ -175,6 +176,8 @@ class ToolUseLoop(
         var lastRound: RoundSnapshot? = null
         var pendingUserInput: PendingUserInput? = null
         var anyFinalBubble: ToolResult? = null
+        val chipCropOcrBudget = if (cropOcrCap > 0) cropOcrCap else Int.MAX_VALUE
+        var chipCropOcrUsed = 0
         for (round in 1..MAX_ROUNDS) {
             log("TOOL", "→ chip 第 $round 轮（messages=${messages.length()}）")
             val response: ToolUseResponse = try {
@@ -304,11 +307,29 @@ class ToolUseLoop(
                                     .put("data", b64 as Any)
                             )
                     )
-                    val hint = if (followUps.size == 1) {
-                        "已放大你刚才要求的区域（更高分辨率），请用这张图继续回答。"
+                    // Phase 2a (2026-07-11): same auto-OCR + crop
+                    // formatHint wiring as runCycle (see lines 619+).
+                    val cropNote = if (chipCropOcrUsed < chipCropOcrBudget) {
+                        chipCropOcrUsed++
+                        val result = runCatching { OcrEngine.recognize(img) }
+                        result.onFailure { e ->
+                            log("OCR_ERR_CROP", formatThrowable(e))
+                        }
+                        val cropOcr = result.getOrDefault(OcrResult.EMPTY)
+                        val cropHint = OcrResult.formatHint(
+                            cropOcr.blocks,
+                            maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
+                            isCropHint = true,
+                        )
+                        if (cropHint.isNotBlank()) cropHint
+                        else "(已对该裁剪区域跑 OCR，未识别到文字——继续 zoom_in 钻更细或直接 emit)"
+                    } else null
+                    val hintPrefix = if (followUps.size == 1) {
+                        "已放大你刚才要求的区域（更高分辨率）"
                     } else {
-                        "放大区域 #${i + 1}/${followUps.size}，请用这些图继续回答。"
+                        "放大区域 #${i + 1}/${followUps.size}"
                     }
+                    val hint = if (cropNote != null) "$hintPrefix。$cropNote" else hintPrefix
                     nextContent.put(JSONObject().put("type", "text").put("text", hint))
                 }
             }
@@ -364,21 +385,27 @@ class ToolUseLoop(
      *   across rounds so zoom_in can crop from it on demand.
      * @param userText optional follow-up text from a prior
      *   [Outcome.PendingUserInput]; pass "" on round 1.
+     * @param cropOcrCap fast-iteration knob for the eval: max number
+     *   of crop OCR runs to perform across the whole cycle (0 =
+     *   unlimited, prod default).  Round-1 OCR pre-pass is always
+     *   counted separately and is unaffected.
      */
     suspend fun runCycle(
         thumbnail: ByteArray,
         fullRes: ByteArray,
         userText: String,
+        cropOcrCap: Int = 0,
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
         val toolsJson = registry.toAnthropicToolsJson()
+        val cropOcrBudget = if (cropOcrCap > 0) cropOcrCap else Int.MAX_VALUE
+        var cropOcrUsed = 0
         // Round-1 OCR pre-pass: run OcrEngine on the full-resolution
         // photo so the model has verbatim text + 4-corner coords +
-        // confidence per line, before deciding whether to call
-        // `read_text` for a sub-region.  We use fullRes (not the
-        // downscaled thumbnail) because OCR quality on small text
-        // drops sharply with input resolution.  Failures are silent
+        // confidence per line.  We use fullRes (not the downscaled
+        // thumbnail) because OCR quality on small text drops sharply
+        // with input resolution.  Failures are silent
         // — read_text still works as a manual fallback.
         //
         // The full [OcrResult] is cached for the whole cycle and
@@ -437,8 +464,8 @@ class ToolUseLoop(
         // zoom_in would only ever crop fullRes regardless of how
         // many zooms deep we were.  This persistence is what
         // makes the [LOW]-line re-OCR workflow (round-1 OCR →
-        // round-2 zoom_in the [LOW] bbox → round-3 read_text on
-        // that crop) actually work end-to-end.
+        // round-2 zoom_in the [LOW] bbox → round-3 zoom_in on the
+        // crop again for deeper drill-down) actually work end-to-end.
         var currentImage: ByteArray = fullRes
 
         for (round in 1..maxRounds) {
@@ -559,8 +586,10 @@ class ToolUseLoop(
                     // the original is always available via
                     // ctx.originalFullRes for source="original" mode.
                     // ocrCache carries the round-1 OCR result so
-                    // compare_text and read_text can reuse it
-                    // instead of re-running OCR on already-scanned
+                    // compare_text can reuse it instead of re-running
+                    // OCR on already-scanned regions.  (read_text was
+                    // removed in Phase 2 — auto-OCR on every zoom_in
+                    // crop covers the same need.)
                     // regions.
                     def.body(
                         ToolContext(
@@ -620,6 +649,16 @@ class ToolUseLoop(
             // follow-up image (zoom_in), prepend an image content
             // block + a hint per image so the model sees the
             // high-detail regions in addition to the tool_results.
+            //
+            // Phase 2a (2026-07-11): every zoom_in crop auto-runs
+            // on-device OCR and ships the formatted hint alongside
+            // the image.  The hint uses the CROP variant of
+            // OcrResult.formatHint: header is "zoom_in crop OCR
+            // 高保真重扫" (not the round-1 全图扫描 wording), and the
+            // [LOW] follow-up advice is "trust verbatim" instead of
+            // "不要 verbatim 复制" — the workflow narrative is in
+            // TOOL_USE_SYSTEM (LlmClient.kt) and the hint text just
+            // echoes the verdict.
             val nextContent = JSONArray()
             if (followUps.isNotEmpty()) {
                 followUps.forEachIndexed { i, img ->
@@ -635,11 +674,31 @@ class ToolUseLoop(
                                     .put("data", b64 as Any)
                             )
                     )
-                    val hint = if (followUps.size == 1) {
-                        "已放大你刚才要求的区域（更高分辨率），请用这张图继续回答。"
+                    // Auto-OCR per crop.  Silent drop on exception
+                    // (matches round-1's contract).  Budget-gated by
+                    // cropOcrCap so the eval can fast-iterate at
+                    // ~2-min/20-fixture pace; prod uses unlimited.
+                    val cropNote = if (cropOcrUsed < cropOcrBudget) {
+                        cropOcrUsed++
+                        val result = runCatching { OcrEngine.recognize(img) }
+                        result.onFailure { e ->
+                            log("OCR_ERR_CROP", formatThrowable(e))
+                        }
+                        val cropOcr = result.getOrDefault(OcrResult.EMPTY)
+                        val cropHint = OcrResult.formatHint(
+                            cropOcr.blocks,
+                            maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
+                            isCropHint = true,
+                        )
+                        if (cropHint.isNotBlank()) cropHint
+                        else "(已对该裁剪区域跑 OCR，未识别到文字——继续 zoom_in 钻更细或直接 emit)"
+                    } else null
+                    val hintPrefix = if (followUps.size == 1) {
+                        "已放大你刚才要求的区域（更高分辨率）"
                     } else {
-                        "放大区域 #${i + 1}/${followUps.size}，请用这些图继续回答。"
+                        "放大区域 #${i + 1}/${followUps.size}"
                     }
+                    val hint = if (cropNote != null) "$hintPrefix。$cropNote" else hintPrefix
                     nextContent.put(
                         JSONObject()
                             .put("type", "text")

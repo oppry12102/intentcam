@@ -145,7 +145,7 @@ fun ToolRegistry.registerDefaultTools() {
                 "  - ocr_only: OCR 有但你没提到 → zoom_in_required（可能 OCR 错或你漏看）\n" +
                 "  - llm_only: 你有但 OCR 没有 → zoom_in_required（可能你幻觉或 OCR 漏）\n" +
                 "  - disagree: 你俩都有但内容不一样 → trust_llm（你图上看到的优先）或 zoom_in_required\n" +
-                "**用法**：调完一次拿到的 diff 结果决定哪些行要 zoom_in / read_text 重扫 / 直接 drop。",
+                "**用法**：调完一次拿到的 diff 结果决定哪些行要 zoom_in 重扫 / 直接 drop。",
             inputSchema = JSONObject().apply {
                 put("type", "object")
                 put("properties", JSONObject().apply {
@@ -202,129 +202,6 @@ fun ToolRegistry.registerDefaultTools() {
                             "disagree=${diffs.count { it.conflict == "disagree" }}"
                         sb.append("summary: ").append(summary)
                         ToolResult(toolSummary = sb.toString())
-                    }
-                }
-            },
-        )
-    )
-
-    // ── 3. read_text ────────────────────────────────────────────
-    // Sub-region OCR re-scan.  Reserved for two scenarios where the
-    // round-1 OCR hint isn't enough on its own:
-    //
-    //   1. OCR hint has a [LOW]-confidence line the model wants to
-    //      verify by re-scanning at higher fidelity.
-    //   2. OCR hint missed a region entirely (small text the engine
-    //      dropped, occluded area the LLM spotted in the image).
-    //
-    // NOT for routine text reading: round 1 already shipped the OCR
-    // hint (top-30 blocks sorted by confidence with [LOW] tags) as
-    // the **first opinion** on verbatim characters.  Calling
-    // read_text on text the OCR hint already nailed wastes a
-    // round-trip.
-    //
-    // Returns per-line OCR with **normalized [0,1] 4-corner
-    // coordinates** so the model can map each text line back to its
-    // position in the image (top-left / top-right / bottom-right /
-    // bottom-left vertex order).
-    register(
-        ToolDef(
-            name = "read_text",
-            description = "对图里某区域重新跑 on-device OCR（中英离线，HMS ML Kit），返回**逐字字符串 + 4 点坐标 + 可信度**。\n" +
-                "**什么时候调**：\n" +
-                "  1. **OCR hint 里有 [LOW] 行**（conf<0.5）你想验证——直接用 OCR hint 给的 bbox 作为 x/y/w/h 重扫。\n" +
-                "  2. **OCR hint 没识别到的区域**，但你在图上看到有文字（菜单小字、被遮挡行）——用你看到的 bbox 重扫。\n" +
-                "**什么时候不要调**：\n" +
-                "  - OCR hint 已经清晰识别（conf>=0.5）的印刷体——重复 OCR 是浪费 round-trip。\n" +
-                "  - 书法、手写、艺术字、模糊图——OCR 在这些场景不可靠，调了会把噪声喂进你的答案。\n" +
-                "**参数**：x, y, w, h 是归一化坐标 ∈ [0, 1]（直接 verbatim 用 OCR hint 给的 bbox）。" +
-                "source 默认 'last'（链式），要扫原图不同区域用 'original'。\n" +
-                "**返回值**：每行 text + 4 个角点坐标 (归一化 [0,1]) + 可信度。坐标顺序：左上 → 右上 → 右下 → 左下。",
-            inputSchema = JSONObject().apply {
-                put("type", "object")
-                put("properties", JSONObject().apply {
-                    put("x", JSONObject().apply {
-                        put("type", "number"); put("minimum", 0); put("maximum", 1)
-                        put("description", "左边缘归一化坐标 [0, 1]（相对于 source 指定的图）")
-                    })
-                    put("y", JSONObject().apply {
-                        put("type", "number"); put("minimum", 0); put("maximum", 1)
-                        put("description", "上边缘归一化坐标 [0, 1]")
-                    })
-                    put("w", JSONObject().apply {
-                        put("type", "number"); put("minimum", 0); put("maximum", 1)
-                        put("description", "宽度归一化坐标 [0, 1]")
-                    })
-                    put("h", JSONObject().apply {
-                        put("type", "number"); put("minimum", 0); put("maximum", 1)
-                        put("description", "高度归一化坐标 [0, 1]")
-                    })
-                    put("source", JSONObject().apply {
-                        put("type", "string")
-                        put("enum", JSONArray().put("last").put("original"))
-                        put("description", "扫哪张图。last=上一张你看到的（链式），original=原图（绝对坐标）")
-                    })
-                })
-                put("required", JSONArray().put("x").put("y").put("w").put("h"))
-                put("additionalProperties", false)
-            },
-            body = { ctx, input ->
-                val x = input.optDouble("x", 0.0).toFloat()
-                val y = input.optDouble("y", 0.0).toFloat()
-                val w = input.optDouble("w", 0.0).toFloat().coerceAtLeast(0.05f)
-                val h = input.optDouble("h", 0.0).toFloat().coerceAtLeast(0.05f)
-                val source = input.optString("source", "last")
-                val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
-                val cropBytes = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 90)
-                if (cropBytes == null) {
-                    ToolResult(
-                        toolSummary = "read_text 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})"
-                    )
-                } else if (OcrEngine.impl == null) {
-                    // Fail-closed: no OCR backend installed in this build.
-                    // Surface a clear "backend missing" message so it's
-                    // distinguishable from "OCR ran but found nothing".
-                    ToolResult(
-                        toolSummary = "read_text: 当前构建未安装 OCR 后端 (read_text 兜底不可用)。" +
-                            "请直接通过 zoom_in 放大看清,或调 emit_bubble 自行读图。"
-                    )
-                } else {
-                    try {
-                        val result = OcrEngine.recognize(cropBytes)
-                        if (result.blocks.isEmpty()) {
-                            ToolResult(toolSummary = "OCR: 该区域未识别到文字")
-                        } else {
-                            // Build a multi-line tool result.  Each line:
-                            // "text | bbox=[(x1,y1),(x2,y2),(x3,y3),(x4,y4)] conf=0.xx"
-                            // Coordinates are normalized [0,1] in the
-                            // CROPPED region's frame, matching what the
-                            // model asked for (so it can map back to the
-                            // source image by offsetting with the
-                            // x/y/w/h it passed in).
-                            val sb = StringBuilder()
-                            sb.append("OCR (${result.blocks.size} 行):\n")
-                            for (b in result.blocks) {
-                                val corners = b.corners
-                                val bbox = if (corners.size >= 4) {
-                                    val tl = corners[0]; val tr = corners[1]
-                                    val br = corners[2]; val bl = corners[3]
-                                    "[(${"%.2f".format(tl.x)},${"%.2f".format(tl.y)})," +
-                                        "(${"%.2f".format(tr.x)},${"%.2f".format(tr.y)})," +
-                                        "(${"%.2f".format(br.x)},${"%.2f".format(br.y)})," +
-                                        "(${"%.2f".format(bl.x)},${"%.2f".format(bl.y)})]"
-                                } else "[]"
-                                sb.append("  • \"${b.text}\" bbox=$bbox " +
-                                    "conf=${"%.2f".format(b.confidence)}\n")
-                            }
-                            // Trailing plain-text dump for easy quoting
-                            // into emit_bubble.content.
-                            sb.append("\nfull_text: ").append(result.fullText)
-                            ToolResult(toolSummary = sb.toString().trimEnd())
-                        }
-                    } catch (e: Throwable) {
-                        ToolResult(
-                            toolSummary = "read_text 失败：${e.javaClass.simpleName}: ${e.message ?: "未知错误"}"
-                        )
                     }
                 }
             },
