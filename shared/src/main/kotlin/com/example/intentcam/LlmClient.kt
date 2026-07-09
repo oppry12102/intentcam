@@ -338,7 +338,21 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  (1182 chars pre-tool text ≈ 600-900 BPE tokens + 8 detail
          *  rows with bbox ≈ 400 tokens + content ≈ 200 tokens = ~1500
          *  BPE tokens).  Short answers still stop early so the cost is
-         *  only paid on scenes that need it. */
+         *  only paid on scenes that need it.
+         *
+         *  2026-07-10: tested 3072 + "≤80字 prose" rule to recover
+         *  rctw_21 / rctw_49 empty bubbles in @100 batch (root cause:
+         *  `stop_reason=max_tokens` cut `emit_bubble` JSON mid-stream
+         *  at `{"confidence": 0.93, "details": `).  REJECTED at @20:
+         *  fix1 (3072 + prompt rule) 0.886 vs option C 0.902
+         *  (-0.016); fix2 (3072 alone) 0.879 (-0.023).  The bigger
+         *  cap flipped the model into verbose-but-tangential mode on
+         *  rctw_04 (-0.125), rctw_14 (-0.142), rctw_20 (-0.125), losing
+         *  more than the 2-7 empty-bubble recovery.  2048 stays.  The
+         *  empty-bubble cases at @100 are 2-7/100 (2-7% noise floor);
+         *  the composite cost is < -0.015 which is already inside the
+         *  per-eval variance.  A real fix is "retry on stop=max_tokens
+         *  with 'summarize short' nudge", tracked separately. */
         const val MAX_TOKENS = 2048
 
         /** Lock at 0 to keep intent classification deterministic. */
