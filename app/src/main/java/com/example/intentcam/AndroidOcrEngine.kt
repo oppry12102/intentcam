@@ -281,12 +281,8 @@ private suspend fun recognizeWith(
             try {
                 val result = mlTextToResult(mlText, bitmap.width, bitmap.height)
                 // async succeeded → trust the result (may be empty =
-                // "no text").  We do NOT fall back to the synchronous
-                // analyseFrame here: HMF posts this listener on the
-                // MAIN thread, and analyseFrame runs the full native
-                // OCR inline — a main-thread native call that can ANR
-                // or crash.  An empty local result already flows to the
-                // cloud fallback in recognizeBlocking.
+                // "no text").  An empty local result already flows to
+                // the cloud fallback in recognizeBlocking.
                 cont.resume(result)
             } catch (t: Throwable) {
                 cont.resumeWithException(t)
@@ -436,33 +432,6 @@ private fun walkBlock(
             }
         }
     }
-}
-
-/**
- * Convert a [SparseArray] of [MLText.Block] (the shape returned by
- * the synchronous [MLTextAnalyzer.analyseFrame] fallback) into our
- * flat [OcrResult].  Mirrors [mlTextToResult] but skips the
- * MLText wrapper since the sync API doesn't carry one.
- *
- * Used as a last-resort fallback when asyncAnalyseFrame returns
- * SUCCESS with an empty `MLText.getBlocks()` — HMS does this on
- * some devices when the cached model is stale and only the sync
- * path is able to re-decode.  Without this fallback the engine
- * silently loses content and our OCR round returns "" with no
- * diagnostic.
- */
-private fun sparseArrayToResult(
-    blocks: android.util.SparseArray<MLText.Block>,
-    width: Int,
-    height: Int,
-): OcrResult {
-    if (width <= 0 || height <= 0) return OcrResult.EMPTY
-    val sink = mutableListOf<OcrBlock>()
-    for (i in 0 until blocks.size()) {
-        walkBlock(sink, blocks.valueAt(i), width, height)
-    }
-    val fullText = sink.joinToString(separator = " ") { it.text }
-    return OcrResult(blocks = sink, fullText = fullText)
 }
 
 /**

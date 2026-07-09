@@ -1,0 +1,565 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.7708333333333333,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.7708333333333333},
+  "fixtures": [
+    {
+      "raw_content": "这张图确认了：右侧是 4 行隶书大字（左→右顺序），左侧是题款（小字 + 印章）。隶书大字部分我看清了，但左侧题款的字符我用肉眼也分辨不清\u2014\u2014是典型的草书/行草题款。crop OCR 也大多 [LOW]，我直接从图上读到的字符（含隶书大字）：\n\n**隶书大字（4 列，由左至右竖排读）：**\n- 第 1 列：衣 / 日 / 幽 / 問\n- 第 2 列：裳 / 清 / 映 / 讀\n- 第 3 列：輝 ",
+      "r2_text": 0.55,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.7225,
+      "r2_text_fuzzy": 0.16,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 200,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一家名为\"Gazan 雅山\"的中式料理店招牌，招牌上有一个戴红色头巾的卡通猫捧着饭碗的吉祥物 logo。招牌下方写着副标题\"牛满碗·奇道中式料理\"，整体采用白字+深红色背景的店面招牌样式。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "主招牌品牌名",
+          "value": "Gazan 雅山"
+        },
+        {
+          "kind": "logo",
+          "label": "卡通吉祥物",
+          "value": "戴红色头巾的猫捧着饭碗"
+        },
+        {
+          "kind": "text",
+          "label": "副标题菜系",
+          "value": "牛满碗·奇道中式料理"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 96,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙上的装饰画有两行白色手写风格的诗句：\"弯弯曲曲的水稻梯田，在阳光下，水波粼粼。\" 周围有黄色山丘、绿色菜叶、橙色三角等装饰图案，黑色背景配白色斜纹。左上角有一个被画面边框截断的汉字（疑似\"构\"字的局部，仅露出右下半部分）。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "诗句第一行",
+          "value": "弯弯曲曲的水稻梯田，"
+        },
+        {
+          "kind": "text",
+          "label": "诗句第二行",
+          "value": "在阳光下，水波粼粼。"
+        },
+        {
+          "kind": "text",
+          "label": "左上角截断字符",
+          "value": "构（部分，被画面边框截断，仅露出右下角的\"勾\"形笔画）"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_05",
+      "category": "default",
+      "content_len": 112,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是医院/医疗机构走廊的一扇深棕色双开门，门上方挂着一块绿底白字圆角招牌，写着中文\"疤痕治疗与康复中心\"，下方对应英文\"Anti-Scar Treatment Rehabilitation Center\"。门半开着，可见里面是一间浅绿色地面的诊室，靠墙有绿色置物架，架上放着纸箱和瓶罐，地上撑着一把蓝色雨伞。门两侧米色墙面较亮，左侧墙上有一个白色小开关面板，右侧墙上有一台白色方形壁挂设备（疑似温控器/控制器，无文字）。",
+      "r2_text": 0.75,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "科室中文名",
+          "value": "疤痕治疗与康复中心"
+        },
+        {
+          "kind": "text",
+          "label": "科室英文名",
+          "value": "Anti-Scar Treatment Rehabilitation Center"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_06",
+      "category": "default",
+      "content_len": 210,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张红色的「仟仟有礼·随机立减」促销活动海报，背景为中式菜肴、年糕、饺子、点心等摆盘图，左上角有「2016」年份标签。核心文案为「仟仟有礼」「随机立减」，下方小字说明「支付宝付款消费满20元即可享受随机立减优惠」（此行为 OCR [LOW]，仅作参考）。右上角有竖排装饰文字「Gifts」（模糊）。底部白色区域为活动规则详情，因图像分辨率限制文字不可辨识。整体活动由支付宝赞助。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "主标题",
+          "value": "仟仟有礼"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "随机立减"
+        },
+        {
+          "kind": "text",
+          "label": "活动说明（[LOW]）",
+          "value": "支付宝付款消费满20元即可享受随机立减优惠"
+        },
+        {
+          "kind": "date",
+          "label": "年份标签",
+          "value": "2016"
+        },
+        {
+          "kind": "logo",
+          "label": "支付方式标识",
+          "value": "支付宝"
+        },
+        {
+          "kind": "text",
+          "label": "右上装饰文字（OCR模糊）",
+          "value": "Gifts"
+        },
+        {
+          "kind": "object",
+          "label": "主视觉",
+          "value": "中式菜肴、年糕、饺子、点心摆盘图"
+        },
+        {
+          "kind": "text",
+          "label": "底部规则详情（[LOW]）",
+          "value": "活动细则详见店内海报"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_07",
+      "category": "default",
+      "content_len": 191,
+      "r1": 1
+    },
+    {
+      "raw_content": "I can see the image clearly. It's a hospital corridor with a directional sign. The OCR captured the main sign text very confidently. Let me zoom in slightly to verify the sign details and check if the",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_08",
+      "category": "default",
+      "content_len": 200,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "门牌标识：「管理间 / Management Room」。位于红色门框上方，米色大理石墙面上的黑色铭牌，中文\"管 理 间\"在上，英文\"Management Room\"在下。门为红框玻璃门。",
+      "r2_text": 0.5833333333333333,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "中文门牌",
+          "value": "管 理 间"
+        },
+        {
+          "kind": "text",
+          "label": "英文门牌",
+          "value": "Management Room"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7916666666666666,
+      "r2_text_fuzzy": 0.6666666666666666,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_09",
+      "category": "default",
+      "content_len": 94,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "不锈钢金属框架的禁止停车警示牌，立在灰色人行道砖上。牌面顶部为禁止符号：红色圆圈 + 斜杠覆盖在蓝色字母 \"P\" 上（表示禁止停车）。中部为黑色中文 \"请勿泊车\"，下方为英文 \"NO PARKING\"，中间用黑色横线分隔。整体为中英双语禁停标识。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "symbol",
+          "label": "禁止符号",
+          "value": "红色禁止圆圈 + 斜杠（覆盖在蓝色 P 上）"
+        },
+        {
+          "kind": "logo",
+          "label": "字母",
+          "value": "P（蓝色，位于禁止符号中心）"
+        },
+        {
+          "kind": "text",
+          "label": "中文警示",
+          "value": "请勿泊车"
+        },
+        {
+          "kind": "text",
+          "label": "英文警示",
+          "value": "NO PARKING"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_11",
+      "category": "default",
+      "content_len": 123,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块中百商网（中百集团旗下购物网站）的落地灯箱广告牌，红色品牌 logo「e中百商网」配网址 www.zon100.com，宣传语「诚信 正品 便捷 无忧」，订购热线 96518，下方手写体广告语「中百电器 在您生活的每一天」。顶部还有「家居一体 / 完美保障 / 摆放到位」等服务承诺图标。广告牌安装于金属支架上，下方为绿色瓷砖地面。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名",
+          "value": "e中百商网"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "中百集团旗下购物网站"
+        },
+        {
+          "kind": "text",
+          "label": "宣传语",
+          "value": "诚信 正品 便捷 无忧"
+        },
+        {
+          "kind": "text",
+          "label": "订购热线",
+          "value": "订购热线：96518"
+        },
+        {
+          "kind": "text",
+          "label": "网址",
+          "value": "www.zon100.com"
+        },
+        {
+          "kind": "text",
+          "label": "手写体广告语",
+          "value": "中百电器 在您生活的每一天"
+        },
+        {
+          "kind": "text",
+          "label": "顶部图标文案",
+          "value": "家居一体 / 完美保障 / 摆放到位"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 右上角文字",
+          "value": "???（OCR 模糊，不可辨认）"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.975,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_12",
+      "category": "default",
+      "content_len": 170,
+      "r1": 1
+    },
+    {
+      "raw_content": "川菜餐厅发光招牌，位于深色大理石墙面上。招牌内容自上而下：圆形品牌 logo（圆形图案内含艺术化字符），主品牌名\"川吉道\"（大字），英文\"CHUAN JI DAO\"，\"创意餐厅\"，\"新派川菜\"。这是一间主打新派川菜的创意餐厅。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "品牌名",
+          "value": "川吉道"
+        },
+        {
+          "kind": "text",
+          "label": "拼音",
+          "value": "CHUAN JI DAO"
+        },
+        {
+          "kind": "text",
+          "label": "店铺类型",
+          "value": "创意餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "菜系定位",
+          "value": "新派川菜"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_13",
+      "category": "default",
+      "content_len": 113,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.75,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "停车规则1",
+          "value": "严禁鸣叫"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则2",
+          "value": "请轻关门"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则3",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则4",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则5",
+          "value": "请排气管朝外"
+        },
+        {
+          "kind": "text",
+          "label": "防盗守则标题(大字)",
+          "value": "汽车防盗守则"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.875,
+      "r2_text_fuzzy": 0.2,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "Now I can clearly see the plaque. The OCR is reading the characters right-to-left as is traditional in Chinese calligraphy. Let me check the actual character order on the sign:\n\nLooking at the zoomed ",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_16",
+      "category": "default",
+      "content_len": 200,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 0,
+      "composite": 0.15,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(error)",
+      "id": "rctw_default_17",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.3
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.7083333333333334,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌 logo",
+          "value": "MAN"
+        },
+        {
+          "kind": "text",
+          "label": "机构名",
+          "value": "武汉名仕男科研究院"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "名仕男科 只为男人"
+        },
+        {
+          "kind": "text",
+          "label": "百度搜索框",
+          "value": "Baidu 百度 武汉名仕男科研究院"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "院址：武昌大东门立交桥旁"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8541666666666667,
+      "r2_text_fuzzy": 0.7,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_18",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 0,
+      "composite": 0.15,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(error)",
+      "id": "rctw_default_19",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.3
+    },
+    {
+      "raw_content": "夜间拍摄的商场/室内场景，石质拱形窗户内竖排白色发光灯箱写着\"观光电梯\"四个字（自上而下排列）。右上角远处可见 \"FJL\" 白色发光招牌，后面跟着一串模糊的中文字符和一个翅膀/叶子状 LOGO。窗户玻璃内隐约可见艺术字\"趣味文创\"（OCR 低置信度）。画面右侧远处是商场中庭走廊，有拱门、栏杆、行人撑伞经过，整体环境为夜间室内/半室内商业空间。",
+      "r2_text": 0.41666666666666663,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "观光电梯竖排灯箱",
+          "value": "观光电梯"
+        },
+        {
+          "kind": "logo",
+          "label": "FJL招牌（右上角）",
+          "value": "FJL + (模糊文字/LOGO)"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 窗户内艺术字",
+          "value": "趣味文创(?)（OCR 不确定）"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7083333333333333,
+      "r2_text_fuzzy": 0.3333333333333333,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_20",
+      "category": "default",
+      "content_len": 172,
+      "r1": 1
+    }
+  ]
+}
