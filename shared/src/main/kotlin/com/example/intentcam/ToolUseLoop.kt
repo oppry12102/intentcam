@@ -463,6 +463,17 @@ class ToolUseLoop(
         var lastRound: RoundSnapshot? = null
         var pendingUserInput: PendingUserInput? = null
         var chosenToolName: String? = null
+        // Phase 2c (2026-07-10): retry-once on `stop_reason=max_tokens`
+        // when the truncated JSON produced an empty bubble.  Without
+        // this, 2-7/100 fixtures (e.g. rctw_21, rctw_49) hit
+        // `max_tokens` mid-`emit_bubble` JSON, parse fails → empty
+        // `{}` → bubble with empty content + details, costing ~-0.015
+        // composite in the @100 noise floor.  Detected via the empty-
+        // bubble fingerprint (detail blank AND details empty) on a
+        // `stop=max_tokens` round.  Capped at 1 retry per fixture to
+        // bound wall-time; if the retry also truncates we fall through
+        // to the empty-bubble path and the caller scores it as-is.
+        var maxTokensRetries = 0
 
         // Multi-round drill-down chain: persists across rounds so
         // round-N's `zoom_in(source="last")` crops round-N-1's
@@ -651,6 +662,57 @@ class ToolUseLoop(
                                 )
                         )
                 )
+            }
+
+            // Phase 2c (2026-07-10): empty-bubble retry.  If the model
+            // hit `stop_reason=max_tokens` mid-`emit_bubble` JSON, the
+            // parser may have partially succeeded (org.json.JSONObject
+            // is lenient about trailing junk), yielding a half-built
+            // bubble whose `content`/`detail` field is blank even when
+            // some `details[]` rows made it through.  Don't return that
+            // — push a "summarize short" nudge and re-run the round so
+            // the model has another chance to emit a complete JSON.
+            // Cap at 1 retry per fixture so a pathologically verbose
+            // model can't loop forever.
+            //
+            // Trigger condition: `detail` field blank (the user-facing
+            // content).  Catches both fingerprints:
+            //  - detail blank + details empty (rctw_21/49)
+            //  - detail blank + details non-empty (rctw_14, 2026-07-10
+            //    debug: 11 detail rows but content empty)
+            if (response.stopReason == "max_tokens" &&
+                anyFinalBubble?.detail.isNullOrBlank() &&
+                maxTokensRetries < 1
+            ) {
+                maxTokensRetries++
+                log(
+                    "TOOL_RETRY",
+                    "round $round truncated emit_bubble at stop=max_tokens " +
+                        "(detail empty, details empty); nudging to summarize short"
+                )
+                // Replace the normal next-round user message with a
+                // single nudge text block.  We don't include the
+                // follow-up images or prior tool_results — they were
+                // all part of the failed round and re-attaching them
+                // would just bloat the next request.  The model's
+                // conversation history already has the assistant's
+                // truncated emit_bubble from the failed round (we
+                // persisted it via reconstructAssistantMessage above);
+                // Anthropic's protocol will quote it back unchanged.
+                val nudgeContent = JSONArray()
+                    .put(
+                        JSONObject().put("type", "text").put(
+                            "text",
+                            "你上一次的 emit_bubble 调用被 token 预算截断了（response 撞到 " +
+                                "max_tokens）。请**立刻**重新调一次 emit_bubble，这次：" +
+                                "\n  - content 用 ≤150 字总结场景" +
+                                "\n  - 完整文字 / 数字 / 品牌 / 价格写到 details[]（≥1 行，" +
+                                "≤10 行，多了会再次撞 max_tokens）" +
+                                "\n  - 不要在 emit_bubble 调用前再写长 prose——直接 emit。"
+                        )
+                    )
+                messages.put(JSONObject().put("role", "user").put("content", nudgeContent))
+                continue
             }
             // Build next user message.  If any tool returned a
             // follow-up image (zoom_in), prepend an image content
