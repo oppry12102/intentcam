@@ -1,0 +1,166 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 1,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 1},
+  "fixtures": [
+    {
+      "raw_content": "拍摄到\"瑞缇咖啡 Rettycoffee\"店门口两块告示牌（蓝色牌子，挂在米黄色大理石柱子上，左下角还有红色店铺招牌上的同款 logo）。\n\n上方牌子内容：温馨提示：咖啡厅谢绝自带食品、酒水、饮料入内！(Cafe with food, drinks, beverages refused entry!);咖啡厅谢绝摄像、拍照、宠物入内！(Cafe declined, photographed, pets in camera!);谢谢您的合作 (Thank you for you cooperation)\n\n下方牌子内容：营业时间 Business hours / 上午：9:00\u2014凌晨：01：00 / 预约热线：Reservation hotline. / 028-26183333　028-26780888\n\n附注：牌子英文翻译有语法瑕疵（\"cooperation\"前多个 \"you\"，\"photographed, pets in camera\"与中文原文不完全对应），均为牌子原始印刷文字，原样保留未改。",
+      "r2_text": 1,
+      "details_count": 14,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名（上方牌子）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示（中文）",
+          "value": "温馨提示："
+        },
+        {
+          "kind": "text",
+          "label": "规则1（中文）",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！"
+        },
+        {
+          "kind": "text",
+          "label": "规则1（英文）",
+          "value": "Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "规则2（中文）",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！"
+        },
+        {
+          "kind": "text",
+          "label": "规则2（英文）",
+          "value": "Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "致谢（中文）",
+          "value": "谢谢您的合作"
+        },
+        {
+          "kind": "text",
+          "label": "致谢（英文）",
+          "value": "Thank you for you cooperation"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线标题",
+          "value": "预约热线： Reservation hotline."
+        },
+        {
+          "kind": "phone",
+          "label": "预约电话1",
+          "value": "028-26183333"
+        },
+        {
+          "kind": "phone",
+          "label": "预约电话2",
+          "value": "028-26780888"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌名（下方店铺招牌）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 456,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「建行安阳分行」投票页面，可见候选人：23、周登祥 153票 2%；24、王立波 11票 0%；25、陈静(已选） 591票 8%。底部灰色按钮显示\"你已投票\"。下方蓝色banner广告：\"安阳建行,与同业不一样的银行！\"。再往下是分享卡片：\"独享不如与众分享，点击右上角 分享到朋友圈\"。状态栏时间 21:08。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选23",
+          "value": "23、周登祥 \u2014 153票 2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选24",
+          "value": "24、王立波 \u2014 11票 0%"
+        },
+        {
+          "kind": "text",
+          "label": "候选25(已选)",
+          "value": "25、陈静(已选） \u2014 591票 8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "Banner标题",
+          "value": "安阳建行,"
+        },
+        {
+          "kind": "text",
+          "label": "Banner副标题",
+          "value": "与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享标题",
+          "value": "独享不如与众分享"
+        },
+        {
+          "kind": "text",
+          "label": "分享提示",
+          "value": "点击右上角 分享到朋友圈"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏时间",
+          "value": "21:08"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 159,
+      "r1": 1
+    }
+  ]
+}

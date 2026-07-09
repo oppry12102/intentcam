@@ -1,0 +1,146 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.9675,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.9675},
+  "fixtures": [
+    {
+      "raw_content": "咖啡厅外墙贴有两块蓝色告示牌和一块红色招牌。店名为「瑞缇咖啡 Rettycoffee」。\n\n上牌为温馨提示：\n- 咖啡厅谢绝自带食品、酒水、饮料入内！(Cafe with food, drinks, beverages refused entry!)\n- 咖啡厅谢绝摄像、拍照、宠物入内！(Cafe declined, photographed, pets in camera!)\n- 谢谢您的合作 (Thank you for you cooperation)\n\n下牌为营业信息：\n- 营业时间 Business hours：上午 9:00 \u2014 凌晨 01:00\n- 预约热线 Reservation hotline：028-26183333 / 028-26780888\n\n底部红色招牌同样显示「瑞缇咖啡 Rettycoffee」（艺术字，OCR 不太稳但视觉可辨）。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店名 logo（上牌）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示",
+          "value": "温馨提示：Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "规定 1",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "规定 2",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "致谢",
+          "value": "谢谢您的合作 Thank you for you cooperation"
+        },
+        {
+          "kind": "text",
+          "label": "店名 logo（下牌）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线",
+          "value": "预约热线：Reservation hotline. 028-26183333  028-26780888"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 386,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.975,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "周登祥 票数",
+          "value": "153票"
+        },
+        {
+          "kind": "number",
+          "label": "周登祥 得票率",
+          "value": "2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "王立波 票数",
+          "value": "11票"
+        },
+        {
+          "kind": "number",
+          "label": "王立波 得票率",
+          "value": "0%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人（已选）",
+          "value": "25、陈静(已选）"
+        },
+        {
+          "kind": "number",
+          "label": "陈静 票数",
+          "value": "591票"
+        },
+        {
+          "kind": "number",
+          "label": "陈静 得票率",
+          "value": "8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.935,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.875,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.875},
+  "fixtures": [
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是建行安阳分行的微信投票页面，显示了3位候选人及其票数：23、周登祥（153票，2%）；24、王立波（11票，0%）；25、陈静(已选)（591票，8%）。页面提示\"你已投票\"。下方有广告：\"安阳建行，与同业不一样的银行！\"以及分享提示：\"独享不如与众分享，点击右上角 分享到朋友圈\"。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "投票标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选23",
+          "value": "23、周登祥 | 153票 | 2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选24",
+          "value": "24、王立波 | 11票 | 0%"
+        },
+        {
+          "kind": "text",
+          "label": "候选25(已选)",
+          "value": "25、陈静(已选) | 591票 | 8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "广告标语",
+          "value": "安阳建行，与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享提示",
+          "value": "独享不如与众分享，点击右上角 分享到朋友圈"
+        },
+        {
+          "kind": "date",
+          "label": "状态栏时间",
+          "value": "21:08"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 144,
+      "r1": 1
+    }
+  ]
+}
