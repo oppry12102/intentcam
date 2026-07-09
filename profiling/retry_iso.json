@@ -1,0 +1,136 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.9708333333333333,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.9708333333333333},
+  "fixtures": [
+    {
+      "raw_content": "咖啡厅门口两块不锈钢牌匾 + 门口招牌。上方牌匾是「温馨提示 Reminder」：① 咖啡厅谢绝自带食品、酒水、饮料入内！Cafe with food, drinks, beverages refused entry! ② 咖啡厅谢绝摄像、拍照、宠物入内！Cafe declined, photographed, pets in camera! ③ 谢谢您的合作 Thank you for you cooperation。下方牌匾是「营业时间 Business hours」：上午：9:00\u2014凌晨：01:00；「预约热线 Reservation hotline.」：028-26183333 / 028-26780888（成都 028 区号）。品牌名为\"瑞缇咖啡 Rettycoffee\"，出现在两块牌匾顶部 logo 及门口深红色招牌上，为艺术手写风格字体配圆点装饰。",
+      "r2_text": 1,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名（上牌匾）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌名（下牌匾）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌名（门口招牌）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示标题",
+          "value": "温馨提示：Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "规则一",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "规则二",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "结束语",
+          "value": "谢谢您的合作 Thank you for you cooperation"
+        },
+        {
+          "kind": "title",
+          "label": "营业时间标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "上午：9:00\u2014凌晨：01:00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线标题",
+          "value": "预约热线：Reservation hotline."
+        },
+        {
+          "kind": "phone",
+          "label": "预约电话1",
+          "value": "028-26183333"
+        },
+        {
+          "kind": "phone",
+          "label": "预约电话2",
+          "value": "028-26780888"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] OCR 误识别",
+          "value": "文镇"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 386,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.8833333333333333,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选人 23",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "候选人 23 得票",
+          "value": "153票  2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人 24",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "候选人 24 得票",
+          "value": "11票  0%"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9416666666666667,
+      "r2_text_fuzzy": 0.675,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    }
+  ]
+}

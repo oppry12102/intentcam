@@ -1,0 +1,141 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.97375,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.97375},
+  "fixtures": [
+    {
+      "raw_content": "瑞缇咖啡（Rettycoffee）门口的两块告示牌。上牌「温馨提示 Reminder」：咖啡厅谢绝自带食品、酒水、饮料入内（Cafe with food, drinks, beverages refused entry!），谢绝摄像、拍照、宠物入内（Cafe declined, photographed, pets in camera!），谢谢您的合作（Thank you for you cooperation）。下牌「营业时间 Business hours」：上午 9:00 \u2014 凌晨 01:00；预约热线 Reservation hotline：028-26183333 / 028-26780888。底部还有艺术字 logo「瑞缇咖啡 Rettycoffee」（[LOW] OCR 识别不稳定，但视觉确认是品牌名）。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名（第二个牌子）",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌名（第一个牌子）[LOW]",
+          "value": "瑞缇咖啡 Rettycoffee"
+        },
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "温馨提示：Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "谢绝事项 1",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "谢绝事项 2",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "结束语",
+          "value": "谢谢您的合作 Thank you for you cooperation"
+        },
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线",
+          "value": "预约热线：028-26183333 028-26780888 Reservation hotline."
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 363,
+      "r1": 1
+    },
+    {
+      "raw_content": "建行安阳分行手机投票页面：候选23周登祥153票(2%)、候选24王立波11票(0%)、候选25陈静(已选)591票(8%)，用户已投票；底部广告「安阳建行,与同业不一样的银行！」，提示「独享不如与众分享 点击右上角 分享到朋友圈」。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选23",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "23号票数",
+          "value": "153票 / 2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选24",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "24号票数",
+          "value": "11票 / 0%"
+        },
+        {
+          "kind": "text",
+          "label": "候选25(已选)",
+          "value": "25、陈静(已选）"
+        },
+        {
+          "kind": "number",
+          "label": "25号票数",
+          "value": "591票 / 8%"
+        },
+        {
+          "kind": "text",
+          "label": "状态提示",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "安阳建行,与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享提示",
+          "value": "独享不如与众分享"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 117,
+      "r1": 0.895
+    }
+  ]
+}

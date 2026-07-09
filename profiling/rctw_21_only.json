@@ -1,0 +1,83 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 1,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 1,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 1},
+  "fixtures": [{
+    "raw_content": "这是「瑞缇咖啡 Rettycoffee」门口的告示牌，包含两块信息：\n\n【第一块：温馨提示 / Reminder】\n\u2022 咖啡厅谢绝自带食品、酒水、饮料入内！ / Cafe with food, drinks, beverages refused entry!\n\u2022 咖啡厅谢绝摄像、拍照、宠物入内！ / Cafe declined, photographed, pets in camera!\n\u2022 谢谢您的合作 / Thank you for you cooperation\n\n【第二块：营业时间 / Business hours】\n\u2022 上午：9:00 \u2014 凌晨：01：00\n\u2022 预约热线 / Reservation hotline: 028-26183333、028-26780888\n\n底部红色招牌上是咖啡店的 logo：「瑞缇咖啡 Rettycoffee」",
+    "r2_text": 1,
+    "details_count": 11,
+    "raw_details": [
+      {
+        "kind": "logo",
+        "label": "品牌 logo 上",
+        "value": "瑞缇咖啡 Rettycoffee"
+      },
+      {
+        "kind": "text",
+        "label": "温馨提示",
+        "value": "温馨提示：Reminder"
+      },
+      {
+        "kind": "text",
+        "label": "规则 1 中文",
+        "value": "咖啡厅谢绝自带食品、酒水、饮料入内！"
+      },
+      {
+        "kind": "text",
+        "label": "规则 1 英文",
+        "value": "Cafe with food, drinks, beverages refused entry!"
+      },
+      {
+        "kind": "text",
+        "label": "规则 2 中文",
+        "value": "咖啡厅谢绝摄像、拍照、宠物入内！"
+      },
+      {
+        "kind": "text",
+        "label": "规则 2 英文",
+        "value": "Cafe declined, photographed, pets in camera!"
+      },
+      {
+        "kind": "text",
+        "label": "致谢",
+        "value": "谢谢您的合作 / Thank you for you cooperation"
+      },
+      {
+        "kind": "logo",
+        "label": "品牌 logo 下",
+        "value": "瑞缇咖啡 Rettycoffee"
+      },
+      {
+        "kind": "text",
+        "label": "营业时间标题",
+        "value": "营业时间 Business hours"
+      },
+      {
+        "kind": "text",
+        "label": "营业时间",
+        "value": "上午：9:00\u2014凌晨：01：00"
+      },
+      {
+        "kind": "text",
+        "label": "预约热线",
+        "value": "预约热线：Reservation hotline. 028-26183333 028-26780888"
+      }
+    ],
+    "r2_type": 1,
+    "composite": 1,
+    "r2_text_fuzzy": 1,
+    "has_text": true,
+    "picked_tool": "zoom_in",
+    "id": "rctw_default_21",
+    "category": "default",
+    "content_len": 380,
+    "r1": 1
+  }]
+}
