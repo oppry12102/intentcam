@@ -1,0 +1,95 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 4,
+  "overall_composite": 0.7577083333333333,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 4,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.7577083333333333},
+  "fixtures": [
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.6666666666666666,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标识标题（上行）",
+          "value": "出租车"
+        },
+        {
+          "kind": "text",
+          "label": "标识标题（下行）",
+          "value": "上下客"
+        },
+        {
+          "kind": "logo",
+          "label": "停车标识 P",
+          "value": "P"
+        },
+        {
+          "kind": "text",
+          "label": "英文标注",
+          "value": "TAXI"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.7808333333333333,
+      "r2_text_fuzzy": 0.5714285714285714,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    }
+  ]
+}

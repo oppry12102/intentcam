@@ -1,0 +1,188 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 4,
+  "overall_composite": 0.871875,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 4,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.871875},
+  "fixtures": [
+    {
+      "raw_content": "墙上挂一幅装裱好的隶书书法作品（红木框、米色绢纸），主体为 4 行 16 个隶书大字（按右上至左下顺序排列）：「耀每書路閒 / 白堂深月 / 衣日幽莭問 / 裳清映讀山」。左侧有行草落款「右錄古詩一首　己丑年　主善之書」，下方有两枚方形篆体朱文红印。整体为汉隶风格，传统中式装裱。",
+      "r2_text": 0.6,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "隶书第1行",
+          "value": "耀每書路閒"
+        },
+        {
+          "kind": "text",
+          "label": "隶书第2行",
+          "value": "白堂深月"
+        },
+        {
+          "kind": "text",
+          "label": "隶书第3行",
+          "value": "衣日幽莭問"
+        },
+        {
+          "kind": "text",
+          "label": "隶书第4行",
+          "value": "裳清映讀山"
+        },
+        {
+          "kind": "text",
+          "label": "左侧落款（行草）",
+          "value": "右錄古詩一首 己丑年 主善之書"
+        },
+        {
+          "kind": "object",
+          "label": "落款下印章",
+          "value": "两枚方形篆体朱文印（红色）"
+        },
+        {
+          "kind": "shape",
+          "label": "书法体裁",
+          "value": "隶书（汉隶风格，蚕头燕尾）+ 左侧行草落款"
+        },
+        {
+          "kind": "shape",
+          "label": "装裱形式",
+          "value": "红木深棕色镜框、米色绢纸底，传统中式立轴装裱挂于白墙"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8,
+      "r2_text_fuzzy": 0.16,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 140,
+      "r1": 1
+    },
+    {
+      "raw_content": "路边一块蓝黄相间的交通标志牌，蓝色上半部写着「出租车上下客」并配有白色「P」停车标志和出租车图案（含「TAXI」字样），黄色下半部写有禁止语「禁止非法营运车辆和其他车辆停放」。标志牌立在人行道旁的金属杆上，背景是行道树、远处建筑和广场。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标志标题(上)",
+          "value": "出租车"
+        },
+        {
+          "kind": "text",
+          "label": "标志标题(下)",
+          "value": "上下客"
+        },
+        {
+          "kind": "logo",
+          "label": "停车标志",
+          "value": "P (含 TAXI 出租车图案)"
+        },
+        {
+          "kind": "text",
+          "label": "英文",
+          "value": "TAXI"
+        },
+        {
+          "kind": "text",
+          "label": "禁止语第1行",
+          "value": "禁止非法营"
+        },
+        {
+          "kind": "text",
+          "label": "禁止语第2行",
+          "value": "运车辆和其他"
+        },
+        {
+          "kind": "text",
+          "label": "禁止语第3行",
+          "value": "他车辆停放"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 118,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色横幅招牌（白字），主标题为「大懒人昌菜」，左侧有「懒人 AN REN」品牌 logo（躺卧小人卡通图）。招牌右侧字符 OCR 置信度偏低 (conf=0.33/0.22 [LOW])，zoom_in 后字符笔画显示为「昌」+「菜」（两个日形方框上下叠的结构是「昌」而非「冒」\u2014\u2014「冒」应是日下接目而非日下日）。招牌下方铁卷帘门紧闭，店铺闭店，卷帘门右下角有编号「26188806」。门店应为「大懒人昌菜」连锁餐饮店。",
+      "r2_text": 0.625,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "左侧小图标（躺卧小人）下的品牌文字",
+          "value": "懒人 AN REN"
+        },
+        {
+          "kind": "text",
+          "label": "招牌主标题（白字）",
+          "value": "大懒人昌菜"
+        },
+        {
+          "kind": "object",
+          "label": "店铺状态",
+          "value": "铁卷帘门拉下、闭店中（卷帘门上有锈迹和旧贴纸残留）"
+        },
+        {
+          "kind": "number",
+          "label": "卷帘门右下角编号",
+          "value": "26188806"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8125,
+      "r2_text_fuzzy": 0.75,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 210,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张店铺招牌照片。红色面板上印有卡通小厨师 LOGO（戴厨师帽、抱饭碗的小孩造型），主标题为「Gazan 雅山」，下方副标题为「牛满分碗·奇道中式料理」，招牌上方是建筑玻璃幕墙。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "卡通 LOGO",
+          "value": "卡通小厨师头像（围裙 / 饭碗）"
+        },
+        {
+          "kind": "text",
+          "label": "店招主标题（英文+中文）",
+          "value": "Gazan 雅山"
+        },
+        {
+          "kind": "text",
+          "label": "店招副标题",
+          "value": "牛满分碗·奇道中式料理"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 91,
+      "r1": 1
+    }
+  ]
+}
