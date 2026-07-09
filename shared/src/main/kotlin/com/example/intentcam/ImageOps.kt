@@ -51,10 +51,12 @@ object ImageOps {
     fun encodeThumbnail(jpeg: ByteArray, maxDim: Int, quality: Int): ByteArray? =
         thumbnailImpl?.invoke(jpeg, maxDim, quality)
 
-    /** Default quality for `cropJpegRegion` callers (zoom_in, read_text).
-     *  Bumped from 80 → 90 (2026-07-10): at q80, small text glyphs in
-     *  the crop start to smudge on the 1568-cap re-encode; q90 keeps
-     *  the edge detail the LLM needs to read dense-text fixtures. */
+    /** Default quality for `cropJpegRegion` callers (zoom_in).
+     *  Phase 2 (2026-07-11) removed `read_text` so this is now only
+     *  used by zoom_in.  Bumped from 80 → 90 (2026-07-10): at q80,
+     *  small text glyphs in the crop start to smudge on the 1568-cap
+     *  re-encode; q90 keeps the edge detail the LLM needs to read
+     *  dense-text fixtures. */
     const val DEFAULT_CROP_QUALITY = 90
 
     /** Max-dim cap on the JPEG bytes produced by `cropJpegRegion`.

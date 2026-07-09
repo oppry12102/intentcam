@@ -2,16 +2,18 @@ package com.example.intentcam
 
 /**
  * Strategy holder for on-device OCR.  Lives in `:shared` so the
- * `read_text` tool body can call it without an Android dependency.
+ * auto-OCR path (round-1 pre-pass + per-zoom_in crop) can call it
+ * without an Android dependency.
  *
  * The implementation strategy is set once at startup:
  *   - Android app: `MainActivity.onCreate` installs an HMS ML Kit-backed
  *     recognizer that decodes the JPEG bytes to a Bitmap internally
  *     and returns text + 4-point coordinates + confidence per block.
- *   - JVM eval:    no implementation installed — the eval returns
- *     [OcrResult.EMPTY] from `read_text` since the eval machine has no
- *     on-device OCR.  (The system prompt steers the model to avoid
- *     `read_text` by default anyway.)
+ *   - JVM eval:    no implementation installed by default.  When the
+ *     HUAWEICLOUD_SDK_AK/SK/PROJECT_ID env vars are set, [eval] installs
+ *     a cloud OCR backend that mirrors HMS ML Kit semantics.  Without
+ *     it, [OcrResult.EMPTY] is returned (no OCR hint, no auto-OCR on
+ *     crops).
  *
  * If `impl` is null, `recognize` returns [OcrResult.EMPTY] — fail-closed.
  */
@@ -58,10 +60,10 @@ data class OcrPoint(val x: Float, val y: Float)
 
 /**
  * Aggregated OCR result for one input image.  [fullText] is the
- * blocks joined with spaces (single-line behavior, matches what
- * `read_text`'s prior String return value carried).  [blocks] is the
+ * blocks joined with spaces (single-line behavior).  [blocks] is the
  * structured per-block list with positions + confidences — used by
- * the tool to return spatial detail.
+ * the auto-OCR hint formatting ([formatHint]) to return spatial
+ * detail.
  */
 data class OcrResult(
     val blocks: List<OcrBlock>,
@@ -89,24 +91,55 @@ data class OcrResult(
          *  got truncated out of the hint.  Reverted. */
         const val MAX_OCR_HINT_LINES = 30
 
+        /** Tighter cap for the per-zoom crop OCR hint.  Crops are
+         *  smaller regions so they usually have far fewer lines;
+         *  10 keeps the per-zoom hint ~1 KB and cuts token cost on
+         *  multi-zoom chains (3 zooms × ~2 KB round-1 = 6 KB vs
+         *  3 × ~1 KB crop = 3 KB saved).  The model still gets the
+         *  high-conf lines via top-K; rare dense crops (>10 text
+         *  regions) drop their low-conf lines which the model can
+         *  pick up by chaining another zoom_in (the crop OCR runs
+         *  automatically on every followUpJpeg). */
+        const val MAX_CROP_OCR_HINT_LINES = 10
+
         /** Format the structured [blocks] list as the round-1 hint
          *  block injected into the user message.  Sorted by
          *  confidence descending, truncated to
-         *  [MAX_OCR_HINT_LINES] rows.  Each row carries text + 4
-         *  corner coords (normalized [0,1]) + confidence; [LOW]
-         *  suffix on rows below [LOW_CONFIDENCE_THRESHOLD].
+         *  [maxLines] rows (default [MAX_OCR_HINT_LINES]).  Each
+         *  row carries text + 4 corner coords (normalized [0,1]) +
+         *  confidence; [LOW] suffix on rows below
+         *  [LOW_CONFIDENCE_THRESHOLD].
          *
          *  Pure data — no I/O, no LLM calls — so [ToolUseLoop] can
          *  format it cheaply on every cycle.  The result also
          *  drives the `compare_text` tool's input so the same shape
-         *  appears on both sides. */
-        fun formatHint(blocks: List<OcrBlock>): String {
+         *  appears on both sides.
+         *
+         *  Phase 2a (2026-07-11):
+         *  - [maxLines] lets callers pass a tighter cap for
+         *    per-zoom crop hints (see [MAX_CROP_OCR_HINT_LINES]).
+         *    Smaller crops → fewer text lines → cap to 10 keeps the
+         *    hint concise and the model focused on high-conf lines.
+         *  - [isCropHint] toggles the header + [LOW] follow-up
+         *    advice: round-1 hint steers the model to call zoom_in
+         *    on [LOW] bboxes; crop hint steers the model to
+         *    **trust** the high-fidelity re-scan OCR verbatim. */
+        fun formatHint(
+            blocks: List<OcrBlock>,
+            maxLines: Int = MAX_OCR_HINT_LINES,
+            isCropHint: Boolean = false,
+        ): String {
             if (blocks.isEmpty()) return ""
             val sorted = blocks.sortedByDescending { it.confidence }
-                .take(MAX_OCR_HINT_LINES)
+                .take(maxLines)
             val sb = StringBuilder()
-            sb.append("【read_text 全图扫描结果】on-device OCR 已扫过整张图，" +
-                "下面按行给出字符+坐标+置信度（坐标归一化 [0,1]，顺序: 左上→右上→右下→左下）。\n")
+            sb.append(
+                if (isCropHint) {
+                    "【zoom_in crop OCR 高保真重扫】on-device OCR 已对该裁剪区域重新扫描（更高分辨率，比 round-1 hint 的同区域更可靠），下面按行给出字符+坐标+置信度（坐标是 crop frame，归一化 [0,1]，顺序: 左上→右上→右下→左下）。\n"
+                } else {
+                    "【read_text 全图扫描结果】on-device OCR 已扫过整张图，下面按行给出字符+坐标+置信度（坐标归一化 [0,1]，顺序: 左上→右上→右下→左下）。\n"
+                }
+            )
             sorted.forEachIndexed { i, b ->
                 val corners = b.corners
                 val bbox = if (corners.size >= 4) {
@@ -130,8 +163,15 @@ data class OcrResult(
             if (lowCount > 0) {
                 sb.append("；其中 ").append(lowCount).append(" 行 [LOW]（<")
                     .append(LOW_CONFIDENCE_THRESHOLD)
-                    .append("），可能是模糊/艺术字/手写。\n")
-                sb.append("这些行不要直接 verbatim 复制——可以调 zoom_in (用上面的 bbox) 看细节，或直接放弃（宁可不写也别编）。\n")
+                    .append("）。\n")
+                if (isCropHint) {
+                    sb.append("**trust 这些字符 verbatim**——crop OCR 是高保真重扫，字符本身是你能直接用的 verbatim 字符，[LOW] 只是 OCR 引擎的 confidence 低，字符本身仍然可信。在 emit_bubble.content 和 details[] 里 verbatim 引用。\n")
+                } else {
+                    sb.append("[LOW] 行的字符 verbatim 引用到 emit_bubble（在 details[].label 标记 \"[LOW]\" 让用户知道这一行 OCR 不太确定）。\n")
+                    sb.append("**workflow**：如果某行 [LOW] 影响你要 emit 的内容，**调 zoom_in(bbox) 重扫**——zoom_in 的 crop 会自动附带一次高保真 OCR。\n")
+                }
+            } else if (!isCropHint) {
+                sb.append("，全部 verbatim 引用到 emit_bubble.content 和 details[]。\n")
             }
             return sb.toString().trimEnd()
         }

@@ -51,7 +51,9 @@ import kotlin.coroutines.resumeWithException
  * HMS's `MLTextAnalyzer.asyncAnalyseFrame` is callback-based; we
  * bridge it to a suspend function via [suspendCancellableCoroutine].
  * `recognize` is therefore safe to call from any coroutine context
- * (it's the public entry point used by `read_text`).
+ * (it's the public entry point used by the auto-OCR path —
+ * round-1 pre-pass + per-zoom_in crop).  Phase 2 (2026-07-11) removed
+ * the `read_text` tool that previously called this directly.
  */
 
 /** Languages recognized up-front by the local analyzer.  HMS will

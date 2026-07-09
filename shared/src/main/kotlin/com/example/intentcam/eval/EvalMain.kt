@@ -36,13 +36,12 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
     installJvmImageOps()
     // OCR backend.  Tries Huawei Cloud first (env vars must all be set);
-    // silently falls back to no-backend (read_text returns "[OCR
-    // unavailable]") when the env is missing.  With the cloud backend
-    // installed the round-1 pre-pass populates the same OCR hint the
-    // Android app ships via HMS ML Kit — keeping eval and prod truly
-    // aligned, so thumbnail / crop experiments aren't biased by the
-    // "blind LLM" baseline (no hint → reads dense text off a single
-    // low-res overview → favours smaller images by accident).
+    // silently falls back to no-backend when the env is missing.  With
+    // the cloud backend installed the round-1 pre-pass AND each
+    // zoom_in crop auto-OCR get the same OCR hint the Android app
+    // ships via HMS ML Kit — keeping eval and prod truly aligned, so
+    // thumbnail / crop experiments aren't biased by the "blind LLM"
+    // baseline.
     val ocrInstalled = JvmHuaweiCloudOcrEngine.installIfConfigured()
     System.err.println(
         if (ocrInstalled) "[OCR] Huawei Cloud backend installed (env vars OK)"
@@ -58,6 +57,7 @@ fun main(args: Array<String>) {
         resize = opts.resize,
         quality = opts.quality,
         jsonOut = opts.jsonOut,
+        cropOcrCap = opts.cropOcrCap,
     )
     val exit = EvalRunner(config).run()
     exitProcess(exit)
@@ -187,6 +187,10 @@ internal data class EvalOpts(
     val resize: Int,
     val quality: Int,
     val jsonOut: File?,
+    // Phase 2a (2026-07-11): max number of followUpJpeg OCRs per
+    // cycle.  0 = unlimited (prod default).  Iter runs use small
+    // values to keep wall-time at ~2-min/20-fixture pace.
+    val cropOcrCap: Int,
 )
 
 internal fun parseArgs(args: Array<String>): EvalOpts {
@@ -203,6 +207,10 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
     var resize = 1568
     var quality = 90
     var jsonOut: String? = null
+    // Phase 2a (2026-07-11): fast-iteration knob.  Default 0 =
+    // unlimited (prod).  Set e.g. 1 for ~2-min/20-fixture pace:
+    // round-1 OCR + first zoom crop OCR; subsequent crops skipped.
+    var cropOcrCap = 0
     var i = 0
     while (i < args.size) {
         when (args[i]) {
@@ -212,9 +220,11 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
             "--resize"       -> { resize = args[++i].toInt() }
             "--quality"      -> { quality = args[++i].toInt() }
             "--json-out"     -> { jsonOut = args[++i] }
+            "--crop-ocr-cap" -> { cropOcrCap = args[++i].toInt() }
             "--help", "-h"   -> {
-                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH]")
+                println("Usage: eval [--ground-truth PATH] [--img-dir PATH] [--limit N] [--resize PX] [--quality Q] [--json-out PATH] [--crop-ocr-cap N]")
                 println("  defaults: --resize 768 --quality 90 (1-only mode; matches prod)")
+                println("  --crop-ocr-cap N: max followUpJpeg OCRs per cycle (0 = unlimited; default 0)")
                 exitProcess(0)
             }
             else -> System.err.println("Unknown arg: ${args[i]}")
@@ -228,6 +238,7 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
         resize = resize,
         quality = quality,
         jsonOut = jsonOut?.let { File(it) },
+        cropOcrCap = cropOcrCap,
     )
 }
 
@@ -240,6 +251,8 @@ internal data class EvalConfig(
     val resize: Int,
     val quality: Int,
     val jsonOut: File?,
+    // Phase 2a (2026-07-11): see EvalOpts.cropOcrCap.
+    val cropOcrCap: Int,
 )
 
 // Stub for the app's LlmConfig — only the model name + URL are used.

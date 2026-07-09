@@ -1,11 +1,15 @@
 # IntentCam
 
 A camera-based Android app that recognises intent from a single
-phone photo using a 2-tool LLM protocol (`zoom_in` for detail,
+phone photo using a 3-tool LLM protocol (`zoom_in` for visual
+drill-down + auto-OCR, `compare_text` for end-cloud diff,
 `emit_bubble` for the structured answer).  Round-1 ships the
 **1568-px thumbnail + on-device OCR hint** (HMS ML Kit, offline);
 the LLM drills into regions with `zoom_in` and ends with
-`emit_bubble`.  The user taps the bubble to see the image and a
+`emit_bubble`.  Every `zoom_in` crop auto-runs a higher-fidelity
+OCR scan and ships the result alongside the image, so the model
+sees verbatim characters at every zoom level without a second
+round-trip.  The user taps the bubble to see the image and a
 `details` table of every visible text / number / brand / date /
 price the model read.
 
@@ -16,13 +20,14 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design and
 
 | metric | value |
 |---|---|
-| **composite @ 100 fixtures (with OCR)** | **0.853** |
-| composite @ 20 fixtures (with OCR) | 0.898 |
-| baseline chain | 0.652 → 0.819 → 0.835 → 0.853 (over 4 days) |
+| **composite @ 100 fixtures (with OCR)** | **0.868** (Phase 2) |
+| composite @ 20 fixtures (with OCR) | 0.854 |
+| baseline chain | 0.652 → 0.819 → 0.835 → 0.853 → **0.868** |
 
-The 0.853 ceiling is the same code path as production: 1-only image
-strategy + OCR-first prompt + zoom_in=original + 2048-px fullRes.
-See `profiling/eval_1568_nudge_100.json`.
+The 0.868 ceiling is the same code path as production: 1-only image
+strategy + auto-OCR on every zoom_in crop + workflow prompt
+("round-1 → zoom on [LOW] → trust crop OCR → emit") + 2048-px
+fullRes.  See `profiling/eval_phase2_noreadtext_100.json`.
 
 ## Quick start
 
@@ -90,8 +95,8 @@ app/src/main/java/com/example/intentcam/   — app source
   MainActivity.kt          Compose UI (preview, debug overlay, detail)
   Models.kt                Bubble / Detail / UiState
   Tools.kt                 ToolDef / ToolRegistry / ToolContext
-  ToolImplementations.kt   zoom_in + emit_bubble bodies
-  ToolUseLoop.kt           multi-round orchestrator
+  ToolImplementations.kt   zoom_in + compare_text + emit_bubble bodies
+  ToolUseLoop.kt           multi-round orchestrator (auto-OCR on followUps)
 
 shared/src/main/kotlin/com/example/intentcam/  — :shared module
   CapturedFrame.kt         frame = (thumbnail, fullRes)

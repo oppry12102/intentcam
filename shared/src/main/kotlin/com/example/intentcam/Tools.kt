@@ -65,9 +65,11 @@ data class ToolContext(
     val config: LlmConfig,
     /** Round-1 OCR result (full image).  Populated by
      *  [ToolUseLoop] from [OcrEngine.recognize]; empty when the
-     *  OCR backend isn't installed (e.g. JVM eval).  Tools like
-     *  `compare_text` and `read_text` look up here instead of
-     *  re-running OCR on already-scanned regions. */
+     *  OCR backend isn't installed (e.g. JVM eval).  Used by
+     *  `compare_text` to diff the LLM's own reading against
+     *  the round-1 OCR without re-running OCR on already-scanned
+     *  regions.  Phase 2 (2026-07-11) — `read_text` removed; only
+     *  `compare_text` consults the cache now. */
     val ocrCache: OcrResult = OcrResult.EMPTY,
 )
 

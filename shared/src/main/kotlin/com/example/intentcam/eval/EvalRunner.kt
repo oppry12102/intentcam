@@ -91,6 +91,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                     thumbnail = frame.thumbnail,
                     fullRes = frame.fullRes,
                     userText = "",
+                    cropOcrCap = config.cropOcrCap,
                 )
             }
             if (outcome is ToolUseLoop.Outcome.Error) {
@@ -246,8 +247,8 @@ internal class EvalRunner(private val config: EvalConfig) {
         val empty = JSONObject()
         val r1Details = JSONObject()
         // ToolUseLoop.Outcome exposes firstToolName — the first
-        // non-final tool the model invoked (zoom_in / read_text /
-        // compare_text if it did reconnaissance, emit_bubble if it
+        // non-final tool the model invoked (zoom_in / compare_text
+        // if it did reconnaissance, emit_bubble if it
         // went straight to the final summary, null if the model just
         // emitted text without any tool call).  Score the choice
         // directly so the metric reflects "did the model think
@@ -257,8 +258,8 @@ internal class EvalRunner(private val config: EvalConfig) {
         // The penalty for skipping reconnaissance depends on whether
         // the fixture has text content: for text-heavy fixtures
         // (ground truth lists expected_description_keywords /
-        // expected_details) the model really should zoom_in or
-        // read_text to verify text; for non-text fixtures the 5
+        // expected_details) the model really should zoom_in to
+        // verify text; for non-text fixtures the 5
         // round-1 images already let the model answer correctly.
         //
         // End-cloud (2026-07-07+): the round-1 OCR hint is the
@@ -287,7 +288,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 pickScore = skipReconScore
                 pickedLabel = "emit_bubble"
             }
-            firstTool == "zoom_in" || firstTool == "read_text" || firstTool == "compare_text" -> {
+            firstTool == "zoom_in" || firstTool == "compare_text" -> {
                 pickScore = 1.0
                 pickedLabel = firstTool
             }
