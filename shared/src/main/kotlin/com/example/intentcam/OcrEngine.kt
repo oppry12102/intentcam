@@ -77,7 +77,15 @@ data class OcrResult(
          *  uncertain.  Tuned so high-confidence (>=0.5) blocks are
          *  treated as ground truth verbatim; below that the LLM
          *  is steered to either zoom_in for verification or skip
-         *  the line entirely ("宁可不写也别编"). */
+         *  the line entirely ("宁可不写也别编").
+         *
+         *  Phase 2b (2026-07-11): tested 0.5→0.7.  REJECTED @20.
+         *  Hypothesis was inverted — raising the threshold marks
+         *  MORE lines [LOW] (the 0.5-0.7 range flips from
+         *  high-fidelity to [LOW]).  Result with OCR-on: composite
+         *  0.854→0.840 (-0.014), r2_text_fuzzy 0.734→0.552
+         *  (-0.182), 7/20 empty (vs 0/20 baseline).  The model
+         *  hedged more on the inflated [LOW] count.  0.5 stays. */
         const val LOW_CONFIDENCE_THRESHOLD = 0.5f
 
         /** Hard cap on the number of OCR blocks injected into the
