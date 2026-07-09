@@ -1,0 +1,272 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.8345,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.8345},
+  "fixtures": [
+    {
+      "raw_content": "这是微信小程序\"中国能量堡垒\"的扫码奖励记录页面（晚上7:58）。显示两条扫码获赠能量币的通知：\n\n1) 扫描\"能量堡垒葛根提取物软胶囊\"产品二维码 [1420279160816506]，获得了118能量币。立即查看能量币 \u2014 查看全文\n2) 1月13日 \u2014 扫描\"能量堡垒维生素C片\"产品二维码 [1420519580860218]，获得了108能量币。立即查看能量币 \u2014 查看全文\n\n页面中部是一张产品全家福广告图（代言人：能量大使·田亮），宣传语\"全家优营养，健康正能量\"，展示乳清蛋白质粉、DHA蛋白质酶等多款产品，编号 524000581008，右上角为\"能量堡垒 ENERGY FORTRESS\"品牌logo。\n\n底部Tab：能量资讯 / 营养商学院 / 扫一扫。",
+      "r2_text": 0.95,
+      "details_count": 14,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "页面标题",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "text",
+          "label": "第一条扫码记录产品",
+          "value": "能量堡垒葛根提取物软胶囊"
+        },
+        {
+          "kind": "text",
+          "label": "第一条扫码编号",
+          "value": "[1420279160816506]"
+        },
+        {
+          "kind": "price",
+          "label": "第一条获得能量币",
+          "value": "118能量币"
+        },
+        {
+          "kind": "text",
+          "label": "第二条扫码记录产品",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "date",
+          "label": "第二条日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "第二条扫码编号",
+          "value": "[1420519580860218]"
+        },
+        {
+          "kind": "price",
+          "label": "第二条获得能量币",
+          "value": "108能量币"
+        },
+        {
+          "kind": "text",
+          "label": "广告语左上",
+          "value": "全家优营养 健康正能量"
+        },
+        {
+          "kind": "text",
+          "label": "广告语代言",
+          "value": "能量大使：田亮"
+        },
+        {
+          "kind": "logo",
+          "label": "右上角品牌logo [LOW]",
+          "value": "能量堡垒 ENERGY FORTRESS"
+        },
+        {
+          "kind": "text",
+          "label": "产品广告图上文字",
+          "value": "乳清蛋白质粉 / DHA蛋白质酶"
+        },
+        {
+          "kind": "text",
+          "label": "底部Tab",
+          "value": "能量资讯 / 营养商学院 / 扫一扫"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏时间",
+          "value": "晚上7:58"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.975,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 338,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "禁止鸣叫",
+          "value": "严禁鸣叫"
+        },
+        {
+          "kind": "text",
+          "label": "禁止大力关门",
+          "value": "请轻关门"
+        },
+        {
+          "kind": "text",
+          "label": "禁止怠速",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "禁止远光灯",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "禁止排气管朝向",
+          "value": "请排气管朝外"
+        },
+        {
+          "kind": "title",
+          "label": "防盗守则标题",
+          "value": "汽车防盗守则"
+        },
+        {
+          "kind": "text",
+          "label": "英文副标题",
+          "value": "the rules of guarding aguinst theft of cars"
+        },
+        {
+          "kind": "text",
+          "label": "左上警示说明",
+          "value": "切勿将贵重物品留在车内。"
+        },
+        {
+          "kind": "text",
+          "label": "左上英文警示",
+          "value": "Dont leave any valuablong in the car."
+        },
+        {
+          "kind": "text",
+          "label": "右上警示说明",
+          "value": "不要将车匙留在车内。"
+        },
+        {
+          "kind": "text",
+          "label": "右上英文警示",
+          "value": "Don'leave the key in the car.t"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0.788888888888889,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "微信内\"建行安阳分行\"投票页面截图，显示三名候选人得票情况：23号周登祥 153票 (2%)、24号王立波 11票 (0%)、25号陈静（已选）591票 (8%)，页面底部提示\"你已投票\"。下方为安阳建行宣传区：\"安阳建行,与同业不一样的银行！\"、\"",
+      "r2_text": 1,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "23号票数",
+          "value": "153票 2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "24号票数",
+          "value": "11票 0%"
+        },
+        {
+          "kind": "text",
+          "label": "已选候选人",
+          "value": "25、陈静（已选）"
+        },
+        {
+          "kind": "number",
+          "label": "25号票数",
+          "value": "591票 8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "安阳建行,与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享引导",
+          "value": "独享不如与众分享"
+        },
+        {
+          "kind": "text",
+          "label": "分享提示",
+          "value": "点击右上角 分享到朋友圈"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 125,
+      "r1": 1
+    }
+  ]
+}

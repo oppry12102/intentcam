@@ -1,0 +1,323 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.9265000000000001,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.9265000000000001},
+  "fixtures": [
+    {
+      "raw_content": "这是\"中国能量堡垒\"公众号页面，显示两条扫码获得能量币的通知：第一条「通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币」，第二条（1月13日）「通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币」。中间插有宣传图，含品牌LOGO\"能量堡垒 ENERGY FORTRESS\"、代言人田亮及产品（乳清蛋白质粉、DHA蛋白质酶等）。底部Tab为「能量资讯 / 营养商学院 / 扫一扫」，状态栏显示晚上7:58。",
+      "r2_text": 0.975,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "date",
+          "label": "状态栏时间",
+          "value": "晚上7:58"
+        },
+        {
+          "kind": "text",
+          "label": "第1条扫码通知",
+          "value": "您好，通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币"
+        },
+        {
+          "kind": "number",
+          "label": "第1条二维码编号",
+          "value": "1420279160816506"
+        },
+        {
+          "kind": "price",
+          "label": "第1条获得能量币",
+          "value": "118能量币"
+        },
+        {
+          "kind": "date",
+          "label": "第2条日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "第2条文章标题",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "text",
+          "label": "第2条扫码通知",
+          "value": "您好，通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币"
+        },
+        {
+          "kind": "number",
+          "label": "第2条二维码编号",
+          "value": "1420519580860218"
+        },
+        {
+          "kind": "price",
+          "label": "第2条获得能量币",
+          "value": "108能量币"
+        },
+        {
+          "kind": "logo",
+          "label": "宣传图品牌LOGO",
+          "value": "能量堡垒 ENERGY FORTRESS"
+        },
+        {
+          "kind": "brand",
+          "label": "宣传图标语 [LOW]",
+          "value": "全家优营养 健康正能量（OCR: 生家优营春/健康正量）"
+        },
+        {
+          "kind": "text",
+          "label": "底部Tab",
+          "value": "能量资讯 | 营养商学院 | 扫一扫"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9875,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 248,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块蓝底白字的停车规则与汽车防盗告示牌。上半部分列出 5 条停车规则（每条左侧带\"禁\"符号 ⊘）：\"严禁鸣叫 / 请轻关门 / 停靠后请熄火 / 请勿使用远光灯 / 请排气管朝外\"。中段主标题\"汽车防盗守则\"，英文副标题 the rules of guarding aguinst theft of cars（原图拼写有误：aguinst 应为 against）。下半部分用漫画图示说明防盗要诀：左上图（红色 ×）\"切勿将贵重物品留在车内。Dont leave any valuablong in the car.\"；右上图（红色 ×）\"不要将车匙留在车内。Don'leave the key in the car.t\"；下方还有 3 张正确做法图示（带红色 ✓），分别演示锁车、关车门、检查车窗。右侧另有其他板块，顶部出现\"THE\"字样及条纹 logo，中部出现红色印章状图案，下部有\"收费\"\"武价\"等字样（疑为价目表的一部分）。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "停车规则1",
+          "value": "严禁鸣叫"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则2",
+          "value": "请轻关门"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则3",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则4",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则5",
+          "value": "请排气管朝外"
+        },
+        {
+          "kind": "title",
+          "label": "主标题",
+          "value": "汽车防盗守则"
+        },
+        {
+          "kind": "text",
+          "label": "英文标题",
+          "value": "the rules of guarding aguinst theft of cars"
+        },
+        {
+          "kind": "text",
+          "label": "防盗提示1(左上)",
+          "value": "切勿将贵重物品留在车内。Dont leave any valuablong in the car."
+        },
+        {
+          "kind": "text",
+          "label": "防盗提示2(右上)",
+          "value": "不要将车匙留在车内。Don'leave the key in the car.t"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.9888888888888889,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 418,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.6975,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 0,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "瑞缇咖啡(Retty coffee)店外挂了两块告示牌和一块红色招牌。\n\n**上方牌子 \u2014 温馨提示(Reminder)**：\n咖啡厅谢绝自带食品、酒水、饮料入内！ Cafe with food, drinks, beverages refused entry!\n咖啡厅谢绝摄像、拍照、宠物入内！ Cafe declined, photographed, pets in camera!\n谢谢您的合作 Thank you for you cooperation\n\n**下方牌子 \u2014 营业时间(Business hours)**：\n上午：9:00\u2014凌晨：01：00\n预约热线：Reservation hotline. 028-26183333 / 028-26780888\n\n**底部红色招牌**：瑞缇咖啡 Retty coffee\n\n注：牌子上的英文翻译是逐字 OCR 结果，\"Thank you for you cooperation\" 和 \"Cafe declined, photographed, pets in camera!\" 是牌子原文如此(非翻译错)。品牌名\"瑞缇\"经放大重扫确认(round-1 OCR 误读为\"嗨3\")。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名(上方牌子)",
+          "value": "瑞缇咖啡 Retty coffee"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌名(下方牌子)",
+          "value": "瑞缇咖啡 Retty coffee"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示",
+          "value": "温馨提示：Reminder"
+        },
+        {
+          "kind": "text",
+          "label": "禁带食品规定",
+          "value": "咖啡厅谢绝自带食品、酒水、饮料入内！ Cafe with food, drinks, beverages refused entry!"
+        },
+        {
+          "kind": "text",
+          "label": "禁拍照摄像规定",
+          "value": "咖啡厅谢绝摄像、拍照、宠物入内！ Cafe declined, photographed, pets in camera!"
+        },
+        {
+          "kind": "text",
+          "label": "结尾致谢",
+          "value": "谢谢您的合作 Thank you for you cooperation"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间标题",
+          "value": "营业时间 Business hours"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "上午：9:00\u2014凌晨：01：00"
+        },
+        {
+          "kind": "text",
+          "label": "预约热线",
+          "value": "预约热线：Reservation hotline. 028-26183333 028-26780888"
+        },
+        {
+          "kind": "logo",
+          "label": "底部红色招牌(自读)",
+          "value": "瑞缇咖啡 Retty coffee"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_21",
+      "category": "default",
+      "content_len": 519,
+      "r1": 1
+    },
+    {
+      "raw_content": "建行安阳分行的投票页面，显示候选人排名与得票情况：23、周登祥 153票 (2%)；24、王立波 11票 (0%)；25、陈静(已选) 591票 (8%)。页面底部显示\"你已投票\"。下方宣传图：安阳建行，与同业不一样的银行！分享提示：独享不如与众分享，点击右上角 分享到朋友圈。",
+      "r2_text": 1,
+      "details_count": 14,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "建行安阳分行"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "23、周登祥"
+        },
+        {
+          "kind": "number",
+          "label": "周登祥票数",
+          "value": "153票"
+        },
+        {
+          "kind": "number",
+          "label": "周登祥得票率",
+          "value": "2%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人",
+          "value": "24、王立波"
+        },
+        {
+          "kind": "number",
+          "label": "王立波票数",
+          "value": "11票"
+        },
+        {
+          "kind": "number",
+          "label": "王立波得票率",
+          "value": "0%"
+        },
+        {
+          "kind": "text",
+          "label": "候选人(已选)",
+          "value": "25、陈静(已选）"
+        },
+        {
+          "kind": "number",
+          "label": "陈静票数",
+          "value": "591票"
+        },
+        {
+          "kind": "number",
+          "label": "陈静得票率",
+          "value": "8%"
+        },
+        {
+          "kind": "text",
+          "label": "投票状态",
+          "value": "你已投票"
+        },
+        {
+          "kind": "text",
+          "label": "宣传语",
+          "value": "安阳建行，与同业不一样的银行！"
+        },
+        {
+          "kind": "text",
+          "label": "分享提示",
+          "value": "独享不如与众分享，点击右上角 分享到朋友圈"
+        },
+        {
+          "kind": "date",
+          "label": "状态栏时间",
+          "value": "21:08"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_49",
+      "category": "default",
+      "content_len": 139,
+      "r1": 0.895
+    }
+  ]
+}

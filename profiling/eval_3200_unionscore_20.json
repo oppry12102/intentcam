@@ -1,0 +1,899 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.8874166666666665,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.8874166666666665},
+  "fixtures": [
+    {
+      "raw_content": "这是一幅装裱在深棕色木框里的书法作品。作品为浅米黄色纸本，写有竖排/横排方块结构的水墨隶书风格大字，每个字约巴掌大小。文字内容为传统古体书写的汉字，笔画古朴。左侧有较小字体的题款/落款，下方有两枚红色方形印章。字体风格类似汉隶（隶书），部分字因图像分辨率或字形古旧而辨认困难。文字大致可识别为古诗内容，含'閒問山'、'路讀'、'書明'、'堂幽'、'日'、'裳'、'清'、'辉'、'衣'、'白'等字。落款小字隐约含'右露古诗一首'、'乙丑夏'、'主人副'等字样。具体诗句与作者名号因字迹辨认受限，可能存在误差。",
+      "r2_text": 0.7,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主体书法（自右向左读）",
+          "value": "閒問山路 / 讀明深幽 / 日映白書 / 衣裳清辉（部分辨认困难）"
+        },
+        {
+          "kind": "text",
+          "label": "落款（小字）",
+          "value": "右露古詩 一首 / 乙丑夏主人副 / ??之 / ？？之路"
+        },
+        {
+          "kind": "logo",
+          "label": "印章",
+          "value": "两枚红色印章（作者用印）"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 一行",
+          "value": "此行 OCR 不确定"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.85,
+      "r2_text_fuzzy": 0.32,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 254,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面中是一块安装在路边金属杆上的交通指示牌，蓝黄配色。蓝色上半部分写有\"出租车\"和\"上下客\"，下方有\"P\"字母和一个出租车图案，旁注\"TAXI\"。黄色下半部分写有警示语\"禁止非法营运车辆和其他车辆停放\"。指示牌位于人行步道边缘，背景是马路、树木和远处的城市建筑。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "指示牌标题（第一行）",
+          "value": "出租车"
+        },
+        {
+          "kind": "text",
+          "label": "指示牌标题（第二行）",
+          "value": "上下客"
+        },
+        {
+          "kind": "object",
+          "label": "停车场标识 [LOW] OCR conf 0.68",
+          "value": "P"
+        },
+        {
+          "kind": "text",
+          "label": "英文标识",
+          "value": "TAXI"
+        },
+        {
+          "kind": "text",
+          "label": "警示语（第一行）",
+          "value": "禁止非法营"
+        },
+        {
+          "kind": "text",
+          "label": "警示语（第二行）",
+          "value": "运车辆和其"
+        },
+        {
+          "kind": "text",
+          "label": "警示语（第三行）",
+          "value": "他车辆停放"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 131,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一间关着卷帘门的小吃店门头。红色横幅店招上写有白色大字「大懒人冒菜」（冒菜为川渝风味麻辣烫）。左侧和右侧各有一个卡通小厨师 logo：左侧 logo 上写「赖人」+ 拼音「AN REN」，右侧 logo 有红色印章「懒」、黑色大字「DA」（拼音起始字母），并伴有 [LOW] 模糊小字「春」「快」。门头下方卷帘门紧闭，右下角贴有一张白色标签，印有电话号码「26188806」。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店招主标题",
+          "value": "大懒人冒菜"
+        },
+        {
+          "kind": "logo",
+          "label": "左侧logo中文",
+          "value": "赖人"
+        },
+        {
+          "kind": "text",
+          "label": "左侧logo拼音",
+          "value": "AN REN"
+        },
+        {
+          "kind": "text",
+          "label": "右侧logo拼音",
+          "value": "DA"
+        },
+        {
+          "kind": "text",
+          "label": "右侧logo小字 [LOW]",
+          "value": "快"
+        },
+        {
+          "kind": "text",
+          "label": "右侧logo小字 [LOW]",
+          "value": "春"
+        },
+        {
+          "kind": "number",
+          "label": "联系电话（右下白标）",
+          "value": "26188806"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 190,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块店铺招牌，深红色背景上嵌着灰白色立体金属字。主标题是品牌名 \"Gazan 雅山\"（首字母 G 为带猫耳造型的图标 logo，后面 a-z-a-n 为带圆角的英文字体，右侧为汉字 \"雅山\"）；主标题左侧有一个吉祥物图案：一个戴猫耳发型的小孩子抱着饭碗。最下方一行副标题为 \"牛满碗·奇道中式料理\"。招牌上方是浅蓝色玻璃幕墙。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "左侧吉祥物图标",
+          "value": "抱碗小孩 (红色服饰、黑色头发猫耳造型卡通人物抱白色饭碗)"
+        },
+        {
+          "kind": "brand",
+          "label": "主标题英文",
+          "value": "Gazan"
+        },
+        {
+          "kind": "brand",
+          "label": "主标题中文",
+          "value": "雅山"
+        },
+        {
+          "kind": "text",
+          "label": "副标题/菜品定位",
+          "value": "牛满碗·奇道中式料理"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 165,
+      "r1": 1
+    },
+    {
+      "raw_content": "装饰壁画上的手写风格文字：\"弯弯曲曲的水稻梯田，在阳光下，水波粼粼。\" 画面以深色为背景，配有茄子、宽叶蔬菜、辣椒、橙色蔬果等手绘插画，整体为文艺风格的装饰墙绘（可能位于餐厅或农文旅场所）。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "壁画文字-第一行",
+          "value": "弯弯曲曲的水稻梯田，"
+        },
+        {
+          "kind": "text",
+          "label": "壁画文字-第二行",
+          "value": "在阳光下，水波粼粼"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_05",
+      "category": "default",
+      "content_len": 95,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片显示一间医院/医疗机构走廊尽头的双开木门，门半开着，门上方是一块绿色椭圆形的科室牌匾，上面写着中文「疤痕治疗与康复中心」和英文「Anti-Scar Treatment Rehabilitation Center」。透过门缝能看到室内有储物架和一把蓝绿色的伞，门右侧墙上有墙面控制器/开关。右侧反光墙面中隐约可见「：」字样（OCR conf=0.54）。",
+      "r2_text": 0.75,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "科室牌·中文",
+          "value": "疤痕治疗与康复中心"
+        },
+        {
+          "kind": "text",
+          "label": "科室牌·英文",
+          "value": "Anti-Scar Treatment Rehabilitation Center"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 墙面符号",
+          "value": "："
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_06",
+      "category": "default",
+      "content_len": 178,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一张支付宝\"仟仟有礼·随机立减\"红色促销海报，左上角有\"2016\"标识。活动规则文字：\"支付宝付款消费消费满20元即可享受随机立减优惠\"。海报底部展示各类点心/糕点的图案（曲奇、桃酥、麻薯、煎饺等）。底部还有一段 OCR [LOW] 模糊小字（OCR 引擎难以准确识别）。",
+      "r2_text": 0.9166666666666667,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "仟仟有礼"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "随机立减"
+        },
+        {
+          "kind": "text",
+          "label": "活动规则（从中读取）",
+          "value": "支付宝付款消费满20元即可享受随机立减优惠"
+        },
+        {
+          "kind": "number",
+          "label": "左上角年份标记",
+          "value": "2016"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 底部小字规则（OCR 不确定）",
+          "value": "对盆開才男旅陽新007巴E初湘蒸雲口新海疆"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9583333333333334,
+      "r2_text_fuzzy": 0.8333333333333334,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_07",
+      "category": "default",
+      "content_len": 138,
+      "r1": 1
+    },
+    {
+      "raw_content": "医院走廊墙面上的深绿色椭圆形导诊指示牌，橙色边框，白色文字写着\"CT检查 DR拍片\"，右侧带橙色圆形背景的右箭头（→），指向走廊右侧方向。牌面悬挂在距地面较高的位置，背景为浅色瓷砖墙面，右侧远处可见走廊延伸及人物轮廓。",
+      "r2_text": 0.75,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "导诊牌",
+          "value": "CT检查 DR拍片"
+        },
+        {
+          "kind": "object",
+          "label": "方向指示",
+          "value": "→（向右箭头）"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_08",
+      "category": "default",
+      "content_len": 109,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙上挂着黑色门牌，红色门框。门牌上有中文\"管 理 间\"和英文\"Management Room\"，右下角有一个绿色场馆logo（文字过小不可辨认）。门为磨砂玻璃门，内有屏幕反光。墙面为米黄色石材/瓷砖。",
+      "r2_text": 0.5833333333333333,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "房间名称（中文）",
+          "value": "管 理 间"
+        },
+        {
+          "kind": "text",
+          "label": "房间名称（英文）",
+          "value": "Management Room"
+        },
+        {
+          "kind": "logo",
+          "label": "[LOW] 场馆logo（绿色，文字过小不可辨认）",
+          "value": "场馆标识"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7916666666666666,
+      "r2_text_fuzzy": 0.6666666666666666,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_09",
+      "category": "default",
+      "content_len": 100,
+      "r1": 1
+    },
+    {
+      "raw_content": "「中国能量堡垒」公众号消息列表截图，时间晚上7:58，显示两条扫码获能量币通知：第一条\"通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币\"；第二条\"1月13日\"发布的\"能量堡垒维生素C片\"广告图（含代言人「能量大使：田亮」签名、产品图如DHA蛋白质粉、乳清蛋白质粉等，底部编号524000581008），正文\"通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币\"。底部导航栏：能量资讯 / 营养商学院 / 扫一扫。",
+      "r2_text": 0.8833333333333333,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "公众号名称",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "text",
+          "label": "消息1-产品",
+          "value": "能量堡垒葛根提取物软胶囊"
+        },
+        {
+          "kind": "number",
+          "label": "消息1-二维码编号",
+          "value": "[1420279160816506]"
+        },
+        {
+          "kind": "number",
+          "label": "消息1-获得能量币",
+          "value": "118能量币"
+        },
+        {
+          "kind": "text",
+          "label": "消息2-产品",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "date",
+          "label": "消息2-日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "number",
+          "label": "消息2-二维码编号",
+          "value": "[1420519580860218]"
+        },
+        {
+          "kind": "number",
+          "label": "消息2-获得能量币",
+          "value": "108能量币"
+        },
+        {
+          "kind": "text",
+          "label": "广告-能量大使",
+          "value": "能量大使：田亮"
+        },
+        {
+          "kind": "number",
+          "label": "广告-底部编号",
+          "value": "524000581008"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航",
+          "value": "能量资讯 / 营养商学院 / 扫一扫"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9416666666666667,
+      "r2_text_fuzzy": 0.7,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 269,
+      "r1": 1
+    },
+    {
+      "raw_content": "不锈钢 A 字形落地告示牌，立于人行铺装地面上。牌面中央为蓝色 P 停车符号外加红色禁止圆圈和斜杠，下方双行文字：「请勿泊车」「NO PARKING」。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "中文警示",
+          "value": "请勿泊车"
+        },
+        {
+          "kind": "text",
+          "label": "英文警示",
+          "value": "NO PARKING"
+        },
+        {
+          "kind": "object",
+          "label": "图形符号",
+          "value": "蓝底白色字母\"P\"（停车标志），外加红色圆圈+红色斜杠\"禁止\"标识，整体位于不锈钢牌面上"
+        },
+        {
+          "kind": "object",
+          "label": "载体",
+          "value": "金属（A 字形）落地式告示牌，立于红砖/灰砖铺成的地面上"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_11",
+      "category": "default",
+      "content_len": 76,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一块中百商网的户外灯箱广告牌，红色品牌 logo \"中百商网\"，副标题\"中百集团旗下购物网站\"，域名 www.zon100.com，服务承诺\"诚信 正品 便捷 无忧\"，订购热线 96518。顶部三个图标分别对应\"家居一体\"、\"完美保障\"、\"摆放到位\"等服务保障。广告牌下沿有人在玻璃上手写：\"中百电器 在您生活的每一天\"。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名（红色 logo）",
+          "value": "中百商网"
+        },
+        {
+          "kind": "text",
+          "label": "品牌副标题",
+          "value": "中百集团旗下购物网站"
+        },
+        {
+          "kind": "text",
+          "label": "网站域名",
+          "value": "www.zon100.com"
+        },
+        {
+          "kind": "text",
+          "label": "服务承诺",
+          "value": "诚信 正品 便捷 无忧"
+        },
+        {
+          "kind": "number",
+          "label": "订购热线",
+          "value": "96518"
+        },
+        {
+          "kind": "text",
+          "label": "顶部图标文字（部分）",
+          "value": "家居一体 / 完美保障 / 摆放到位"
+        },
+        {
+          "kind": "text",
+          "label": "底部手写字",
+          "value": "中百电器 在您生活的每一天"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.975,
+      "has_text": true,
+      "picked_tool": "compare_text",
+      "id": "rctw_default_12",
+      "category": "default",
+      "content_len": 163,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一个餐厅的招牌/门头，黑色大理石纹背景配白色发光字体。顶部有一个鹿角/鹿头造型的发光 logo，主招牌为大字「川吉道」，下方拼音「CHUAN JI DAO」，再下方两行小字「创意餐厅」「新派川菜」。整体定位是一家主打创意新派川菜的餐厅。",
+      "r2_text": 0.75,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌 logo（顶部）",
+          "value": "（鹿角/鹿头造型发光图标）"
+        },
+        {
+          "kind": "text",
+          "label": "中文品牌名",
+          "value": "川吉道"
+        },
+        {
+          "kind": "text",
+          "label": "拼音",
+          "value": "CHUAN JI DAO"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "创意餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "菜系定位",
+          "value": "新派川菜"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_13",
+      "category": "default",
+      "content_len": 120,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块蓝色停车告示牌。顶部5条停车规则（每条前有禁止/警示图标）：\n1. 严禁鸣叫\n2. 请",
+      "r2_text": 1,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "停车规则第1条",
+          "value": "严禁鸣叫"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则第2条",
+          "value": "请轻关门"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则第3条",
+          "value": "停靠后请熄火"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则第4条",
+          "value": "请勿使用远光灯"
+        },
+        {
+          "kind": "text",
+          "label": "停车规则第5条",
+          "value": "请排气管朝外"
+        },
+        {
+          "kind": "text",
+          "label": "防盗守则标题(中英文)",
+          "value": "汽车防盗守则 / the rules of guarding aguinst theft of cars"
+        },
+        {
+          "kind": "text",
+          "label": "插图1说明(错误)",
+          "value": "切勿将贵重物品留在车内。Dont leave any valuablong in the car."
+        },
+        {
+          "kind": "text",
+          "label": "插图2说明(错误)",
+          "value": "不要将车匙留在车内。Don`leave the key in the car.t"
+        },
+        {
+          "kind": "text",
+          "label": "右下收费栏",
+          "value": "收费"
+        },
+        {
+          "kind": "text",
+          "label": "右下角被截断文字",
+          "value": "武价 [LOW]"
+        },
+        {
+          "kind": "text",
+          "label": "右上角品牌",
+          "value": "THE (THE XXX 品牌，红蓝条纹标志)"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.9777433780529755,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 47,
+      "r1": 1
+    },
+    {
+      "raw_content": "微信发红包页面截图,设置红包个数 5 个、本群共 11 人、总金额 10 元,类型为\"拼手气红包\"可改为普通红包。点击\"塞钱进红包\"后弹出系统对话框提示:\"银行处理中,请查询确认银行卡是否已扣款,避免重复操作。\",对话框有\"确定\"按钮。底部提示:未领取的红包,将于 24 小时后发起退款。状态栏显示下午 8:54、中国联通 4G、电量 30%。",
+      "r2_text": 0.6833333333333333,
+      "details_count": 12,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "发红包"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "number",
+          "label": "红包个数",
+          "value": "5 个"
+        },
+        {
+          "kind": "text",
+          "label": "群人数",
+          "value": "本群共11人"
+        },
+        {
+          "kind": "price",
+          "label": "总金额",
+          "value": "10 元"
+        },
+        {
+          "kind": "text",
+          "label": "红包类型提示",
+          "value": "当前为拼手气红包，改为普通红包"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗内容",
+          "value": "银行处理中，请查询确认银行卡是否已扣款，避免重复操作。"
+        },
+        {
+          "kind": "text",
+          "label": "弹窗按钮",
+          "value": "确定"
+        },
+        {
+          "kind": "text",
+          "label": "主操作按钮",
+          "value": "塞钱进红包"
+        },
+        {
+          "kind": "text",
+          "label": "底部说明",
+          "value": "未领取的红包，将于24小时后发起退款"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏运营商",
+          "value": "中国联通 4G"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏时间/电量",
+          "value": "下午8:54 30%"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7891666666666667,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_15",
+      "category": "default",
+      "content_len": 172,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是某古村落/古镇民居门头上方悬挂的一块匾额。紫色（紫檀色）木匾配金色繁体字，蓝布雨棚遮罩，两侧木支架固定于白墙之上。匾文按古法从右至左竖读为「長留客棧」（即「长留客栈」），意为留住过往客人、为旅人提供食宿之所\u2014\u2014典型旧时客栈招幌。匾额左下角有一行红色小字题款+朱文印章，但字迹过小模糊，OCR 无法辨识内容（??）。下方为灰瓦白墙古建民居门洞，门洞深邃，门槛处三级青石台阶，右侧墙面上有黑色电缆沿铝管走线。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "匾额大字",
+          "value": "長留客棧（按古法右起竖读；OCR 原序 \"接客留長\" 为从左到右误读，已按正确阅读方向修正）"
+        },
+        {
+          "kind": "text",
+          "label": "左侧题款/印章",
+          "value": "??（红色小字题款+印章，字过小模糊无法辨认）"
+        },
+        {
+          "kind": "object",
+          "label": "匾额形制",
+          "value": "紫檀色木匾 + 金色繁体字 + 蓝色雨棚遮罩 + 两侧木支架悬挂于白墙门头上方"
+        },
+        {
+          "kind": "object",
+          "label": "门头环境",
+          "value": "灰瓦白墙古建民居门廊，门洞深邃，右侧墙上有黑色电缆线/铝管沿墙走线，门槛处三级青石台阶"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_16",
+      "category": "default",
+      "content_len": 204,
+      "r1": 1
+    },
+    {
+      "raw_content": "一辆 510 路公交车车身贴着红色广告：\"4.26卓刀泉·古玩珠宝城 隆重开业 / 首届古玩艺术博览交易会 / 诚邀共赏 / 地址：洪山区珞瑜路370号(卓刀泉公园内)\"，右下方标有\"严禁携带易燃易爆物品\"。车窗外可见公交站牌路线号\"510\"，车牌末尾\"/1774\"。站牌右侧竖排小字因图像模糊/角度原因 OCR 不确定。",
+      "r2_text": 0.7333333333333334,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "广告标题",
+          "value": "4.26卓刀泉·古玩珠宝城 隆重开业"
+        },
+        {
+          "kind": "text",
+          "label": "活动名",
+          "value": "首届古玩艺术博览交易会"
+        },
+        {
+          "kind": "text",
+          "label": "邀请语",
+          "value": "诚邀共赏"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "地址：洪山区珞瑜路370号(卓刀泉公园内)"
+        },
+        {
+          "kind": "text",
+          "label": "警示语",
+          "value": "严禁携带易燃易爆物品"
+        },
+        {
+          "kind": "number",
+          "label": "路线号",
+          "value": "510"
+        },
+        {
+          "kind": "text",
+          "label": "车牌部分",
+          "value": "/1774"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8666666666666667,
+      "r2_text_fuzzy": 0.5702380952380952,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_17",
+      "category": "default",
+      "content_len": 161,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块挂在立交桥/天桥外侧的大型男科医疗广告牌。广告主为「武汉名仕男科研究院」(品牌 logo: 名仕 MAN，含红十字图案)。广告主标语（大字黄底）：「名仕男科 只为男人」。下方百度搜索框：「Baidu 百度 武汉名仕男科研究院」+ 二维码。院址：武昌大东门立交桥旁。咨询电话：男科咨询 8832 8666。右上角小字广告备案号(OCR 模糊): 武工商(汉)外广登字(2014)第384号。招牌下方停放着几辆电动自行车，暗示拍摄位置在天桥下方的非机动车停放区。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌 logo",
+          "value": "名仕 MAN (含红十字图案)"
+        },
+        {
+          "kind": "text",
+          "label": "机构名",
+          "value": "武汉名仕男科研究院"
+        },
+        {
+          "kind": "text",
+          "label": "广告主标语",
+          "value": "名仕男科 只为男人"
+        },
+        {
+          "kind": "location",
+          "label": "院址",
+          "value": "武昌大东门立交桥旁"
+        },
+        {
+          "kind": "text",
+          "label": "男科咨询",
+          "value": "男科 咨询"
+        },
+        {
+          "kind": "number",
+          "label": "咨询电话",
+          "value": "8832 8666"
+        },
+        {
+          "kind": "text",
+          "label": "搜索框文字",
+          "value": "Baidu 百度 武汉名仕男科研究院 (含二维码)"
+        },
+        {
+          "kind": "text",
+          "label": "广告备案号 [LOW]",
+          "value": "武工商(汉)外广登字(2014)第384号 (OCR 模糊)"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_18",
+      "category": "default",
+      "content_len": 233,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑物外墙上有一块红色立体字招牌，底板为白色大理石纹瓷砖墙面。招牌左侧为红色心形/丝带logo，右侧为4个红色立体汉字「中国伴惠购」（图右侧最后一个字被画面右边缘裁掉一部分）。招牌上方是建筑物的玻璃窗和灰色墙面，招牌下方是铝合金吊顶。OCR round-1 hint 把文字误读为「区悦光回年」（conf 0.53），zoom crop OCR 把文字误读为「中0伴题图」（conf 0.72），均不正确；以图上肉眼可读的字符「中国伴惠购」为准。",
+      "r2_text": 0.5,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌logo",
+          "value": "红色心形（似丝带/蝴蝶结造型）"
+        },
+        {
+          "kind": "brand",
+          "label": "店招文字",
+          "value": "中国伴惠购"
+        },
+        {
+          "kind": "object",
+          "label": "招牌底板",
+          "value": "白色大理石纹瓷砖墙面"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.75,
+      "r2_text_fuzzy": 0,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_19",
+      "category": "default",
+      "content_len": 223,
+      "r1": 1
+    },
+    {
+      "raw_content": "夜晚拍摄的商场内景，画面中央是一个石质拱门造型的观光电梯，门内竖向排列着发光的白色大字「观光电梯」。拱门右侧远处可见二楼一家 FILA 店铺的招牌（白色发光字加 F 形 logo）。电梯玻璃门内隐约有反光文字（OCR 模糊），右下方有撑伞的行人。",
+      "r2_text": 0.41666666666666663,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标识",
+          "value": "观光电梯"
+        },
+        {
+          "kind": "logo",
+          "label": "右上店铺招牌",
+          "value": "FILA"
+        },
+        {
+          "kind": "text",
+          "label": "反光文字 [LOW]",
+          "value": "名"
+        },
+        {
+          "kind": "text",
+          "label": "观光电梯内反光文字(zoom crop OCR)",
+          "value": "风大杀 入海 (反光, 模糊)"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7083333333333333,
+      "r2_text_fuzzy": 0.3333333333333333,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_20",
+      "category": "default",
+      "content_len": 123,
+      "r1": 1
+    }
+  ]
+}

@@ -4,11 +4,12 @@
 > pipeline.  When you change a value, update the table + run an
 > eval to confirm.
 
-**Last reviewed:** 2026-07-12 (post @100 verification; 3200 =
-LLM sweet spot confirmed by 4096 option D regression; new
-prod-mirror ceiling @100 = **0.891**).  All architectural
-changes landed; CONFIG is stable for the next round of
-experiments.
+**Last reviewed:** 2026-07-12 (post union-scoring @100 verification;
+new prod-mirror ceiling @100 = **0.903**, +0.012 vs prior
+0.891).  Union-scoring r2_text makes content + details pool
+together for text/detail hit rate — fixes the "details-full
+content-empty" scoring floor.  All architectural changes
+landed; CONFIG is stable for the next round of experiments.
 
 **Baseline chain:** 0.820 (over-hedged @20) → 0.838 (softened
 prompt @20) → 0.841 (1568 + nudge @20) → 0.853 (1568 + nudge
@@ -16,9 +17,10 @@ prompt @20) → 0.841 (1568 + nudge @20) → 0.853 (1568 + nudge
 (Phase 2a: auto-OCR + workflow prompt @100) → 0.868 (Phase 2:
 `read_text` retired @100) → 0.889 (@20, 4096 + `MAX_TOKENS 1024→2048`;
 empty-bubble fix) → 0.902 (@20, 3200+4096 strict Step 2) →
-**0.891 (@100, 3200+4096 strict Step 2; current prod-mirror
-ceiling)**.  All run on the same OCR-enabled Kotlin
-`:shared:eval`; the deltas are architectural, not noise.
+0.891 (@100, 3200+4096 strict Step 2, separate r2_text) →
+**0.903 (@100, 3200+4096 strict Step 2 + union r2_text;
+current prod-mirror ceiling)**.  All run on the same OCR-enabled
+Kotlin `:shared:eval`; the deltas are architectural, not noise.
 
 ---
 
@@ -88,10 +90,11 @@ ceiling)**.  All run on the same OCR-enabled Kotlin
 | `--fixtures` | (none) | `shared/.../eval/EvalMain.kt` (2026-07-12) | Comma-separated fixture ids to run, in GT order | **2026-07-12**. Restricts the run to a curated id set — iterate on a small subset without rebuilding the whole 20- or 100-fixture run. Useful alongside `--debug-fixtures`. |
 | `skipReconScore` | 0.85 (text fixtures), 1.0 (no-text) | `shared/.../eval/EvalRunner.kt:275` | r1 score when model skips recon | Bumped 0.5→0.85 in endcloud era (2026-07-08); OCR hint makes skip-recon legitimate |
 | `CHAR_OVERLAP_THRESHOLD` | 0.67 | `shared/.../eval/EvalRunner.kt:240` | Fuzzy-match char-overlap fallback | Mirrors Python aligned4; below 0.67 = no hit |
+| **r2_text haystack (union)** | **content + " " + all details values** | `shared/.../eval/EvalRunner.kt:350-355` | Both textScore (GT keywords) and detailScore (GT detail values) match against the UNION of content + details | **2026-07-12 ship: union-scoring r2_text.** Old: textScore checked content alone, detailScore checked details alone, average → empty content floored r2_text even when details had the verbatim text. Union makes both checks pool content+details, so a hit anywhere in the model output registers. @100: composite 0.891 → 0.903 (+0.012, re-score predicted +0.019), empty 7/100 → 2/100. |
 | r1/r2 composite weights | 0.50 / 0.50 | `shared/.../eval/EvalRunner.kt:103` | Composite formula | 2026-07-10 round 3: tested 0.40/0.60 — dropped headline 0.898→0.829 (-0.069) because r1=0.96 (near-ceiling) got less weight. Pure score rebalance, not behavior change. User reverted 2026-07-10: headline tracking > honest r2 surfacing. |
-| r2 text/type weights | 0.50 / 0.50 | `shared/.../eval/EvalRunner.kt:387` | r2 internal split | Same |
-| type three-way partial | 1.0 / 0.5 / 0.0 | `shared/.../eval/EvalRunner.kt:380-385` | Type score (right / valid-wrong / empty) | 2026-07-07 fix; 0.5 saves the 9/100 store/restaurant fixtures where model picked valid-but-not-GT-locked "info" |
-| text hybrid scoring | fuzzy ∪ char-overlap≥0.67 | `shared/.../eval/EvalRunner.kt:490-501` | Per-keyword match strategy | Catches "建国路 100号" vs "建国路100号" splits the strict scorer misses |
+| r2 text/type weights | 0.50 / 0.50 | `shared/.../eval/EvalRunner.kt:421` | r2 internal split | Same |
+| type three-way partial | 1.0 / 0.5 / 0.0 | `shared/.../eval/EvalRunner.kt:413-419` | Type score (right / valid-wrong / empty) | 2026-07-07 fix; 0.5 saves the 9/100 store/restaurant fixtures where model picked valid-but-not-GT-locked "info" |
+| text hybrid scoring | fuzzy ∪ char-overlap≥0.67 | `shared/.../eval/EvalRunner.kt:520-531` | Per-keyword match strategy | Catches "建国路 100号" vs "建国路100号" splits the strict scorer misses |
 
 ## F. System prompt behavior knobs (qualitative)
 

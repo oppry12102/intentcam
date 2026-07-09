@@ -1,0 +1,112 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 20,
+  "overall_composite": 0.8362499999999999,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.8362499999999999},
+  "fixtures": [
+    {
+      "r2_text_details_score": 0.8333333333333334,
+      "raw_content": "「中国能量堡垒」公众号消息页，显示两条扫码获得能量币的记录：①扫描葛根提取物软胶囊产品二维码[1420279160816506]，获得118能量币；②1月13日扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得108能量币。配图为能量堡垒全家营养产品图，代言人田亮，编号4000581008。底部导航：能量资讯 / 营养商学院 / 扫一扫。",
+      "r2_text": 0.75,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "date",
+          "label": "时间",
+          "value": "晚上7:58"
+        },
+        {
+          "kind": "text",
+          "label": "第1条消息内容",
+          "value": "您好，通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币"
+        },
+        {
+          "kind": "number",
+          "label": "第1条能量币数",
+          "value": "118能量币"
+        },
+        {
+          "kind": "text",
+          "label": "第2条标题",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "date",
+          "label": "第2条日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "第2条消息内容",
+          "value": "您好，通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币"
+        },
+        {
+          "kind": "number",
+          "label": "第2条能量币数",
+          "value": "108能量币"
+        },
+        {
+          "kind": "brand",
+          "label": "产品图品牌",
+          "value": "能量堡垒 ENERGS FORTRESS"
+        },
+        {
+          "kind": "text",
+          "label": "产品图宣传语",
+          "value": "全家优营养 健康正能量"
+        },
+        {
+          "kind": "text",
+          "label": "代言人",
+          "value": "能量大使：田亮"
+        },
+        {
+          "kind": "number",
+          "label": "产品编号",
+          "value": "4000581008"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航",
+          "value": "能量资讯 / 营养商学院 / 扫一扫"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.875,
+      "r2_text_fuzzy": 0.7,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 182,
+      "r1": 1
+    },
+    {
+      "r2_text_details_score": 0,
+      "raw_content": "I'll analyze the image. The OCR scan captured most of the visible text clearly. Let me check a couple of areas that need verification - the \"中烟世\" line (conf 0.71) which appears to be rotated/stylized,",
+      "r2_text": 0.7,
+      "details_count": 0,
+      "raw_details": [],
+      "r2_type": 1,
+      "composite": 0.7975,
+      "r2_text_fuzzy": 0.4,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_14",
+      "category": "default",
+      "content_len": 200,
+      "r1": 0.895
+    }
+  ]
+}

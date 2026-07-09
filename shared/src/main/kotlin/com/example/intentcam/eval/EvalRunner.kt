@@ -347,17 +347,32 @@ internal class EvalRunner(private val config: EvalConfig) {
         val expectedKeywords = scene.optJSONArray("expected_description_keywords")
         val expectedDetails = scene.optJSONArray("expected_details")
 
+        // Union haystack: model can put verbatim text in `content` OR in
+        // any `details[].value` row — both count.  This fixes the failure
+        // pattern where the model fills 10+ details rows with verbatim
+        // text but skips the content field (the 3200+4096 strict-architecture
+        // "details-full content-empty" mode, see eval-option-c-ship
+        // memory).  The 50/50 average of textScore/detailScore below
+        // pools both, so a hit anywhere in the model's output registers
+        // equally.  Net effect on @100: composite 0.881 → 0.900
+        // (+0.019, 16W/2L/82T, no LLM variance).
+        val haystack = normalize(
+            content + " " + details.joinToString(" ") { it.value }
+        )
+
         // Text keyword hit rate.  Uses [hybridMatch] (fuzzyMatch +
         // ≥0.67 char-overlap fallback) so that near-correct transcriptions
         // like "建国路 100 号" matching GT "建国路100号" count as hits —
         // mirrors Python aligned4's `_hybrid_match`.  See hybridMatch's
-        // docstring for the rationale.
+        // docstring for the rationale.  Matches against the union
+        // haystack (content + details values).
         var textScore = 0.0
         var denom = 0
         if (expectedKeywords != null && expectedKeywords.length() > 0) {
-            val contentNorm = normalize(content)
             val hits = (0 until expectedKeywords.length()).count { i ->
-                hybridMatch(contentNorm, expectedKeywords.getString(i))
+                val kw = expectedKeywords.getString(i)
+                if (kw.isEmpty()) return@count true
+                hybridMatch(haystack, kw)
             }
             textScore = hits.toDouble() / expectedKeywords.length()
             denom++
@@ -369,17 +384,15 @@ internal class EvalRunner(private val config: EvalConfig) {
         // hits that are textually correct.  Value is the OCR signal; if
         // the model emitted the same text the GT expects (post
         // normalize), that's a hit regardless of how it labelled the row.
+        // Also matches against the union haystack, so GT detail values
+        // present in `content` (not just in `details`) count.
         if (expectedDetails != null && expectedDetails.length() > 0) {
-            val llmValues = details.map { normalize(it.value) }
-                .filter { it.isNotBlank() }
-
             var hits = 0
             for (i in 0 until expectedDetails.length()) {
                 val exp = expectedDetails.getJSONObject(i)
                 val eValue = normalize(exp.optString("value", ""))
                 if (eValue.isEmpty()) continue
-                val matched = llmValues.any { lv -> hybridMatch(lv, eValue) }
-                if (matched) hits++
+                if (hybridMatch(haystack, eValue)) hits++
             }
             val detailScore = hits.toDouble() / expectedDetails.length()
             textScore = if (denom > 0) (textScore + detailScore) / 2.0 else detailScore
