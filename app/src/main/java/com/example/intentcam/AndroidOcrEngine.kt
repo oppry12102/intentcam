@@ -64,10 +64,13 @@ import kotlin.coroutines.resumeWithException
 private const val PRIMARY_LANGUAGE = "zh"
 
 /** Max long-side dimension for the bitmap fed to HMS OCR.  Larger
- *  images get downscaled; smaller ones are sent as-is.  1920 px is
- *  HMS's recommended sweet spot — covers 1080p+ camera output
- *  comfortably while staying under HMS's internal limits. */
-private const val MAX_BITMAP_DIM = 1920
+ *  images get downscaled; smaller ones are sent as-is.  Bumped
+ *  1920→4096 on 2026-07-12 alongside the MAX_DIM=3200 shift:
+ *  round-1 OCR now reads the full 4096-px fullRes directly, so
+ *  [LOW] rate drops and the model has fewer reasons to zoom_in
+ *  just to verify OCR.  4096 is the cap on MAX_FULL_DIM and is
+ *  within HMS's reported working range. */
+private const val MAX_BITMAP_DIM = 4096
 
 private const val TAG = "AndroidOcrEngine"
 

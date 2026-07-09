@@ -82,14 +82,14 @@ fun ToolRegistry.registerDefaultTools() {
                 val h = input.optDouble("h", 0.0).toFloat().coerceAtLeast(0.05f)
                 val focus = input.optString("focus", "").ifBlank { "细节" }
                 // Default to "original" (crop the 4096-wide fullRes),
-                // not "last" (crop the 768-wide thumbnail).  With
-                // "last" as the default a 50% region on a 768 thumbnail
-                // gave the LLM a 384-wide crop — strictly less detail
-                // than round 1's view.  Defaulting to "original" makes
-                // zoom_in always a true magnifier: any region you ask
-                // for comes from the full-resolution original (capped
-                // at 1568 on output so the LLM still gets a single-
-                // resolution payload).
+                // not "last" (crop the 3200-wide round-1 thumbnail).
+                // With "last" as the default a 50% region on a 3200
+                // thumbnail would give the LLM a 1600-wide crop —
+                // strictly less detail than round 1's view.  Defaulting
+                // to "original" keeps zoom_in a real magnifier: any
+                // region you ask for comes from the full-resolution
+                // original (capped at CROP_OUTPUT_MAX_DIM=3200 on
+                // output, matching the round-1 thumbnail resolution).
                 val source = input.optString("source", "original")
                 val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
                 val crop = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 90)
