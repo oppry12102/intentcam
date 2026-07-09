@@ -60,12 +60,12 @@ object ImageOps {
     const val DEFAULT_CROP_QUALITY = 90
 
     /** Max-dim cap on the JPEG bytes produced by `cropJpegRegion`.
-     *  Matches Claude vision encoder's internal grid (1568), so crops
-     *  above this get downscaled by the model anyway — capping here
-     *  keeps the per-round payload bounded.  Also the lower bound on
-     *  "useful zoom": any crop output is ≥ this, so the LLM always
-     *  sees strictly more detail than the 768-px round-1 thumbnail
-     *  (when source="original", a 100% zoom is 1568 = 2× thumbnail
-     *  in each axis, 4× area). */
-    const val CROP_OUTPUT_MAX_DIM = 1568
+     *  3200 matches `MAX_DIM` (round-1 thumbnail) — the proven
+     *  2026-07-12 sweet spot.  Option D (4096/4096) was tested
+     *  and REVERTED — pushing the cap to model max caused
+     *  "attention-spread" regression (composite 0.902 → 0.885).
+     *  3200/3200 keeps zoom_in a real (or equal-resolution)
+     *  magnifier while staying in the model's focused-attention
+     *  band. */
+    const val CROP_OUTPUT_MAX_DIM = 3200
 }

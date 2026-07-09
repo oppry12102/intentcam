@@ -89,10 +89,10 @@ private fun jvmCropJpegRegion(
         val bot = ((y + h).coerceIn(0f, 1f) * fullH).toInt().coerceAtMost(fullH)
         if (right <= left || bot <= top) return null
         val cropped = src.getSubimage(left, top, right - left, bot - top)
-        // Cap at CROP_OUTPUT_MAX_DIM (1568, Claude vision encoder's
-        // internal grid max).  The previous 768 cap meant a zoom crop
-        // was lower-resolution than the LLM's first view of the
-        // original, defeating the purpose of zoom_in.
+        // Cap at CROP_OUTPUT_MAX_DIM (3200, matches MAX_DIM and the
+        // 2026-07-12 sweet spot).  Tested 4096 here, REVERTED —
+        // attention-spread regression.  3200 stays in the
+        // focused-attention band.
         val scale = ImageOps.CROP_OUTPUT_MAX_DIM.toFloat() / maxOf(cropped.width, cropped.height)
         val out = java.io.ByteArrayOutputStream()
         val finalImage = if (scale < 1f) {
@@ -209,14 +209,12 @@ internal fun parseArgs(args: Array<String>): EvalOpts {
     var gt = "profiling/ground_truth_rctw.json"
     var imgDir = "img/rctw"
     var limit = 20
-    // Defaults: --resize 1568 --quality 90.  Mirrors FrameAnalyzer.MAX_DIM.
-    // 1568 was tried on 2026-07-10 and regressed -0.050 in the no-OCR
-    // eval (LLM spreads attention over the larger image and reads
-    // dense text worse; zoom_in default="last" turned from "magnifier"
-    // into "downsample" because 50% of 1568 = 784 < 1568).  Both root
-    // causes mitigated 2026-07-10 round 2: real OCR hint + zoom_in
-    // default=original.  1568 also matches Claude vision's native grid.
-    var resize = 1568
+    // Defaults: --resize 3200 --quality 90.  Mirrors FrameAnalyzer.MAX_DIM.
+    // 2026-07-12 option C: 3200 is the sweet spot.  Tested
+    // 1568 (baseline 0.889) → 3200 (0.902 ⭐) → 4096 (0.885,
+    // REVERTED).  3200 mirrors prod and is the prod-mirror
+    // ceiling for this LLM.
+    var resize = 3200
     var quality = 90
     var jsonOut: String? = null
     // Phase 2a (2026-07-11): fast-iteration knob.  Default 0 =

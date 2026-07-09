@@ -408,14 +408,16 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "## 端云协同识别工作流（**这是核心，请严格按这个走**）\n" +
                     "\n" +
                     "### Step 1: round-1 — 读 OCR 全图扫描 + 看缩略图\n" +
-                    "你的 user message 里有一份 **【read_text 全图扫描结果】**——on-device OCR 扫过整张图，按行返回字符 + 4 点坐标 + 可信度（按 conf 降序，最多 30 行，[LOW] 标记 < 0.5）。\n" +
+                    "你的 user message 里有一份 **【read_text 全图扫描结果】**——on-device OCR 在 4096-px 全分辨率扫过整张图，按行返回字符 + 4 点坐标 + 可信度（按 conf 降序，最多 30 行，[LOW] 标记 < 0.5）。\n" +
                     "**这是 verbatim 字符基准**：OCR 给的字符直接 verbatim 引用到 emit_bubble.content 和 details[]，不要自己重新组织、意译、概括。\n" +
-                    "**这张缩略图是 1568-px 降采样版**（原图 4096-px），够看场景 / 颜色 / 整体布局，但密集文字 / 小字 / 模糊字在缩略图上会糊。\n" +
+                    "**这张缩略图是 3200-px 降采样版**（原图手机直出 8000+ 像素，cap 到 3200 给 LLM——2026-07-12 实测的 sweet spot），够看清大部分文字，但**密集小字 / 角落字 / 模糊字在缩略图上会糊**——遇到这种情况必须走 Step 2。\n" +
                     "\n" +
-                    "### Step 2: 识别 [LOW] / 漏扫区域 → 调 zoom_in\n" +
-                    "**关键 workflow**：OCR hint 里有两类行值得 zoom_in：\n" +
-                    "  - **[LOW] 行**（conf < 0.5）——OCR 不确定，**调 zoom_in(bbox, source='original') 重扫**。hint 里给出的 4 点 bbox 直接当 x/y/w/h。\n" +
-                    "  - **OCR 漏掉的区域**（hint 里没有，但你从图上看到有字）——按你看到的 bbox 调 zoom_in。\n" +
+                    "### Step 2: [LOW] / 漏扫 / 缩略图看不清 → 调 zoom_in（**不能跳过**）\n" +
+                    "3200-px 缩略图 + 4096-px OCR 是首选路径，**但以下情况必须调 zoom_in(bbox, source='original')**——**不要因为缩略图看着像就跳过这一步**：\n" +
+                    "  - **[LOW] 行**（conf < 0.5）——OCR 不确定，**必须**调 zoom_in 重扫。hint 给出的 4 点 bbox 直接当 x/y/w/h。**关键原则**：[LOW] 是 OCR 引擎告诉你它自己不确定，缩略图大概率也看不清——**这一类不能省**。\n" +
+                    "  - **OCR 漏扫**：hint 里完全没有，但你从图上看到有字——按你看到的 bbox 调 zoom_in。\n" +
+                    "  - **缩略图上有字但 OCR 没识别**：看着像但 OCR 没给字符的角落字 / 小字——按 bbox 调 zoom_in 重新跑 OCR。\n" +
+                    "**不要过度 zoom**：thumbnail + OCR 已经清晰读出来的部分不要为了「保险」再 zoom_in。\n" +
                     "\n" +
                     "### Step 3: zoom_in crop 自动附 OCR hint（**trust 这些字符**）\n" +
                     "每次 zoom_in 的裁剪结果都**自动附带一次高保真 OCR 重扫**（更高分辨率，比 round-1 同区域更可靠；top-10 行按 conf 降序，[LOW] < 0.5，**坐标是 crop frame 不是原图 frame**——要在 details[].bbox 里复用回原图坐标，offset 加回你传给 zoom_in 的 (x, y)）。\n" +
@@ -430,7 +432,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；x/y 是左上角，w/h 是宽高。" +
                     "source 默认 'original'（裁**原始照片**——坐标绝对，永远从 4096-px 原图裁，永远比 round-1 缩略图更清晰）。" +
                     "想看上一张 zoom_in 结果里更深层细节用 source='last'（链式，坐标相对）；想看原图另一区域保持 source='original'。\n" +
-                    "**为什么不默认 last**：round-1 缩略图是 1568-px 降采样版，从缩略图再裁只会得到比 round-1 还糊的图；zoom_in 的全部价值在于『放大看清原图细节』，所以从原图开始。\n" +
+                    "**为什么不默认 last**：round-1 缩略图是 3200-px 降采样版，从缩略图再裁只会得到 ≤3200-px 的输出，没有放大效果；zoom_in 的价值在于『从 4096-px 原图裁感兴趣的小区域』，让 LLM 把算力集中在更小区域看更细的图，所以从原图开始。\n" +
                     "\n" +
                     "## 工具 2: compare_text —— 端云 diff\n" +
                     "纯端侧 diff：**你**从图上读的字符 vs OCR hint 给的字符。结果告诉哪些行「同意 / OCR-only / 你-only / 冲突」。\n" +

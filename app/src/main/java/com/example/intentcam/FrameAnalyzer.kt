@@ -145,18 +145,18 @@ class FrameAnalyzer(
     }
 
     private companion object {
-        // Thumbnail (initial LLM image): 1568 px max-dim, q90.
-        // Bumped 768→1568 on 2026-07-10 (round 2) after the eval
-        // got real OCR hint + zoom_in=original + softened prompt
-        // (see [[eval-softened-prompt-2026-07-10]]).  The original
-        // 2026-07-10 1568 regression was a no-OCR eval, where
-        // (a) the LLM read dense text from vision and "spread
-        // attention" at 1568; (b) zoom_in=last cropped the 1568
-        // thumbnail (50% = 784 < 1568 = downsample).  Both
-        // mitigated now: OCR handles text, zoom_in=original crops
-        // 4096-wide fullRes directly.  1568 also matches Claude
-        // vision's native internal grid — no internal downsample.
-        const val MAX_DIM = 1568
+        // Thumbnail (initial LLM image): 3200 px max-dim, q90.
+        // 2026-07-12 (option C, shipped): 3200 is the ceiling.
+        // Tested 1568 (baseline 0.889) → 3200 (0.902 ⭐) → 4096
+        // (0.885, REVERTED).  The 4096 result confirmed the
+        // "attention-spread" failure pattern: pushing dimension
+        // to model max makes the model lose focus on text regions.
+        // 3200 is the sweet spot for this LLM's vision encoder.
+        //
+        // Token cost: 3200² ≈ 10.24M px (vs 4096² ≈ 16.78M,
+        // 1.64× less).  Round-1 thumbnail is sent every round, so
+        // 3200 stays under 16M px / round — well under the cap.
+        const val MAX_DIM = 3200
         const val QUALITY = 90
         // Full-res kept in memory for zoom_in crops (sibling views).
         // No downscale; the JPEG is at native phone-photo size
