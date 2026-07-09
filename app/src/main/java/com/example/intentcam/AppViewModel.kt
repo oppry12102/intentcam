@@ -183,7 +183,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun captureLatestFrame() {
         if (!analyzing.compareAndSet(false, true)) return
         captureArmed.set(true)
-        _state.value = _state.value.copy(analyzing = true, error = null)
+        enterAnalyzing()
         viewModelScope.launch {
             try {
                 // Wait for the analyzer to deliver the next frame, up to
@@ -221,19 +221,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * Flip the shared UI state into the "analyzing" mode.  Called from
+     * every entry point that kicks off recognition (shutter tap,
+     * text-input submit, internal cycle restart).  Centralized so the
+     * three call sites don't drift on which fields they set.
+     */
+    private fun enterAnalyzing() {
+        _state.value = _state.value.copy(analyzing = true, error = null)
+    }
+
+    /**
      * One-shot recognition cycle: delegates to [ToolUseLoop], which
      * drives a multi-round tool-use conversation with the model and
      * returns a final bubble (or a user-input placeholder).
      */
     private suspend fun runRecognitionCycle(frame: CapturedFrame) {
-        _state.value = _state.value.copy(analyzing = true, error = null)
+        // [captureLatestFrame] already flipped into analyzing mode; no
+        // re-set needed.  Keep the entry point as a separate function
+        // so submitUserInput can also reach runToolUseCycle without
+        // going through the shutter-button frame-wait.
         runToolUseCycle(frame, userText = "")
-
-        // Hint the GC to release the OkHttp / Bitmap buffers we just freed
-        // up.  Best-effort: on a low-RAM device this is the difference
-        // between "process reclaimed, ready for next tap" and "LMK kills us
-        // for hanging on to a dead ByteArray for another 5 minutes".
-        System.gc()
     }
 
     /** Multi-round tool-use path.  Emits a bubble, sets a placeholder,
@@ -297,6 +304,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(
             analyzing = true,
             userInputRequest = null,
+            error = null,
         )
         viewModelScope.launch {
             // Remove the placeholder so the new result doesn't show a

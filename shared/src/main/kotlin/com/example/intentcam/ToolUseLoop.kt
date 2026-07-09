@@ -321,6 +321,13 @@ class ToolUseLoop(
                             maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
                             isCropHint = true,
                         )
+                        log(
+                            "OCR_CROP",
+                            "blocks=${cropOcr.blocks.size} " +
+                                "topConf=${cropOcr.blocks.maxOfOrNull { it.confidence }?.let { "%.2f".format(it) } ?: "n/a"} " +
+                                "hintLines=${if (cropHint.isNotBlank()) cropHint.lines().count { it.startsWith("  line ") } else 0} " +
+                                "lowCount=${cropOcr.blocks.count { it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD }}"
+                        )
                         if (cropHint.isNotBlank()) cropHint
                         else "(已对该裁剪区域跑 OCR，未识别到文字——继续 zoom_in 钻更细或直接 emit)"
                     } else null
@@ -689,6 +696,13 @@ class ToolUseLoop(
                             cropOcr.blocks,
                             maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
                             isCropHint = true,
+                        )
+                        log(
+                            "OCR_CROP",
+                            "blocks=${cropOcr.blocks.size} " +
+                                "topConf=${cropOcr.blocks.maxOfOrNull { it.confidence }?.let { "%.2f".format(it) } ?: "n/a"} " +
+                                "hintLines=${if (cropHint.isNotBlank()) cropHint.lines().count { it.startsWith("  line ") } else 0} " +
+                                "lowCount=${cropOcr.blocks.count { it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD }}"
                         )
                         if (cropHint.isNotBlank()) cropHint
                         else "(已对该裁剪区域跑 OCR，未识别到文字——继续 zoom_in 钻更细或直接 emit)"
