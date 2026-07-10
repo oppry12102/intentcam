@@ -318,7 +318,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 pickScore = skipReconScore
                 pickedLabel = "emit_bubble"
             }
-            firstTool == "zoom_in" || firstTool == "compare_text" -> {
+            firstTool == "zoom_in" || firstTool == "compare_text" || firstTool == "extract_text" -> {
                 pickScore = 1.0
                 pickedLabel = firstTool
             }

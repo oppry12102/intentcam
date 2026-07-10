@@ -4,29 +4,32 @@
 > and at-a-glance summary live there; this file is the deep-dive.
 > See [CONFIG.md](CONFIG.md) for every tunable constant.
 
-## 1. The three-tool design (Phase 2, 2026-07-11)
+## 1. The four-tool design (v1.1, 2026-07-12)
 
-The previous design had 12 specialized tools
-(`default_describe`, `identify_product`, `navigate_to_block`, ...).
-It forced the LLM to *categorize* the image first, leading to wrong
-picks on anything it didn't recognize.  Phase 2 (2026-07-11) collapsed
-to **three tools** — `read_text` was retired because every `zoom_in`
-crop now auto-runs OCR (see §4.2):
+Phase 2 (2026-07-11) collapsed the previous 12-tool design to
+three.  v1.1 added a fourth: `extract_text` — a text-only sibling
+of `zoom_in` for cases where the model has already seen the region
+in the round-1 thumbnail and only wants verbatim characters.
 
 | Tool | What it does |
 |---|---|
-| `zoom_in` | crop a region of the (current) image at native resolution + auto-OCR |
+| `zoom_in` | crop a region at native resolution + auto-OCR + return image |
+| `extract_text` | crop a region + OCR, return ONLY text (no image) |
 | `compare_text` | pure on-device string diff (model reading vs OCR hint) |
 | `emit_bubble` | end the cycle with a structured answer |
 
-That's it.  The LLM looks at the image, calls `zoom_in` to clarify
-unclear details (and gets verbatim OCR text from each crop), and
-ends with `emit_bubble` when satisfied.
+**Routing rule (v1.1)**: Step 2 of the workflow now defaults to
+`extract_text` for [LOW] / 漏扫 / 已见区域 cases.  `zoom_in` is
+reserved for when the model needs to **see new pixels** (corner
+text not in the round-1 thumbnail, or shape/color/object details
+that the LLM needs to look at directly).  See §4.4 for why.
 
-`zoom_in` is the **default mode** — the system prompt says
-"无论图是否清楚，先调 1-2 次 zoom_in 看清楚细节" (whether
-or not the image is clear, first call 1-2 zoom_in to clarify
-details).
+`extract_text` was adopted by the model in **5-7 of 20 fixtures**
+(25-35%) in the v1.1 eval runs — typically cases where the model
+had already seen the region in the round-1 thumbnail and just
+needed a fresh high-fidelity OCR scan.  Composite @20 was
+statistically flat vs v1.0 (0.883 mean across 3 runs vs 0.887
+baseline, in the noise band).
 
 ```
 zoom_in(x, y, w, h, source, focus)
@@ -287,6 +290,55 @@ env vars are set.  The cloud backend mirrors HMS ML Kit semantics
 (text + 4-corner coords + confidence) and runs the same
 `formatHint` formatter, so eval and prod see the same hint shape.
 
+### 4.4 v1.1 (2026-07-12): `extract_text` and the routing rule
+
+Pre-v1.1 Step 2 of the workflow said "调 zoom_in" for any
+unclear region.  This was wasteful when the model had already
+seen the region in the round-1 thumbnail — it was paying
+~1 image-equivalent in tokens just to get a fresh OCR scan of
+text it had already localized.
+
+v1.1 splits Step 2 into two paths:
+
+- **`extract_text(x, y, w, h)`** — the default when:
+  - the region is `[LOW]` in the round-1 OCR hint (re-scan the
+    same bbox at fullRes, get the verbatim characters back)
+  - the region is `OCR-漏扫` but the model **already sees it**
+    in the round-1 thumbnail (just want verbatim chars)
+  - you want to fan-out: re-scan multiple regions in one round
+    without paying image-token cost for each
+- **`zoom_in(x, y, w, h, source)`** — required when:
+  - the region is **not in the round-1 thumbnail** at all
+    (corner text that was cropped off, or new details the
+    round-1 view didn't show)
+  - you need to see the image to understand non-text content
+    (color / shape / object identification)
+
+Implementation: `extract_text` reuses `cropJpegRegion` +
+`OcrEngine.recognize` (the same path `zoom_in` follow-ups take
+for auto-OCR), then formats the result with the same
+`formatHint(isCropHint=true)` shape.  The only difference vs
+`zoom_in`'s follow-up is that `extract_text` does NOT attach the
+cropped image to the next round's user message — only the
+formatted OCR text.  That single change is the whole value prop.
+
+**Adoption**: model picked `extract_text` in 5-7 of 20 fixtures
+(25-35%) in v1.1 eval runs, vs 0/20 in v1.0 (where the tool
+didn't exist).  The model self-routes correctly — it uses
+`extract_text` for character-only queries and `zoom_in` for
+"show me new pixels" queries, with no apparent confusion.
+
+**Composite @20**: v1.1 mean = 0.883 (3 runs: 0.880/0.862/0.908,
+std 0.023) vs v1.0 baseline 0.887.  In the noise band; no
+measurable regression.  v1.1 is a capability unlock, not a
+ceiling bump — the gain is structural (model has more routing
+options) rather than numerical.
+
+**Scorer fix**: EvalRunner's first-tool scorer was treating
+`extract_text` as the "other tool" fallback (pickScore 0.7).  Fixed
+in v1.1 — `extract_text` is now a valid recon tool (pickScore
+1.0), matching the production tool surface.
+
 ## 5. 1-only image strategy (since 2026-07-06)
 
 Round-1 ships **one** image — the 1568-px thumbnail.  No 4-quadrant
@@ -410,6 +462,7 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 | `capture timeout` | **`3000` ms** | `AppViewModel.kt:212` | v1.0: bumped 500→3000ms for cold-start + sensor-res encode |
 | `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
 | `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
+| `extract_text` (v1.1) | text-only OCR | `ToolImplementations.kt:210-330` | v1.1: new tool. Same crop path as `zoom_in` follow-up but no `followUpJpeg` — returns only OCR text. Model picks it for 25-30% of fixtures when the region is already visible in the round-1 thumbnail. |
 
 ## 10. Debug overlay
 
