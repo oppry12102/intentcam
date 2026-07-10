@@ -2,7 +2,7 @@ package com.example.intentcam
 
 /**
  * One captured frame, in two encodings (1-only image strategy):
- *  - [thumbnail] is sized for the LLM (768 max-dim, q90).  Sent as
+ *  - [thumbnail] is sized for the LLM (3200 max-dim, q90).  Sent as
  *    the round-1 image so the model can pick a tool + scan the scene.
  *  - [fullRes] is the original photo at high quality.  Stays in
  *    memory in case the model's `zoom_in` tool needs to crop a

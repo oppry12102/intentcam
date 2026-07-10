@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.BitmapRegionDecoder
 import android.graphics.Rect
+import android.util.Log
 import java.io.ByteArrayOutputStream
 
 /**
@@ -50,8 +51,7 @@ private fun androidCropJpegRegion(
         if (cropped == null) return null
         // Re-encode the crop at thumbnail sizing so the LLM gets a
         // single-resolution payload it can compare across rounds.
-        // Cap at CROP_OUTPUT_MAX_DIM (1568, Claude vision encoder's
-        // internal grid max) so a zoom crop isn't *less* detailed
+        // Cap at CROP_OUTPUT_MAX_DIM (3200, matching MAX_DIM) so a zoom crop isn't *less* detailed
         // than the LLM's first view of the original.  The prior
         // 768 cap threw away 50%+ linear pixels for any crop larger
         // than that, which is why the model "zoomed in" and then
@@ -67,7 +67,8 @@ private fun androidCropJpegRegion(
         val ok = finalBitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
         if (finalBitmap !== cropped) finalBitmap.recycle()
         if (ok) out.toByteArray() else null
-    } catch (_: Throwable) {
+    } catch (t: Throwable) {
+        Log.w("ImageOps", "crop failed (likely OOM/decode): ${t.javaClass.simpleName}: ${t.message}")
         null
     }
 }
@@ -107,7 +108,8 @@ private fun androidEncodeThumbnail(
         val ok = scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
         if (scaled !== bitmap) scaled.recycle()
         if (ok) out.toByteArray() else null
-    } catch (_: Throwable) {
+    } catch (t: Throwable) {
+        Log.w("ImageOps", "thumbnail encode failed (likely OOM/decode): ${t.javaClass.simpleName}: ${t.message}")
         null
     }
 }

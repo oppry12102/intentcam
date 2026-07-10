@@ -36,7 +36,7 @@ typealias ToolBody = suspend (ctx: ToolContext, input: JSONObject) -> ToolResult
  * one of these per recognition cycle and reuses it across all rounds.
  *
  * Three image fields, in increasing "zoom level":
- *  - [thumbnail] is the small JPEG (768 px max-dim, q80) sent to
+ *  - [thumbnail] is the small JPEG (3200 px max-dim, q90) sent to
  *    the LLM as the round-1 image.  Tools that want to talk to the
  *    LLM again (e.g. a hypothetical verify tool) would use this.
  *  - [jpeg] is the **current croppable** image.  For round 1 it's

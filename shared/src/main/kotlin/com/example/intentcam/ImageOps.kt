@@ -54,7 +54,7 @@ object ImageOps {
     /** Default quality for `cropJpegRegion` callers (zoom_in).
      *  Phase 2 (2026-07-11) removed `read_text` so this is now only
      *  used by zoom_in.  Bumped from 80 → 90 (2026-07-10): at q80,
-     *  small text glyphs in the crop start to smudge on the 1568-cap
+     *  small text glyphs in the crop start to smudge on the 3200-cap
      *  re-encode; q90 keeps the edge detail the LLM needs to read
      *  dense-text fixtures. */
     const val DEFAULT_CROP_QUALITY = 90

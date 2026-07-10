@@ -8,11 +8,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -310,11 +312,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 "full=${frame.fullRes.size / 1024}KB " +
                 "userText='${userText.take(40)}')"
         )
-        val outcome = toolUseLoop.runCycle(
-            thumbnail = frame.thumbnail,
-            fullRes = frame.fullRes,
-            userText = userText,
-        )
+        val outcome = withContext(Dispatchers.IO) {
+            toolUseLoop.runCycle(
+                thumbnail = frame.thumbnail,
+                fullRes = frame.fullRes,
+                userText = userText,
+            )
+        }
         when (outcome) {
             is ToolUseLoop.Outcome.Bubble -> {
                 val merged = (_state.value.bubbles + outcome.bubble).takeLast(UiState.BUBBLE_MAX)
