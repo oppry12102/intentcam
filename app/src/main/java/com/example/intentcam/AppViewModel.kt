@@ -95,6 +95,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     @Volatile private var latestFrame: CapturedFrame? = null
 
+    // Full-res crop source for the single in-flight needs-input placeholder.
+    // Kept out of the bubble history (bubbles carry only display thumbnails)
+    // so a 4-bubble history stays small; consumed on submitUserInput, cleared
+    // on cancel. See the Bubble.imageBytes doc and submitUserInput.
+    private var pendingFullRes: ByteArray? = null
+
     /**
      * Atomically check + disarm the camera analyzer.  Returns true on the
      * single frame that wins the CAS (the one we'll actually capture);
@@ -334,6 +340,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
             is ToolUseLoop.Outcome.PendingUserInput -> {
+                // The placeholder bubble only carries the display thumbnail
+                // (see Bubble.imageBytes). The full-res original — needed as
+                // the crop source if the resumed cycle calls zoom_in — is
+                // stashed here in a single transient field rather than in the
+                // bubble history. Invariant: at most one placeholder is
+                // pending at a time (analyzing lock + blocking text input),
+                // so a single field is sufficient.
+                pendingFullRes = frame.fullRes
                 val merged = (_state.value.bubbles + outcome.placeholder).takeLast(UiState.BUBBLE_MAX)
                 _state.value = _state.value.copy(
                     scene = outcome.request.prompt,
@@ -374,11 +388,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // index.
             val withoutPlaceholder = _state.value.bubbles.filterNot { it.id == placeholder.id }
             _state.value = _state.value.copy(bubbles = withoutPlaceholder)
-            // Reconstruct a CapturedFrame for the resume path.  The
-            // thumbnail is the same image bytes; the fullRes is also
-            // the same since the placeholder holds the original photo.
-            // zoom_in still works for the resumed cycle.
-            val frame = CapturedFrame(thumbnail = jpeg, fullRes = jpeg)
+            // Reconstruct a CapturedFrame for the resume path.  `jpeg` is
+            // the placeholder's display thumbnail; the full-res crop source
+            // comes from the stashed pendingFullRes (falls back to the
+            // thumbnail if — unexpectedly — it wasn't set, so resume still
+            // works, just cropping from the lower-res image).
+            val fullRes = pendingFullRes ?: jpeg
+            pendingFullRes = null
+            val frame = CapturedFrame(thumbnail = jpeg, fullRes = fullRes)
             runToolUseCycle(frame, userText = text)
         }
     }
@@ -386,6 +403,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** User cancelled the [UiState.userInputRequest].  Drops the
      *  placeholder bubble and returns to scanning. */
     fun cancelUserInput() {
+        pendingFullRes = null
         val placeholder = _state.value.bubbles.lastOrNull { it.needsUserInput }
         val request = _state.value.userInputRequest
         _state.value = _state.value.copy(

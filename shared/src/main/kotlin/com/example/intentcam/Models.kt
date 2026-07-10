@@ -34,9 +34,12 @@ data class Detail(
  *  - [intentFocus] : which area of the image informs the intent
  *  - [confidence] : 0.0..1.0
  *
- * [imageBytes] is the JPEG bytes returned by the camera at capture
- * time.  [needsUserInput] is true for placeholder bubbles parked
- * while the orchestrator waits for the user to type a follow-up.
+ * [imageBytes] is the **thumbnail** JPEG (display-only, ~3200 px).
+ * The full-res original is NOT held here — for the needs-input resume
+ * path the app keeps it in a transient AppViewModel field, not in the
+ * bubble history, so a 4-bubble history stays small.  [needsUserInput]
+ * is true for placeholder bubbles parked while the orchestrator waits
+ * for the user to type a follow-up.
  */
 data class Bubble(
     val id: String,

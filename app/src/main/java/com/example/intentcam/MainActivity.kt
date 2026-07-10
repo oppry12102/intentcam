@@ -2,6 +2,7 @@ package com.example.intentcam
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -419,10 +420,10 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
     }
     val thumbnail = remember(bubble.imageBytes) {
         // Decode on a worker thread; the result bitmap is cached for the
-        // composition's lifetime so re-emits are cheap.
-        runCatching {
-            BitmapFactory.decodeByteArray(bubble.imageBytes, 0, bubble.imageBytes.size)
-        }.getOrNull()
+        // composition's lifetime so re-emits are cheap.  Downscaled to a
+        // card-sized bitmap — no point decoding a 3200 px thumbnail full
+        // for a 56 dp preview.
+        decodeScaled(bubble.imageBytes, targetMaxDim = 400)
     }
     Surface(
         color = Color(0xE6161C2E),
@@ -516,6 +517,24 @@ private fun ToolChip(toolName: String) {
     }
 }
 
+/** Decode [bytes] downscaled so the long side is ≈ [targetMaxDim] px, via
+ *  a power-of-2 `inSampleSize`.  Avoids decoding a 3200 px thumbnail into a
+ *  full ~30 MB ARGB bitmap just to render it small (card) or Fit-scaled to a
+ *  ~1080 px screen (detail).  Returns null on empty/undecodable input. */
+private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
+    if (bytes.isEmpty()) return null
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    val longest = maxOf(bounds.outWidth, bounds.outHeight)
+    if (longest <= 0) return null
+    var sample = 1
+    while (longest / (sample * 2) >= targetMaxDim) sample *= 2
+    val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+    return runCatching {
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+    }.getOrNull()
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DetailScreen(
@@ -524,147 +543,142 @@ private fun DetailScreen(
     modifier: Modifier
 ) {
     val fullImage = remember(bubble.imageBytes) {
-        runCatching {
-            BitmapFactory.decodeByteArray(bubble.imageBytes, 0, bubble.imageBytes.size)
-        }.getOrNull()
+        // The bubble carries the ~3200 px display thumbnail; decode it
+        // downscaled to ~1600 px — plenty for a Fit view on a phone
+        // screen, and ~1/4 the ARGB footprint of a full decode.
+        decodeScaled(bubble.imageBytes, targetMaxDim = 1600)
     }
     val accent = when (bubble.type) {
         "location" -> Color(0xFF37D399)
         "solve" -> Color(0xFFFFAF54)
         else -> Color(0xFF4F8CFF)
     }
-    // [2026-07-12] redesign: image fills the upper area at full width
-    // (ContentScale.Fit preserves aspect ratio; black bars fill the
-    // gap), text/details live in a scrollable panel directly below,
-    // and the panel header is a tap-to-collapse toggle so the user
-    // can give the image back the full screen when needed.  The 退出
-    // button is sticky at the bottom so it's always reachable.
+    // [2026-07-13] fullscreen redesign: the image fills the entire screen
+    // (ContentScale.Fit, black letterbox) so the user can see it clearly
+    // and cross-check it against the results.  The result panel and the
+    // 退出 button float on top of the image as a bottom overlay.  The panel
+    // is a tap-to-collapse sheet — collapsed gives the image the whole
+    // screen; expanded shows the (scrollable, half-screen-capped,
+    // semi-transparent) content over the lower part of the image.
     var textExpanded by remember { mutableStateOf(true) }
     val textScroll = rememberScrollState()
-    Column(
+    Box(
         modifier
             .fillMaxSize()
             .background(Color(0xFF000000))
     ) {
-        // Image — takes all available vertical space; ContentScale.Fit
-        // shows the full original aspect ratio.  When the text panel
-        // collapses, the image gets back the room.
+        // Layer 1 — fullscreen image.  When bytes are missing (rare), the
+        // Box's black background stands in.
         if (fullImage != null) {
             Image(
                 bitmap = fullImage.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        // Layer 2 — bottom overlay: collapsible result sheet + sticky 退出.
+        Column(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            // Sheet header — always visible, tap to collapse/expand.
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.Black)
-            )
-        } else {
-            // Image bytes missing (rare — eval fixture, decode OOM):
-            // fall back to a black box so the layout still renders.
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.Black),
-            )
-        }
-        // Text panel header — always visible, tap to collapse/expand.
-        // Arrow icon flips to indicate current state (down = expanded
-        // text is below, up = collapsed text would appear below).
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF111828))
-                .clickable { textExpanded = !textExpanded }
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier
-                    .size(10.dp)
-                    .background(accent, RoundedCornerShape(5.dp))
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = bubble.title.ifBlank { "识别结果" },
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                "${(bubble.confidence * 100).toInt()}%",
-                color = accent,
-                style = MaterialTheme.typography.labelMedium,
-            )
-            Spacer(Modifier.width(8.dp))
-            Icon(
-                imageVector = if (textExpanded) {
-                    Icons.Filled.KeyboardArrowDown
-                } else {
-                    Icons.Filled.KeyboardArrowUp
-                },
-                contentDescription = if (textExpanded) "收起文字" else "展开文字",
-                tint = Color(0xFFB9C4DE),
-            )
-        }
-        // Scrollable text content — only when expanded.  Capped at
-        // weight 1f so it never pushes the 退出 button off-screen;
-        // long detail text or many rows scroll inside this region.
-        if (textExpanded) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF0E1320))
-                    .verticalScroll(textScroll)
+                    .background(Color(0xE6111828))
+                    .clickable { textExpanded = !textExpanded }
                     .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                bubble.toolName?.let { name ->
-                    ToolChip(toolName = name)
-                    Spacer(Modifier.height(8.dp))
-                }
-                if (bubble.detail.isNotBlank()) {
-                    Text(
-                        bubble.detail,
-                        color = Color(0xFFE7ECF7),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                if (bubble.needsUserInput) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "需要补充信息（点击下方退出后重拍画面）",
-                        color = Color(0xFFFFAF54),
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
-                if (bubble.details.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "图片细节",
-                        color = Color(0xFFB9C4DE),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    DetailsTable(bubble.details)
+                Box(
+                    Modifier
+                        .size(10.dp)
+                        .background(accent, RoundedCornerShape(5.dp))
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = bubble.title.ifBlank { "识别结果" },
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    "${(bubble.confidence * 100).toInt()}%",
+                    color = accent,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (textExpanded) {
+                        Icons.Filled.KeyboardArrowDown
+                    } else {
+                        Icons.Filled.KeyboardArrowUp
+                    },
+                    contentDescription = if (textExpanded) "收起文字" else "展开文字",
+                    tint = Color(0xFFB9C4DE),
+                )
+            }
+            // Expanded content — semi-transparent panel over the image,
+            // capped to half the screen and scrollable so the image top
+            // stays visible for cross-checking.
+            if (textExpanded) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.5f)
+                        .background(Color(0xE60E1320))
+                        .verticalScroll(textScroll)
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                ) {
+                    bubble.toolName?.let { name ->
+                        ToolChip(toolName = name)
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    if (bubble.detail.isNotBlank()) {
+                        Text(
+                            bubble.detail,
+                            color = Color(0xFFE7ECF7),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    if (bubble.needsUserInput) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "需要补充信息（点击下方退出后重拍画面）",
+                            color = Color(0xFFFFAF54),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                    if (bubble.details.isNotEmpty()) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "图片细节",
+                            color = Color(0xFFB9C4DE),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        DetailsTable(bubble.details)
+                    }
                 }
             }
-        }
-        // 退出 button — sticky at bottom, always visible.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF111828))
-                .navigationBarsPadding()
-                .padding(20.dp),
-        ) {
-            Button(
-                onClick = onRestart,
-                modifier = Modifier.fillMaxWidth(),
+            // 退出 button — sticky at the bottom, floating over the image.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xE6111828))
+                    .navigationBarsPadding()
+                    .padding(20.dp),
             ) {
-                Text("退出")
+                Button(
+                    onClick = onRestart,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("退出")
+                }
             }
         }
     }

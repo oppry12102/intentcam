@@ -214,7 +214,7 @@ class ToolUseLoop(
                             // this answer is incomplete; eval doesn't
                             // gate on confidence.
                             confidence = 0.4f,
-                            imageBytes = fullRes,
+                            imageBytes = thumbnail,
                             createdAtMs = System.currentTimeMillis(),
                             toolName = null,
                         ),
@@ -324,7 +324,7 @@ class ToolUseLoop(
                         toolName = def.name,
                         prompt = toolResult.userInputPrompt.ifBlank { "请补充信息" },
                         bubble = buildPlaceholder(
-                            jpeg = fullRes,
+                            jpeg = thumbnail,
                             toolName = def.name,
                             detail = toolResult.toolSummary,
                         ),
@@ -500,7 +500,7 @@ class ToolUseLoop(
                         title = tb.title.ifBlank { "未识别" },
                         detail = tb.detail,
                         confidence = tb.confidence,
-                        imageBytes = fullRes,
+                        imageBytes = thumbnail,
                         createdAtMs = System.currentTimeMillis(),
                         toolName = chosenToolName,
                         intentFocus = null,  // emit_bubble body doesn't carry it yet
@@ -537,7 +537,7 @@ class ToolUseLoop(
                 title = finalText.take(40).ifBlank { "未识别" },
                 detail = finalText.take(200).ifBlank { "（模型未给出内容描述）" },
                 confidence = 0.5f,
-                imageBytes = fullRes,
+                imageBytes = thumbnail,
                 createdAtMs = System.currentTimeMillis(),
                 toolName = chosenToolName,
             ),
