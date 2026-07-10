@@ -10,12 +10,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import android.hardware.camera2.CameraCharacteristics
+import android.util.Size
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -24,8 +32,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -250,7 +262,36 @@ private fun CameraPreview(viewModel: AppViewModel) {
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
-                val analysis = ImageAnalysis.Builder()
+                val targetSize = pickLargestAnalysisSize(
+                        provider = provider,
+                        selector = CameraSelector.DEFAULT_BACK_CAMERA,
+                    )
+                    val analysis = ImageAnalysis.Builder()
+                    // [2026-07-12] explicit ResolutionSelector.  CameraX
+                    // defaults to 640×480 (VGA) for ImageAnalysis when
+                    // none is set, so MAX_DIM=3200 and MAX_FULL_DIM=4096
+                    // in FrameAnalyzer were no-ops — encodeBitmap only
+                    // downscales (never upscales), and the LLM was
+                    // getting a 640×480 JPEG instead of the configured
+                    // 3200-wide thumbnail.  zoom_in crops were also
+                    // dying because 50% of 640 = 320 = a tiny "magnified"
+                    // image.  Query the back camera's actual supported
+                    // sizes and pick the largest 4:3 (falling back to
+                    // largest-by-area) so every device targets its real
+                    // sensor resolution instead of a hardcoded guess.
+                    .setResolutionSelector(
+                        ResolutionSelector.Builder()
+                            .setAspectRatioStrategy(
+                                AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
+                            )
+                            .setResolutionStrategy(
+                                ResolutionStrategy(
+                                    targetSize,
+                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                                )
+                            )
+                            .build()
+                    )
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build()
@@ -492,12 +533,22 @@ private fun DetailScreen(
         "solve" -> Color(0xFFFFAF54)
         else -> Color(0xFF4F8CFF)
     }
-    Box(
+    // [2026-07-12] redesign: image fills the upper area at full width
+    // (ContentScale.Fit preserves aspect ratio; black bars fill the
+    // gap), text/details live in a scrollable panel directly below,
+    // and the panel header is a tap-to-collapse toggle so the user
+    // can give the image back the full screen when needed.  The 退出
+    // button is sticky at the bottom so it's always reachable.
+    var textExpanded by remember { mutableStateOf(true) }
+    val textScroll = rememberScrollState()
+    Column(
         modifier
+            .fillMaxSize()
             .background(Color(0xFF000000))
     ) {
-        // Top half: image (fixed height).  ContentScale.Fit keeps
-        // aspect ratio; black bars on the sides for non-16:9.
+        // Image — takes all available vertical space; ContentScale.Fit
+        // shows the full original aspect ratio.  When the text panel
+        // collapses, the image gets back the room.
         if (fullImage != null) {
             Image(
                 bitmap = fullImage.asImageBitmap(),
@@ -505,79 +556,113 @@ private fun DetailScreen(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(360.dp)
-                    .align(Alignment.TopCenter)
+                    .weight(1f)
                     .background(Color.Black)
             )
+        } else {
+            // Image bytes missing (rare — eval fixture, decode OOM):
+            // fall back to a black box so the layout still renders.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(Color.Black),
+            )
         }
-        // Bottom half: header info + details table + 退出 button.
-        Column(
-            Modifier
-                .align(Alignment.BottomCenter)
+        // Text panel header — always visible, tap to collapse/expand.
+        // Arrow icon flips to indicate current state (down = expanded
+        // text is below, up = collapsed text would appear below).
+        Row(
+            modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xE6111828))
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .background(Color(0xFF111828))
+                .clickable { textExpanded = !textExpanded }
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .size(10.dp)
-                        .background(accent, RoundedCornerShape(5.dp))
-                )
-                Spacer(Modifier.width(10.dp))
-                if (bubble.title.isNotBlank()) {
+            Box(
+                Modifier
+                    .size(10.dp)
+                    .background(accent, RoundedCornerShape(5.dp))
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = bubble.title.ifBlank { "识别结果" },
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                "${(bubble.confidence * 100).toInt()}%",
+                color = accent,
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                imageVector = if (textExpanded) {
+                    Icons.Filled.KeyboardArrowDown
+                } else {
+                    Icons.Filled.KeyboardArrowUp
+                },
+                contentDescription = if (textExpanded) "收起文字" else "展开文字",
+                tint = Color(0xFFB9C4DE),
+            )
+        }
+        // Scrollable text content — only when expanded.  Capped at
+        // weight 1f so it never pushes the 退出 button off-screen;
+        // long detail text or many rows scroll inside this region.
+        if (textExpanded) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0E1320))
+                    .verticalScroll(textScroll)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+            ) {
+                bubble.toolName?.let { name ->
+                    ToolChip(toolName = name)
+                    Spacer(Modifier.height(8.dp))
+                }
+                if (bubble.detail.isNotBlank()) {
                     Text(
-                        bubble.title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        "${(bubble.confidence * 100).toInt()}%",
-                        color = accent,
-                        style = MaterialTheme.typography.labelMedium
+                        bubble.detail,
+                        color = Color(0xFFE7ECF7),
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
+                if (bubble.needsUserInput) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "需要补充信息（点击下方退出后重拍画面）",
+                        color = Color(0xFFFFAF54),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+                if (bubble.details.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "图片细节",
+                        color = Color(0xFFB9C4DE),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    DetailsTable(bubble.details)
+                }
             }
-            bubble.toolName?.let { name ->
-                Spacer(Modifier.height(4.dp))
-                ToolChip(toolName = name)
-            }
-            if (bubble.detail.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    bubble.detail,
-                    color = Color(0xFFE7ECF7),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-            if (bubble.needsUserInput) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "需要补充信息（点击下方退出后重拍画面）",
-                    color = Color(0xFFFFAF54),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-            // Details table — extracted from the image by the LLM.
-            if (bubble.details.isNotEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "图片细节",
-                    color = Color(0xFFB9C4DE),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(Modifier.height(4.dp))
-                DetailsTable(bubble.details)
-            }
-            // 退出 button — back to the recognition loop.
-            Spacer(Modifier.height(12.dp))
+        }
+        // 退出 button — sticky at bottom, always visible.
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF111828))
+                .navigationBarsPadding()
+                .padding(20.dp),
+        ) {
             Button(
                 onClick = onRestart,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("退出")
             }
@@ -772,4 +857,67 @@ private fun UserInputDialog(
             TextButton(onClick = onCancel) { Text("取消") }
         },
     )
+}
+
+/**
+ * Pick the largest size the given camera's sensor supports for
+ * ImageAnalysis.  Reads `StreamConfigurationMap.getOutputSizes(...)`
+ * via Camera2 interop so we target the *real* sensor size instead
+ * of a hardcoded guess (which would either waste resolution on
+ * a low-end device or crash the analyzer on a high-end one whose
+ * sensor is bigger than 4096 — e.g. Samsung's 50MP sensor outputs
+ * 8160×6120, Huawei P40 Pro 8192×6144).
+ *
+ * Strategy:
+ *  1. Prefer 4:3 sizes (matches the system prompt's "横屏/竖屏都按 4:3"
+ *     assumption and pairs cleanly with the user's framing).
+ *  2. Among 4:3 sizes, pick the one with the largest area.
+ *  3. If no 4:3 size is available, fall back to the overall
+ *     largest size (defensive — should never happen on a stock
+ *     Android camera).
+ *  4. If the camera2 query fails entirely (rare OEM bug), fall
+ *     back to 1920×1080 (a size every CameraX-supported device
+ *     exposes for ImageAnalysis).
+ *
+ * Pass the result into `ResolutionStrategy(size, ...)` so the
+ * selector targets an exact sensor size; combined with
+ * `FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER` we still degrade
+ * gracefully on devices where the exact size is unavailable.
+ */
+private fun pickLargestAnalysisSize(
+    provider: ProcessCameraProvider,
+    selector: CameraSelector,
+): Size {
+    // `selector.filter(List<CameraInfo>)` returns the sub-list that
+    // matches the selector; we then pick the first match.  No
+    // `first { predicate }` here because CameraSelector's filter
+    // is a list operation, not a predicate.
+    val backInfo: CameraInfo = try {
+        selector.filter(provider.availableCameraInfos).firstOrNull()
+    } catch (_: Throwable) {
+        null
+    } ?: return Size(1920, 1080)
+    val camera2Info = runCatching { Camera2CameraInfo.from(backInfo) }.getOrNull()
+        ?: return Size(1920, 1080)
+    val map = runCatching {
+        camera2Info.getCameraCharacteristic(
+            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+        )
+    }.getOrNull() ?: return Size(1920, 1080)
+    // ImageAnalysis accepts YUV_420_888 (default) and converts to
+    // RGBA_8888 internally; querying YUV gives the physical sensor
+    // sizes CameraX will deliver.
+    val sizes = runCatching {
+        map.getOutputSizes(android.graphics.ImageFormat.YUV_420_888)
+    }.getOrNull() ?: return Size(1920, 1080)
+    if (sizes.isEmpty()) return Size(1920, 1080)
+    val fourThirds = sizes.filter {
+        val ratio = it.width.toFloat() / it.height.toFloat()
+        // 4:3 = 1.333...  accept 1.30–1.36 to cover OEM rounding.
+        ratio in 1.30f..1.36f
+    }
+    val picked = fourThirds.maxByOrNull { it.width.toLong() * it.height }
+        ?: sizes.maxByOrNull { it.width.toLong() * it.height }
+        ?: Size(1920, 1080)
+    return picked
 }

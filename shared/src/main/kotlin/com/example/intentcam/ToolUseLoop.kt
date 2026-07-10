@@ -98,16 +98,34 @@ class ToolUseLoop(
         // Local copy because Kotlin can't smart-cast a var captured
         // by a changing closure (the onFailure lambda reassigns it).
         val ocrEx = ocrException
+        // ocr_hit = did OCR find ANY text in the frame?  Surfaced as
+        // the leading field on every branch so the user can grep it.
+        // Useful for sanity-checking the on-device pipeline: e.g.
+        // ocr_hit=false with fullRes at 87KB strongly suggests the
+        // ImageAnalysis buffer is too small for OCR to read anything
+        // (cf. [2026-07-12] ResolutionSelector fix).  Also dumps
+        // confidence stats (avg / min / max) so a partial-OCR run
+        // (most blocks skipped because confidence < threshold) is
+        // visible in the overlay instead of silently halving the
+        // hit count.
         val ocrStatus = when {
-            OcrEngine.impl == null -> "OCR 后端未安装（impl == null）"
-            ocrEx != null -> "OCR 异常（见 OCR_ERR 行）：${ocrEx.javaClass.simpleName}: " +
+            OcrEngine.impl == null -> "ocr_hit=false 后端未安装（impl == null）"
+            ocrEx != null -> "ocr_hit=false 异常（见 OCR_ERR 行）：${ocrEx.javaClass.simpleName}: " +
                 (ocrEx.message?.take(80) ?: "?")
-            ocrResult.blocks.isEmpty() -> "OCR 跑了但 0 块识别到（图上无文字 / 模型未下完）"
+            ocrResult.blocks.isEmpty() -> "ocr_hit=false 0 块（图上无文字 / 模型未下完）"
             else -> {
                 val lowCount = ocrResult.blocks.count {
                     it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD
                 }
-                "OCR ${ocrResult.blocks.size} 行（${lowCount} [LOW]），" +
+                val avgConf = ocrResult.blocks
+                    .map { it.confidence }
+                    .average()
+                val minConf = ocrResult.blocks.minOf { it.confidence }
+                val maxConf = ocrResult.blocks.maxOf { it.confidence }
+                "ocr_hit=true ${ocrResult.blocks.size} 行（${lowCount} [LOW]），" +
+                    "conf avg=${"%.2f".format(avgConf)} " +
+                    "min=${"%.2f".format(minConf)} " +
+                    "max=${"%.2f".format(maxConf)}，" +
                     "hint ${ocrHint.length} 字符"
             }
         }
@@ -441,16 +459,34 @@ class ToolUseLoop(
         // exception (init failure), or was never installed (impl
         // == null — e.g. non-Huawei device).
         val ocrEx = ocrException
+        // ocr_hit = did OCR find ANY text in the frame?  Surfaced as
+        // the leading field on every branch so the user can grep it.
+        // Useful for sanity-checking the on-device pipeline: e.g.
+        // ocr_hit=false with fullRes at 87KB strongly suggests the
+        // ImageAnalysis buffer is too small for OCR to read anything
+        // (cf. [2026-07-12] ResolutionSelector fix).  Also dumps
+        // confidence stats (avg / min / max) so a partial-OCR run
+        // (most blocks skipped because confidence < threshold) is
+        // visible in the overlay instead of silently halving the
+        // hit count.
         val ocrStatus = when {
-            OcrEngine.impl == null -> "OCR 后端未安装（impl == null）"
-            ocrEx != null -> "OCR 异常（见 OCR_ERR 行）：${ocrEx.javaClass.simpleName}: " +
+            OcrEngine.impl == null -> "ocr_hit=false 后端未安装（impl == null）"
+            ocrEx != null -> "ocr_hit=false 异常（见 OCR_ERR 行）：${ocrEx.javaClass.simpleName}: " +
                 (ocrEx.message?.take(80) ?: "?")
-            ocrResult.blocks.isEmpty() -> "OCR 跑了但 0 块识别到（图上无文字 / 模型未下完）"
+            ocrResult.blocks.isEmpty() -> "ocr_hit=false 0 块（图上无文字 / 模型未下完）"
             else -> {
                 val lowCount = ocrResult.blocks.count {
                     it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD
                 }
-                "OCR ${ocrResult.blocks.size} 行（${lowCount} [LOW]），" +
+                val avgConf = ocrResult.blocks
+                    .map { it.confidence }
+                    .average()
+                val minConf = ocrResult.blocks.minOf { it.confidence }
+                val maxConf = ocrResult.blocks.maxOf { it.confidence }
+                "ocr_hit=true ${ocrResult.blocks.size} 行（${lowCount} [LOW]），" +
+                    "conf avg=${"%.2f".format(avgConf)} " +
+                    "min=${"%.2f".format(minConf)} " +
+                    "max=${"%.2f".format(maxConf)}，" +
                     "hint ${ocrHint.length} 字符"
             }
         }

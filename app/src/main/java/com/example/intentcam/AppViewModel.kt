@@ -1,9 +1,12 @@
 package com.example.intentcam
 
 import android.app.Application
+import android.graphics.BitmapFactory
 import android.os.SystemClock
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +37,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    /** [2026-07-12] CameraX provider future, kicked off at construction
+     *  time so the service connection is established in parallel with
+     *  permission grant and UI render.  Consumed by the AndroidView
+     *  factory in MainActivity which calls `.get()` on it — by then
+     *  the future is usually already done.
+     *
+     *  `ProcessCameraProvider.getInstance()` is idempotent (returns the
+     *  same singleton future for the same process), so calling it
+     *  again from the AndroidView factory is safe — both listeners
+     *  fire when the underlying service is connected. */
+    private val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+        ProcessCameraProvider.getInstance(app).also { future ->
+            val start = SystemClock.elapsedRealtime()
+            future.addListener({
+                val ready = SystemClock.elapsedRealtime() - start
+                logDebug("CAM", "provider ready after ${ready}ms (cold start)")
+            }, java.util.concurrent.Executor { it.run() })
+        }
+
+    /** Bus flag for "a recognition cycle is currently running".  Read by
+     *  the camera analyzer's `isBusy()` callback and the shutter button. */
+    private val analyzing = AtomicBoolean(false)
+
     init {
         // Restore the persisted debug-overlay preference.  Defer the state
         // write to viewModelScope so it never happens during the first
@@ -42,13 +68,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.value = _state.value.copy(debugEnabled = settings.loadDebugEnabled())
         }
+        // Pre-warming handled at the property-declaration site
+        // above; nothing else to do in init.
     }
 
     val config: LlmConfig get() = client.config
-
-    /** Bus flag for "a recognition cycle is currently running".  Read by
-     *  the camera analyzer's `isBusy()` callback and the shutter button. */
-    private val analyzing = AtomicBoolean(false)
 
     /**
      * Gate for the camera analyzer.  Default false: the analyzer runs its
@@ -158,6 +182,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * Read a JPEG's pixel dimensions without decoding the bitmap.
+     * `inJustDecodeBounds=true` only parses the SOF marker so this
+     * is allocation-free — useful in the CAP log to verify that the
+     * ImageAnalysis source actually came in at the configured
+     * resolution (vs CameraX's 640×480 default).  Returns
+     * "WxH" or "?" on a malformed JPEG.
+     */
+    private fun jpegBounds(jpeg: ByteArray): String {
+        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, opts)
+        val w = opts.outWidth
+        val h = opts.outHeight
+        return if (w > 0 && h > 0) "${w}x${h}" else "?"
+    }
+
+    /**
      * Called by the camera analyzer each time it produces a fresh
      * frame.  Carries two encodings: a thumbnail (for LLM initial
      * image) and a full-resolution copy (kept in memory for tools
@@ -186,27 +226,45 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         enterAnalyzing()
         viewModelScope.launch {
             try {
-                // Wait for the analyzer to deliver the next frame, up to
-                // 500 ms.  The CAS in [tryArmCapture] ensures only one
-                // frame is captured regardless of how many are queued.
-                val deadline = SystemClock.elapsedRealtime() + 500L
+                // Wait for the analyzer to deliver the next frame.
+                // [2026-07-12] raised 500ms→3000ms.  Two reasons:
+                //  1. Cold start: CameraX bindToLifecycle takes
+                //     200-800ms on first launch; `analyze()` doesn't
+                //     fire at all until binding completes, so the
+                //     first shutter tap after `onPermissionsGranted`
+                //     would always hit 500ms and fail.  Second tap
+                //     worked because binding finished in between.
+                //  2. Larger encodes: ResolutionSelector now targets
+                //     sensor max (~4032×3024).  JPEG q95 on the
+                //     full-res bitmap takes ~200-400ms on its own,
+                //     so even with the camera warm we burn ~300ms
+                //     before the first analyze() returns.  500ms
+                //     was tight for 640×480; it's racy for sensor max.
+                // 3s is enough for both: covers cold bind + encode
+                // overhead, with no impact on the warm path (typical
+                // wait is 50-80ms so we exit the loop early).
+                val deadline = SystemClock.elapsedRealtime() + 3000L
+                val t0 = SystemClock.elapsedRealtime()
                 while (latestFrame == null &&
                     _state.value.phase == Phase.SCANNING &&
                     SystemClock.elapsedRealtime() < deadline
                 ) {
                     delay(20L)
                 }
+                val waitedMs = SystemClock.elapsedRealtime() - t0
                 captureArmed.set(false)
                 val frame = latestFrame
                 latestFrame = null
                 if (frame == null) {
-                    logDebug("CAP", "500ms 内没拿到帧")
+                    logDebug("CAP", "3000ms 内没拿到帧（等了 ${waitedMs}ms）")
                     return@launch
                 }
                 logDebug(
                     "CAP",
-                    "用户触发 thumb=${frame.thumbnail.size / 1024}KB " +
-                        "full=${frame.fullRes.size / 1024}KB"
+                    "用户触发 waited=${waitedMs}ms " +
+                        "thumb=${frame.thumbnail.size / 1024}KB " +
+                        "full=${frame.fullRes.size / 1024}KB " +
+                        "src=${jpegBounds(frame.fullRes)}"
                 )
                 runRecognitionCycle(frame)
             } catch (e: Throwable) {
