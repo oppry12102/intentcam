@@ -133,12 +133,52 @@ next user message).
 
 `FrameAnalyzer` produces two encodings per capture:
 
-- `thumbnail` (1568 px max-dim, q90) — sent to the LLM as the
+- `thumbnail` (3200 px max-dim, q90) — sent to the LLM as the
   round-1 image.  Balances bandwidth against recognition accuracy.
-- `fullRes` (2048 px max-dim, q95) — kept in memory so `zoom_in`
-  can crop from it.  Counter-intuitive win (2026-07-10): smaller
-  than 4096-px makes zoom_in *more* effective because crops are
-  more focused, less context dilution.
+- `fullRes` (4096 px max-dim, q95) — kept in memory so `zoom_in`
+  can crop from it.
+
+### 3.1 Camera buffer sizing (v1.0 critical)
+
+The `ImageAnalysis` use case must be configured with an explicit
+`ResolutionSelector` — **otherwise CameraX defaults to 640×480 VGA**.
+This was the silent bug fixed in v1.0: even with `MAX_DIM=3200`
+and `MAX_FULL_DIM=4096` configured correctly, the `FrameAnalyzer`
+was receiving 640×480 frames because nothing told CameraX to
+deliver larger buffers.  `encodeBitmap` only downscales (never
+upscales), so both JPEGs came out at 640×480 — meaning the LLM
+saw a thumbnail smaller than a typical website favicon, and
+`zoom_in` crops were *downsampling*, not magnifying.
+
+Fix: `pickLargestAnalysisSize()` queries the back camera's
+`StreamConfigurationMap.getOutputSizes(YUV_420_888)` via
+`Camera2CameraInfo`, picks the largest 4:3 (fall back to
+largest-by-area), passes to `ResolutionStrategy(size,
+FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)`.  Works on every
+CameraX-supported device without hardcoding a number that would
+crash analyzers on 50MP sensors or waste resolution on 5MP ones.
+
+### 3.2 Cold start (v1.0 critical)
+
+On first launch, the user grants permission → `CameraScreen`
+composes → `AndroidView` factory runs → `ProcessCameraProvider`
+init + `bindToLifecycle` happen.  This sequence takes 200-800ms
+on real devices; the analyzer receives its first frame *after*
+binding completes, so any shutter tap within that window hits
+the timeout.
+
+Fix: kick off `ProcessCameraProvider.getInstance(app)` at
+`AppViewModel` construction (i.e. during `onCreate`).  The
+provider service connection is then established in parallel
+with permission grant and UI render.  By the time the user
+taps shutter, the provider is usually already ready and
+`bindToLifecycle` completes in ~150ms.
+
+Verified via `CAM` debug log line: `provider ready after Xms
+(cold start)` — typically 50-150ms by the time the user reacts.
+Capture timeout was also raised 500ms → 3000ms (see §9).
+
+### 3.3 Capture flow
 
 There is **no stability gate** — the user controls when to capture
 via a shutter tap, not "wait for scene to settle".
@@ -148,6 +188,7 @@ User taps shutter:
   captureLatestFrame()
     armed = true  (CAS — FrameAnalyzer's next frame is captured)
     state.analyzing = true
+    viewModelScope.launch { wait for frame, up to 3000ms }
 
 FrameAnalyzer.analyze() next frame:
   if !isArmed → return  (common case — user just looking)
@@ -156,8 +197,8 @@ FrameAnalyzer.analyze() next frame:
   armed = false  (only one frame captured per tap)
 
 AppViewModel captures:
-  if latestFrame == null → wait up to 500 ms
-  runRecognitionCycle(frame)
+  if latestFrame == null → log "[CAP] 3000ms 内没拿到帧（等了 Xms）"
+  else → runRecognitionCycle(frame)
     toolUseLoop.runCycle(thumb, full, "")
 ```
 
@@ -352,19 +393,21 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 
 | Knob | Value | Where | Purpose |
 |---|---|---|---|
-| `MAX_DIM` (thumbnail) | `1568` | `FrameAnalyzer.kt` | max-dim cap for the LLM-facing image |
-| `QUALITY` (thumbnail) | `90` | `FrameAnalyzer.kt` | JPEG quality for the LLM-facing image |
-| `MAX_FULL_DIM` | `2048` | `FrameAnalyzer.kt` | cap for the in-memory full-res JPEG |
-| `FULL_QUALITY` | `95` | `FrameAnalyzer.kt` | JPEG quality for the in-memory full-res JPEG |
-| `CROP_OUTPUT_MAX_DIM` | `1568` | `ImageOps.kt` | max-dim cap on `zoom_in` crops (Phase 2: read_text removed) |
-| `DEFAULT_CROP_QUALITY` | `90` | `ImageOps.kt` | JPEG quality for crops |
-| `MAX_OCR_HINT_LINES` | `30` | `OcrEngine.kt` | top-N OCR blocks injected into round-1 user message |
-| `LOW_CONFIDENCE_THRESHOLD` | `0.5` | `OcrEngine.kt` | OCR conf < 0.5 → mark `[LOW]` in hint |
+| `MAX_DIM` (thumbnail) | `3200` | `FrameAnalyzer.kt:159` | max-dim cap for the LLM-facing image |
+| `QUALITY` (thumbnail) | `90` | `FrameAnalyzer.kt:160` | JPEG quality for the LLM-facing image |
+| `MAX_FULL_DIM` | `4096` | `FrameAnalyzer.kt:176` | cap for the in-memory full-res JPEG |
+| `FULL_QUALITY` | `95` | `FrameAnalyzer.kt:177` | JPEG quality for the in-memory full-res JPEG |
+| `CROP_OUTPUT_MAX_DIM` | `3200` | `ImageOps.kt:70` | max-dim cap on `zoom_in` crops |
+| `DEFAULT_CROP_QUALITY` | `90` | `ImageOps.kt:60` | JPEG quality for crops |
+| `ResolutionSelector` | sensor max 4:3 | `MainActivity.kt:253-292` | v1.0: tells CameraX to deliver full sensor res to ImageAnalysis (was 640×480 default) |
+| `camera pre-warm` | viewmodel init | `AppViewModel.kt:50-57` | v1.0: kicks off `ProcessCameraProvider.getInstance()` during `onCreate` |
+| `MAX_OCR_HINT_LINES` | `30` | `OcrEngine.kt:92` | top-N OCR blocks injected into round-1 user message |
+| `LOW_CONFIDENCE_THRESHOLD` | `0.5` | `OcrEngine.kt:89` | OCR conf < 0.5 → mark `[LOW]` in hint |
 | `MAX_ROUNDS` | `30` | `ToolUseLoop.kt` | soft cap; 兜底 Bubble on hit |
-| `TOTAL_TIMEOUT_MS` | `60_000` | `LlmClient.kt` | per-round SSE timeout |
-| `MAX_TOKENS` | `1024` | `LlmClient.kt` | output token cap per round |
-| `REQUEST_TEMPERATURE` | `0.0` | `LlmClient.kt` | locked at 0 for deterministic routing |
-| `capture timeout` | `500` ms | `AppViewModel.captureLatestFrame` | how long to wait for the analyzer's next frame |
+| `TOTAL_TIMEOUT_MS` | `90_000` | `LlmClient.kt:358` | per-round SSE timeout |
+| `MAX_TOKENS` | `2048` | `LlmClient.kt:342` | output token cap per round |
+| `REQUEST_TEMPERATURE` | `0.0` | `LlmClient.kt:336` | locked at 0 for deterministic routing |
+| `capture timeout` | **`3000` ms** | `AppViewModel.kt:212` | v1.0: bumped 500→3000ms for cold-start + sensor-res encode |
 | `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
 | `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
 
@@ -458,7 +501,44 @@ dataset's XML labels.
 | r1/r2 weights 0.50/0.50→0.40/0.60 | -0.069 | Pure rebalance; r1 near-ceiling; user chose headline tracking |
 | Phase 1: auto-OCR wiring only, no workflow prompt | -0.17 r2_text_fuzzy | "Free information paradox" — auto-attached OCR treated as low-confidence vs requested OCR.  Reverted.  Phase 2a fixed by adding 4-step workflow narrative. |
 
-## 13. TODOs
+## 13. DetailScreen (v1.0 UX overhaul)
+
+Pre-v1.0: image was capped at `height(360.dp)` at the top with
+the text/details in a translucent panel glued to the bottom —
+text overflowed off-screen on long bubbles and there was no
+way to see more image at the expense of text.
+
+v1.0 layout:
+
+```
+┌─────────────────────────────┐
+│                             │
+│       原图 (fit)            │  ← weight(1f), fills remaining space
+│                             │     ContentScale.Fit, black bars
+│                             │
+├─────────────────────────────┤
+│ ● 标题            99%  ▾   │  ← header, tap to collapse/expand
+├─────────────────────────────┤
+│ 工具芯片                     │
+│ 识别详情文字...              │  ← scrollable (verticalScroll)
+│ [图片细节]                   │     long text/rows scroll here
+│ kind label value •          │     退出 button never pushed off-screen
+├─────────────────────────────┤
+│      [ 退  出 ]             │  ← sticky bottom
+└─────────────────────────────┘
+```
+
+- Image: `fillMaxWidth().weight(1f)` + `ContentScale.Fit`.  When
+  text is collapsed, image gets back almost full screen.
+- Text header: always visible.  Tap row to toggle
+  `textExpanded: Boolean` state.  Arrow icon flips between
+  `▾` (expanded) / `▴` (collapsed).
+- Scrollable text body: `verticalScroll(rememberScrollState())`.
+  Long bubbles + many detail rows scroll inside this region;
+  退出 button stays anchored.
+- 退出 button: `navigationBarsPadding()`, always at bottom.
+
+## 14. TODOs
 
 - Release signing config + `isMinifyEnabled = true` (currently debug-only)
 - Plumb `ANTHROPIC_AUTH_TOKEN` env var into the default token at
@@ -466,8 +546,13 @@ dataset's XML labels.
   Settings entry
 - CI: run `profiling/eval_*` on every commit; flag regressions
   > 0.05 in average composite
-- r2_text: lift the r2_text ceiling (currently 0.74 strict, 0.63
-  fuzzy).  The model is at the limit of the 1568-px thumb + OCR
-  hint; next experiments should explore higher resolution crops,
-  text-region detection, or a tool that returns structured text
-  per region.
+- r2_text: lift the r2_text ceiling.  Current prod-mirror ceiling
+  is **0.903 @100**; with v1.0's on-device sensor resolution
+  finally matching the eval's 3200-px input, next experiments
+  should target the text-heavy fixtures where r2_text_fuzzy still
+  lags (≤0.74 strict).  Promising: text-region detection,
+  per-region structured-text tool, or a higher `CROP_OUTPUT_MAX_DIM`.
+- On-device eval verification: now that the device finally delivers
+  sensor-res frames, install v1.0 and run a 20-fixture manual
+  smoke test on a real photo set — confirm the eval @0.903 ceiling
+  is reproducible in hand (not just `:shared:eval`).

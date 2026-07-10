@@ -4,12 +4,11 @@
 > pipeline.  When you change a value, update the table + run an
 > eval to confirm.
 
-**Last reviewed:** 2026-07-12 (post union-scoring @100 verification;
-new prod-mirror ceiling @100 = **0.903**, +0.012 vs prior
-0.891).  Union-scoring r2_text makes content + details pool
-together for text/detail hit rate — fixes the "details-full
-content-empty" scoring floor.  All architectural changes
-landed; CONFIG is stable for the next round of experiments.
+**Last reviewed:** 2026-07-12 v1.0.0 release (cold-start camera
+fix + DetailScreen UX overhaul + debug-log enhancements).
+On-device pipeline now actually delivers full sensor-resolution
+frames (was silently 640×480 — see §A.6).  Architecture stable;
+next round of experiments will be on prompt + tool routing.
 
 **Baseline chain:** 0.820 (over-hedged @20) → 0.838 (softened
 prompt @20) → 0.841 (1568 + nudge @20) → 0.853 (1568 + nudge
@@ -35,6 +34,8 @@ Kotlin `:shared:eval`; the deltas are architectural, not noise.
 | `CROP_OUTPUT_MAX_DIM` | **3200** | `shared/.../ImageOps.kt:70` | Max-dim cap on `cropJpegRegion` output (zoom_in) | **2026-07-12 option C ship: 1568→3200** to match `MAX_DIM`. A 50% region on 4096-px source is 2048-px output, a 100% zoom is 3200-px output — both ≥ the round-1 thumbnail's effective area, so zoom_in is still a magnifier (or at minimum equal-resolution focused on less content). **Option D (4096) tested and REVERTED** — same attention-spread issue. |
 | `DEFAULT_CROP_QUALITY` | 90 | `shared/.../ImageOps.kt:60` | Zoom crop output quality | q90 keeps edge detail for small text; q80 smudged at 1568-cap re-encode (note: at 3200-cap the q80 smear is even worse — keep q90) |
 | Region min w/h | 0.05f | `shared/.../ToolImplementations.kt:81,82` | Min crop region (normalized) | Below 5% the crop has too little info to be useful |
+| ImageAnalysis `ResolutionSelector` | **sensor max 4:3, dynamic** | `app/.../MainActivity.kt:253-292` (call site), `pickLargestAnalysisSize()` `MainActivity.kt:830-880` | Size of the `ImageProxy` buffer CameraX delivers to `FrameAnalyzer.analyze()` | **v1.0 critical fix.** Without an explicit `ResolutionSelector`, CameraX defaults to **640×480 VGA** for `ImageAnalysis` — meaning `MAX_DIM=3200` and `MAX_FULL_DIM=4096` in FrameAnalyzer were no-ops (encodeBitmap only downscales, never upscales). The LLM was receiving a 640×480 JPEG; zoom_in crops from this source were dying (50% of 640 = 320 = a "magnified" image that's smaller than round-1 thumbnail). Now: query the back camera's `StreamConfigurationMap.getOutputSizes(YUV_420_888)` via `Camera2CameraInfo`, pick the largest 4:3 (fall back to largest-by-area), pass to `ResolutionStrategy(size, FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)`. Works on every Android device that CameraX supports. |
+| `ProcessCameraProvider` pre-warm | viewmodel init | `app/.../AppViewModel.kt:50-57` | Kick off `ProcessCameraProvider.getInstance(app)` at viewmodel construction | **v1.0 critical fix.** Previously called only inside the AndroidView factory (which runs AFTER permission grant + recomposition), so the first shutter tap raced `getInstance` (100-300ms) + `bindToLifecycle` (100-300ms) + first `analyze()` call (33ms+). At 500ms timeout, first tap always failed. Now: pre-warm in viewmodel.init runs during `onCreate`, so by the time the user grants permission and taps shutter, the provider service connection is already established. Verified via `CAM` log line "provider ready after Xms" — typically 50-150ms by the time the user reacts. |
 
 ## B. OCR pipeline
 
@@ -65,7 +66,7 @@ Kotlin `:shared:eval`; the deltas are architectural, not noise.
 | `DEBUG_LOG_MAX` | 40 | `shared/.../Models.kt:82` | Debug log cap | Reasonable debug history |
 | `DEFAULT_TOKEN` | "REPLACE_AT_RUNTIME" | `shared/.../Models.kt:135` | Token placeholder at build time | Real builds need runtime Settings entry or env-var injection (TODO) |
 | `DEFAULT_MODEL` | "MiniMax-M3" | `shared/.../Models.kt:136` | LLM model name | Sandbox default per env; user-overridable in Settings |
-| capture timeout | 500 ms | `app/.../AppViewModel.kt:192` | How long to wait for the analyzer's next frame | Shutter tap → 500 ms window; "[CAP] 500ms 内没拿到帧" if missed |
+| capture timeout | **3000 ms** | `app/.../AppViewModel.kt:212-220` | How long to wait for the analyzer's next frame | **v1.0 bumped 500ms→3000ms.** Two reasons: (1) Cold start: even with pre-warming (see A.6), CameraX `bindToLifecycle` on first launch takes 200-800ms — `analyze()` doesn't fire at all until binding completes, so first shutter tap needs >500ms headroom. (2) Larger encodes: `MAX_FULL_DIM=4096` JPEG q95 takes ~200-400ms on its own. 3s covers both, with no impact on warm path (typical wait 50-80ms). The CAP log line shows the actual `waited=` value so cold vs warm is visible at a glance. |
 
 ## D. Tool behavior
 
@@ -152,6 +153,8 @@ memory `eval-phase2a-autoocr-2026-07-11.md` and
 
 | Constant | Was at | Removed | Why |
 |---|---|---|---|
+| capture timeout = **500 ms** | `app/.../AppViewModel.kt` | **v1.0 (2026-07-12)** | Insufficient for cold camera start + 4096-px JPEG encode. Bumped to 3000ms; see A.7 above. |
+| Hardcoded `Size(4096, 4096)` ResolutionSelector | `app/.../MainActivity.kt` | **v1.0 (2026-07-12)** | User flagged: should query actual camera max instead of hardcoding. Now `pickLargestAnalysisSize(provider, selector)` reads `StreamConfigurationMap.getOutputSizes(YUV_420_888)` and picks the largest 4:3. |
 | `read_text` tool | `shared/.../ToolImplementations.kt:230-332` | 2026-07-11 (Phase 2) | Auto-OCR on every zoom_in crop covers both [LOW] verification and missed-region re-scan. System prompt now lists 3 tools: zoom_in, compare_text, emit_bubble. See [[eval-phase2a-autoocr-2026-07-11]]. |
 | `MAX_OCR_HINT_CHARS = 1500` | `shared/.../ToolUseLoop.kt:828` | 2026-07-08 | Replaced by `MAX_OCR_HINT_LINES`; pure dead code |
 | `CROP_OUTPUT_MAX_DIM` (magic 1568) | inline in 2 files | 2026-07-10 | Was duplicated; extracted |
