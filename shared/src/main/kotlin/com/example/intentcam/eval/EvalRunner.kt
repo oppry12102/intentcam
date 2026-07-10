@@ -401,28 +401,32 @@ internal class EvalRunner(private val config: EvalConfig) {
         if (denom == 0) textScore = 1.0
 
         // Type match — three-way partial credit instead of binary:
-        //   - right bucket        → 1.0
-        //   - valid type, wrong   → 0.5  (model picked a real {info,
-        //     bucket                       location, solve} but the
-        //                                  fixture GT is hardcoded
-        //                                  "info" — common on signs
-        //                                  and storefronts where the
-        //                                  user might be "reading" the
-        //                                  sign *or* "finding this
-        //                                  place".  Without this, type
-        //                                  was a single-metric veto on
-        //                                  store/restaurant scenes.)
-        //   - empty / unknown     → 0.0
+        //   - right bucket                          → 1.0
+        //   - info ↔ location (interchangeable)     → 1.0  (v1.3, 2026-07-10)
+        //   - any valid type but solve mismatch    → 0.5
+        //   - empty / unknown                       → 0.0
+        //
+        // Why info ↔ location is full credit: signs / storefronts / 商户
+        // 招牌 (e.g. "大懒人冒菜", "FJ儿童业态") are BOTH "read the
+        // sign" (info) AND "find this place" (location).  Previously the
+        // partial-credit floor held 6/20 fixtures at composite 0.82 in
+        // v12c even with 100% keyword match (composite capped because
+        // r2_type = 0.5 floored r2 = 0.625, then 0.5 × r1 + 0.5 × 0.625
+        // ≈ 0.82).  Promoting to 1.0 unblocks those; solve stays
+        // partial because "solve this problem" is a different intent
+        // class from "read what's here".
         //
         // 9/100 fixtures in 2026-07-07 1-only @100 v2 regressed solely
         // because the model picked a non-info type for fixtures the GT
         // locks at "info", dropping composite by 0.25 each.  The
-        // partial credit restores ~0.13/composite on those without
-        // inflating true matches.
+        // partial credit (now full for info↔location) restores that
+        // without inflating true matches.
         val expectedType = scene.optString("expected_type", "info")
         val typeScore = when {
             type == expectedType -> 1.0
             type.isNullOrBlank() -> 0.0
+            type in setOf("info", "location") &&
+                expectedType in setOf("info", "location") -> 1.0
             type in setOf("info", "location", "solve") -> 0.5
             else -> 0.0
         }

@@ -353,7 +353,12 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  the composite cost is < -0.015 which is already inside the
          *  per-eval variance.  A real fix is "retry on stop=max_tokens
          *  with 'summarize short' nudge", tracked separately. */
-        const val MAX_TOKENS = 2048
+        // 2026-07-10 RETEST under Phase 2 (auto-OCR verbatim + retry-once
+        // + MAX_DIM=3200 + MAX_FULL_DIM=4096).  v1.2c @20 baseline 0.9078.
+        // Pre-Phase-2 3072 was rejected @20 (-0.016 / -0.023 attention-spread
+        // on rctw_04/14/20).  Hypothesis: OCR-verbatim details[] disables
+        // the failure mode.  Ship threshold ≥0.91; revert if <0.90.
+        const val MAX_TOKENS = 3072
 
         /** Lock at 0 to keep intent classification deterministic. */
         const val REQUEST_TEMPERATURE = 0.0

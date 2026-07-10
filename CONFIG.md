@@ -4,17 +4,21 @@
 > pipeline.  When you change a value, update the table + run an
 > eval to confirm.
 
-**Last reviewed:** 2026-07-12 v1.1.0 release (added `extract_text`
-tool + Step 2 routing rule + scorer fix; reverted 4×4 grid).
-On-device architecture stable; tool-routing experiment didn't
-move @20 composite (0.883 mean vs 0.887 baseline, in noise
-band) but unlocked a new capability the model adopted 25-30%
-of the time.  Next round: r2_text ceiling (still ~0.74 strict).
+**Last reviewed:** 2026-07-10 v1.3 ship (A2 scorer fix: `info ↔ location`
+promoted to full credit, lifts 6/20 floored fixtures +0.12 each
+composite 0.9078 → **0.9391 @20**; B+C2 prompt experiment rejected
+@20 -0.007 net, fixture 14 regression traced to extra prompt
+jargon confusing model on bilingual fixture).  v1.1.0 (2026-07-12)
+added `extract_text` + Step 2 routing; v1.0 critical fix set
+sensor-max 4:3 ImageAnalysis + 3s capture timeout + 4096/3200/4096
+image pipeline.  On-device architecture stable; tool-routing
+experiment in noise band but unlocked 25-30% extraction adoption.
+Next round: r2_text ceiling (~0.74 strict, but A2 closed the type
+floor — only true text-miss fixtures remain).
 
 **Baseline chain:** 0.820 → 0.838 → 0.841 → 0.853 → 0.868 →
-0.887 (unionscore @20) → 0.902 (option C @20) → **0.903 (@100
-unionscore, current prod-mirror ceiling)** → 0.883 (v1.1 @20
-mean, 3 runs 0.880/0.862/0.908 — flat in noise vs 0.887).
+0.887 (unionscore @20) → 0.902 (option C @20) → 0.903 (@100
+unionscore) → **0.939 (v1.3 @20, A2 scorer + MAX_TOKENS 3072)**.
 
 **Baseline chain:** 0.820 (over-hedged @20) → 0.838 (softened
 prompt @20) → 0.841 (1568 + nudge @20) → 0.853 (1568 + nudge
@@ -23,9 +27,10 @@ prompt @20) → 0.841 (1568 + nudge @20) → 0.853 (1568 + nudge
 `read_text` retired @100) → 0.889 (@20, 4096 + `MAX_TOKENS 1024→2048`;
 empty-bubble fix) → 0.902 (@20, 3200+4096 strict Step 2) →
 0.891 (@100, 3200+4096 strict Step 2, separate r2_text) →
-**0.903 (@100, 3200+4096 strict Step 2 + union r2_text;
-current prod-mirror ceiling)**.  All run on the same OCR-enabled
-Kotlin `:shared:eval`; the deltas are architectural, not noise.
+0.903 (@100, 3200+4096 strict Step 2 + union r2_text) →
+**0.939 (@20, v1.3: A2 scorer `info↔location=1.0` + MAX_TOKENS 3072;
+9W/4L/7T)**.  All run on the same OCR-enabled Kotlin
+`:shared:eval`; the deltas are architectural, not noise.
 
 ---
 
@@ -47,10 +52,10 @@ Kotlin `:shared:eval`; the deltas are architectural, not noise.
 
 | Constant | Value | File:line | What it controls | Why this value |
 |---|---|---|---|---|
-| `MAX_OCR_HINT_LINES` | 30 | `shared/.../OcrEngine.kt:92` | Top-N OCR blocks injected into round-1 user message | Keeps prompt bounded (~2 KB); "details: 5-8" leaves headroom. Tested 20 (2026-07-10 round 2): regressed r2_text_fuzzy -0.042, reverted |
-| `MAX_CROP_OCR_HINT_LINES` | 10 | `shared/.../OcrEngine.kt:103` | Top-N OCR blocks per zoom_in crop hint | **Phase 2 (2026-07-11)**. Crops are smaller regions; 10 lines covers the dense case without blowing the multi-zoom token budget (3 zooms × ~1 KB = 3 KB vs 3 × ~2 KB at 30) |
-| `LOW_CONFIDENCE_THRESHOLD` | 0.5 | `shared/.../OcrEngine.kt:81` | conf<0.5 → mark `[LOW]` in hint | Standard; below 0.5 OCR often misreads |
-| `MAX_BITMAP_DIM` | **4096** | `app/.../AndroidOcrEngine.kt:70` | Decoded bitmap cap for HMS ML Kit OCR | **2026-07-12 shift: 1920→4096** alongside MAX_DIM=3200. Round-1 OCR now reads the full 4096-px fullRes directly, so [LOW] rate drops and the model has fewer reasons to zoom_in just to verify OCR. Within HMS's reported working range. |
+| `MAX_OCR_HINT_LINES` | 30 | `shared/.../OcrEngine.kt:100` | Top-N OCR blocks injected into round-1 user message | Keeps prompt bounded (~2 KB); "details: 5-8" leaves headroom. Tested 20 (2026-07-10 round 2): regressed r2_text_fuzzy -0.042, reverted |
+| `MAX_CROP_OCR_HINT_LINES` | 10 | `shared/.../OcrEngine.kt:111` | Top-N OCR blocks per zoom_in crop hint | **Phase 2 (2026-07-11)**. Crops are smaller regions; 10 lines covers the dense case without blowing the multi-zoom token budget (3 zooms × ~1 KB = 3 KB vs 3 × ~2 KB at 30) |
+| `LOW_CONFIDENCE_THRESHOLD` | 0.5 | `shared/.../OcrEngine.kt:89` | conf<0.5 → mark `[LOW]` in hint | Standard; below 0.5 OCR often misreads |
+| `MAX_BITMAP_DIM` | **4096** | `app/.../AndroidOcrEngine.kt:73` | Decoded bitmap cap for HMS ML Kit OCR | **2026-07-12 shift: 1920→4096** alongside MAX_DIM=3200. Round-1 OCR now reads the full 4096-px fullRes directly, so [LOW] rate drops and the model has fewer reasons to zoom_in just to verify OCR. Within HMS's reported working range. |
 | `PRIMARY_LANGUAGE` | "zh" | `app/.../AndroidOcrEngine.kt:64` | HMS ML Kit OCR language | Current test set is RCTW (Chinese) |
 | OCR endpoint | cn-north-4 | `profiling/ocr_huaweicloud.py:84` | Huawei Cloud OCR region | Fixed by user's project region. The Kotlin side `JvmHuaweiCloudOcrEngine` (line 59) shells out to this Python helper. |
 | `detect_direction` | true | `profiling/ocr_huaweicloud_runner.py:44` (imports OcrRegion) | Rotation detection | Phone photos can be sideways; true is the right default |
@@ -61,13 +66,13 @@ Kotlin `:shared:eval`; the deltas are architectural, not noise.
 
 | Constant | Value | File:line | What it controls | Why this value |
 |---|---|---|---|---|
-| `MAX_TOKENS` | 2048 | `shared/.../LlmClient.kt:342` | Output cap per round | Bumped 1024→2048 on 2026-07-12. Same fix pattern as 256→1024 (2026-07-07): under Phase 2 (richer round-1 OCR + auto crop OCR + per-row details[] with bbox), 5-10 detail rows + thinking text exceeded 1024 BPE, `stop_reason=max_tokens` cut emit_bubble JSON mid-`details[]` → empty content. With `MAX_FULL_DIM=4096` (more OCR chars), emit grew further. 2048 covers worst case with headroom. Watch for new `max_tokens` stops — if any fixture shows them, next bump is 3072. |
-| `REQUEST_TEMPERATURE` | 0.0 | `shared/.../LlmClient.kt:336` | Sampling temperature | Lock at 0 for deterministic intent classification |
-| `TOTAL_TIMEOUT_MS` | 90_000 | `shared/.../LlmClient.kt:358` | Per-round LLM timeout | Bumped 60s→90s on 2026-07-12. 60s was right for `MAX_TOKENS=1024` (~38s worst case); with `MAX_TOKENS=2048`, worst-case read on overload approaches 73s. 90s covers that with margin. |
+| `MAX_TOKENS` | 3072 | `shared/.../LlmClient.kt:361` | Output cap per round | **3072 on 2026-07-10 per user decision.** Architecture vs prior 3072 test (2026-07-10 reject @20: 0.879, -0.023 attention-spread on rctw_04/14/20) differs: Phase 2 auto-OCR + retry-once + MAX_DIM=3200 + union r2_text scoring. **Cap-removal retest at 3072 confirmed the failure mode persists with cap removed** (no_cap @20 = 0.871, -0.037; rctw_12/19/20 -0.27 to -0.30 individual regressions), so cap stays at "5-8 行" (see §D). With cap, 3072 vs 2048 @20 = 0.906 vs 0.9078 = -0.002 (in noise). 3072 kept per user; if 2048 re-measured diverges more than noise, revisit. |
+| `REQUEST_TEMPERATURE` | 0.0 | `shared/.../LlmClient.kt:364` | Sampling temperature | Lock at 0 for deterministic intent classification |
+| `TOTAL_TIMEOUT_MS` | 90_000 | `shared/.../LlmClient.kt:377` | Per-round LLM timeout | Bumped 60s→90s on 2026-07-12. 60s was right for `MAX_TOKENS=1024` (~38s worst case); with `MAX_TOKENS=2048`, worst-case read on overload approaches 73s. 90s covers that with margin. **Under MAX_TOKENS=3072 + cap-restored, observed 0/20 timeouts in today's @20 run** (typical emit ~500 tokens well under cap); keep 90s. Re-derive if cap is relaxed. |
 | `connectTimeout` | 15s | `shared/.../LlmClient.kt:41` | HTTP connect | Standard |
 | `writeTimeout` | 30s | `shared/.../LlmClient.kt:43` | HTTP write | Standard |
 | `readTimeout` / `callTimeout` | 0 (infinite) | `shared/.../LlmClient.kt:42,44` | HTTP read/call | SSE streaming requires infinite; real hangs caught by `TOTAL_TIMEOUT_MS` |
-| `MAX_ROUNDS` | 30 | `shared/.../ToolUseLoop.kt:874` | Per-cycle iteration cap | Allows iterative drill-down; most fixtures converge in 5-10. Tested 15 (2026-07-10): at least one fixture hit cap, 兜底 empty → -0.257 single fixture. Reverted. |
+| `MAX_ROUNDS` | 30 | `shared/.../ToolUseLoop.kt:986` | Per-cycle iteration cap | Allows iterative drill-down; most fixtures converge in 5-10. Tested 15 (2026-07-10): at least one fixture hit cap, 兜底 empty → -0.257 single fixture. Reverted. |
 | `BUBBLE_MAX` | 4 | `shared/.../Models.kt:80` | Bubbles kept in UI | Reasonable history depth |
 | `DEBUG_LOG_MAX` | 40 | `shared/.../Models.kt:82` | Debug log cap | Reasonable debug history |
 | `DEFAULT_TOKEN` | "REPLACE_AT_RUNTIME" | `shared/.../Models.kt:135` | Token placeholder at build time | Real builds need runtime Settings entry or env-var injection (TODO) |
@@ -84,33 +89,33 @@ Kotlin `:shared:eval`; the deltas are architectural, not noise.
 | `extract_text` routing rule | "default for [LOW]" | `shared/.../LlmClient.kt:431-441` (Step 2 paragraph) | **v1.1 (2026-07-12)**. Step 2 of the workflow now defaults to `extract_text` for [LOW] / 漏扫 / 已见区域 cases, with `zoom_in` reserved for "need to see new pixels" (corner text not in thumbnail, non-text content). Without this routing rule the model picked `extract_text` 0% of the time (v1.1 first attempt). |
 | compare_text cache | round-1 OCR only | `shared/.../ToolImplementations.kt:179` (passes `ctx.ocrCache`) | diff scope | Crop OCR is not in `ocrCache`; only round-1 result. If model needs crop-level diff, future extension (out of scope). |
 | Region w/h minimum | 0.05f | (see A. above) | Same as crop min | Same |
-| details cap (prompt) | "5-8 行" | `shared/.../LlmClient.kt:439` | Hint to model on details array size | Prevents over-long answers; 8 covers most scenes |
+| details cap (prompt) | "5-8 行" | `shared/.../LlmClient.kt:501` | Hint to model on details array size | Prevents over-long answers; 8 covers most scenes. **2026-07-10 retest of cap-removed: rejected at @20 = 0.871 (-0.037 attention-spread)**; cap restoration required. |
 | `cropOcrCap` | 0 (unlimited) | `shared/.../ToolUseLoop.kt:409,418` | Per-cycle cap on followUpJpeg OCRs | **Phase 2 (2026-07-11)**. Fast-iter knob: 0 = unlimited (prod), 1 = round-1 + first crop only (~2-min/20-fixture pace). Set via `--crop-ocr-cap N` eval arg. |
 
 ## E. Eval scoring + CLI
 
 | Constant | Value | File:line | What it controls | Why this value |
 |---|---|---|---|---|
-| `--resize` | **3200** | `shared/.../eval/EvalMain.kt:219` | eval thumbnail dim (mirrors `MAX_DIM`) | **2026-07-12 option C ship: 1568→3200.** 1:1 mirror of prod. **Option D (4096) tested and REVERTED.** |
-| `--quality` | 90 | `shared/.../eval/EvalMain.kt:220` | eval thumbnail quality (mirrors `QUALITY`) | 1:1 mirror of prod |
-| `--limit` | 20 | `shared/.../eval/EvalMain.kt:199` | Default fixtures per run | Per user rule 2026-07-08: 20 for iteration, `--limit 0` for conclusive |
-| `--crop-ocr-cap` | 0 | `shared/.../eval/EvalMain.kt:213` | Max followUpJpeg OCRs per cycle | **Phase 2 (2026-07-11)**. Default 0=unlimited; N>0 caps crop OCR for fast iter |
-| `--debug-fixtures` | (none) | `shared/.../eval/EvalMain.kt` (2026-07-12) | Comma-separated fixture ids whose ToolUseLoop logs forward to stderr | **2026-07-12**. Diagnostic mode: orchestrator hot-loop stays silent for the rest, named fixtures print full debug trace. Use during targeted reruns on regressions. |
-| `--fixtures` | (none) | `shared/.../eval/EvalMain.kt` (2026-07-12) | Comma-separated fixture ids to run, in GT order | **2026-07-12**. Restricts the run to a curated id set — iterate on a small subset without rebuilding the whole 20- or 100-fixture run. Useful alongside `--debug-fixtures`. |
-| `skipReconScore` | 0.85 (text fixtures), 1.0 (no-text) | `shared/.../eval/EvalRunner.kt:275` | r1 score when model skips recon | Bumped 0.5→0.85 in endcloud era (2026-07-08); OCR hint makes skip-recon legitimate |
-| `CHAR_OVERLAP_THRESHOLD` | 0.67 | `shared/.../eval/EvalRunner.kt:240` | Fuzzy-match char-overlap fallback | Mirrors Python aligned4; below 0.67 = no hit |
+| `--resize` | **3200** | `shared/.../eval/EvalMain.kt:232` | eval thumbnail dim (mirrors `MAX_DIM`) | **2026-07-12 option C ship: 1568→3200.** 1:1 mirror of prod. **Option D (4096) tested and REVERTED.** |
+| `--quality` | 90 | `shared/.../eval/EvalMain.kt:233` | eval thumbnail quality (mirrors `QUALITY`) | 1:1 mirror of prod |
+| `--limit` | 20 | `shared/.../eval/EvalMain.kt:231` | Default fixtures per run | Per user rule 2026-07-08: 20 for iteration, `--limit 0` for conclusive |
+| `--crop-ocr-cap` | 0 | `shared/.../eval/EvalMain.kt:235` | Max followUpJpeg OCRs per cycle | **Phase 2 (2026-07-11)**. Default 0=unlimited; N>0 caps crop OCR for fast iter |
+| `--debug-fixtures` | (none) | `shared/.../eval/EvalMain.kt:236` (2026-07-12) | Comma-separated fixture ids whose ToolUseLoop logs forward to stderr | **2026-07-12**. Diagnostic mode: orchestrator hot-loop stays silent for the rest, named fixtures print full debug trace. Use during targeted reruns on regressions. |
+| `--fixtures` | (none) | `shared/.../eval/EvalMain.kt:239` (2026-07-12) | Comma-separated fixture ids to run, in GT order | **2026-07-12**. Restricts the run to a curated id set — iterate on a small subset without rebuilding the whole 20- or 100-fixture run. Useful alongside `--debug-fixtures`. |
+| `skipReconScore` | 0.85 (text fixtures), 1.0 (no-text) | `shared/.../eval/EvalRunner.kt:305` | r1 score when model skips recon | Bumped 0.5→0.85 in endcloud era (2026-07-08); OCR hint makes skip-recon legitimate |
+| `CHAR_OVERLAP_THRESHOLD` | 0.67 | `shared/.../eval/EvalRunner.kt:270` | Fuzzy-match char-overlap fallback | Mirrors Python aligned4; below 0.67 = no hit |
 | **r2_text haystack (union)** | **content + " " + all details values** | `shared/.../eval/EvalRunner.kt:350-355` | Both textScore (GT keywords) and detailScore (GT detail values) match against the UNION of content + details | **2026-07-12 ship: union-scoring r2_text.** Old: textScore checked content alone, detailScore checked details alone, average → empty content floored r2_text even when details had the verbatim text. Union makes both checks pool content+details, so a hit anywhere in the model output registers. @100: composite 0.891 → 0.903 (+0.012, re-score predicted +0.019), empty 7/100 → 2/100. |
 | r1/r2 composite weights | 0.50 / 0.50 | `shared/.../eval/EvalRunner.kt:103` | Composite formula | 2026-07-10 round 3: tested 0.40/0.60 — dropped headline 0.898→0.829 (-0.069) because r1=0.96 (near-ceiling) got less weight. Pure score rebalance, not behavior change. User reverted 2026-07-10: headline tracking > honest r2 surfacing. |
 | r2 text/type weights | 0.50 / 0.50 | `shared/.../eval/EvalRunner.kt:421` | r2 internal split | Same |
-| type three-way partial | 1.0 / 0.5 / 0.0 | `shared/.../eval/EvalRunner.kt:413-419` | Type score (right / valid-wrong / empty) | 2026-07-07 fix; 0.5 saves the 9/100 store/restaurant fixtures where model picked valid-but-not-GT-locked "info" |
+| type scoring (v1.3) | right / **`info↔location=1.0`** / solve-mismatch=0.5 / empty=0.0 | `shared/.../eval/EvalRunner.kt:413-433` | Type match with three buckets: exact, info↔location interchangeable, solve stays partial | **v1.3 (2026-07-10)**: signs / storefronts / 商户招牌 (e.g. "大懒人冒菜", "FJ儿童业态") are BOTH "read the sign" (info) AND "find this place" (location).  Previous 0.5 floor held 6/20 fixtures at composite 0.82 in v12c even with 100% keyword match.  Promoting to 1.0 unblocked those → composite 0.9078 → **0.9391 @20** (+0.031, 9W/4L/7T).  solve stays partial because "solve this problem" is a different intent class. |
 | text hybrid scoring | fuzzy ∪ char-overlap≥0.67 | `shared/.../eval/EvalRunner.kt:520-531` | Per-keyword match strategy | Catches "建国路 100号" vs "建国路100号" splits the strict scorer misses |
 
 ## F. System prompt behavior knobs (qualitative)
 
 These are paragraph-level behaviors in `TOOL_USE_SYSTEM`
-(`shared/.../LlmClient.kt:395-460`), not numeric constants.  The
+(`shared/.../LlmClient.kt:428-510`), not numeric constants.  The
 prompt is a 4-step **workflow narrative** (Step 1 → 4, lines
-400-415) + tool descriptions + content/details/anti-hallucination
+433-453) + tool descriptions + content/details/anti-hallucination
 guidance.  Each is a tradeoff:
 
 | Behavior | Current guidance | Why | Risk of changing |
@@ -120,7 +125,7 @@ guidance.  Each is a tradeoff:
 | Workflow narrative | Step 1 (read OCR) → Step 2 ([LOW]→zoom_in) → Step 3 (trust crop OCR) → Step 4 (emit_bubble) | **Phase 2 (2026-07-11)**. The load-bearing piece. Without the explicit "trust crop OCR" Step 3, auto-attached OCR was treated as low-confidence (Phase 1 attempt rejected, r2_text_fuzzy -0.17). | If Step 3 wording weakens, model hedges crop OCR. |
 | Crop-frame bbox caveat | "zoom crop hint 的 bbox 是 crop frame — 要在 details[].bbox 里复用，offset 加回传给 zoom_in 的 (x, y)" | Crop bboxes are normalized in the crop's [0,1], not the original photo's | If model skips the offset, details table can't highlight the row in original frame |
 | Anti-hallucination | "OCR 字符 verbatim 引用，但绝不发明" + '?' placeholder for hand-written/unreadable | User-safety: wrong text > no text > fabricated text | Same |
-| details cap | "5-8 行" for scenes with >8 text regions | Bounds answer length under 1024-token cap | Loose guidance; model often emits 1-3 details instead of 8 |
+| details cap | "5-8 行" for scenes with >8 text regions | Bounds answer length under 3072-token cap | Loose guidance; model often emits 1-3 details instead of 8; cap-removal test (2026-07-10) regressed @20 -0.037 attention-spread |
 | Confidence tagging | OCR `[LOW]` lines still emitted verbatim, marked in details | User sees "OCR 不太确定" rather than nothing | If dropped, user can't tell uncertain text from missing text |
 | Multi-round drill-down | Nudge "你已经 zoom_in N 次；如果内容已清楚必须 emit_bubble" | Bounds cycles; prevents runaway loops | Too aggressive = premature emit; too lax = wasted LLM calls |
 | Never skip emit_bubble | "**绝对不要**...跳过 emit_bubble / 减少 details 行数 / 发空 content" | Phase 2 re-emphasizes — the workflow narrative + trust-first language still saw ~5-10% empty emits; the hard "never" guard counters it | If removed, empty emits climb |
@@ -174,6 +179,8 @@ memory `eval-phase2a-autoocr-2026-07-11.md` and
 | `quadrants` param on `runCycle` | `shared/.../ToolUseLoop.kt:375` | gone | Same |
 | `--quadrants` eval flag | `shared/.../eval/EvalMain.kt:217` | gone | Same |
 | `EvalOpts.quadrants` + `EvalConfig.quadrants` | `shared/.../eval/EvalMain.kt:190,247` | gone | Same |
+| details-cap removal (prompt: "details 不设上限") | `LlmClient.kt:501` | 2026-07-10 EOD (rejected) | Per user "3072不变，完全删除cap" test @20 = 0.871 (-0.037 attention-spread). Cap MUST stay at "5-8 行"; one real win (rctw_15 +0.17, a dense menu fixture) lost in 11 net regressions. See [[eval-maxt3072-2026-07-10]]. Single-fixture wins were the lure; aggregate regression is the truth. |
+| v1.3 prompt experiment: "[LOW] 优先级 > 5-8 cap" + "竖排中文阅读顺序" sections (B+C2) | `LlmClient.kt:501` (added then reverted) | **2026-07-10 (rejected, B+C2 reverted)** | Bundled test @20 = 0.9324 (vs A2 alone = 0.9391, -0.007).  Fixture 14 (bilingual parking sign) regressed 0.99 → 0.75 with 0 details + English content — extra prompt jargon confused the model on bilingual fixtures.  The pure-scorer A2 alone (info↔location=1.0) is cleaner: same lift on the 6 floored fixtures, no LLM-side risk.  B+C2 reverted; A2 shipped as v1.3.  See [[eval-v13-prompt-rejected-2026-07-10]]. |
 
 ## To-try-next (priority order, with rejection notes)
 
