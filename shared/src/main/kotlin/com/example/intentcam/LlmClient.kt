@@ -414,10 +414,14 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  Phase 2 (2026-07-11): read_text tool removed.  Auto-OCR
          *  on every zoom crop covers both [LOW] verification and
          *  missed-region re-scan, so read_text is redundant.
-         *  Tooling: zoom_in, compare_text, emit_bubble.
+         *  v1.1 (2026-07-12): extract_text added.  Sibling of
+         *  zoom_in — same region input, but returns ONLY OCR text
+         *  (no image).  Use when you've already seen the region in
+         *  round-1 and just want verbatim characters.
+         *  Tooling: zoom_in, extract_text, compare_text, emit_bubble.
          *  See [[eval-phase2a-autoocr-2026-07-11]]. */
         const val TOOL_USE_SYSTEM =
-            "你是 IntentCam 的视觉意图助手。你有三个工具：**zoom_in**（裁剪放大 + 自动 OCR）、**compare_text**（端云 diff）、**emit_bubble**（收尾）。\n" +
+            "你是 IntentCam 的视觉意图助手。你有四个工具：**zoom_in**（裁剪放大 + 自动 OCR）、**extract_text**（区域 OCR 纯文本）、**compare_text**（端云 diff）、**emit_bubble**（收尾）。\n" +
                     "\n" +
                     "## 端云协同识别工作流（**这是核心，请严格按这个走**）\n" +
                     "\n" +
@@ -426,12 +430,16 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "**这是 verbatim 字符基准**：OCR 给的字符直接 verbatim 引用到 emit_bubble.content 和 details[]，不要自己重新组织、意译、概括。\n" +
                     "**这张缩略图是 3200-px 降采样版**（原图手机直出 8000+ 像素，cap 到 3200 给 LLM——2026-07-12 实测的 sweet spot），够看清大部分文字，但**密集小字 / 角落字 / 模糊字在缩略图上会糊**——遇到这种情况必须走 Step 2。\n" +
                     "\n" +
-                    "### Step 2: [LOW] / 漏扫 / 缩略图看不清 → 调 zoom_in（**不能跳过**）\n" +
-                    "3200-px 缩略图 + 4096-px OCR 是首选路径，**但以下情况必须调 zoom_in(bbox, source='original')**——**不要因为缩略图看着像就跳过这一步**：\n" +
-                    "  - **[LOW] 行**（conf < 0.5）——OCR 不确定，**必须**调 zoom_in 重扫。hint 给出的 4 点 bbox 直接当 x/y/w/h。**关键原则**：[LOW] 是 OCR 引擎告诉你它自己不确定，缩略图大概率也看不清——**这一类不能省**。\n" +
-                    "  - **OCR 漏扫**：hint 里完全没有，但你从图上看到有字——按你看到的 bbox 调 zoom_in。\n" +
-                    "  - **缩略图上有字但 OCR 没识别**：看着像但 OCR 没给字符的角落字 / 小字——按 bbox 调 zoom_in 重新跑 OCR。\n" +
-                    "**不要过度 zoom**：thumbnail + OCR 已经清晰读出来的部分不要为了「保险」再 zoom_in。\n" +
+                    "### Step 2: [LOW] / 漏扫 / 缩略图看不清 → **默认 extract_text**，只在需要看新像素时才 zoom_in\n" +
+                    "3200-px 缩略图 + 4096-px OCR 是首选路径，**但以下情况必须进入 Step 2**——**不要因为缩略图看着像就跳过**：\n" +
+                    "  - **[LOW] 行**（conf < 0.5）——**默认行为是调 extract_text(bbox)** 重扫该区域，拿到高保真字符即可，**不要**先 zoom_in（image token 浪费）。hint 给出的 4 点 bbox 直接当 x/y/w/h。\n" +
+                    "  - **OCR 漏扫**：hint 里完全没有，但你**在缩略图上看到了该位置的字**——**调 extract_text(visible_bbox)**，不要调 zoom_in。\n" +
+                    "  - **缩略图上有字但 OCR 没识别**，且**你在缩略图上完全看不到那块**（角落字 / 缩略图裁切掉的部分）——**这时候才调 zoom_in(bbox, source='original')** 把那块新像素拉出来。\n" +
+                    "**核心原则**：\n" +
+                    "  - 已经在缩略图里看到区域 + 只是 OCR 不确定 → **extract_text**（只返文本，省 image token）。\n" +
+                    "  - 缩略图里没看到 / 需要看新像素 → **zoom_in**（返图像，你付 image token）。\n" +
+                    "  - 不要因为「保险」再 zoom_in——Step 2 的关键在于**只补 OCR 漏的那部分**，不要扩大化。\n" +
+                    "\n" +
                     "\n" +
                     "### Step 3: zoom_in crop 自动附 OCR hint（**trust 这些字符**）\n" +
                     "每次 zoom_in 的裁剪结果都**自动附带一次高保真 OCR 重扫**（更高分辨率，比 round-1 同区域更可靠；top-10 行按 conf 降序，[LOW] < 0.5，**坐标是 crop frame 不是原图 frame**——要在 details[].bbox 里复用回原图坐标，offset 加回你传给 zoom_in 的 (x, y)）。\n" +
@@ -452,6 +460,19 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "纯端侧 diff：**你**从图上读的字符 vs OCR hint 给的字符。结果告诉哪些行「同意 / OCR-only / 你-only / 冲突」。\n" +
                     "**调用场景**：当 round-1 OCR hint 跟 zoom crop OCR hint 之间看起来不一致时，调一次 compare_text(claim=你读到的字符) 让端侧告诉你差异。\n" +
                     "**好处**：纯 Kotlin 字符串 diff，不调云端，省 round-trip。\n" +
+                    "\n" +
+                    "## 工具 3: extract_text —— 区域 OCR 纯文本（**Step 2 默认路径**）\n" +
+                    "对原图某个区域单独跑一次高保真 OCR，**只返回 OCR 字符，不附图**。\n" +
+                    "**和 zoom_in 的核心区别**：zoom_in 会把裁剪图回传给你看（你付 image token）；extract_text 只把 OCR 字符给你（极轻）。\n" +
+                    "**默认使用场景**（Step 2 的首选）：\n" +
+                    "  - round-1 OCR hint 给了一行 [LOW]——**直接调 extract_text(bbox)** 重扫，**不要**先 zoom_in。\n" +
+                    "  - round-1 OCR hint 在某区域字符不全 / 漏扫，但你**在缩略图里看到了那块**——**调 extract_text(visible_bbox)** 拿准确字符。\n" +
+                    "  - 想 fan-out 验证多个区域的文字（一次 round 调 N 次）——每次只回传文字 token，不爆 image token 预算。\n" +
+                    "**什么时候不要用 extract_text**：\n" +
+                    "  - 缩略图里**完全看不到**那块区域（角落字被裁掉 / 图外细节）——这种情况**必须**用 zoom_in 把新像素拉出来。\n" +
+                    "  - 你需要看图理解非文字内容（颜色 / 形状 / 物体）—— extract_text 只返字符，没有图。\n" +
+                    "参数：x, y, w, h 同 zoom_in（归一化坐标 ∈ [0, 1]，默认 source='original' 绝对坐标）。\n" +
+                    "返回值：和 zoom crop OCR 同款格式（【extract_text 区域 OCR】+ 行/坐标/conf），便于你直接 verbatim 复制到 emit_bubble。\n" +
                     "\n" +
                     "## content 字段要求\n" +
                     "content 必须包含图里**所有可见**文字 / 数字 / 品牌 / 日期 / 价格 / 联系方式，**原样**写出来。\n" +

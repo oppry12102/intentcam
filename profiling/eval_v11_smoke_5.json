@@ -1,0 +1,229 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 5,
+  "overall_composite": 0.914,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.914},
+  "fixtures": [
+    {
+      "raw_content": "这是一幅装裱在深色木框内的四列竖排篆隶书法作品（米黄色洒金宣纸），从右至左四列正文大字，每列四字，按行从上至下读：**「閑 / 月 / 問 / 山」「路 / 深 / 聲 / 讀」「書 / 堂 / 幽 / 映」「輝 / 白 / 衣 / 清」**（OCR 主线：裳清映讀山 / 輝每書路閑 / 衣日幽茆問 / 白堂深月 → 按篆隶字形正应为上述释读，部分字 OCR 标 [LOW] 不确定）。\n\n左侧用行草书写两列小字题跋，依稀可辨：**\"右錄吉沆一書\u2026已丑年\u2026立春之\u2026主人\u2026副\u2026譚心...\"**（题款文字大半为 OCR [LOW]，读不全）。左下角落两枚红色印章（篆书白文/朱文），文字 OCR 无法识别。\n\n整体为典型的中国书法挂轴作品，装裱后挂于白墙之上。",
+      "r2_text": 0.6,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主体大字（右起第1列）",
+          "value": "閑 月 問 山"
+        },
+        {
+          "kind": "text",
+          "label": "主体大字（右起第2列）",
+          "value": "路 深 聲 讀"
+        },
+        {
+          "kind": "text",
+          "label": "主体大字（右起第3列）",
+          "value": "書 堂 幽 映"
+        },
+        {
+          "kind": "text",
+          "label": "主体大字（右起第4列）",
+          "value": "輝 白 衣 清"
+        },
+        {
+          "kind": "text",
+          "label": "题跋小字（左上行草）",
+          "value": "右錄吉沆一書 / 已丑年 立春之\u2026 主人\u2026 副\u2026 譚心（题款，多字 OCR [LOW]，读不全）"
+        },
+        {
+          "kind": "object",
+          "label": "载体",
+          "value": "木质深色镜框 + 米白卡纸装裱，米黄色洒金宣纸为主体"
+        },
+        {
+          "kind": "object",
+          "label": "印章",
+          "value": "左下角两枚红色印章（篆书白文/朱文，OCR 未识出可读文字）"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8,
+      "r2_text_fuzzy": 0.2,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 329,
+      "r1": 1
+    },
+    {
+      "raw_content": "路边一根灯杆上挂着一块方形的出租车临时上下客指示牌，分上下两部分：上半部分为蓝底白字，印有「出租车 / 上下客」、白色「P」停车标识、白色出租车图案和「TAXI」字样；下半部分为黄底黑字，提示「禁止非法营运车辆和其他车辆停放」。背景是城市道路，行道树、远处住宅楼、护栏和路面可见。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标识类型",
+          "value": "出租车"
+        },
+        {
+          "kind": "text",
+          "label": "功能",
+          "value": "上下客"
+        },
+        {
+          "kind": "logo",
+          "label": "停车标识",
+          "value": "P"
+        },
+        {
+          "kind": "text",
+          "label": "英文",
+          "value": "TAXI"
+        },
+        {
+          "kind": "text",
+          "label": "禁止事项(1/3)",
+          "value": "禁止非法营"
+        },
+        {
+          "kind": "text",
+          "label": "禁止事项(2/3)",
+          "value": "运车辆和其"
+        },
+        {
+          "kind": "text",
+          "label": "禁止事项(3/3)",
+          "value": "他车辆停放"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 140,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "红色店铺招牌，白色大字「**大懒人昌菜**」（招牌上为「昌菜」两字，意思可能是「昌」字招牌/菜系，需以门头实际字样为准）。招牌左侧为圆形品牌图标（卡通人物+锅铲），文字「赖人」+ 拼音「LAN REN」；右侧为另一个圆形图标（戴红帽卡通人物），下方有大字「大」和拼音「DA」。招牌下方是金属卷帘门（拉下状态），卷帘门右下角贴有一张白底贴纸，印刷电话 **26188806**，贴纸上方有一行小字（OCR 模糊不可靠，可能是外卖订餐提示），店面处于闭店状态。",
+      "r2_text": 0.75,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主招牌",
+          "value": "大懒人昌菜"
+        },
+        {
+          "kind": "logo",
+          "label": "左侧品牌图标(人物+锅)",
+          "value": "赖人"
+        },
+        {
+          "kind": "text",
+          "label": "左侧拼音",
+          "value": "LAN REN"
+        },
+        {
+          "kind": "logo",
+          "label": "右侧品牌图标(戴帽人物)",
+          "value": "大+DA"
+        },
+        {
+          "kind": "number",
+          "label": "右下角贴纸电话",
+          "value": "26188806"
+        },
+        {
+          "kind": "text",
+          "label": "右下角贴纸小字标题 [LOW] (OCR模糊)",
+          "value": "?????网订餐送门??"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.875,
+      "r2_text_fuzzy": 0.95,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 228,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺招牌照片：左侧是戴头巾的小武士抱饭团的卡通 logo（酒红底），主招牌为银白色立体字「Gazan 雅山」，下方浅黄色灯箱条上为副标题「牛蒡研究·奇道中式料理」（注：round-1 OCR 把「Gazan」错识为「aan」、把「蒡/究/式/料」错识为「病/：/太/理」，以上为本人从 zoom_in 放大图直接识读的字符）。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌 logo",
+          "value": "Gazan 雅山 + 戴头巾小武士抱饭团卡通图案"
+        },
+        {
+          "kind": "text",
+          "label": "主招牌",
+          "value": "Gazan 雅山"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "牛蒡研究·奇道中式料理"
+        },
+        {
+          "kind": "object",
+          "label": "招牌底色",
+          "value": "酒红色背景 + 银色立体字 + 浅黄色灯箱条"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.9,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 163,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一面装饰墙或墙绘的局部照片：深色背景上有艺术插画（绿色叶片、黄色/橙色食物造型似枕头粽或传统糕点、橙色锥形装饰等），并配有白色手写风格的中文文字。文字内容为：\"（顶部被裁掉）3弯曲曲的水稻梯田，在阳光下，水波粼粼。\" 推测完整句子可能是\"（连绵）弯弯曲曲的水稻梯田，在阳光下，水波粼粼。\"，描写的是云南哈尼梯田一类的梯田景观。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "墙面文字第1行",
+          "value": "3弯曲曲的水稻梯田，"
+        },
+        {
+          "kind": "text",
+          "label": "墙面文字第2行",
+          "value": "在阳光下，水波粼粼"
+        },
+        {
+          "kind": "text",
+          "label": "顶部被裁掉的文字",
+          "value": "（图片顶部有部分汉字被裁掉，疑似\"...的...\"等字，无法确认）"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.9475,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_05",
+      "category": "default",
+      "content_len": 165,
+      "r1": 0.895
+    }
+  ]
+}

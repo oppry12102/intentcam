@@ -20,14 +20,43 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design and
 
 | metric | value |
 |---|---|
-| **composite @ 100 fixtures (with OCR)** | **0.903** (3200+4096 + union r2_text) |
-| composite @ 20 fixtures (with OCR) | 0.902 |
-| baseline chain | 0.652 → 0.819 → 0.835 → 0.853 → 0.868 → 0.902 → **0.903** |
+| **composite @ 100 fixtures (with OCR)** | **0.903** (v1.0: 3200+4096 + union r2_text) |
+| composite @ 20 fixtures (with OCR) | 0.883 mean (v1.1: 3 runs 0.880/0.862/0.908) |
+| baseline chain | 0.652 → 0.819 → 0.835 → 0.853 → 0.868 → 0.887 → 0.903 |
 
 The 0.903 ceiling is the same code path as production: 1-only image
 strategy + auto-OCR on every zoom_in crop + workflow prompt
-("round-1 → zoom on [LOW] → trust crop OCR → emit") + 3200-px
-thumbnail / 4096-px fullRes.  See `profiling/eval_*.json`.
+("round-1 → extract_text on [LOW] → trust crop OCR → emit") +
+3200-px thumbnail / 4096-px fullRes.  v1.1 added the
+`extract_text` tool (text-only sibling of zoom_in) without moving
+the @20 composite — see `profiling/eval_v12c_20_ocr.json`.
+
+## v1.1 release notes (2026-07-12)
+
+Adds the **`extract_text`** tool — a text-only sibling of `zoom_in`
+that runs OCR on a region and returns just the characters (no
+image re-attach).  Adopted by the model on **~25-30% of fixtures**
+(5-7/20 in the v1.1 eval runs) for cases where the model has
+already seen the region in the round-1 thumbnail and only wants
+verbatim characters.  Composite @20 mean: **0.883** across 3 runs
+(0.880/0.862/0.908, std 0.023) — statistically equivalent to v1.0
+baseline 0.887, no regression, new capability unlocked.
+
+Workflow change: Step 2 now defaults to `extract_text` for
+[LOW] /漏扫 / 已见区域 cases, with `zoom_in` reserved for when
+the model needs to see new pixels.  The system prompt and tool
+descriptions are updated accordingly.
+
+Eval-scorer fix: `extract_text` is now recognized as a valid
+recon tool (pickScore 1.0) — previously it was scored at 0.7
+under the "other tool" fallback, which understated r1 for the
+~25% of fixtures that adopted it.  See
+`profiling/eval_v12*_20_ocr.json` for the three runs.
+
+A 4×4 spatial grid summary in the round-1 OCR hint (originally
+part of v1.1) was **reverted** before tagging — eval showed it
+diluted r2_text fuzzy without helping the model, which already
+infers spatial layout from per-line bbox.
 
 ## v1.0 release notes (2026-07-12)
 
@@ -80,7 +109,7 @@ sideloading.
 
 1. Camera permission on first launch
 2. Tap the green **识别** button to capture a frame
-3. Wait ~1-2 s for round 1 (OCR + LLM) + 0-2 zoom rounds
+3. Wait ~1-2 s for round 1 (OCR + LLM) + 0-2 zoom/extract rounds
 4. Tap the resulting bubble to see the image (full-screen, scrollable
    text below, header tap to collapse for more image)
 5. Tap **退出** to dismiss and start a new capture

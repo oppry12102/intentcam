@@ -208,6 +208,115 @@ fun ToolRegistry.registerDefaultTools() {
         )
     )
 
+    // ── 3. extract_text (v1.1) ──────────────────────────────────
+    // Text-only crop OCR.  Sibling of zoom_in: same region input,
+    // but the tool body returns ONLY the formatted OCR text — no
+    // image is attached to the next round.
+    //
+    // Why a separate tool:
+    //   - zoom_in is the "I need to LOOK at this region" path —
+    //     re-renders the crop as an image so the LLM can see it.
+    //     Costs ~1 image-equivalent per call.
+    //   - extract_text is the "I've already SEEN this region in
+    //     round-1, I just want verbatim characters" path.  Skips
+    //     the image payload — pure text return.  The LLM can fan
+    //     out 5+ extract_text calls in one round without blowing
+    //     the token budget on images.
+    //
+    // When to use:
+    //   - zoom_in when you need to see new pixels (e.g. a small
+    //     detail you couldn't read in the round-1 thumbnail).
+    //   - extract_text when the OCR hint is sparse / [LOW] for a
+    //     region you've already identified, and you just want a
+    //     fresh high-fidelity text scan without paying for the
+    //     image re-attach.
+    //
+    // Implementation: crop the fullRes at (x,y,w,h), run OCR on
+    // the crop via OcrEngine, format the result with the same
+    // `formatHint` the orchestrator uses for zoom crops (so the
+    // LLM sees the same shape it already knows).  No followUpJpeg.
+    register(
+        ToolDef(
+            name = "extract_text",
+            description = "对原图某个区域单独跑一次高保真 OCR，**只返回文字**（不附图）。" +
+                "和 zoom_in 的区别：zoom_in 会把裁剪图回传给你看，extract_text 只把 OCR 字符给你——节省 image token。" +
+                "**什么时候调**：你已经看到 round-1 OCR hint 里某个区域字符不全 / [LOW] / 漏扫，但你**不需要再看图**——只想要准确的字符。" +
+                "**不要**用来探索未知区域——那种情况用 zoom_in（你要先看见才能判断该不该 extract_text）。" +
+                "参数同 zoom_in：x, y, w, h 是归一化坐标 ∈ [0, 1]（基于原图 frame，不是缩略图）；source 默认 'original'。" +
+                "**支持多次调用**：一个 round 内可以 fan-out 调多次 extract_text 拿不同区域的文字（每次只回传文字 token，body 极轻）。" +
+                "**和 zoom_in 共享同一份 OCR hint 格式**：返回值形如【extract_text 区域 OCR】+ 行/坐标/conf，便于你直接 verbatim 复制到 emit_bubble。",
+            inputSchema = JSONObject().apply {
+                put("type", "object")
+                put("properties", JSONObject().apply {
+                    put("x", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0); put("maximum", 1)
+                        put("description", "左边缘归一化坐标 [0, 1]（相对于原图 frame）")
+                    })
+                    put("y", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0); put("maximum", 1)
+                        put("description", "上边缘归一化坐标 [0, 1]")
+                    })
+                    put("w", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0.05); put("maximum", 1)
+                        put("description", "宽度归一化坐标 [0, 1]")
+                    })
+                    put("h", JSONObject().apply {
+                        put("type", "number"); put("minimum", 0.05); put("maximum", 1)
+                        put("description", "高度归一化坐标 [0, 1]")
+                    })
+                    put("source", JSONObject().apply {
+                        put("type", "string")
+                        put("enum", JSONArray().put("original").put("last"))
+                        put("description", "裁哪张图。original=原始照片（默认，绝对坐标）；last=上一张（链式，相对）")
+                    })
+                })
+                put("required", JSONArray().put("x").put("y").put("w").put("h"))
+                put("additionalProperties", false)
+            },
+            body = { ctx, input ->
+                val x = input.optDouble("x", 0.0).toFloat()
+                val y = input.optDouble("y", 0.0).toFloat()
+                val w = input.optDouble("w", 0.05).toFloat().coerceAtLeast(0.05f)
+                val h = input.optDouble("h", 0.05).toFloat().coerceAtLeast(0.05f)
+                val source = input.optString("source", "original")
+                val sourceJpeg = if (source == "original") ctx.originalFullRes else ctx.jpeg
+                val crop = cropJpegRegion(sourceJpeg, x, y, w, h, quality = 90)
+                if (crop == null) {
+                    ToolResult(
+                        toolSummary = "extract_text 失败：无法裁剪 source=$source (${x}, ${y}, ${w}, ${h})",
+                        finalBubble = false,
+                    )
+                } else {
+                    // Run OCR on the crop.  Same OcrEngine.recognize
+                    // the orchestrator uses for zoom_in follow-ups,
+                    // so the formatHint shape is identical to what
+                    // the model already sees — zero learning curve.
+                    val ocr = runCatching { OcrEngine.recognize(crop) }
+                        .getOrDefault(OcrResult.EMPTY)
+                    val hint = OcrResult.formatHint(
+                        blocks = ocr.blocks,
+                        maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
+                        isCropHint = true,
+                    )
+                    val header = "【extract_text 区域 OCR】对原图 (${x}, ${y}, ${w}, ${h}) " +
+                        "source=$source 跑了一次高保真 OCR，结果如下（坐标是 crop frame，不是原图）：\n"
+                    val body = if (hint.isBlank()) {
+                        header + "（OCR 没识别到任何字符——可能是空白 / 字太小 / 字符超出 OCR 能力）"
+                    } else {
+                        header + hint
+                    }
+                    ToolResult(
+                        toolSummary = body,
+                        finalBubble = false,
+                        // No followUpJpeg — that's the whole point of
+                        // this tool.  Model can call again next round
+                        // for a different region.
+                    )
+                }
+            },
+        )
+    )
+
     // ── 4. emit_bubble ───────────────────────────────────────────
     // End the cycle with a structured final answer.  Two stages:
     //   - content:        what you see in the image (after any zoom_ins)

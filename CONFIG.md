@@ -4,11 +4,17 @@
 > pipeline.  When you change a value, update the table + run an
 > eval to confirm.
 
-**Last reviewed:** 2026-07-12 v1.0.0 release (cold-start camera
-fix + DetailScreen UX overhaul + debug-log enhancements).
-On-device pipeline now actually delivers full sensor-resolution
-frames (was silently 640×480 — see §A.6).  Architecture stable;
-next round of experiments will be on prompt + tool routing.
+**Last reviewed:** 2026-07-12 v1.1.0 release (added `extract_text`
+tool + Step 2 routing rule + scorer fix; reverted 4×4 grid).
+On-device architecture stable; tool-routing experiment didn't
+move @20 composite (0.883 mean vs 0.887 baseline, in noise
+band) but unlocked a new capability the model adopted 25-30%
+of the time.  Next round: r2_text ceiling (still ~0.74 strict).
+
+**Baseline chain:** 0.820 → 0.838 → 0.841 → 0.853 → 0.868 →
+0.887 (unionscore @20) → 0.902 (option C @20) → **0.903 (@100
+unionscore, current prod-mirror ceiling)** → 0.883 (v1.1 @20
+mean, 3 runs 0.880/0.862/0.908 — flat in noise vs 0.887).
 
 **Baseline chain:** 0.820 (over-hedged @20) → 0.838 (softened
 prompt @20) → 0.841 (1568 + nudge @20) → 0.853 (1568 + nudge
@@ -74,6 +80,8 @@ Kotlin `:shared:eval`; the deltas are architectural, not noise.
 |---|---|---|---|---|
 | zoom_in default source | "original" | `shared/.../ToolImplementations.kt:93` | First zoom crops 2048-px fullRes | Pre-2026-07-10 was "last" — broke because 50% of 768 = 384 < round-1 view; default="original" makes zoom always a magnifier |
 | zoom_in crop OCR auto | always on (prod) | `shared/.../ToolUseLoop.kt:699` | Every followUpJpeg auto-OCR | **Phase 2 (2026-07-11)**. See §G workflow narrative. Crop OCR result attached as a text content block alongside the image. |
+| `extract_text` (v1.1) | text-only OCR | `shared/.../ToolImplementations.kt:210-330` | **v1.1 (2026-07-12)**. New tool. Same crop path as `zoom_in` follow-up (cropJpegRegion + OcrEngine.recognize + formatHint) but **no followUpJpeg** — returns only formatted OCR text. Adopted by the model in 5-7/20 fixtures (~25-35%) for [LOW] / 漏扫 / 已见区域 cases. Composite @20 mean 0.883 vs v1.0 0.887 (in noise). |
+| `extract_text` routing rule | "default for [LOW]" | `shared/.../LlmClient.kt:431-441` (Step 2 paragraph) | **v1.1 (2026-07-12)**. Step 2 of the workflow now defaults to `extract_text` for [LOW] / 漏扫 / 已见区域 cases, with `zoom_in` reserved for "need to see new pixels" (corner text not in thumbnail, non-text content). Without this routing rule the model picked `extract_text` 0% of the time (v1.1 first attempt). |
 | compare_text cache | round-1 OCR only | `shared/.../ToolImplementations.kt:179` (passes `ctx.ocrCache`) | diff scope | Crop OCR is not in `ocrCache`; only round-1 result. If model needs crop-level diff, future extension (out of scope). |
 | Region w/h minimum | 0.05f | (see A. above) | Same as crop min | Same |
 | details cap (prompt) | "5-8 行" | `shared/.../LlmClient.kt:439` | Hint to model on details array size | Prevents over-long answers; 8 covers most scenes |
@@ -177,3 +185,5 @@ memory `eval-phase2a-autoocr-2026-07-11.md` and
 6. ~~**Phase 1: auto-OCR wiring only, no workflow prompt**~~ — REJECTED 2026-07-11. Composite flat, r2_text_fuzzy -0.17. "Free information paradox" — auto-attached OCR treated as low-confidence vs requested OCR. Phase 2a fixed by adding 4-step workflow narrative.
 7. ~~**Phase 2b: bump `LOW_CONFIDENCE_THRESHOLD` 0.5 → 0.7**~~ — **TESTED 2026-07-11 @20, REJECTED.** Hypothesis was inverted — the threshold controls the *upper bound of [LOW]* (chars with `conf < THRESHOLD` are tagged). Raising 0.5→0.7 flips the 0.5-0.7 conf range from high-fidelity to [LOW], giving the model MORE reason to hedge, not less. Result with OCR-on @20: composite 0.854→0.840 (-0.014), r2_text_fuzzy 0.734→0.552 (-0.182, real), 7/20 empty vs 0/20 baseline. 0.5 stays. Lesson: the right direction to *reduce* [LOW] count is lowering the threshold, not raising.
 8. ~~**Option D: `MAX_DIM` 3200→4096 + `CROP_OUTPUT_MAX_DIM` 3200→4096**~~ — **TESTED 2026-07-12 @20, REVERTED.** "摸一摸天花板" — user asked if 4096 (model max) unlocks a higher ceiling than 3200. Result: composite 0.902 → **0.885** (-0.017), r2_text_fuzzy 0.821 → 0.766 (**-0.055, real signal**), empty 0/20 → 1/20 (rctw_15 went empty again). The **attention-spread failure pattern**, identical to 2026-07-10 1568 regression: pushing image dim to model max makes the model lose focus on text regions. **3200 is the sweet spot.** Two independent confirmations (1568 once, 4096 once) make this a stable conclusion, not noise.
+9. ~~**4×4 spatial grid in round-1 OCR hint**~~ — **TESTED 2026-07-12, REVERTED before v1.1 tag.** Hypothesis was that an ASCII 4×4 grid (cells = OCR block count per quadrant) would help the model see spatial layout without parsing 30 line entries. Result @20 with strong-nudge `extract_text` prompt: composite 0.888 blind (no signal), 0.890 with OCR (in noise vs 0.887), but r2_text_fuzzy -0.137 (real signal — the grid took token space away from verbatim copy). The per-line bbox already gives the model the spatial info it needs; the grid added nothing. Code removed; the `computeSpatialGrid` helper was deleted from `OcrEngine.kt` rather than left as dead code.
+10. **`extract_text` without explicit Step 2 routing rule** — also REJECTED (same TEST, @20). Without "Step 2 默认 extract_text, only zoom_in for new pixels" the model picked `extract_text` **0/20 fixtures** in the v1.1 first attempt (the tool was registered but never used). With the routing rule, adoption jumped to 5-7/20 (25-35%) across 3 runs. **Lesson**: adding a new tool to the registry isn't enough — the prompt must explicitly say when to use it vs the existing alternative.

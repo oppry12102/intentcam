@@ -1,0 +1,442 @@
+{
+  "ground_truth": "ground_truth_rctw.json",
+  "img_dir": "img/rctw",
+  "limit": 10,
+  "overall_composite": 0.8692500000000001,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 10,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"default": 0.8692500000000001},
+  "fixtures": [
+    {
+      "raw_content": "这是一幅装裱在深色木框镜框中的隶书书法作品，米黄色宣纸背景，主体为四行大字隶书（右起竖排），内容为「閑路讀書 / 問月潭堂 / 問鄂幽問 / 裳清映讀山」。左侧题款小字行书落款：「右錄吉沆一首 己丑年 立善之臂」（OCR [LOW] 部分），下方钤有两枚红色方形印章。",
+      "r2_text": 0.6,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主文第一行（右起）",
+          "value": "閑路讀書"
+        },
+        {
+          "kind": "text",
+          "label": "主文第二行",
+          "value": "問月潭堂"
+        },
+        {
+          "kind": "text",
+          "label": "主文第三行",
+          "value": "問鄂幽問"
+        },
+        {
+          "kind": "text",
+          "label": "主文第四行",
+          "value": "裳清映讀山"
+        },
+        {
+          "kind": "text",
+          "label": "题款（左侧小字）",
+          "value": "右錄吉沆一首 己丑年 立善之臂"
+        },
+        {
+          "kind": "object",
+          "label": "印章",
+          "value": "两枚红色方印（篆刻）"
+        },
+        {
+          "kind": "shape",
+          "label": "书体",
+          "value": "隶书（clerkly script）装裱镜框"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8,
+      "r2_text_fuzzy": 0.16,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_01",
+      "category": "default",
+      "content_len": 134,
+      "r1": 1
+    },
+    {
+      "raw_content": "人行道边树立着一块出租车专用上下客指示牌：上半部蓝色底白字写「出租车 上下客」，配有「P」停车标识和「TAXI」小汽车图形；下半部黄色底黑字写警示语「禁止非法营运车辆和其他车辆停放」。背景是铺砖人行道、几棵光秃的行道树、远处有行人和建筑物。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "蓝色标题第一行",
+          "value": "出租车"
+        },
+        {
+          "kind": "text",
+          "label": "蓝色标题第二行",
+          "value": "上下客"
+        },
+        {
+          "kind": "logo",
+          "label": "停车场 P 标识",
+          "value": "P"
+        },
+        {
+          "kind": "text",
+          "label": "出租车英文",
+          "value": "TAXI"
+        },
+        {
+          "kind": "text",
+          "label": "黄色警示第1行",
+          "value": "禁止非法营"
+        },
+        {
+          "kind": "text",
+          "label": "黄色警示第2行",
+          "value": "运车辆和其"
+        },
+        {
+          "kind": "text",
+          "label": "黄色警示第3行",
+          "value": "他车辆停放"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_02",
+      "category": "default",
+      "content_len": 120,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "红色店招，上书\"大懒人冒菜\"白色大字，左右两侧各有一个\"赖人\"卡通人像品牌 logo（左侧 logo 上有\"赖人 / LAN REN\"字样，右侧 logo 上有\"大 / DA\"字样），下方是关着的金属卷帘门，门上贴有编号\"26188806\"。招牌整体风格为红色背景配白字，logo 是戴红帽子的卡通小人物形象。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店招主名",
+          "value": "大懒人冒菜"
+        },
+        {
+          "kind": "logo",
+          "label": "左侧品牌名(中文)",
+          "value": "赖人"
+        },
+        {
+          "kind": "text",
+          "label": "左侧品牌名(拼音)",
+          "value": "LAN REN"
+        },
+        {
+          "kind": "text",
+          "label": "右侧品牌拼音",
+          "value": "DA"
+        },
+        {
+          "kind": "number",
+          "label": "卷帘门编号",
+          "value": "26188806"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_03",
+      "category": "default",
+      "content_len": 155,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺招牌照片。主招牌为红色衬底白色立体字，左侧有一个穿中式服饰、手捧米饭碗的卡通小女孩吉祥物，主招牌文字为「Gazan 雅山」。下方金色灯箱底座上有副标题：「牛潇石宛·奇道 中式米料理」。招牌上方是青绿色玻璃幕墙建筑外墙。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌主名(英文)",
+          "value": "Gazan"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌主名(中文)",
+          "value": "雅山"
+        },
+        {
+          "kind": "text",
+          "label": "副标题前段",
+          "value": "牛潇石宛·奇道"
+        },
+        {
+          "kind": "text",
+          "label": "副标题后段(品类)",
+          "value": "中式米料理"
+        },
+        {
+          "kind": "object",
+          "label": "卡通吉祥物",
+          "value": "小女孩抱着米饭碗的卡通形象"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 1,
+      "r2_text_fuzzy": 0.95,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_04",
+      "category": "default",
+      "content_len": 111,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一面装饰墙/灯箱：深色背景上画着稻穗、绿叶、橙色三角图案，下方有两行手写体白色中文文案\u2014\u2014「弯弯曲曲的水稻梯田，在阳光下，水波粼粼。」顶部左角有一个被裁切的汉字残留。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主文案第一行",
+          "value": "弯弯曲曲的水稻梯田，"
+        },
+        {
+          "kind": "text",
+          "label": "主文案第二行",
+          "value": "在阳光下，水波粼粼。"
+        },
+        {
+          "kind": "text",
+          "label": "顶部左侧字符",
+          "value": "?（疑似单个汉字的上半部分，画面被裁切）"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.895,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "extract_text",
+      "id": "rctw_default_05",
+      "category": "default",
+      "content_len": 86,
+      "r1": 0.7899999999999999
+    },
+    {
+      "raw_content": "医院走廊一间科室入口，门头上方为绿底白字带黄色描边的椭圆牌匾，中文文字\"疤痕治疗与康复中心\"，下方英文\"Anti-Scar Treatment Rehabilitation Center\"。深棕色木质双开门，左扇关闭、右扇开启，透过门口可见浅绿色储物架、纸箱和一把撑开的蓝色雨伞，墙面为浅色瓷砖，地面为花岗岩。",
+      "r2_text": 0.75,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "科室名称（中文）",
+          "value": "疤痕治疗与康复中心"
+        },
+        {
+          "kind": "text",
+          "label": "科室名称（英文）",
+          "value": "Anti-Scar Treatment Rehabilitation Center"
+        },
+        {
+          "kind": "object",
+          "label": "门牌样式",
+          "value": "绿底白字椭圆牌匾，带黄色描边"
+        },
+        {
+          "kind": "object",
+          "label": "房门",
+          "value": "深棕色木质双开门，左扇关闭、右扇开启"
+        },
+        {
+          "kind": "object",
+          "label": "室内可见物",
+          "value": "浅绿色储物架、纸箱、蓝色雨伞、花岗岩地面"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_06",
+      "category": "default",
+      "content_len": 155,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "这是一张红色调的支付宝2016年新春营销海报，主标题\"任仟有礼\"，副标题\"随机立减\"，活动说明\"支付宝付款消费满20元即可享受随机立减优惠\"，左上角有\"2016\"年份标签，海报右下角有\"2016支付宝 翼支付\"等品牌标识，画面中央展示了一桌丰盛的年夜饭菜肴。",
+      "r2_text": 0.9166666666666667,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "任仟有礼"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "随机立减"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 活动说明",
+          "value": "支付宝付款消费满20元即可享受随机立减优惠"
+        },
+        {
+          "kind": "date",
+          "label": "年份标签",
+          "value": "2016"
+        },
+        {
+          "kind": "brand",
+          "label": "活动品牌",
+          "value": "2016支付宝 翼支付"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.8533333333333333,
+      "r2_text_fuzzy": 0.8333333333333334,
+      "has_text": true,
+      "picked_tool": "extract_text",
+      "id": "rctw_default_07",
+      "category": "default",
+      "content_len": 129,
+      "r1": 0.7899999999999999
+    },
+    {
+      "raw_content": "医院走廊内绿色科室指示牌，文字为\"CT检查 DR拍片\"，右侧带橙色圆形向右箭头，指示该方向可前往CT检查和DR（X光）拍片室。墙面为白色瓷砖，地面反射可见走廊及人影。",
+      "r2_text": 0.75,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "text",
+        "label": "科室指示牌",
+        "value": "CT检查 DR拍片 →"
+      }],
+      "r2_type": 0.5,
+      "composite": 0.8225,
+      "r2_text_fuzzy": 1,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_08",
+      "category": "default",
+      "content_len": 83,
+      "r1": 0.895
+    },
+    {
+      "raw_content": "图片显示一处红色门框的门入口，门框上方墙面上挂着一块黑色铭牌。铭牌上白色字写有中英文双语标识：\"管 理 间 / Management Room\"，右下角有一个绿色叶子状的小 logo + 小字（OCR 模糊不可辨）。墙面为米黄色纹理石材贴面，门为玻璃门，门内隐约可见反光。",
+      "r2_text": 0.5833333333333333,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "房间标识-中文",
+          "value": "管 理 间"
+        },
+        {
+          "kind": "text",
+          "label": "房间标识-英文",
+          "value": "Management Room"
+        },
+        {
+          "kind": "logo",
+          "label": "右下角logo [LOW]",
+          "value": "（绿色叶子状logo+小字，文字不可辨，OCR 识别为\"吸尔\"，明显误识）"
+        }
+      ],
+      "r2_type": 0.5,
+      "composite": 0.7916666666666666,
+      "r2_text_fuzzy": 0.6666666666666666,
+      "has_text": true,
+      "picked_tool": "zoom_in",
+      "id": "rctw_default_09",
+      "category": "default",
+      "content_len": 136,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「中国能量堡垒」微信公众号/小程序的扫码奖励消息页，显示了两次扫产品二维码获得的能量币记录：\n1. 扫描\"能量堡垒葛根提取物软胶囊\"产品二维码[1420279160816506]，获得 118 能量币\n2. 1月13日 \u2014 扫描\"能量堡垒维生素C片\"产品二维码[1420519580860218]，获得 108 能量币\n配图为代言人田亮的宣传图，编号 524000581008。\n底部导航：能量资讯 / 营养商学院 / 扫一扫。",
+      "r2_text": 0.875,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "中国能量堡垒"
+        },
+        {
+          "kind": "date",
+          "label": "状态栏时间",
+          "value": "晚上7:58"
+        },
+        {
+          "kind": "text",
+          "label": "第一条消息正文",
+          "value": "您好，通过扫描能量堡垒葛根提取物软胶囊产品二维码[1420279160816506]，获得了118能量币。立即查看能量币"
+        },
+        {
+          "kind": "text",
+          "label": "第一条操作",
+          "value": "查看全文"
+        },
+        {
+          "kind": "text",
+          "label": "第二条标题",
+          "value": "能量堡垒维生素C片"
+        },
+        {
+          "kind": "date",
+          "label": "第二条日期",
+          "value": "1月13日"
+        },
+        {
+          "kind": "text",
+          "label": "第二条消息正文",
+          "value": "您好，通过扫描能量堡垒维生素C片产品二维码[1420519580860218]，获得了108能量币。立即查看能量币"
+        },
+        {
+          "kind": "text",
+          "label": "第二条操作",
+          "value": "查看全文"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航1",
+          "value": "能量资讯"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航2",
+          "value": "营养商学院"
+        },
+        {
+          "kind": "text",
+          "label": "底部导航3",
+          "value": "扫一扫"
+        },
+        {
+          "kind": "text",
+          "label": "产品图代言 [LOW]",
+          "value": "能量大使：田亮"
+        },
+        {
+          "kind": "text",
+          "label": "产品图编号",
+          "value": "524000581008"
+        }
+      ],
+      "r2_type": 1,
+      "composite": 0.885,
+      "r2_text_fuzzy": 0.5,
+      "has_text": true,
+      "picked_tool": "(none)",
+      "id": "rctw_default_10",
+      "category": "default",
+      "content_len": 216,
+      "r1": 0.895
+    }
+  ]
+}
