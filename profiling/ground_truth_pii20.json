@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "description": "Per-intent fixture set for the 4 PII-sensitive intents shipped in Phase B (2026-07-13): real_estate_rental / recruit_hiring / payment_qr / id_document. 5 fixtures each = 20 total. Standard 20-fixture size. Hand-curated from `profiling/scan_intents.py`'s top-5 per cluster by confidence. Expected actions mirror the consent-gated ActionDef shipped in the same Phase B commit. Notes: (a) `payment_qr` is sparse — only 49 RCTW images match the strict scan regex, so 4 of 5 fixtures are boundary cases (one is literally an Alipay screenshot). (b) `id_document` includes the only real 居民身份证 card in RCTW (image_170) — that's the hardest case; redact_id chip should propose there but we land on Toast, no auto-side-effect. (c) `recruit_hiring` has overlap with phone (some classified-ads fixtures have phone + hiring keywords); the phone_20 / pii20 sets don't overlap, but the LLM may emit BOTH action_ids on cross-fixtures.",
+  "version": 3,
+  "description": "Per-intent PII fixture set (Phase B). v3 (2026-07-11 audit): removed 8 mislabeled auto-classified fixtures. real_estate_rental / recruit_hiring / id_document each = 5 CLEAN visually-verified fixtures (dominant subject + verifier-safe: every real_estate corpus carries a REAL_ESTATE-regex token so IntentVerifier Pass7 mobile-guard holds). payment_qr DROPPED from eval coverage: only ~8 genuine pay-context images in all 8034 RCTW, none clean scan-to-pay QRs (all are 微信支付 stickers / 扫一扫关注 follow-QRs the verifier excludes by design). The 5 ex-payment_qr slots are RELABELED to true observable type (4x follow-QR brand posters -> info/[]; 1x 支付宝转账截图 with a mobile -> phone/[dial_number]); they double as precision guards that Phase F action-injection does NOT over-add a PII chip. Swaps: 1906/2475/2638->1090/3034/5429 (real_estate); 3968->2042 (recruit); 6012->334 (id). Backup: ground_truth_pii20.json.bak.",
   "img_dir": "/home/oppry/RCTW-171/train_images",
   "scenes": [
     {
@@ -9,39 +9,59 @@
       "src": "intent_all image_1391 conf=1.000 auto_basis=auto classified → real_estate_rental",
       "category": "real_estate_residential",
       "what_is_pictured": "湘华名邸住宅小区广告牌 — 强调名校 / 风水宝地 / 稀缺楼梯房",
-      "must_have_in_scene_or_observation": ["湘华名邸", "小区"],
+      "must_have_in_scene_or_observation": [
+        "湘华名邸",
+        "小区"
+      ],
       "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": ["copy_listing"]
+      "expected_actions": [
+        "copy_listing"
+      ]
     },
     {
-      "id": "image_1906",
-      "file": "image_1906.jpg",
-      "src": "intent_all image_1906 conf=1.000 basis={出租,警务室,公安,街道}",
-      "category": "community_service_announcement",
-      "what_is_pictured": "南山社区警务室 — 出租房屋和流动人口综合管理站 + 大凌河公安分局地址",
-      "must_have_in_scene_or_observation": ["南山社区", "出租"],
+      "id": "image_1090",
+      "file": "image_1090.jpg",
+      "src": "replace(1906 police)->listing",
+      "category": "residential_development_billboard",
+      "what_is_pictured": "创爱莲湖 户型奇迹 91㎡≥110㎡ 楼盘户型广告牌 + 2886789",
+      "must_have_in_scene_or_observation": [
+        "爱莲湖",
+        "户型"
+      ],
       "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": ["copy_listing"]
+      "expected_actions": [
+        "copy_listing"
+      ]
     },
     {
-      "id": "image_2475",
-      "file": "image_2475.jpg",
-      "src": "intent_all image_2475 conf=1.000 basis={珞,喻,路,物业管理,公摊}",
-      "category": "mall_property_notice",
-      "what_is_pictured": "广埠屯地铁站 / 珞喻路 OPP/ZHAN 标识 + 物业管理费、空调费、水费公摊通知",
-      "must_have_in_scene_or_observation": ["物业", "珞喻路"],
+      "id": "image_3034",
+      "file": "image_3034.jpg",
+      "src": "replace(2475 metro)->rental banner",
+      "category": "building_rental_banner",
+      "what_is_pictured": "本楼底层房屋出租 面积600平米 13862528959 王女士",
+      "must_have_in_scene_or_observation": [
+        "出租",
+        "平米"
+      ],
       "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": ["copy_listing"]
+      "expected_actions": [
+        "copy_listing"
+      ]
     },
     {
-      "id": "image_2638",
-      "file": "image_2638.jpg",
-      "src": "intent_all image_2638 conf=1.000 basis={南江县,广达物业}",
-      "category": "community_property_ad",
-      "what_is_pictured": "南江县广达物业宣传标语 — 文明城市 + 和谐成果",
-      "must_have_in_scene_or_observation": ["广达物业"],
+      "id": "image_5429",
+      "file": "image_5429.jpg",
+      "src": "replace(2638 civic slogan)->commercial leasing",
+      "category": "commercial_leasing_banner",
+      "what_is_pictured": "整体招商 二楼2000平米商铺 售楼热线",
+      "must_have_in_scene_or_observation": [
+        "招商",
+        "商铺"
+      ],
       "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": ["copy_listing"]
+      "expected_actions": [
+        "copy_listing"
+      ]
     },
     {
       "id": "image_3285",
@@ -49,30 +69,43 @@
       "src": "intent_all image_3285 conf=1.000 basis={吉房急售,复州花园,南北通透,平米}",
       "category": "residential_listing",
       "what_is_pictured": "吉房急售 — 复州花园 3室2厅 126平 南北通透 + QQ 313521397 + 联系看房",
-      "must_have_in_scene_or_observation": ["吉房急售", "复州花园"],
+      "must_have_in_scene_or_observation": [
+        "吉房急售",
+        "复州花园"
+      ],
       "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": ["copy_listing"]
+      "expected_actions": [
+        "copy_listing"
+      ]
     },
-
     {
       "id": "image_1434",
       "file": "image_1434.jpg",
       "src": "intent_all image_1434 conf=1.000 basis={招聘,广告,师傅}",
       "category": "recruit_ad_with_phone",
       "what_is_pictured": "立东广告 — 招聘广告制作师傅,广八路 112附1 店面",
-      "must_have_in_scene_or_observation": ["招聘"],
+      "must_have_in_scene_or_observation": [
+        "招聘"
+      ],
       "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": ["save_posting"]
+      "expected_actions": [
+        "save_posting"
+      ]
     },
     {
-      "id": "image_3968",
-      "file": "image_3968.jpg",
-      "src": "intent_all image_3968 conf=1.000 basis={储值,VIP,会员}",
-      "category": "vip_recruit_programme",
-      "what_is_pictured": "老村长私募菜 — VIP会员储值卡办理广告 + 储值500元入会",
-      "must_have_in_scene_or_observation": ["VIP", "储值"],
+      "id": "image_2042",
+      "file": "image_2042.jpg",
+      "src": "replace(3968 VIP card)->recruit",
+      "category": "restaurant_recruit_led",
+      "what_is_pictured": "好百年饭店 LED滚动: 急招: 餐厅服务员",
+      "must_have_in_scene_or_observation": [
+        "急招",
+        "服务员"
+      ],
       "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": ["save_posting"]
+      "expected_actions": [
+        "save_posting"
+      ]
     },
     {
       "id": "image_7144",
@@ -80,9 +113,13 @@
       "src": "intent_all image_7144 conf=1.000 basis={招聘,鞋店,待业}",
       "category": "street_recruit_flyer",
       "what_is_pictured": "广八路 98路鞋店 — 招聘 + 出口服装工厂打折店营业中",
-      "must_have_in_scene_or_observation": ["招聘"],
+      "must_have_in_scene_or_observation": [
+        "招聘"
+      ],
       "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": ["save_posting"]
+      "expected_actions": [
+        "save_posting"
+      ]
     },
     {
       "id": "image_7506",
@@ -90,9 +127,13 @@
       "src": "intent_all image_7506 conf=1.000 basis={诚聘,待遇,销售经理}",
       "category": "company_recruit_poster",
       "what_is_pictured": "安徽华佗国药股份 — 诚聘四川省各市/县销售经理,待遇5000+",
-      "must_have_in_scene_or_observation": ["诚聘"],
+      "must_have_in_scene_or_observation": [
+        "诚聘"
+      ],
       "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": ["save_posting"]
+      "expected_actions": [
+        "save_posting"
+      ]
     },
     {
       "id": "image_7854",
@@ -100,71 +141,94 @@
       "src": "intent_all image_7854 conf=1.000 basis={招聘,服务员,关山街}",
       "category": "community_recruit_bulletin",
       "what_is_pictured": "关山街龙安社区服务站 — 招聘服务员若干名,详情进店咨询",
-      "must_have_in_scene_or_observation": ["招聘"],
+      "must_have_in_scene_or_observation": [
+        "招聘"
+      ],
       "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": ["save_posting"]
+      "expected_actions": [
+        "save_posting"
+      ]
     },
-
     {
       "id": "image_6978",
       "file": "image_6978.jpg",
-      "src": "intent_all image_6978 conf=1.000 basis={扫一扫,关注}",
+      "src": "was payment_qr; 扫一扫关注 follow-QR -> info",
       "category": "brand_wechat_follow",
-      "what_is_pictured": "光谷新青年 / 国际青年互动特区 — 80-140m2住宅 / 优客家族身份卡 + 扫一扫关注",
-      "must_have_in_scene_or_observation": ["扫一扫"],
-      "expected_top_intent_type": "payment_qr",
-      "expected_actions": ["scan_to_pay"]
+      "what_is_pictured": "光谷新青年 国际青年互动特区 80-140m2户型 扫一扫关注 (地产品牌关注海报)",
+      "must_have_in_scene_or_observation": [
+        "国际青年",
+        "扫一扫"
+      ],
+      "expected_top_intent_type": "info",
+      "expected_actions": []
     },
     {
       "id": "image_1108",
       "file": "image_1108.jpg",
-      "src": "intent_all image_1108 conf=0.80 basis={扫一扫,抢行不文明}",
-      "category": "mall_pedestrian_signage",
-      "what_is_pictured": "韵湖星光 / 新世界 — 应急出口 / 抢行不文明 / 扫一扫街道口地 10108888",
-      "must_have_in_scene_or_observation": ["扫一扫"],
-      "expected_top_intent_type": "payment_qr",
-      "expected_actions": ["scan_to_pay"]
+      "src": "was payment_qr; mall follow signage -> info",
+      "category": "mall_signage_follow",
+      "what_is_pictured": "韵湖星光 新世界 应急出口 扫一扫 街道口 (商场导视/关注牌)",
+      "must_have_in_scene_or_observation": [
+        "扫一扫",
+        "新世界"
+      ],
+      "expected_top_intent_type": "info",
+      "expected_actions": []
     },
     {
       "id": "image_5235",
       "file": "image_5235.jpg",
-      "src": "intent_all image_5235 conf=0.80 basis={扫一扫关注}",
+      "src": "was payment_qr; 扫一扫关注北新建材 -> info",
       "category": "brand_follow_qr",
-      "what_is_pictured": "汉供销建材家 — 扫一扫关注北新建材 + 汉西建材大世界",
-      "must_have_in_scene_or_observation": ["扫一扫"],
-      "expected_top_intent_type": "payment_qr",
-      "expected_actions": ["scan_to_pay"]
+      "what_is_pictured": "汉供销建材家 扫一扫关注北新建材 汉西建材大世界 (建材品牌关注海报)",
+      "must_have_in_scene_or_observation": [
+        "建材",
+        "扫一扫"
+      ],
+      "expected_top_intent_type": "info",
+      "expected_actions": []
     },
     {
       "id": "image_5627",
       "file": "image_5627.jpg",
-      "src": "intent_all image_5627 conf=0.80 basis={扫一扫,公众号}",
+      "src": "was payment_qr; 关注天音公众号 -> info",
       "category": "music_school_follow",
-      "what_is_pictured": "天音葫芦丝公众号 — 关注天音 + 培训项目 + 大风车店 NO05449",
-      "must_have_in_scene_or_observation": ["扫一扫"],
-      "expected_top_intent_type": "payment_qr",
-      "expected_actions": ["scan_to_pay"]
+      "what_is_pictured": "天音葫芦丝 葫芦丝公众号 关注天音 扫一扫 大风车店 (培训机构关注海报)",
+      "must_have_in_scene_or_observation": [
+        "葫芦丝",
+        "关注"
+      ],
+      "expected_top_intent_type": "info",
+      "expected_actions": []
     },
     {
       "id": "image_3453",
       "file": "image_3453.jpg",
-      "src": "intent_all image_3453 conf=0.60 basis={支付宝转账}",
+      "src": "was payment_qr; 支付宝转账截图+手机号 -> phone",
       "category": "alipay_transfer_screenshot",
-      "what_is_pictured": "支付宝转账通知截图 — 21:34 转账 + 13303835656 + Flyme 4G 河南郑州电信",
-      "must_have_in_scene_or_observation": ["支付宝转账"],
-      "expected_top_intent_type": "payment_qr",
-      "expected_actions": ["scan_to_pay"]
+      "what_is_pictured": "支付宝转账截图 21:34 许贺建 13303835656 河南郑州电信",
+      "must_have_in_scene_or_observation": [
+        "13303835656",
+        "支付宝"
+      ],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
     },
-
     {
       "id": "image_2372",
       "file": "image_2372.jpg",
       "src": "intent_all image_2372 conf=1.000 basis={登记号}",
       "category": "clinic_registration_certificate",
       "what_is_pictured": "武汉中凯瓶装气供应站登记号 66349177942012017D2112 + 朱铁生西医外科诊所公示",
-      "must_have_in_scene_or_observation": ["登记号"],
+      "must_have_in_scene_or_observation": [
+        "登记号"
+      ],
       "expected_top_intent_type": "id_document",
-      "expected_actions": ["redact_id"]
+      "expected_actions": [
+        "redact_id"
+      ]
     },
     {
       "id": "image_2540",
@@ -172,19 +236,28 @@
       "src": "intent_all image_2540 conf=0.60 basis={登记号,电话}",
       "category": "clinic_sign_with_id",
       "what_is_pictured": "武昌彭春阳西医内科诊所 — 登记号 56558555242010617D2112 + 电话 027-87337814",
-      "must_have_in_scene_or_observation": ["登记号"],
+      "must_have_in_scene_or_observation": [
+        "登记号"
+      ],
       "expected_top_intent_type": "id_document",
-      "expected_actions": ["redact_id"]
+      "expected_actions": [
+        "redact_id"
+      ]
     },
     {
-      "id": "image_6012",
-      "file": "image_6012.jpg",
-      "src": "intent_all image_6012 conf=0.60 basis={身份证}",
-      "category": "tea_house_id_sign",
-      "what_is_pictured": "秀玉红茶坊 Show coffee & tea — 身份证提示 + 山天河国际影城 BULL",
-      "must_have_in_scene_or_observation": ["身份证"],
+      "id": "image_334",
+      "file": "image_334.jpg",
+      "src": "replace(6012 teahouse)->clinic 登记号",
+      "category": "clinic_registration_sign",
+      "what_is_pictured": "武昌 天康中西医 登记号: (诊所门头医疗机构登记号)",
+      "must_have_in_scene_or_observation": [
+        "登记号",
+        "天康"
+      ],
       "expected_top_intent_type": "id_document",
-      "expected_actions": ["redact_id"]
+      "expected_actions": [
+        "redact_id"
+      ]
     },
     {
       "id": "image_170",
@@ -192,9 +265,13 @@
       "src": "intent_all image_170 conf=0.50 basis={中华人民共和国,居民身份证}",
       "category": "national_id_card",
       "what_is_pictured": "中华人民共和国居民身份证样本 — 太湖县公安局签发 / 2006.07.07-2026.07.07",
-      "must_have_in_scene_or_observation": ["居民身份证"],
+      "must_have_in_scene_or_observation": [
+        "居民身份证"
+      ],
       "expected_top_intent_type": "id_document",
-      "expected_actions": ["redact_id"]
+      "expected_actions": [
+        "redact_id"
+      ]
     },
     {
       "id": "image_2494",
@@ -202,9 +279,13 @@
       "src": "intent_all image_2494 conf=0.50 basis={营业执照}",
       "category": "business_license_signage",
       "what_is_pictured": "中部国旅 — 营业执照 + 国内游/入境游 + 创始会员 / 租3送1",
-      "must_have_in_scene_or_observation": ["营业执照"],
+      "must_have_in_scene_or_observation": [
+        "营业执照"
+      ],
       "expected_top_intent_type": "id_document",
-      "expected_actions": ["redact_id"]
+      "expected_actions": [
+        "redact_id"
+      ]
     }
   ]
 }
