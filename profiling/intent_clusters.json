@@ -1,0 +1,467 @@
+{
+  "summary": {
+    "total_items": 8034,
+    "auto_intent_counts": {
+      "location": 1493,
+      "info": 6536,
+      "solve": 5
+    },
+    "clusters_evaluated": 38,
+    "cluster_image_counts_desc": [
+      {
+        "cluster": "location",
+        "count": 2533
+      },
+      {
+        "cluster": "direction_arrow",
+        "count": 895
+      },
+      {
+        "cluster": "phone",
+        "count": 645
+      },
+      {
+        "cluster": "english_dominant",
+        "count": 523
+      },
+      {
+        "cluster": "service_institution",
+        "count": 514
+      },
+      {
+        "cluster": "warning_safety",
+        "count": 509
+      },
+      {
+        "cluster": "shopping_promo",
+        "count": 351
+      },
+      {
+        "cluster": "price",
+        "count": 327
+      },
+      {
+        "cluster": "menu_food",
+        "count": 308
+      },
+      {
+        "cluster": "advertising_design",
+        "count": 186
+      },
+      {
+        "cluster": "date_time",
+        "count": 178
+      },
+      {
+        "cluster": "hours_schedule",
+        "count": 140
+      },
+      {
+        "cluster": "real_estate_rental",
+        "count": 131
+      },
+      {
+        "cluster": "shopping_product",
+        "count": 114
+      },
+      {
+        "cluster": "celebration_greeting",
+        "count": 112
+      },
+      {
+        "cluster": "transit",
+        "count": 110
+      },
+      {
+        "cluster": "url",
+        "count": 110
+      },
+      {
+        "cluster": "recruit_hiring",
+        "count": 97
+      },
+      {
+        "cluster": "instant_message",
+        "count": 96
+      },
+      {
+        "cluster": "parking",
+        "count": 75
+      },
+      {
+        "cluster": "emergency_call",
+        "count": 55
+      },
+      {
+        "cluster": "payment_qr",
+        "count": 49
+      },
+      {
+        "cluster": "traffic_sign",
+        "count": 49
+      },
+      {
+        "cluster": "vehicle_plate",
+        "count": 41
+      },
+      {
+        "cluster": "notice_announcement",
+        "count": 32
+      },
+      {
+        "cluster": "gaming_lottery",
+        "count": 32
+      },
+      {
+        "cluster": "event_show",
+        "count": 19
+      },
+      {
+        "cluster": "love_dating",
+        "count": 15
+      },
+      {
+        "cluster": "logistics",
+        "count": 14
+      },
+      {
+        "cluster": "id_document",
+        "count": 13
+      },
+      {
+        "cluster": "solve",
+        "count": 12
+      },
+      {
+        "cluster": "ingredients_recipe",
+        "count": 11
+      },
+      {
+        "cluster": "patent_id",
+        "count": 7
+      },
+      {
+        "cluster": "legal_contract",
+        "count": 7
+      },
+      {
+        "cluster": "coupon_voucher",
+        "count": 4
+      },
+      {
+        "cluster": "medicine_drug",
+        "count": 3
+      },
+      {
+        "cluster": "lost_found",
+        "count": 1
+      }
+    ]
+  },
+  "ranking_top20": [
+    {
+      "rank": 1,
+      "cluster": "location",
+      "image_count": 2533,
+      "score": 8625.74,
+      "rationale": "Street-level address, shop name with 店/号, recognizable district. Already wired → open_in_maps."
+    },
+    {
+      "rank": 2,
+      "cluster": "direction_arrow",
+      "image_count": 895,
+      "score": 2646.2,
+      "rationale": "→/入口/出口/左转. Action: integrate with location."
+    },
+    {
+      "rank": 3,
+      "cluster": "phone",
+      "image_count": 645,
+      "score": 1816.48,
+      "rationale": "Cellphone (1[3-9]xxxxxxxxx), landline (xxx-xxxxxxxx), or contact keyword. Action: open dialer."
+    },
+    {
+      "rank": 4,
+      "cluster": "english_dominant",
+      "image_count": 523,
+      "score": 1426.08,
+      "rationale": "6+6 latin words in a row (not acronyms). Action: translate."
+    },
+    {
+      "rank": 5,
+      "cluster": "service_institution",
+      "image_count": 514,
+      "score": 1397.74,
+      "rationale": "医院/学校/政府/银行. Action: open maps + hours."
+    },
+    {
+      "rank": 6,
+      "cluster": "warning_safety",
+      "image_count": 509,
+      "score": 1382.02,
+      "rationale": "请勿/禁止/警告/危险. Action: explain warning text."
+    },
+    {
+      "rank": 7,
+      "cluster": "shopping_promo",
+      "image_count": 351,
+      "score": 897.69,
+      "rationale": "促销/打折/满减/秒杀/亏本/清仓/甩卖. Action: copy_to_clipboard for sharing."
+    },
+    {
+      "rank": 8,
+      "cluster": "price",
+      "image_count": 327,
+      "score": 826.53,
+      "rationale": "Explicit currency (￥/元/块/$). Action: copy price for shopping list."
+    },
+    {
+      "rank": 9,
+      "cluster": "menu_food",
+      "image_count": 308,
+      "score": 770.75,
+      "rationale": "菜品/火锅/烧烤/餐厅 or 套餐/招牌菜. Action: translate menu."
+    },
+    {
+      "rank": 10,
+      "cluster": "advertising_design",
+      "image_count": 186,
+      "score": 426.36,
+      "rationale": "广告/策划/设计/VI/LOGO. Action: copy agency contact."
+    },
+    {
+      "rank": 11,
+      "cluster": "date_time",
+      "image_count": 178,
+      "score": 404.8,
+      "rationale": "年/月/日/周N/节假日. Action: add_to_calendar."
+    },
+    {
+      "rank": 12,
+      "cluster": "hours_schedule",
+      "image_count": 140,
+      "score": 304.65,
+      "rationale": "营业时间/AM/PM/HH:MM-HH:MM. Action: copy hours."
+    },
+    {
+      "rank": 13,
+      "cluster": "real_estate_rental",
+      "image_count": 131,
+      "score": 281.55,
+      "rationale": "二手房/出租/转让/楼盘. Action: copy listing details."
+    },
+    {
+      "rank": 14,
+      "cluster": "shopping_product",
+      "image_count": 114,
+      "score": 238.65,
+      "rationale": "批发/零售/代购/微商 e-commerce. Action: copy product details."
+    },
+    {
+      "rank": 15,
+      "cluster": "celebration_greeting",
+      "image_count": 112,
+      "score": 233.67,
+      "rationale": "恭喜/春节/中秋/祝福/开业大吉. Action: copy greeting."
+    },
+    {
+      "rank": 16,
+      "cluster": "transit",
+      "image_count": 110,
+      "score": 228.71,
+      "rationale": "CRH/动车/高铁/航班/公交车/地铁. Action: lookup train/flight route."
+    },
+    {
+      "rank": 17,
+      "cluster": "url",
+      "image_count": 110,
+      "score": 228.71,
+      "rationale": "Explicit web URL or .com/.cn/.net mention. Action: open_browser."
+    },
+    {
+      "rank": 18,
+      "cluster": "recruit_hiring",
+      "image_count": 97,
+      "score": 196.85,
+      "rationale": "招聘/诚聘/招工/兼职. Action: copy job posting."
+    },
+    {
+      "rank": 19,
+      "cluster": "instant_message",
+      "image_count": 96,
+      "score": 194.43,
+      "rationale": "微信/QQ contact or QR. Action: open_wechat (privacy-aware)."
+    },
+    {
+      "rank": 20,
+      "cluster": "parking",
+      "image_count": 75,
+      "score": 144.71,
+      "rationale": "停车场/P车牌/停车费. Action: open maps to parking."
+    }
+  ],
+  "examples_top5_per_cluster": {
+    "location": [
+      "金氏眼镜 创于1989 城建店 金氏眼 谢#惠顾 ### 欢迎光临",
+      "川·M A07126 大地四海 电动车商城 好品牌应有尽有 资阳西门原松涛车站内 ### 玫瑰之约",
+      "李二鲜鱼村 光谷店 李二鲜鱼村欢迎您 李二 欢迎您 迎您 欢迎您!",
+      "金日手机维修中心 主要经营 电话：1387355 762501687 ### 电子 圣女 美颜 配件、升级、解锁"
+    ],
+    "direction_arrow": [
+      "川·M A07126 大地四海 电动车商城 好品牌应有尽有 资阳西门原松涛车站内 ### 玫瑰之约",
+      "全城 竞技 真诚邀请 ### 西班牙风情 R 朝天門 153 摩非网# 每一个热血高手 网络 咖啡 西点 阅读",
+      "easy lake 武汉东湖 Wuhan east lake 请勿通过 No Thoroughfare #",
+      "珞南五路 South Luo Road No.5 现代臧方养生 ### 藏诺养正堂"
+    ],
+    "phone": [
+      "回收电脑 15549079219 主机，笔记本 好 坏 液晶、手机",
+      "瑞缇咖啡 无限动漫 娱乐无极限 本店出租 TOY STORY 自动选物售卖机 电话：13708262966 ### 蓉记",
+      "丽丽花坊 电话:15072356079 首义路店",
+      "中宣书画馆 www.zxsh001.com 中宣书画网 主营 电话0735-8884338 地址：郴州市裕后街沿河6栋 名家字画 玉器根雕 奇木陶艺 古玩杂项 红木家具 展览拍卖 "
+    ],
+    "english_dominant": [
+      "汇然 华润苏果 CONVENIENCE STORES 便利 SG",
+      "Please Consciously Stand In Queue To Take Buses boats 武汉东湖 Wuhan East Lake easylake 鄂AD5Q7",
+      "Fresh DELICIOUS PRODUCT 天天新鲜",
+      "观光电梯 洗手间 OBSERVATION ELEVATOR TOILETS"
+    ],
+    "service_institution": [
+      "武汉市医保定点医院 04 05 06 08 09 10 11 12 18 17 15 14 07 13 01 柜 ###",
+      "仙桃市城镇职工基本医疗保险定点医疗机构 仙桃市城镇职工工伤保险定点医院 仙桃市城镇居民基本医疗保险定点医院 仙桃市公安局干河水陆派出所复州花园警务室 仙桃大道 17 邮政编码：43",
+      "武汉市人民政府宣 禁鞭防火",
+      "竹行街 146 同里镇人民政府 卫生文明家庭"
+    ],
+    "warning_safety": [
+      "### 世界城广场 安全 这个情人节你可以在这里求婚！ 15.02.02 WiFi",
+      "easy lake 武汉东湖 Wuhan east lake 请勿通过 No Thoroughfare #",
+      "中西自助 海鲜粗粮 日韩烧烤 音乐酒吧 510 严禁携带易燃易爆物品 426 隆重开业 首届古玩艺术博览交易会 诚邀共赏 社会 Y1774 ### 社会# 5F 卓刀泉·古玩珠宝城",
+      "请勿戏水"
+    ],
+    "shopping_promo": [
+      "### 门面转让 亏本清仓 营业时间",
+      "新年感恩 ### 现金红包 连单返",
+      "辞旧岁三羊开泰 ### 电脑维修 平价装 迎新春六猴送安 3201613 永久 8",
+      "一品轩 锅天下 吃100送50券五店通用吃100送50券 ### Cola"
+    ],
+    "price": [
+      "巧克力棉花糖圣代 可丽饼 巴黎夜总汇 25元 澳洲黑胶西冷牛排 南美千岛鲜虾 22元 综合水果圣代 ### ￥22元 ￥20元 House",
+      "啄木鸟鞭炮 5000响，20元/件。",
+      "重重 满足 餐 三层 火腿扒堡 新 双层 麦香鸡 阿拉斯加 狭鳕鱼堡 全天天天超值 ### M ￥15 + = CocaCola ®",
+      "通知 各位老师们好： 请订酸奶、牛奶、 于本月24日至28日办理#订 购<早7：00拿走> 牛奶4.00元/个 酸奶2.5元/瓶 值班室"
+    ],
+    "menu_food": [
+      "GREE ###美女性#### 福 茶 格力 ##车行 之道 茶之道 洗 GR## ### 自助火锅城",
+      "中西自助 海鲜粗粮 日韩烧烤 音乐酒吧 510 严禁携带易燃易爆物品 426 隆重开业 首届古玩艺术博览交易会 诚邀共赏 社会 Y1774 ### 社会# 5F 卓刀泉·古玩珠宝城",
+      "特色小碗菜 火锅 炒菜 小碗菜 道决电动车 E635790 136 ###",
+      "巴蜀大饭店 家常菜 干锅牛蛙 烧鸡公 万州烤鱼 订餐电话：13913077867"
+    ],
+    "advertising_design": [
+      "A1133 12:45 汉味早点米当先 ### 三国 诗尼 浪漫一身 三国英雄 楚 湖北 服装 设计 楚栗香 巷 海",
+      "#图广告传媒 电话：####-2##6618",
+      "会所将 ### 车室内外精洗 蒸汽消毒 承接玻璃幕墙 经营范围专业设计制作 服务宗旨诚 发动机外部清洗 华",
+      "相约空间 形象设计"
+    ],
+    "date_time": [
+      "严谨开启 日 佳美物业封 ### 消火栓巡查记录表 四### 消火栓 FIRE HYDRANT 擅自挪用、破坏消防 器材是违法行为！ 资阳市消防举报投诉中心电话：26123567 ",
+      "湖北剧院 2015年5月12日19:30 中国巡演武汉站 0-627-1988 ### w.7977.com.cn 南美旋风 北",
+      "群聊 该微信群二维码将在2016年1月20日失效",
+      "贵群 被评为先进工作群 特此嘉奖 2015年度 腾讯总部 群友委员会 精神文明办"
+    ],
+    "hours_schedule": [
+      "### 门面转让 亏本清仓 营业时间",
+      "同畅堂餐厅 最新推出 渝和 黄焖鸡米饭 重庆味 中国味 华科店 订餐电话：18007177856 财宝 财 营业时间 10:00-14:00 16:30-21:00 内设空调 正在",
+      "地址·德国风情街 时间·2015年7月~8月 17:00~24:00 鄂A·Y75J0 把光谷 ### WORLD CITY OPTICAL VALLEY",
+      "清水伊人 价值168元#灸或168元交 灸任选，预约电话： 87522601 15717123359 斯威特快捷酒店 客房服务员各2名 女王甲妆 接待收银 福 睿森健身台球咖啡 电"
+    ],
+    "real_estate_rental": [
+      "瑞缇咖啡 无限动漫 娱乐无极限 本店出租 TOY STORY 自动选物售卖机 电话：13708262966 ### 蓉记",
+      "鸣宇锦程 少量住房和门面优价出售 富 THE MOVE 迪 ### FL 一期现房清盘",
+      "创爱莲湖户型奇迹 2886789 91㎡≥110㎡",
+      "严谨开启 日 佳美物业封 ### 消火栓巡查记录表 四### 消火栓 FIRE HYDRANT 擅自挪用、破坏消防 器材是违法行为！ 资阳市消防举报投诉中心电话：26123567 "
+    ],
+    "shopping_product": [
+      "统鑫副食 蔡甸牛肉面 烟酒 性保健 ### 禁止停车 您已进入全新监控区域 中国·",
+      "九芝堂 医者当问良 药者当付全力 服务特色 长沙市医疗保险协议零售药店 九芝堂总府 馆 文# 每一步 ###",
+      "魔音琴行 乐器销售 乐器教学 琴房练习 音响出租 全新进口钢琴 一律标准琴房 0028",
+      "打年货啦 小观园纯手工年货全新上市，快来抢购吧！！！ 活动时间：2016年1月25日至2月22日 购买年货每满500元赠送50元代金券； 每满1000元赠送120元代金券； 每满2"
+    ],
+    "celebration_greeting": [
+      "瑞不可挡 福 喜恩# 贺新####进口、10# 智配方羊奶粉 方羊奶粉 Ruyc 金瑞优 美猴王 车# 2 喜恩 婴儿配方## ### 3 营养均衡 婴儿配方羊奶粉 优势绽放 58",
+      "连锁店 110联网报警健康用户 电话 3253110 精 恭喜 虎氏牛骨头面馆 ###",
+      "宜家美居 YIJIA HOME 地址：南江镇西门沟 爱心献血屋 无偿献血 ICBC 防范通讯诈骗欢度平安春节 闲情网咖 请上二 亚军广告 中国体育彩票 中国工商银行 7572016",
+      "门面转让或出租 春节放假 26677222 26998778 26361666 ###"
+    ],
+    "transit": [
+      "川·M A07126 大地四海 电动车商城 好品牌应有尽有 资阳西门原松涛车站内 ### 玫瑰之约",
+      "仅办理互联网取票 13 CRH ###",
+      "特色小碗菜 火锅 炒菜 小碗菜 道决电动车 E635790 136 ###",
+      "会 迎前来体验 广铁集团 高铁火车票售票处 咨询电话：2552948 ###"
+    ],
+    "url": [
+      "网上购票 hj.hbglky.com",
+      "中宣书画馆 www.zxsh001.com 中宣书画网 主营 电话0735-8884338 地址：郴州市裕后街沿河6栋 名家字画 玉器根雕 奇木陶艺 古玩杂项 红木家具 展览拍卖 ",
+      "JIUJIUAI 玖玖爱 面条走进新时代 美味健康玖玖爱 杂粮面 健康面 LIanJIa.com 链家 ###",
+      "湖北剧院 2015年5月12日19:30 中国巡演武汉站 0-627-1988 ### w.7977.com.cn 南美旋风 北"
+    ],
+    "recruit_hiring": [
+      "招聘",
+      "招聘喽 班纳通话 就是缺你 店员：18-38岁。有工作经验者优先 薪资待遇2500-4500元月 ### 加入我们你有可能晋升店长甚至股东 张经理13995607433 Tale ",
+      "苏州仁德鑫包装有限公司 科技发展有限公司 拓必西科技 诚聘 拓必西（苏州）",
+      "招聘 办证上网186 83591213 ###"
+    ],
+    "instant_message": [
+      "年轻就尚 YOUNG IS SHINE 跑步 让运动改变你 扫一扫 尚 sports ### 杰之行官方微信",
+      "微信扫一扫支付 向$财神$5(**蝶)转账 ￥69.00",
+      "群聊 该微信群二维码将在2016年1月20日失效",
+      "交千万好友 变百万富翁 颠覆整个微营销行业 善意提醒：因为加友速度太快 请各位多准备几个微信号！ ￥ 加爆好友 收益巨大 操作简单 毫无限制 我是 顺其自然 我为 www 代言"
+    ],
+    "parking": [
+      "停车场 P",
+      "专用停车位 馔玉酒楼",
+      "光谷 天地 停车场 出口 务银亭 欢迎使用中国工商 ### 线戒警 工#银行 95588",
+      "P 停车场"
+    ]
+  },
+  "intersection_with_auto_intent_top40": {
+    "location+location": 1342,
+    "info+location": 1191,
+    "location+direction_arrow": 587,
+    "info+phone": 423,
+    "info+warning_safety": 388,
+    "info+english_dominant": 351,
+    "info+direction_arrow": 307,
+    "info+service_institution": 275,
+    "info+shopping_promo": 273,
+    "info+price": 244,
+    "location+service_institution": 238,
+    "info+menu_food": 235,
+    "location+phone": 221,
+    "location+english_dominant": 170,
+    "location+warning_safety": 120,
+    "info+advertising_design": 112,
+    "info+date_time": 110,
+    "info+hours_schedule": 94,
+    "info+shopping_product": 88,
+    "location+price": 82,
+    "info+celebration_greeting": 79,
+    "location+shopping_promo": 78,
+    "info+real_estate_rental": 76,
+    "location+advertising_design": 74,
+    "info+url": 73,
+    "location+menu_food": 73,
+    "info+transit": 72,
+    "info+instant_message": 69,
+    "location+date_time": 67,
+    "info+recruit_hiring": 60,
+    "location+real_estate_rental": 55,
+    "info+parking": 48,
+    "location+hours_schedule": 46,
+    "info+payment_qr": 41,
+    "location+transit": 38,
+    "location+url": 37,
+    "location+recruit_hiring": 37,
+    "info+emergency_call": 35,
+    "location+celebration_greeting": 33,
+    "info+traffic_sign": 32
+  }
+}
