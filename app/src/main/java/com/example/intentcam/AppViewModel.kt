@@ -762,6 +762,41 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         settings.reset()
         client.config = settings.load()
     }
+
+    // ───── [2026-07-13] Phase B: PII action permission toggles ─────
+
+    /**
+     * Snapshot of the current userPrefKey grants for every
+     * PII-tagged action.  Maps `ActionDef.userPrefKey` →
+     * `loadActionPermission(key)`.  Cheap: 4 SharedPreferences
+     * booleans, lives in memory only long enough to render the
+     * Settings screen.
+     *
+     *  Kept as a function instead of a property so the Settings UI
+     *  re-reads after each toggle without needing a separate
+     *  observation Flow (the screen re-renders on `MutableStateFlow`
+     *  updates already, so this is consistent with the rest of the
+     *  Settings layer's "you call me again, I re-read" pattern).
+     */
+    fun piiActionPermissions(): Map<String, Boolean> =
+        actionRegistry.list()
+            .filter { it.requiresConfirmation && it.userPrefKey != null }
+            .associate { it.userPrefKey!! to settings.loadActionPermission(it.userPrefKey) }
+
+    /** Flip one PII action's permission.  Both directions write
+     *  through to [SettingsStore]; the read toggle in
+     *  [piiActionPermissions] reflects the change on the next
+     *  re-read.  Never throws on unknown keys (defensive — the
+     *  Settings UI could pass an id we subsequently removed). */
+    fun setPiiActionPermission(key: String, enabled: Boolean) {
+        val def = actionRegistry.list().firstOrNull { it.userPrefKey == key }
+        if (def == null) {
+            logDebug("PIIGATE", "set permission 未知 key $key")
+            return
+        }
+        settings.saveActionPermission(key, enabled)
+        logDebug("PIIGATE", "${def.id} -> ${if (enabled) "ON" else "OFF"}")
+    }
 }
 
 // formatThrowable moved to :shared/FormatThrowable.kt

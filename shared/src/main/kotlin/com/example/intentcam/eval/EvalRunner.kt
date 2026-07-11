@@ -54,7 +54,11 @@ internal class EvalRunner(private val config: EvalConfig) {
     private val defaultActionIds = listOf(
         "view_details",   // no-op chip (DEFAULT_ID in app/)
         "open_in_maps",   // location → maps
-        "dial_number",    // [2026-07-13] phone → system dialer
+        "dial_number",    // [2026-07-13] phone → system dialer (Phase A)
+        "copy_listing",   // [2026-07-13] real_estate_rental → share (Phase B)
+        "save_posting",   // [2026-07-13] recruit_hiring → share (Phase B)
+        "scan_to_pay",    // [2026-07-13] payment_qr → guidance Toast (Phase B)
+        "redact_id",      // [2026-07-13] id_document → guidance Toast (Phase B)
     )
     // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
     // when --debug-fixtures is set, otherwise stay silent like before.

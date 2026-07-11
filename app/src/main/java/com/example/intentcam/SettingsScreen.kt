@@ -16,9 +16,11 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsScreen(
     current: LlmConfig,
+    piiPermissions: Map<String, Boolean>,
     onSave: (LlmConfig) -> Unit,
     onResetDefault: () -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onTogglePii: (key: String, enabled: Boolean) -> Unit,
 ) {
     var baseUrl by remember { mutableStateOf(current.baseUrl) }
     // Token field is intentionally left blank — we never display the active
@@ -116,6 +118,44 @@ fun SettingsScreen(
                 "提示：接口需支持图片输入（vision）。请求路径为 <BASE_URL>/v1/messages。",
                 style = MaterialTheme.typography.labelSmall
             )
+
+            // [2026-07-13] Phase B: PII action opt-in section.
+            //  Mirrors the `requiresConfirmation=true` chips surfaced
+            //  on `dial_number` / `copy_listing` / `save_posting` /
+            //  `scan_to_pay` / `redact_id` bubbles.  Default OFF — the
+            //  Settings screen is the only entry point for opting in
+            //  (a single tap on a chip grants it once via
+            //  AppViewModel.confirmAction; this section is for
+            //  permanent per-action consent).
+            Spacer(Modifier.height(16.dp))
+            HorizontalDivider()
+            Text(
+                "隐私敏感动作",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                "默认关闭。开启后，每次使用仍然会弹窗确认。",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            // Stable order: by userPrefKey (which embeds the action id).
+            piiPermissions.toSortedMap().forEach { (key, enabled) ->
+                val actionId = key.removePrefix("action_").removeSuffix("_enabled")
+                ListItem(
+                    headlineContent = { Text(actionId) },
+                    supportingContent = {
+                        Text(
+                            "userPrefKey: $key",
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = enabled,
+                            onCheckedChange = { onTogglePii(key, it) },
+                        )
+                    },
+                )
+            }
         }
     }
 }

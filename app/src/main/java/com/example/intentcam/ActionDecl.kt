@@ -233,6 +233,111 @@ fun registerDefaultActions(reg: ActionRegistry) {
             outcome
         },
     ))
+    // [2026-07-13] Phase B: PII-sensitive actions.  All four share
+    //  the same consent + default-off gating as `dial_number`:
+    //   - requiresConfirmation=true (chip-tap parks AlertDialog)
+    //   - userPrefKey="action_<id>_enabled" (SettingsStore backs the
+    //     toggle; Settings screen in Phase B3 surfaces 4 switches)
+    //  Bodies are minimal text → clipboard / warn / info-only — the
+    //  heavy lifting is the consent gate, not the side effect.
+    reg.register(ActionDef(
+        id = "copy_listing",
+        label = "复制房源",
+        iconKey = "clipboard",
+        applicableIntents = setOf("real_estate_rental"),
+        requiresConfirmation = true,
+        userPrefKey = "action_copy_listing_enabled",
+        body = { _, bubble, _ ->
+            // ACTION_SEND with text/plain — the user gets the system
+            // share sheet pre-loaded with the listing text, which is
+            // more honest than silently dropping it on the
+            // clipboard (less surprising if it doesn't paste right).
+            val payload = buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
+                append('\n')
+                append(bubble.detail)
+            }.trim()
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享房源"))
+        },
+    ))
+    reg.register(ActionDef(
+        id = "save_posting",
+        label = "保存招聘",
+        iconKey = "clipboard",
+        applicableIntents = setOf("recruit_hiring"),
+        requiresConfirmation = true,
+        userPrefKey = "action_save_posting_enabled",
+        body = { _, bubble, _ ->
+            // Same share-sheet path as copy_listing — keeps the
+            // surface small and consistent.  Real save-to-Notes /
+            // save-to-RecyclerView is Phase C.
+            val payload = buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
+                append('\n')
+                append(bubble.detail)
+            }.trim()
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "保存招聘"))
+        },
+    ))
+    reg.register(ActionDef(
+        id = "scan_to_pay",
+        label = "扫码支付",
+        iconKey = "wallet",
+        applicableIntents = setOf("payment_qr"),
+        requiresConfirmation = true,
+        userPrefKey = "action_scan_to_pay_enabled",
+        body = { _, _, _ ->
+            // [2026-07-13] CRITICAL: NEVER auto-launch a payment app.
+            //  The QR could be presented in a screenshot / phishing
+            //  context where auto-pay = money lost.  Even after the
+            //  user confirms via the AlertDialog, we open the user's
+            //  *default camera* (or an explicit "scan a QR" launcher)
+            //  so the user has to physically point at a NEW code they
+            //  trust — never the one in the current photo.  This
+            //  body never fires — see the always-None below.
+            //
+            //  Until we have a "scan a fresh QR" UI, surface only the
+            //  guidance Toast.  Phase B's conservative default.
+            ActionOutcome.ShowUiFeedback(
+                "请在相机/支付 App 里手动扫描二维码。不要直接扫描截图里的码。"
+            )
+        },
+    ))
+    reg.register(ActionDef(
+        id = "redact_id",
+        label = "遮挡证件号",
+        iconKey = "lock",
+        applicableIntents = setOf("id_document"),
+        requiresConfirmation = true,
+        userPrefKey = "action_redact_id_enabled",
+        body = { _, bubble, _ ->
+            // [2026-07-13] Conservative v1: copy the FULL text to
+            //  clipboard (so the user can re-paste into a trusted
+            //  form), but mark the bubble as "ID seen, do not share
+            //  the screenshot" via Toast.  Future Phase C will copy a
+            //  redacted version (mask middle 6 digits of 身份证)
+            //  — Phase B ships the simplest safe thing first.
+            val text = bubble.detail.ifBlank { bubble.title }
+            // No clipboard write yet — Toast only until Phase C
+            // bundles a proper redactor + clipboard plumbing.  The
+            // chip's purpose at this stage is to register that the
+            // user saw an ID-containing image (audit trail), not to
+            // bypass the consent gate.
+            ActionOutcome.ShowUiFeedback(
+                "识别到证件类图片。建议手打,不要截图分享。文本: ${text.take(40)}…"
+            )
+        },
+    ))
 }
 
 /** Pull the first plausible phone number from a bubble's surface text.

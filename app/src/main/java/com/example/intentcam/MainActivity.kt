@@ -123,9 +123,11 @@ private fun AppRoot(viewModel: AppViewModel) {
     when (state.phase) {
         Phase.SETTINGS -> SettingsScreen(
             current = viewModel.config,
+            piiPermissions = viewModel.piiActionPermissions(),
             onSave = viewModel::saveConfig,
             onResetDefault = viewModel::resetConfigToDefault,
-            onClose = viewModel::closeSettings
+            onClose = viewModel::closeSettings,
+            onTogglePii = viewModel::setPiiActionPermission,
         )
         Phase.NEED_PERMISSION -> PermissionScreen {
             permissionLauncher.launch(Manifest.permission.CAMERA)

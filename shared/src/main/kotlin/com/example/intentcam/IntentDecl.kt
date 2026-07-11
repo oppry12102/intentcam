@@ -111,6 +111,42 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "拨号：手机号 / 座机 / 400电话 / 服务热线",
         family = IntentFamily.ACT_ON,
     ))
+    // [2026-07-13] Phase B: PII-sensitive intents (consolidated).
+    //  All four below ship with their corresponding ActionDef under
+    //  `requiresConfirmation=true` + `userPrefKey=...` gating, so the
+    //  chip + consent flow from `dial_number` is reused verbatim.
+    //  Lives here (not in a separate `registerPiiIntents`) to keep
+    //  the single-registry invariant ("one bag of intents, one bag
+    //  of actions") enforced at runtime.
+
+    reg.register(IntentDecl(
+        id = "real_estate_rental",
+        label = "租房",
+        llmHint = "租房：出租 / 二手房 / 房源 / 中介",
+        family = IntentFamily.ACT_ON,
+    ))
+    reg.register(IntentDecl(
+        id = "recruit_hiring",
+        label = "招聘",
+        llmHint = "招聘：招工 / 求职 / 兼职 / 高薪",
+        family = IntentFamily.ACT_ON,
+    ))
+    reg.register(IntentDecl(
+        id = "payment_qr",
+        label = "支付",
+        llmHint = "支付：扫一扫 / 收款码 / 付款码 / 转账",
+        family = IntentFamily.ACT_ON,
+    ))
+    reg.register(IntentDecl(
+        id = "id_document",
+        label = "证件",
+        llmHint = "证件：身份证 / 营业执照 / 车牌",
+        family = IntentFamily.ACT_ON,
+    ))
+    // `love_dating` is intentionally omitted: a dating-app-ad is just
+    // an info bubble (read it for context).  No PII action ships —
+    // the existing `info` family already serves the model's
+    // `type=info` classification for these fixtures.
 }
 
 /**
