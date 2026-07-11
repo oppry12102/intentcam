@@ -1,0 +1,244 @@
+{
+  "ground_truth": "ground_truth_pii20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 4,
+  "overall_composite": 0.8718750000000001,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 4,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "brand_wechat_follow": 0.7875000000000001,
+    "clinic_registration_certificate": 0.9,
+    "recruit_ad_with_phone": 0.9,
+    "real_estate_residential": 0.9
+  },
+  "fixtures": [
+    {
+      "raw_content": "画面是一处旧城改造工地外围，砖墙后方有破旧砖瓦房，前方挂着两条红色房地产宣传横幅和一条白色公益宣传横幅。\n\n可见文字：\n- 左侧红色横幅（房地产广告）：「湘华名邸」「风水宝地·纯住宅小区·稀缺电梯房」，下方有「抢房就\u2026」等促销口号（部分被遮挡）\n- 右侧白色横幅（公益标语）：「创建文明城市」「建和谐社会」（大字红字白底）\n- 右上方蓝色小招牌：「阿芝鹅翅」\n- 左侧有一顶带红灯笼的帐篷/小摊棚\n\n场景前景为泥地与废墟瓦砾，下方停着一辆白色轿车的车头。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "左侧红色横幅标题",
+          "value": "湘华名邸"
+        },
+        {
+          "kind": "text",
+          "label": "左侧红色横幅副标题",
+          "value": "风水宝地·纯住宅小区·稀缺电梯房"
+        },
+        {
+          "kind": "text",
+          "label": "左侧横幅底部口号（部分）",
+          "value": "抢房就... [LOW]"
+        },
+        {
+          "kind": "text",
+          "label": "右侧白色横幅大字",
+          "value": "创建文明城市"
+        },
+        {
+          "kind": "text",
+          "label": "右侧白色横幅副大字",
+          "value": "建和谐社会"
+        },
+        {
+          "kind": "text",
+          "label": "右侧蓝色小广告牌顶部",
+          "value": "阿芝鹅翅"
+        },
+        {
+          "kind": "text",
+          "label": "左侧帐篷红色装饰",
+          "value": "红灯笼"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1391",
+      "category": "real_estate_residential",
+      "content_len": 227,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺招牌：\"吉立采广告\"，主营广告制作服务：店面装修、工程图复印、喷绘写真、展柜制作、彩色印刷、广告招牌、丝印、有机加工、发光字水晶字、会议礼品等。门口贴有招聘启事：招聘广告制作师傅、平面设计学徒、制作学徒。门牌号：八一路112附1。右侧相邻店铺为\"网咖\"，再往右有\"照相 请上二楼\"。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店招主营",
+          "value": "吉立采广告"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "店面装修 工程图复印"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "喷绘写真 展柜制作"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "彩色印刷 广告招牌"
+        },
+        {
+          "kind": "text",
+          "label": "招聘启事",
+          "value": "招聘 广告制作师傅 平面设计学徒 制作学徒"
+        },
+        {
+          "kind": "text",
+          "label": "门牌号",
+          "value": "八一路112附1"
+        },
+        {
+          "kind": "text",
+          "label": "相邻店铺",
+          "value": "网咖 照相请上二楼"
+        }
+      ],
+      "expected_actions": ["save_posting"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1434",
+      "category": "recruit_ad_with_phone",
+      "content_len": 143,
+      "r1": 1
+    },
+    {
+      "raw_content": "公交站灯箱广告 \u2014 「光谷新青年 住优+特区」(北辰优+ 国际青年互动社区 INTERNATIONAL YOUTH INTERACTION COMMUNITY)。卖点：「VIP VIP 80-140m² 全通透户型，优客家质身份卡火爆申领中！」。电话：027-8711 8888。外展点：关山大道中建康城27-28号商铺。投资商：北辰实业（中国复合地产业专业品牌第1名，A股代码SH.601588，H股代码HK.0588）。开发商：武汉当代北辰置业有限公司。项目卖点标签：优品牌 / 优地段 / 优园林 / 优配套 / 优客厅 / 优户型。右下角二维码旁文字：「扫一扫关注优+ 官方微信」。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "项目名",
+          "value": "光谷新青年 住优+特区 / 北辰优+ 国际青年互动社区 (INTERNATIONAL YOUTH INTERACTION COMMUNITY)"
+        },
+        {
+          "kind": "price",
+          "label": "户型与卖点",
+          "value": "VIP VIP 80-140m² 全通透户型，优客家质身份卡火爆申领中！"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "027-8711 8888"
+        },
+        {
+          "kind": "text",
+          "label": "外展点",
+          "value": "关山大道中建康城27-28号商铺"
+        },
+        {
+          "kind": "text",
+          "label": "投资商",
+          "value": "北辰实业 (中国复合地产业专业品牌第1名 A股代码SH.601588 H股代码HK.0588)"
+        },
+        {
+          "kind": "text",
+          "label": "开发商",
+          "value": "武汉当代北辰置业有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "项目卖点标签",
+          "value": "优品牌 / 优地段 / 优园林 / 优配套 / 优客厅 / 优户型"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "扫一扫关注优+ 官方微信"
+        }
+      ],
+      "expected_actions": ["scan_to_pay"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "copy_listing",
+        "save_posting",
+        "open_in_maps"
+      ],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_6978",
+      "category": "brand_wechat_follow",
+      "content_len": 295,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「东湖风景朱铁生西医外科诊所」的临街门面。绿色招牌白字，左侧有红色十字 logo，下方标注「登记号：66349177942012017D2112」。门店为玻璃门卷帘门样式，门口左侧贴有「公共场所 请灭烟」「小心碰头」「请随手关门」等提示；右侧紧邻一家蓝色卷帘门的店铺「武汉中凯瓶装气供应站·蔡山中转站」（带电话号码 135****2042 / 133****1158，数字部分小而模糊）；店铺前方挂有一条红色横幅，写有金黄色字「...近三年...合格率100%　2015年一本院校校考合格率100%！」（横幅左端被门柱遮挡，开头数字不清）。门前放着一个绿色厨余垃圾桶，地面上停着一辆电动自行车。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "诊所 logo",
+          "value": "红十字（红色十字符号，白底）"
+        },
+        {
+          "kind": "text",
+          "label": "诊所名称",
+          "value": "东湖风景朱铁生西医外科诊所"
+        },
+        {
+          "kind": "number",
+          "label": "登记号",
+          "value": "登记号：66349177942012017D2112"
+        },
+        {
+          "kind": "text",
+          "label": "公共场所警示",
+          "value": "公共场所 请灭烟"
+        },
+        {
+          "kind": "text",
+          "label": "邻近店铺",
+          "value": "武汉中凯瓶装气供应站 蔡山中转站"
+        },
+        {
+          "kind": "text",
+          "label": "红色横幅",
+          "value": "[LOW] 近三年...合格率100%  2015年一本院校校考合格率100%！（开头被门柱遮挡，部分字模糊）"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门贴纸",
+          "value": "小心碰头 / 请随手关门 / 小心碰头 请灭烟"
+        }
+      ],
+      "expected_actions": ["redact_id"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_2372",
+      "category": "clinic_registration_certificate",
+      "content_len": 299,
+      "r1": 1
+    }
+  ]
+}
