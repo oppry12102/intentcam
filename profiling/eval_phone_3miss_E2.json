@@ -1,0 +1,211 @@
+{
+  "ground_truth": "ground_truth_phone_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.8916666666666667,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 3,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "storefront_with_phone": 0.8875000000000001,
+    "service_ads_with_phone": 0.8875000000000001,
+    "restaurant_with_phone": 0.9
+  },
+  "fixtures": [
+    {
+      "raw_content": "红色摩托车/电动车尾部，挂着一块黑色店铺招牌。车牌 川·M A58333。招牌内容：路发车行\u2014\u2014世纪豪情电动车。总店：天宇市场对面(公交站处)。二分店：三贤弘乐府对面(公交站处)。售后电话：18328277720。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "车牌号(省份)",
+          "value": "川·M"
+        },
+        {
+          "kind": "text",
+          "label": "车牌号",
+          "value": "A58333"
+        },
+        {
+          "kind": "text",
+          "label": "店铺名",
+          "value": "路发车行"
+        },
+        {
+          "kind": "text",
+          "label": "经营品牌/品类",
+          "value": "世纪豪情电动车"
+        },
+        {
+          "kind": "text",
+          "label": "总店地址",
+          "value": "天宇市场对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "二分店地址",
+          "value": "三贤弘乐府对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "售后电话",
+          "value": "18328277720"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1216",
+      "category": "storefront_with_phone",
+      "content_len": 107,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边店铺招牌一览，从左到右：\n1. 左侧小招牌（红色）：\"蒸的健康 / 真的美味\"，大字\"包\"，编号\"D.1603\"\n2. 中间红底黄字招牌：**黄焖鸡米饭**（佳园路店）\n3. 中间黑底金匾招牌：**楚一品 热干面馆**，下方小字\"官网www.jcmcw.com  中文域名:江城名吃  客服电话:027-87875310  佳园路店\"\n4. 右侧卷帘门招牌（黄字）：**经济实**（\"惠\"字疑似被截掉）\n门柱对联：\"一道菜的餐厅\"，门口有\"欢迎您光临\"小字。店前摆放红色和粉色塑料凳。",
+      "r2_text": 1,
+      "details_count": 12,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主招牌1",
+          "value": "黄焖鸡米饭"
+        },
+        {
+          "kind": "text",
+          "label": "分店名",
+          "value": "佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "主招牌2",
+          "value": "楚一品 热干面馆"
+        },
+        {
+          "kind": "text",
+          "label": "网址",
+          "value": "www.jcmcw.com"
+        },
+        {
+          "kind": "text",
+          "label": "中文域名",
+          "value": "中文域名:江城名吃"
+        },
+        {
+          "kind": "phone",
+          "label": "客服电话",
+          "value": "027-87875310"
+        },
+        {
+          "kind": "text",
+          "label": "右侧招牌",
+          "value": "经济实(惠?)"
+        },
+        {
+          "kind": "text",
+          "label": "左侧小招牌",
+          "value": "蒸的健康 真的美味"
+        },
+        {
+          "kind": "text",
+          "label": "招牌大字",
+          "value": "包"
+        },
+        {
+          "kind": "number",
+          "label": "编号",
+          "value": "D.1603"
+        },
+        {
+          "kind": "text",
+          "label": "店内对联",
+          "value": "一道菜的餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "欢迎语",
+          "value": "欢迎您光临"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1359",
+      "category": "restaurant_with_phone",
+      "content_len": 244,
+      "r1": 1
+    },
+    {
+      "raw_content": "小巷内一面水泥墙，墙上方挂有八卦镜装饰；墙面贴着「仙桃大发搬家 室内清洗」广告小牌，联系电话 13972177732 / 18771159411；右侧蓝色门牌「小南小区东十六巷 XIAONANXIAOQUDONG18XIANG」；下方墙上黑色涂鸦写着「13797031332」。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "商家名",
+          "value": "仙桃大发搬家"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "室内清洗"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话1",
+          "value": "13972177732"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话2",
+          "value": "18771159411"
+        },
+        {
+          "kind": "text",
+          "label": "路牌中文",
+          "value": "小南小区东十六巷"
+        },
+        {
+          "kind": "text",
+          "label": "路牌拼音",
+          "value": "XIAONANXIAOQUDONG18XIANG"
+        },
+        {
+          "kind": "phone",
+          "label": "墙面涂鸦电话",
+          "value": "13797031332"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2267",
+      "category": "service_ads_with_phone",
+      "content_len": 139,
+      "r1": 1
+    }
+  ]
+}

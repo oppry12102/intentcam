@@ -1,0 +1,285 @@
+{
+  "ground_truth": "ground_truth_phone_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.915,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "storefront_with_phone": 0.8875000000000001,
+    "service_ads_with_phone": 0.8875000000000001,
+    "shopping_mall_with_phone": 0.9,
+    "factory_sign_with_phone": 1,
+    "restaurant_with_phone": 0.9
+  },
+  "fixtures": [
+    {
+      "raw_content": "一张电动车/摩托车尾部照片（车牌 川·M A58333，车身为粉红色，前面有红色地毯）。车尾挂着一块黑色广告牌：红色大字「路发车行」，绿色字「世纪豪情电动车」，下方绿色小字地址\u2014\u2014「总店：天宇市场对面（公交站处）」「二分店：三贤弘乐府对面（公交站处）」，白色售后电话「18328271720」。",
+      "r2_text": 0.75,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店名",
+          "value": "路发车行"
+        },
+        {
+          "kind": "text",
+          "label": "经销品牌",
+          "value": "世纪豪情电动车"
+        },
+        {
+          "kind": "text",
+          "label": "总店地址",
+          "value": "天宇市场对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "二分店地址",
+          "value": "三贤弘乐府对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "售后电话",
+          "value": "18328271720"
+        },
+        {
+          "kind": "text",
+          "label": "车牌号",
+          "value": "川·M A58333"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "copy_listing"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1216",
+      "category": "storefront_with_phone",
+      "content_len": 147,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张沿街商铺的照片，画面中可见多家店铺招牌：\n\n1. **黄焖鸡米饭（佳园路店）** \u2014 红色招牌，黄字\n2. **楚一品® 热干面馆（佳园路店）** \u2014 黑色招牌，金色字，含官网 www.jcmcw.com、中文域名\"江城名吃\"、客服电话 027-87875310\n3. **一道菜的餐厅** \u2014 红色竖条幅\n4. **最右侧招牌** \u2014 \"拓桥实 / 经济实惠\"（OCR 模糊，[LOW]）\n5. **最左侧店铺招牌** \u2014 仅可见\"包\"、\"D.1603\"、\"蒸的怎康\"等残字，招牌被画面裁切\n\n画面下方有人行道、粉色和红色塑料凳、正在走路的小孩。整体为武汉江城一带沿街餐饮店聚集场景。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店铺招牌1",
+          "value": "黄焖鸡米饭"
+        },
+        {
+          "kind": "text",
+          "label": "分店名1",
+          "value": "佳园路店"
+        },
+        {
+          "kind": "logo",
+          "label": "店铺招牌2",
+          "value": "楚一品® 热干面馆"
+        },
+        {
+          "kind": "url",
+          "label": "官网",
+          "value": "www.jcmcw.com 中文域名:江城名吃"
+        },
+        {
+          "kind": "phone",
+          "label": "客服电话",
+          "value": "027-87875310"
+        },
+        {
+          "kind": "text",
+          "label": "竖条幅文字",
+          "value": "一道菜的餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "右侧招牌文字 [LOW]",
+          "value": "经洗实 / 拓桥实 (OCR 模糊)"
+        },
+        {
+          "kind": "text",
+          "label": "左侧店铺部分文字",
+          "value": "包 / D.1603 / 蒸的怎康 (招牌被裁切)"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_1359",
+      "category": "restaurant_with_phone",
+      "content_len": 297,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一栋金色外墙的购物中心，楼顶有蓝色\"P 立体车库\"标识牌。正面招牌写着\"巷广场购物中心\"和英文\"IXIANG PLAZA SHOPPING CENTER\"（首个汉字被旗杆遮挡，推断为\"南巷广场\"或类似名）。建筑侧面有一根竖向招牌，依次显示入驻商户：「华夏影城」(电影院)、「名仕台球」、「渝尚常」(餐饮)、「屈臣氏 watsons」。门前停着一辆绿色公交车，车头编号「512H1086」，公交车后方隐约能看到\"VIP\"字样的店铺招牌。前景是施工围挡和一堆碎石瓦砾。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "商场名(部分)",
+          "value": "巷广场购物中心"
+        },
+        {
+          "kind": "text",
+          "label": "商场英文名",
+          "value": "IXIANG PLAZA SHOPPING CENTER"
+        },
+        {
+          "kind": "text",
+          "label": "立体车库标识",
+          "value": "P 立体车库"
+        },
+        {
+          "kind": "text",
+          "label": "影院名",
+          "value": "华夏影城"
+        },
+        {
+          "kind": "text",
+          "label": "商户-台球",
+          "value": "名仕台球"
+        },
+        {
+          "kind": "text",
+          "label": "商户-餐饮",
+          "value": "渝尚常"
+        },
+        {
+          "kind": "text",
+          "label": "商户-便利店",
+          "value": "屈臣氏 watsons"
+        },
+        {
+          "kind": "text",
+          "label": "公交/车辆编号",
+          "value": "512H1086"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1658",
+      "category": "shopping_mall_with_phone",
+      "content_len": 235,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色纸箱包装上的产品信息标注：制造商：特步（中国）有限公司；地址：泉州经济技术开发区清濛园区7号街坊9(C)号地块；电话：86-595-2249 5555。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "制造商",
+          "value": "特步（中国）有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "泉州经济技术开发区清濛园区7号街坊9(C)号地块"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "86-595-2249 5555"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1841",
+      "category": "factory_sign_with_phone",
+      "content_len": 78,
+      "r1": 1
+    },
+    {
+      "raw_content": "小巷墙面上的\"仙桃大发搬家\"广告牌（副标题\"室内清洗\"，联系电话 13972177732、18771159411），旁边蓝底白字门牌\"小南小区东十六巷 / XIAONANXIAOQUDONG18XIANG\"，下方墙面黑色手写涂鸦电话号码\"13797031332\"。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "广告主标题",
+          "value": "仙桃大发搬家"
+        },
+        {
+          "kind": "text",
+          "label": "广告副标题",
+          "value": "室内清洗"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话1",
+          "value": "13972177732"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话2",
+          "value": "18771159411"
+        },
+        {
+          "kind": "text",
+          "label": "路牌(中文)",
+          "value": "小南小区东十六巷"
+        },
+        {
+          "kind": "text",
+          "label": "路牌(拼音)",
+          "value": "XIAONANXIAOQUDONG18XIANG"
+        },
+        {
+          "kind": "phone",
+          "label": "墙上涂鸦电话",
+          "value": "13797031332"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2267",
+      "category": "service_ads_with_phone",
+      "content_len": 132,
+      "r1": 1
+    }
+  ]
+}

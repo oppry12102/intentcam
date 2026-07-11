@@ -502,10 +502,34 @@ class ToolUseLoop(
 
             if (anyFinalBubble != null) {
                 val tb = anyFinalBubble
+                // [2026-07-13] Phase E — post-emit_bubble type
+                //  verifier.  Silently overrides `type` when a
+                //  stronger domain signal in the bubble text
+                //  contradicts the LLM's classification (e.g.
+                //  `location` bubble that contains a mobile number
+                //  → `phone`).  Conservative: only fires on
+                //  `location` and `info` source types; the LLM's
+                //  explicit `proposedActions` (action_ids) is
+                //  preserved unchanged so r3 stays a true
+                //  model-behavior metric.  See IntentVerifier.kt
+                //  for the rule set + rationale.
+                val verifiedType = IntentVerifier.verify(
+                    currentType = tb.type,
+                    title = tb.title,
+                    detail = tb.detail,
+                    details = tb.details,
+                )
+                if (verifiedType != tb.type) {
+                    log(
+                        "VERIFY",
+                        "type overridden: ${tb.type} -> $verifiedType " +
+                            "(bubble title='${tb.title.take(40)}')"
+                    )
+                }
                 return Outcome.Bubble(
                     com.example.intentcam.Bubble(
                         id = "bubble-${System.currentTimeMillis()}",
-                        type = tb.type,
+                        type = verifiedType,
                         title = tb.title.ifBlank { "未识别" },
                         detail = tb.detail,
                         confidence = tb.confidence,
