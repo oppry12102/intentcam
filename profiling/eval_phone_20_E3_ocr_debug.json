@@ -1,0 +1,339 @@
+{
+  "ground_truth": "ground_truth_phone_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.9125,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 5,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "classified_ads_with_phone": 0.8875000000000001,
+    "storefront_with_phone": 0.9437500000000001,
+    "service_ads_with_phone": 0.8875000000000001,
+    "restaurant_with_phone": 0.9
+  },
+  "fixtures": [
+    {
+      "raw_content": "图片是一栋住宅楼单元入口的瓷砖墙面，墙上有两张贴纸告示：\n\n主告示（白色A4纸）：\n- 标题：\"房屋出租\"\n- 户型：\"（二室二厅一卫）\"\n- 地址：\"地址：复州花园六楼\"\n- 联系电话：\"电话：15572898725\"\n\n下方黄色小广告：\n- \"高价收购驾照分\"\n- \"电话:18672822958\"\n\n另外墙面右上角有圆形装饰物，左侧门牌号隐约可见 \"E 1 8\"（OCR conf=0.77，可能为楼栋号）。",
+      "r2_text": 0.75,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "房屋出租"
+        },
+        {
+          "kind": "text",
+          "label": "户型",
+          "value": "（二室二厅一卫）"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "地址：复州花园六楼"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "电话：15572898725"
+        },
+        {
+          "kind": "text",
+          "label": "小广告标题",
+          "value": "高价收购驾照分"
+        },
+        {
+          "kind": "phone",
+          "label": "驾照分电话",
+          "value": "电话:18672822958"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1177",
+      "category": "classified_ads_with_phone",
+      "content_len": 207,
+      "r1": 1
+    },
+    {
+      "raw_content": "一辆粉色电动二轮车的尾部，车牌「川·M A58333」,下方挂着一块「路发车行」黑色广告牌(红字店名 + 绿字营业信息)。车行名: 路发车行;品牌: 世纪豪情电动车;总店地址: 天宇市场对面(公交站处);二分店地址: 三贤弘乐府对面(公交站处);售后电话: 18328271720。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "object",
+          "label": "车辆类型",
+          "value": "电动二轮车（粉色车身）"
+        },
+        {
+          "kind": "text",
+          "label": "车牌（省份）",
+          "value": "川·M"
+        },
+        {
+          "kind": "text",
+          "label": "车牌号",
+          "value": "A58333"
+        },
+        {
+          "kind": "text",
+          "label": "车行名称",
+          "value": "路发车行"
+        },
+        {
+          "kind": "text",
+          "label": "品牌",
+          "value": "世纪豪情电动车"
+        },
+        {
+          "kind": "text",
+          "label": "总店地址",
+          "value": "天宇市场对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "二分店地址",
+          "value": "三贤弘乐府对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "售后电话",
+          "value": "18328271720"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1216",
+      "category": "storefront_with_phone",
+      "content_len": 141,
+      "r1": 1
+    },
+    {
+      "raw_content": "街景可见多家临街店铺：从左到右依次为一家含\"包\"、\"商的促美味 D.1603\"的小店；中间大红招牌「黄娴鸡米饭 佳园路店」(实为\"黄焖鸡米饭\")；旁边竖排副标「一道菜的餐厅」；再右侧为「楚街一品® 热干面馆」，招牌下方标注「官网www.jcmcw.com 中文域名:江城名吃 客服电话:027-87875310 佳园路店」；最右侧红底黄字招牌为「经济实惠」(OCR 识别为\"经洗实\"，[LOW])。店内可见红色和粉色塑料凳摆于门口，右侧人行道上一位穿蓝色校服的女孩走过。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店铺招牌(中左)",
+          "value": "黄娴鸡米饭"
+        },
+        {
+          "kind": "text",
+          "label": "分店标识",
+          "value": "佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "店铺招牌(中右)",
+          "value": "楚街一品 热干面馆"
+        },
+        {
+          "kind": "text",
+          "label": "官网与客服",
+          "value": "官网www.jcmcw.com 中文域名:江城名吃 客服电话:027-87875310 佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "竖排副标",
+          "value": "一道菜的餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW]",
+          "value": "欢迎您光猛"
+        },
+        {
+          "kind": "text",
+          "label": "右侧招牌",
+          "value": "经洗实 [LOW]"
+        },
+        {
+          "kind": "text",
+          "label": "左侧小店",
+          "value": "包 商的促美味 D.1603"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "copy_listing"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1359",
+      "category": "restaurant_with_phone",
+      "content_len": 235,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑外墙广告牌，主广告为\"全友家居·全友家私有限公司\"（圆形logo，含中国驰名商标 / 中国环境标志产品认证 / 中国质量环保产品认证 CQC 三项认证）。顶部红色横幅：\"盛大开业 9月18日 全场工厂价 优惠绝无仅有 买贵十倍返差 买家具 抽汽车\"。地址与电话：地址仙桃姚沔阳大道西端全友家居，热线电话 0728-3200612；全国统一服务热线 400-8800-315；下方蓝色区域注明分店地址\"勉阳大道西端(西桥乘风电器二楼)\"，电话 3201778。建筑右下方为另一招牌底稿：\"宏运翔艺传媒 承接：商业喷画 开业 场地策划 金榜\u2026 出租：专业舞台 专业\u2026 电话：\u2026\"。画面中段有一扇铝合金小窗和防盗窗结构。",
+      "r2_text": 1,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "品牌",
+          "value": "全友家居"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "盛大开业"
+        },
+        {
+          "kind": "text",
+          "label": "促销",
+          "value": "买家具 抽汽车"
+        },
+        {
+          "kind": "text",
+          "label": "优惠[LOW]",
+          "value": "优惠绝无仅有 / 买贵十倍返差"
+        },
+        {
+          "kind": "text",
+          "label": "全场[LOW]",
+          "value": "全场工厂价"
+        },
+        {
+          "kind": "text",
+          "label": "日期",
+          "value": "9月18日"
+        },
+        {
+          "kind": "phone",
+          "label": "热线电话",
+          "value": "0728-3200612"
+        },
+        {
+          "kind": "phone",
+          "label": "全国统一服务热线",
+          "value": "400-8800-315"
+        },
+        {
+          "kind": "location",
+          "label": "分店地址",
+          "value": "勉阳大道西端(西桥乘风电器二楼)"
+        },
+        {
+          "kind": "phone",
+          "label": "分店电话",
+          "value": "3201778"
+        },
+        {
+          "kind": "text",
+          "label": "认证标识",
+          "value": "中国驰名商标 / 中国环境标志产品认证 / 中国质量环保产品认证 (CQC)"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌logo",
+          "value": "全友 (圆形标志)"
+        },
+        {
+          "kind": "text",
+          "label": "下方广告[LOW]",
+          "value": "宏运翔艺传媒 承接：商业喷画 开业 场地策划 金榜 出租：专业舞台 专业... 电话：..."
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1583",
+      "category": "storefront_with_phone",
+      "content_len": 309,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一条小巷子。蓝色路牌写着\"小南小区东十六巷\"（拼音 XIAONANXIAOQUDONG16XIANG）。墙上贴有一张白底广告，标题\"仙桃大发搬家\"，副标\"室内清洗\"，下方列有两个联系电话：13972177732、18771159411。墙面喷漆涂鸦还有一个手机号：13797031332。巷子尽头是老旧居民楼，晾衣架上有红布衣物。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "路牌名称",
+          "value": "小南小区东十六巷"
+        },
+        {
+          "kind": "text",
+          "label": "路牌拼音",
+          "value": "XIAONANXIAOQUDONG16XIANG"
+        },
+        {
+          "kind": "text",
+          "label": "广告标题",
+          "value": "仙桃大发搬家"
+        },
+        {
+          "kind": "text",
+          "label": "广告服务",
+          "value": "室 内 清 洗"
+        },
+        {
+          "kind": "phone",
+          "label": "广告电话1",
+          "value": "13972177732"
+        },
+        {
+          "kind": "phone",
+          "label": "广告电话2",
+          "value": "18771159411"
+        },
+        {
+          "kind": "phone",
+          "label": "墙上喷漆号码",
+          "value": "13797031332"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2267",
+      "category": "service_ads_with_phone",
+      "content_len": 168,
+      "r1": 1
+    }
+  ]
+}

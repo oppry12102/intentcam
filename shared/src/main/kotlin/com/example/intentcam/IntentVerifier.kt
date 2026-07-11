@@ -176,6 +176,28 @@ object IntentVerifier {
         if (currentType == "info" && ID_DOCUMENT.containsMatchIn(corpus)) {
             return "id_document"
         }
+        // Pass 7 (E3, 2026-07-11): real_estate_rental + mobile, but no
+        //  real-estate signal → phone.  Catches image_1216 (电动车商铺
+        //  with 售后电话 183...), image_2267 (小南小区 大发搬家 with
+        //  multiple mobile contacts) — fixtures the LLM over-types as
+        //  real_estate_rental but whose GT is `phone`.  The
+        //  !REAL_ESTATE guard is critical: image_3285 ("吉房急售" + a
+        //  contact number) has real_estate_rental as its GT, and the
+        //  corpus matches the REAL_ESTATE regex, so the guard fires
+        //  and the rule skips — preserving the correct type.
+        //
+        //  Risk: a real-estate ad whose corpus has no REAL_ESTATE
+        //  keyword (just a property name + contact phone) would be
+        //  flipped to phone even when GT says real_estate_rental.
+        //  Phase B's pii20 GT is curated so all 4 real_estate_rental
+        //  fixtures carry at least one REAL_ESTATE token; cross-check
+        //  before adding new fixtures that don't.
+        if (currentType == "real_estate_rental"
+            && MOBILE.containsMatchIn(corpus)
+            && !REAL_ESTATE.containsMatchIn(corpus)
+        ) {
+            return "phone"
+        }
         return currentType
     }
 }

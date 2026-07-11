@@ -1,0 +1,139 @@
+{
+  "ground_truth": "ground_truth_pii20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.8375000000000001,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 2,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "residential_listing": 0.8875000000000001,
+    "real_estate_residential": 0.7875000000000001
+  },
+  "fixtures": [
+    {
+      "raw_content": "工地围墙上的楼盘销售横幅。红色横幅大字：\"湘华名邸\"；副标题：\"风水宝地·纯住宅小区·稀缺楼梯房\"；卖点：\"#名校 先主诉之校\"。横幅中间一排密集小字广告语因分辨率过低，OCR 多次重扫仍模糊不清，无法准确辨认。右侧蓝底白字横幅写着政府公益标语：\"创建文明城市 建和谐社\u2026\"（\"会\"字被树枝遮挡）。右上角蓝色门牌上有少量文字但太模糊。画面背景是未完工的砖混结构楼房工地、临时围挡和散落的建筑垃圾。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "楼盘名",
+          "value": "湘华名邸"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "风水宝地·纯住宅小区·稀缺楼梯房"
+        },
+        {
+          "kind": "text",
+          "label": "教育卖点",
+          "value": "#名校 先主诉之校"
+        },
+        {
+          "kind": "text",
+          "label": "小字详情 [LOW]",
+          "value": "(密集小字 OCR 多次扫描仍模糊，无法准确辨认)"
+        },
+        {
+          "kind": "text",
+          "label": "右侧横幅上排",
+          "value": "创建文明城市"
+        },
+        {
+          "kind": "text",
+          "label": "右侧横幅下排",
+          "value": "建和谐社\u2026(下排被树枝遮挡)"
+        },
+        {
+          "kind": "text",
+          "label": "右上门牌 [LOW]",
+          "value": "(蓝色牌上文字不清)"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 0.5,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1391",
+      "category": "real_estate_residential",
+      "content_len": 198,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙上贴的\"吉房急售\"小广告：复州花园黄金楼层低价急售，3室2厅1厨1卫126平，南北通透，家电齐全，有证！可过户！一套您看了就想买的靠谱房,是您居家养育后代之绝选！电话：15607225103 陈先生，QQ：313521397。欢迎随时来电咨询看房。",
+      "r2_text": 0.75,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "吉房急售"
+        },
+        {
+          "kind": "text",
+          "label": "小区",
+          "value": "复州花园黄金楼层低价急售"
+        },
+        {
+          "kind": "text",
+          "label": "户型面积",
+          "value": "3室2厅1厨1卫126平"
+        },
+        {
+          "kind": "text",
+          "label": "卖点",
+          "value": "南北通透，家电齐全，有证！可过户！"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "一套您看了就想买的靠谱房,是您居家养育后代之绝选!"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "15607225103"
+        },
+        {
+          "kind": "text",
+          "label": "联系人",
+          "value": "陈先生"
+        },
+        {
+          "kind": "text",
+          "label": "QQ",
+          "value": "313521397"
+        },
+        {
+          "kind": "text",
+          "label": "结尾",
+          "value": "欢迎随时来电咨询看房。"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing",
+        "save_posting"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_3285",
+      "category": "residential_listing",
+      "content_len": 125,
+      "r1": 1
+    }
+  ]
+}
