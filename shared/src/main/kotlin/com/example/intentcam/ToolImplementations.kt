@@ -350,8 +350,10 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                 "**details** 字段（**重要**）：图里每一处独立的文字/数字/品牌/日期/价格都要有一行，" +
                 "value 写逐字原文（勿意译、勿概括）。图里有文字却 details 为空 = 没完成任务。" +
                 "**confidence** 字段：0.0~1.0 的置信度。" +
-                "**action_ids** 字段（可空 / 不填）：列出建议给用户的下一步动作 id（见系统提示里的 actions ∈ {...}）。" +
-                "不填 = 走系统按 intent 类型自动匹配的旧行为；填了 = 以你列出的为准（用户关闭的动作会被系统过滤）。" +
+                "**action_ids** 字段：**默认应填**。把你认为对当前 bubble 有用的 chip id 列出来（系统提示里 actions ∈ {...} 的子集）。" +
+                "只有当你判断「这个 bubble 完全不需要任何 chip」（最常见：纯文字 type=info 的描述，如" +
+                "读一条不带联系方式 / 地址 / 价格 / 时间的签名）→ 留空 `[]`。" +
+                "其余 case 都应填至少 1 个。" +
                 "**必须**调这个工具结束循环，不能用纯文本收尾。",
             inputSchema = JSONObject().apply {
                 put("type", "object")

@@ -1,0 +1,1267 @@
+{
+  "ground_truth": "ground_truth_phone_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.9625,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 1568,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "classified_ads_with_phone": 0.8875000000000001,
+    "storefront_with_phone": 0.9574999999999999,
+    "school_ad_with_phone": 0.971875,
+    "recruit_ad_with_phone": 1,
+    "service_ads_with_phone": 1,
+    "shopping_mall_directory_with_phone": 1,
+    "advertising_with_phone": 1,
+    "clinic_sign": 1,
+    "shopping_mall_with_phone": 0.9,
+    "factory_sign_with_phone": 1,
+    "restaurant_with_phone": 0.95
+  },
+  "fixtures": [
+    {
+      "raw_content": "墙上贴有一张\"房屋出租\"广告纸，内容为：\n- 标题：房屋出租\n- 户型：二室二厅一卫\n- 地址：复州花园六楼\n- 电话：15572898725\n\n门旁还贴有一张\"急用钱找我\"的小广告（黄底蓝字，含联系方式文字模糊）。入口为蓝色铁门（已上锁），墙面为白瓷砖，环境为住宅楼单元门口。",
+      "r2_text": 0.75,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "房屋出租"
+        },
+        {
+          "kind": "text",
+          "label": "户型",
+          "value": "二室二厅一卫"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "复州花园六楼"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "15572898725"
+        },
+        {
+          "kind": "text",
+          "label": "附注广告",
+          "value": "急用钱找我"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1177",
+      "category": "classified_ads_with_phone",
+      "content_len": 139,
+      "r1": 1
+    },
+    {
+      "raw_content": "电动车尾部悬挂的店铺广告牌:车牌号「川·M A58333」(被广告牌部分遮挡),店名「路发车行」,经营「世纪豪情电动车」。总店地址:天宇市场对面(公交站处);二分店地址:三贤弘乐府对面(公交站处);售后电话:18328277720。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "车牌号",
+          "value": "川·M A58333"
+        },
+        {
+          "kind": "text",
+          "label": "车行名称",
+          "value": "路发车行"
+        },
+        {
+          "kind": "text",
+          "label": "品牌",
+          "value": "世纪豪情电动车"
+        },
+        {
+          "kind": "text",
+          "label": "总店地址",
+          "value": "天宇市场对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "二分店地址",
+          "value": "三贤弘乐府对面(公交站处)"
+        },
+        {
+          "kind": "text",
+          "label": "售后电话",
+          "value": "18328277720"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1216",
+      "category": "storefront_with_phone",
+      "content_len": 116,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边店铺楼下一排小店,正中可见两家餐饮店招: 红色背景的\"黄焖鸡米饭 佳园路店\",右侧黑色背景金字的\"楚街一品 热干面馆\"(官网 www.jcmcw.com,中文域名:江城名吃,客服电话 027-87875310,佳园路店)。更右一家招牌写\"经济实\u2026\"(被画面右边切掉)。最左边红色小招牌有\"包\u2026 1603\"字样。门两侧贴有红底春联(部分可读\"一道\u2026的餐厅\")。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "左侧店招",
+          "value": "黄焖鸡米饭 佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "右侧店铺名",
+          "value": "楚街一品 热干面馆"
+        },
+        {
+          "kind": "text",
+          "label": "品牌拼音",
+          "value": "HU HE YAN ®"
+        },
+        {
+          "kind": "text",
+          "label": "官网",
+          "value": "www.jcmcw.com"
+        },
+        {
+          "kind": "text",
+          "label": "中文域名",
+          "value": "中文域名:江城名吃"
+        },
+        {
+          "kind": "phone",
+          "label": "客服电话",
+          "value": "027-87875310"
+        },
+        {
+          "kind": "text",
+          "label": "分店标注",
+          "value": "佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "右侧店招(部分可见)",
+          "value": "经济实\u2026 (部分被裁切)"
+        },
+        {
+          "kind": "text",
+          "label": "左侧副招牌",
+          "value": "包\u2026 1603"
+        },
+        {
+          "kind": "text",
+          "label": "门口春联(右侧)",
+          "value": "一道\u2026的餐厅"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1359",
+      "category": "restaurant_with_phone",
+      "content_len": 181,
+      "r1": 1
+    },
+    {
+      "raw_content": "传统中式建筑门楼：青砖灰瓦墙体，门头上方镶嵌大型石雕浮雕\u2014\u2014中央为圆形龙凤纹圆形浮雕，左右两侧为人物场景浮雕，并刻有篆书对联。下方挂着红底黄字横幅：「书画展览拍卖 请上二楼」，小字标注「地址：郴州市旅游集散中心对面」和「电话：0735-8884334」(OCR 模糊)。最下方为深色木质双开门。\n\n石雕对联文字（OCR 不太确定）：左侧「百結垂釣恨 羿注鼎鼎觀 / 莫結張弛夢 翰勞觀風殿」；右侧「齊眉鼎觚翰 形来堂輪 / 敦之風意務 兆謹矩觚」。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "横幅大字",
+          "value": "书画展览拍卖 请上二楼"
+        },
+        {
+          "kind": "text",
+          "label": "横幅小字（地址）",
+          "value": "地址：郴州市旅游集散中心对面"
+        },
+        {
+          "kind": "text",
+          "label": "横幅小字（电话）[LOW]",
+          "value": "电话：0735-8884334 (OCR 模糊)"
+        },
+        {
+          "kind": "text",
+          "label": "石雕左联（上行）[LOW]",
+          "value": "百結垂釣恨 羿注鼎鼎觀"
+        },
+        {
+          "kind": "text",
+          "label": "石雕左联（下行）[LOW]",
+          "value": "莫結張弛夢 翰勞觀風殿"
+        },
+        {
+          "kind": "text",
+          "label": "石雕右联（上行）[LOW]",
+          "value": "齊眉鼎觚翰 形来堂輪"
+        },
+        {
+          "kind": "text",
+          "label": "石雕右联（下行）[LOW]",
+          "value": "敦之風意務 兆謹矩觚"
+        },
+        {
+          "kind": "object",
+          "label": "主体场景",
+          "value": "青砖灰瓦传统建筑门头上方雕有装饰石刻浮雕（左右两幅人物场景，中间圆形龙凤纹饰配对联），下方红底黄字横幅，下方为木质双开门"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_listing"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_1573",
+      "category": "storefront_with_phone",
+      "content_len": 224,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺外景照片：上方红色巨幅广告牌是「全友家居」盛大开业宣传（9月18日），主题\"买家具 抽汽车\"，促销语\"全场工厂价 优惠绝无仅有 买贵十倍返差\"；地址\"仙桃沔阳大道西端全友家居\"，热线电话 0728-3200612，全国统一服务热线 400-8800-315，经销方\"全友家私有限公司\"，带 CQC 中国驰名商标 / 环境标志 / 环保产品认证。\n\n中间蓝色店招显示门店地址\"勉阳大道西端（西桥乘凤电器二楼）\"，电话 3201778。\n\n最底部还有一块旧广告布\"宏远演艺传媒\"，承接商业演出、开业、场地策划、金榜题名，出租专业舞台、专业音响（电话被布面撕裂遮住，无法辨认）。",
+      "r2_text": 1,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主广告主题",
+          "value": "全友家居 盛大开业 买家具 抽汽车"
+        },
+        {
+          "kind": "date",
+          "label": "开业日期",
+          "value": "9月18日"
+        },
+        {
+          "kind": "text",
+          "label": "主广告促销语",
+          "value": "全场工厂价 优惠绝无仅有 买贵十倍返差"
+        },
+        {
+          "kind": "text",
+          "label": "主店地址",
+          "value": "地址：仙桃沔阳大道西端全友家居"
+        },
+        {
+          "kind": "phone",
+          "label": "热线电话",
+          "value": "0728-3200612"
+        },
+        {
+          "kind": "phone",
+          "label": "全国统一服务热线",
+          "value": "400-8800-315"
+        },
+        {
+          "kind": "text",
+          "label": "经营公司",
+          "value": "全友家私有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "认证标识",
+          "value": "中国驰名商标 / 中国环境标志产品认证 / 中国环保产品认证 (CQC)"
+        },
+        {
+          "kind": "text",
+          "label": "店招地址",
+          "value": "地址：勉阳大道西端（西桥乘凤电器二楼）"
+        },
+        {
+          "kind": "phone",
+          "label": "店招电话",
+          "value": "3201778"
+        },
+        {
+          "kind": "text",
+          "label": "底部广告主体",
+          "value": "宏远演艺传媒"
+        },
+        {
+          "kind": "text",
+          "label": "承接业务",
+          "value": "承接：商业演出、开业、场地策划、金榜题名"
+        },
+        {
+          "kind": "text",
+          "label": "出租业务",
+          "value": "出租：专业舞台、专业音响（电话被布面撕裂遮住，看不清）"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1583",
+      "category": "storefront_with_phone",
+      "content_len": 288,
+      "r1": 1
+    },
+    {
+      "raw_content": "居民楼二楼阳台悬挂一条红色横幅招租广告，文字为「厂房、门面、套房出租、出售」，下方写有「联系人：??? 先」（姓被旗杆遮挡）和「联系电话：13706258?55」（部分号码被树枝遮挡）。楼下停着一辆蓝色卡车（车牌部分可见「苏DX5565」），前景是挖开的泥土堆和新建房屋。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "招租/招售类型",
+          "value": "厂房、门面、套房出租、出售"
+        },
+        {
+          "kind": "text",
+          "label": "联系人",
+          "value": "联系人: ??? 先（被旗杆遮挡）"
+        },
+        {
+          "kind": "text",
+          "label": "联系电话",
+          "value": "联系电话: 13706258?55（部分被树枝遮挡）"
+        },
+        {
+          "kind": "text",
+          "label": "场景",
+          "value": "居民楼二楼阳台悬挂红色招租横幅，楼下停有蓝色卡车（车牌部分可见）"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1653",
+      "category": "classified_ads_with_phone",
+      "content_len": 136,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是街边一栋金黄色外墙商业综合体\u2014\u2014「？巷广场购物中心 (?XIANG PLAZA SHOPPING CENTER)」（开头被旗杆挡，可能是\"鲁巷广场\"；圆形 logo 上方写着\"鲁巷广场\"）。楼顶有蓝底白字「P 立体车库」标识和红色「广告位招租热线 13986225970」条幅。建筑正面竖排红色大招牌「华夏影城」，下方依次排列商家：名仕台球（营业时间 11:2?）、浙商电?、BAUHAUS、watsons 屈臣氏、Vivo 智能手机体验馆、酷机乐?、仓桥家。前景有绿色班车（车牌 512H1086）经过，街对面是工地围挡和堆土 / 碎砖。前方升着五星红旗和若干黄色旗帜。",
+      "r2_text": 1,
+      "details_count": 12,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "购物中心名",
+          "value": "?巷广场购物中心 / ?XIANG PLAZA SHOPPING CENTER（开头被旗杆遮挡，可能是\"鲁巷广场\"）"
+        },
+        {
+          "kind": "logo",
+          "label": "logo 上方文字",
+          "value": "鲁巷广场"
+        },
+        {
+          "kind": "text",
+          "label": "楼顶停车场标识",
+          "value": "P 立体车库"
+        },
+        {
+          "kind": "text",
+          "label": "顶部招租条幅",
+          "value": "广告位招租热线 13986225970"
+        },
+        {
+          "kind": "text",
+          "label": "塔楼竖排招牌",
+          "value": "华夏影城"
+        },
+        {
+          "kind": "text",
+          "label": "影城下商家1",
+          "value": "名仕台球"
+        },
+        {
+          "kind": "text",
+          "label": "影城下商家2",
+          "value": "浙商电?（模糊）"
+        },
+        {
+          "kind": "logo",
+          "label": "BAUHAUS 招牌",
+          "value": "BAUHAUS"
+        },
+        {
+          "kind": "logo",
+          "label": "屈臣氏招牌",
+          "value": "watsons 屈臣氏"
+        },
+        {
+          "kind": "logo",
+          "label": "手机店招牌",
+          "value": "Vivo 智能手机体验馆"
+        },
+        {
+          "kind": "text",
+          "label": "餐饮招牌",
+          "value": "仓桥家"
+        },
+        {
+          "kind": "text",
+          "label": "绿色班车车牌",
+          "value": "512H1086"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_1658",
+      "category": "shopping_mall_with_phone",
+      "content_len": 289,
+      "r1": 1
+    },
+    {
+      "raw_content": "读取红色包装上的特步产品制造商信息",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "制造商",
+          "value": "制造商: 特步(中国)有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "地址: 泉州经济技术开发区清濛园区7号街坊9(C)号地块"
+        },
+        {
+          "kind": "text",
+          "label": "电话",
+          "value": "电话: 86-595-2249 5555"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1841",
+      "category": "factory_sign_with_phone",
+      "content_len": 17,
+      "r1": 1
+    },
+    {
+      "raw_content": "蓝色诊所招牌：医疗机构名称 王俊平个体诊所，诊疗范围 妇科，诊疗对象 社会，诊疗方式 门诊，负责人 王俊平，执业地址 仙桃市复州大道袁市社区13号，联系电话 13407272442，监督电话 3324061。右侧另有一红色招牌(部分可见)，显示\"中\"、\"王健\"字样。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "医疗机构名称",
+          "value": "王俊平个体诊所"
+        },
+        {
+          "kind": "text",
+          "label": "诊疗范围",
+          "value": "妇科"
+        },
+        {
+          "kind": "text",
+          "label": "诊疗对象",
+          "value": "社会"
+        },
+        {
+          "kind": "text",
+          "label": "诊疗方式",
+          "value": "门诊"
+        },
+        {
+          "kind": "text",
+          "label": "负责人",
+          "value": "王俊平"
+        },
+        {
+          "kind": "text",
+          "label": "执业地址",
+          "value": "仙桃市复州大道袁市社区13号"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "13407272442"
+        },
+        {
+          "kind": "phone",
+          "label": "监督电话",
+          "value": "3324061"
+        },
+        {
+          "kind": "text",
+          "label": "右侧招牌(部分)",
+          "value": "中 王健"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1882",
+      "category": "clinic_sign",
+      "content_len": 133,
+      "r1": 1
+    },
+    {
+      "raw_content": "商场柱子上的「新派川菜 · 三川麻辣风」餐厅招牌，位于4F。品牌口号：\"让生活更有味道 MAKE LIFE MORE FLAVOR\"。联系电话：027-87878057。地址：武汉光谷步行街意大利风情街5号楼4楼。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "品牌logo文字",
+          "value": "三川 麻辣风"
+        },
+        {
+          "kind": "text",
+          "label": "品类",
+          "value": "新派川菜 Fashion Sichuan Cuisine"
+        },
+        {
+          "kind": "text",
+          "label": "品牌口号",
+          "value": "让生活更有味道 MAKE LIFE MORE FLAVOR"
+        },
+        {
+          "kind": "brand",
+          "label": "主标题",
+          "value": "三川麻辣风"
+        },
+        {
+          "kind": "text",
+          "label": "楼层",
+          "value": "4F"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "027-87878057"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "武汉光谷步行街意大利风情街5号楼4楼"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2173",
+      "category": "restaurant_with_phone",
+      "content_len": 107,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「小南小区东十六巷」(XIAONANXIAOQUDONG-SHIANG) 内的一条老巷子。墙面贴有一张白底广告牌「仙桃大发搬家 室内清洗」，列出搬家、空调拆装、疏通管道等服务（部分小字模糊），联系电话 13972177732、18771159411。下方蓝底白字路牌写「小南小区东十六巷」。墙面右侧有黑色喷漆涂鸦手写电话 18719703132，下方两字似为「招工」(OCR 模糊)。巷子尽头可见旧式居民楼和远处行人。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "广告牌标题",
+          "value": "仙桃大发搬家"
+        },
+        {
+          "kind": "text",
+          "label": "服务类别",
+          "value": "室内清洗"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目(小字,部分模糊)",
+          "value": "搬家 室内清洗 空调拆装 疏通管道 等[LOW]"
+        },
+        {
+          "kind": "phone",
+          "label": "搬家联系电话1",
+          "value": "13972177732"
+        },
+        {
+          "kind": "phone",
+          "label": "搬家联系电话2",
+          "value": "18771159411"
+        },
+        {
+          "kind": "text",
+          "label": "蓝色路牌(中文)",
+          "value": "小南小区东十六巷"
+        },
+        {
+          "kind": "text",
+          "label": "蓝色路牌(拼音)",
+          "value": "XIAONANXIAOQUDONG-SHIANG"
+        },
+        {
+          "kind": "phone",
+          "label": "手写招工电话(墙上涂鸦)",
+          "value": "18719703132"
+        },
+        {
+          "kind": "text",
+          "label": "招工备注(手写)",
+          "value": "招工[LOW]"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_2267",
+      "category": "service_ads_with_phone",
+      "content_len": 211,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边电线杆旁弱电箱上的中国电信（天翼宽带）广告牌。画面右侧被一根水泥电线杆严重遮挡，只能看到广告的左半部分。广告顶部是中国电信logo和\"天翼宽带\"字样；中部红色大字广告语\"装电信百兆宽（带）\"、\"看高清电视大（片）\"；下面三个服务图标\"时尚大片 / 精彩体育 / 时政要闻\"；再下面一行\"宽带快装电话（\u2026）\"；红色横幅上是客服电话\"88100000（\u2026）\"（客服头像+电话图标，末尾被电线杆挡住）；底部小字\"创建文明城市 建设美好仙桃\"。广告底部还残留一张被撕坏的小贴纸（残留号码 184582899??，OCR 模糊）。背景为路口场景：电动车骑行者、树木、对向车辆。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "中国电信 天翼宽带"
+        },
+        {
+          "kind": "text",
+          "label": "广告语1",
+          "value": "装电信百兆宽带（广告右侧被电线杆遮挡）"
+        },
+        {
+          "kind": "text",
+          "label": "广告语2",
+          "value": "看高清电视大片（右侧被电线杆遮挡）"
+        },
+        {
+          "kind": "text",
+          "label": "服务图标",
+          "value": "时尚大片 / 精彩体育 / 时政要闻"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "宽带快装电话（右侧被电线杆遮挡）"
+        },
+        {
+          "kind": "phone",
+          "label": "客服电话",
+          "value": "88100000（疑似，末尾数字被电线杆挡住）"
+        },
+        {
+          "kind": "text",
+          "label": "城市标语",
+          "value": "创建文明城市 建设美好仙桃"
+        },
+        {
+          "kind": "text",
+          "label": "位置线索",
+          "value": "湖北仙桃市区路口，广告牌安装在电线杆旁的弱电箱上"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": ["dial_number"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2338",
+      "category": "advertising_with_phone",
+      "content_len": 285,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边酱饼店绿色招牌，主标题大字「京味香酱饼」(红字黄边)，右下方大字红字订餐电话「13085136276」，下方红色副标题注明「袁市分店」。招牌中部偏下还有一块红色小字介绍牌匾，标题同样写「京味香酱饼」，下方列出产品分类「千鸡手扯包黄鸡鸭鱼羊 / 层蛋蔬菜瓜果鸡鸭 / 饼饼饼饼饼饼香香蛋...」(文字密集，部分被褶皱遮挡)，还有一行「电话:13???????」(被褶皱遮挡)。招牌左侧有一个圆形酱饼实物照片。右侧相邻蓝色招牌写着「湖北软...」(部分被裁掉)。",
+      "r2_text": 0.75,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店招主标题",
+          "value": "京味香酱饼"
+        },
+        {
+          "kind": "phone",
+          "label": "订餐电话",
+          "value": "13085136276"
+        },
+        {
+          "kind": "text",
+          "label": "分店名称",
+          "value": "袁市分店"
+        },
+        {
+          "kind": "text",
+          "label": "产品分类(招牌下方小字)",
+          "value": "千鸡手扯包黄鸡鸭鱼羊 层蛋蔬菜瓜果鸡鸭 饼饼饼饼饼饼香香蛋"
+        },
+        {
+          "kind": "text",
+          "label": "右下角副电话(部分被褶皱遮挡)",
+          "value": "电话:13???????"
+        },
+        {
+          "kind": "text",
+          "label": "右侧相邻店铺招牌",
+          "value": "湖北软...(部分被裁)"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2458",
+      "category": "storefront_with_phone",
+      "content_len": 231,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边教育培训机构招牌。黄底红字竖排「比亚教育」(B 形 logo)，下方注明「专注5岁~成人英语培训」；黄底招牌底部小字标注「地址：德政街中心花坛 复州花园北门第一排；电话：18995988846」。右侧相邻红底白字招牌「一百艺术」(副标：生活主题 专业连锁)。建筑顶部红底白字竖排招牌写着「南育英才幼儿园」(OCR conf 较低，凭缩略图判读)。电线杆上挂红底白字小条「生活健康」。招牌位于一栋多层住宅楼一层外墙边，街道空旷、有小区绿化。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "商家招牌",
+          "value": "比亚教育"
+        },
+        {
+          "kind": "text",
+          "label": "业务范围",
+          "value": "专注5岁~成人英语培训"
+        },
+        {
+          "kind": "logo",
+          "label": "相邻商家招牌",
+          "value": "一百艺术"
+        },
+        {
+          "kind": "text",
+          "label": "副标",
+          "value": "生活主题 专业连锁"
+        },
+        {
+          "kind": "text",
+          "label": "楼顶招牌（OCR 模糊）",
+          "value": "南育英才幼儿园 [LOW]"
+        },
+        {
+          "kind": "text",
+          "label": "侧边红底白字（OCR 模糊）",
+          "value": "生活健康"
+        },
+        {
+          "kind": "address",
+          "label": "地址",
+          "value": "德政街中心花坛 复州花园北门第一排"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "18995988846"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_2696",
+      "category": "school_ad_with_phone",
+      "content_len": 221,
+      "r1": 1
+    },
+    {
+      "raw_content": "世界城光谷步行街消费地图，标识\"3号楼 仓桥家 3F\"。图中包含设施图标：人行步梯(Stairway)、升降机(Escalator)、自动电梯(Elevator)、停车场(Park -1F/-2F)。服务咨询热线：8780 3088。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "楼栋标识",
+          "value": "3号楼 仓桥家 3F"
+        },
+        {
+          "kind": "text",
+          "label": "地图标题",
+          "value": "世界城光谷步行街消费地图"
+        },
+        {
+          "kind": "text",
+          "label": "设施",
+          "value": "人行步梯 Stairway"
+        },
+        {
+          "kind": "text",
+          "label": "设施",
+          "value": "升降机 Escalator"
+        },
+        {
+          "kind": "text",
+          "label": "设施",
+          "value": "自动电梯 Elevator"
+        },
+        {
+          "kind": "text",
+          "label": "设施",
+          "value": "停车场 -1/-2层 Park -1F/-2F"
+        },
+        {
+          "kind": "text",
+          "label": "服务热线",
+          "value": "服务咨询热线：8780 3088 Tel:8780 3088"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_2750",
+      "category": "shopping_mall_directory_with_phone",
+      "content_len": 117,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是\"神童少儿口才教育\"的红色广告牌，宣传语为\"好口才的孩子赢天下\"。联系方式：电话 18972170338，地址：复州花园北门向东100米。Logo处有神童卡通形象和\"神童口才\"字样。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "Logo文字",
+          "value": "神童口才"
+        },
+        {
+          "kind": "brand",
+          "label": "机构名称",
+          "value": "神童少儿口才教育"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "好口才的孩子赢天下"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "地址：复州花园北门向东100米"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "电话：18972170338"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "save_posting"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_2852",
+      "category": "school_ad_with_phone",
+      "content_len": 93,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「萌乐园少儿托管中心」（学朋教育全国连锁）的门店招牌。店面二层橙色装饰，绿色 LOGO + 白色大字「萌乐园 少儿托管中心」。副信息：专注少儿学后托管教育 / 湖北省武汉市光谷分校 / TEL:027-88185606 / 上股交上市企业 代码:202702 / 网址 www.xuedu.cc。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "萌乐园"
+        },
+        {
+          "kind": "text",
+          "label": "业务",
+          "value": "少儿托管中心"
+        },
+        {
+          "kind": "text",
+          "label": "全国连锁",
+          "value": "学朋教育 全国连锁 www.xuedu.cc"
+        },
+        {
+          "kind": "text",
+          "label": "口号",
+          "value": "专注少儿学后托管教育"
+        },
+        {
+          "kind": "location",
+          "label": "分校地址",
+          "value": "湖北省武汉市光谷分校"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "TEL:027-88185606"
+        },
+        {
+          "kind": "text",
+          "label": "上市信息",
+          "value": "上股交上市企业 代码:202702"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_2905",
+      "category": "school_ad_with_phone",
+      "content_len": 150,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙上一红一蓝两幅并排的喷绘广告牌，共同组成一条标语：\"德帝实木全屋定制专家\"。\n\n左幅大字：\"德帝实木全\"\n小字（蓝色）：\"书柜、酒柜、护墙板、办\u2026\"（\"办公家具\"的开头被右幅截断）\n下方：\"0512-63127378　盛泽镇南环路金轮国\u2026\"（\"国际家居广场\"开头被截断）\n\n右幅大字：\"屋定制专家\"\n小字（蓝色）：\"公家具、卫生间隔断等\"（承接左幅\"办公家具\"）\n下方：\"际家居广场2楼　电话:0512-63972949\"\n\n招牌上有多处白漆涂改/覆盖痕迹，部分文字模糊。墙面后方是一座工业厂房的白色外立面（可见高窗）。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店招标题（左右两幅合起来）",
+          "value": "德帝实木全屋定制专家"
+        },
+        {
+          "kind": "text",
+          "label": "业务范围（左幅）",
+          "value": "书柜、酒柜、护墙板、办\u2026（公家具被右幅截断）"
+        },
+        {
+          "kind": "text",
+          "label": "业务范围（右幅）",
+          "value": "公家具、卫生间隔断等"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话（左幅）",
+          "value": "0512-63127378"
+        },
+        {
+          "kind": "location",
+          "label": "地址（左幅）",
+          "value": "盛泽镇南环路金轮国\u2026（国际家居广场被右幅截断）"
+        },
+        {
+          "kind": "location",
+          "label": "展厅地址（右幅）",
+          "value": "国际家居广场2楼"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话（右幅）",
+          "value": "0512-63972949"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "copy_listing"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2912",
+      "category": "storefront_with_phone",
+      "content_len": 261,
+      "r1": 1
+    },
+    {
+      "raw_content": "小区/园区入口岗亭旁摆放了三块告示牌：左侧红色\"招贤纳士 食云餐厅\"招聘牌（招服务员 2200+提成、杂工 1800+工资包吃年终奖，联系电话 027-87658220，地址 洪山区民院路97号（湖北测绘二楼））；中间蓝色\"办公区域 严禁入内\"警示牌；右侧白色\"车位已满 来车车辆 概不入内\"告示牌。岗亭外墙上贴有广告\"活动板房 轻钢结构 楼顶加层 厂家直销 13098873188\"和\"彩钢瓦房 轻钢龙骨 楼顶加层 厂家直销\"。入口处设道闸，有\"机动通道\"标识，背景为高层住宅楼。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "岗亭广告",
+          "value": "活动板房 轻钢结构 楼顶加层 厂家直销 13098873188"
+        },
+        {
+          "kind": "text",
+          "label": "岗亭广告2",
+          "value": "彩钢瓦房 轻钢龙骨 楼顶加层 厂家直销"
+        },
+        {
+          "kind": "text",
+          "label": "招贤纳士标题",
+          "value": "招贤纳士 食云餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "招聘要求(部分)",
+          "value": "进 城 端菜 工姿端送, 服务员 2200+提成, 招杂工人员 1800+工资包吃年终奖"
+        },
+        {
+          "kind": "text",
+          "label": "招聘待遇说明",
+          "value": "公司提供良好的食宿, 公司有良好的业余娱乐设施, 节假日可组织员工外出旅游, 有意向者可直接到酒店面试。"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "027-87658220"
+        },
+        {
+          "kind": "text",
+          "label": "招聘地址",
+          "value": "洪山区民院路97号(湖北测绘二楼)"
+        },
+        {
+          "kind": "text",
+          "label": "告示牌2",
+          "value": "办公区域 严禁入内"
+        },
+        {
+          "kind": "text",
+          "label": "告示牌3",
+          "value": "车位已满 来车车辆 概不入内"
+        },
+        {
+          "kind": "text",
+          "label": "道闸标识",
+          "value": "机动 通道"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_listing",
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_3030",
+      "category": "recruit_ad_with_phone",
+      "content_len": 241,
+      "r1": 1
+    },
+    {
+      "raw_content": "翰昌教育秋季课程简章海报，左侧为小学课程（四至六年级，语文写作班/数学强化班/英语同步班，均20课时/800元），右侧为初中课程（初一/初二，语数英及物理同步班，均20课时/1000元）。底部红色横幅注明：报名均享受九折优惠，前五十名更有豪礼相送！咨询电话 15871888813，报名热线 0728-3331833，咨询地址：仙桃市仙桃大道上岛咖啡城市花园B栋301(教育局正对面)。",
+      "r2_text": 0.75,
+      "details_count": 17,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "机构名称",
+          "value": "翰昌教育"
+        },
+        {
+          "kind": "text",
+          "label": "左侧标题",
+          "value": "翰昌教育秋季小学课程简章"
+        },
+        {
+          "kind": "text",
+          "label": "右侧标题",
+          "value": "翰昌教育秋季初中课程简章"
+        },
+        {
+          "kind": "text",
+          "label": "小学招生对象",
+          "value": "四年级/五年级/六年级"
+        },
+        {
+          "kind": "text",
+          "label": "小学班型",
+          "value": "语文写作班 / 数学强化班 / 英语同步班"
+        },
+        {
+          "kind": "number",
+          "label": "小学课时",
+          "value": "20课时"
+        },
+        {
+          "kind": "price",
+          "label": "小学学费",
+          "value": "800元"
+        },
+        {
+          "kind": "text",
+          "label": "初中招生对象",
+          "value": "初一学生/初二学生"
+        },
+        {
+          "kind": "text",
+          "label": "初中班型（初一）",
+          "value": "数学同步班 / 英语同步班 / 语文同步班"
+        },
+        {
+          "kind": "text",
+          "label": "初中班型（初二）",
+          "value": "英语同步班 / 数学同步班 / 物理同步班"
+        },
+        {
+          "kind": "number",
+          "label": "初中课时",
+          "value": "20课时"
+        },
+        {
+          "kind": "price",
+          "label": "初中学费",
+          "value": "1000元"
+        },
+        {
+          "kind": "text",
+          "label": "优惠活动",
+          "value": "报名均享受九折优惠，前五十名更有豪礼相送！"
+        },
+        {
+          "kind": "text",
+          "label": "提示语",
+          "value": "详情请进校咨询"
+        },
+        {
+          "kind": "phone",
+          "label": "咨询电话",
+          "value": "15871888813"
+        },
+        {
+          "kind": "phone",
+          "label": "报名热线",
+          "value": "0728-3331833"
+        },
+        {
+          "kind": "location",
+          "label": "咨询地址",
+          "value": "仙桃市仙桃大道上岛咖啡城市花园B栋301(教育局正对面)"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_3097",
+      "category": "school_ad_with_phone",
+      "content_len": 193,
+      "r1": 1
+    }
+  ]
+}
