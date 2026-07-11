@@ -508,23 +508,48 @@ class ToolUseLoop(
                 //  contradicts the LLM's classification (e.g.
                 //  `location` bubble that contains a mobile number
                 //  → `phone`).  Conservative: only fires on
-                //  `location` and `info` source types; the LLM's
-                //  explicit `proposedActions` (action_ids) is
-                //  preserved unchanged so r3 stays a true
-                //  model-behavior metric.  See IntentVerifier.kt
-                //  for the rule set + rationale.
+                //  `location` and `info` source types.  On a flip the
+                //  LLM's `proposedActions` are re-aligned to the new
+                //  type by Phase F below; when no flip happens they are
+                //  preserved unchanged so r3 stays a true model-behavior
+                //  metric.  See IntentVerifier.kt for the rule set.
                 val verifiedType = IntentVerifier.verify(
                     currentType = tb.type,
                     title = tb.title,
                     detail = tb.detail,
                     details = tb.details,
                 )
+                // [2026-07-11] Phase F — when the verifier CORRECTS the
+                //  type, the LLM's action_ids (proposed for the OLD type)
+                //  are now stale, so the r3 chip disagrees with the r2
+                //  type (e.g. a location→phone flip still carries
+                //  `open_in_maps`, never `dial_number`).  Inject the
+                //  corrected type's canonical action so action follows
+                //  type.  Additive + monotonic: we only ensure the
+                //  correct id is PRESENT (never remove), so r3 recall can
+                //  only rise; settings gating (`enabledActionIds`) still
+                //  filters the chip in prod, and eval scores recall so an
+                //  extra id never hurts.  Deliberately scoped to the
+                //  flip case only — when the LLM types correctly on its
+                //  own we leave its (possibly empty) proposal untouched,
+                //  keeping r3 a real model-behavior signal for the
+                //  non-flip majority (the C2 prompt nudge owns that path).
+                var verifiedActions = tb.proposedActions
                 if (verifiedType != tb.type) {
                     log(
                         "VERIFY",
                         "type overridden: ${tb.type} -> $verifiedType " +
                             "(bubble title='${tb.title.take(40)}')"
                     )
+                    val injected = IntentVerifier.actionFor(verifiedType)
+                    if (injected != null && injected !in tb.proposedActions.orEmpty()) {
+                        verifiedActions = listOf(injected) + tb.proposedActions.orEmpty()
+                        log(
+                            "VERIFY",
+                            "action injected: $injected " +
+                                "(type ${tb.type} -> $verifiedType)"
+                        )
+                    }
                 }
                 return Outcome.Bubble(
                     com.example.intentcam.Bubble(
@@ -550,7 +575,11 @@ class ToolUseLoop(
                         // LLM-override branch.  Null when emit_bubble
                         // didn't receive the field (the legacy
                         // applicability path).
-                        llmProposedActions = tb.proposedActions,
+                        // [2026-07-11] Phase F: `verifiedActions` == the
+                        // model's list, plus the corrected type's
+                        // canonical action when the verifier flipped
+                        // type (else identical to tb.proposedActions).
+                        llmProposedActions = verifiedActions,
                     ),
                     firstToolName = chosenToolName,
                 )

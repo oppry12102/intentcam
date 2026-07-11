@@ -126,6 +126,28 @@ object IntentVerifier {
         return verifyType(currentType, corpus)
     }
 
+    /**
+     * [2026-07-11] Phase F — canonical action id for an intent type.
+     * The single [ActionDef] each type ships with (mirrors
+     * `registerDefaultActions` in app/ + `defaultActionIds` in
+     * EvalRunner).  Observe-only types (`info`, `solve`) carry no
+     * action → null.
+     *
+     * Lives here (not in app/ActionDecl) because Phase F's injection
+     * runs in shared/ `ToolUseLoop` alongside [verify], before the
+     * platform-specific `Bubble` is constructed.  Keep in lockstep
+     * with the app's ActionDef registry and EvalRunner.defaultActionIds.
+     */
+    fun actionFor(type: String): String? = when (type) {
+        "location"            -> "open_in_maps"
+        "phone"               -> "dial_number"
+        "real_estate_rental"  -> "copy_listing"
+        "recruit_hiring"      -> "save_posting"
+        "payment_qr"          -> "scan_to_pay"
+        "id_document"         -> "redact_id"
+        else                  -> null   // info / solve — no action
+    }
+
     private fun verifyType(currentType: String, corpus: String): String {
         // Pass 1: location + mobile number → phone.  Strongest
         //  signal-by-volume rule; absence of FA cases observed in
@@ -140,6 +162,28 @@ object IntentVerifier {
         //  dial-first signals for the user.
         if (currentType == "location" && SERVICE.containsMatchIn(corpus)) {
             return "phone"
+        }
+        // Pass 1c-1e (2026-07-11, Phase F enablement): location + strong
+        //  PII token → the PII type.  Mirrors the info-source rules
+        //  (Pass 4-6) for the `location` source.  The LLM types
+        //  storefront / billboard PII signs (房屋出租 600平米 / 登记号 /
+        //  招聘启事) as `location` because they are physical signs on
+        //  buildings — so the info-only rules never fired and every
+        //  such fixture sat at r2_type=0.5 with no action.  These three
+        //  flips let the verifier correct the type, which in turn gives
+        //  Phase F's action injection (in ToolUseLoop) a flip to act on.
+        //  Ordered AFTER the mobile/service→phone rules above so a
+        //  dialable number still wins (a storefront banner with both a
+        //  mobile and 平米 goes to phone, not real_estate).  Same regex
+        //  tightness + monotonic guarantee as the info-source rules.
+        if (currentType == "location" && REAL_ESTATE.containsMatchIn(corpus)) {
+            return "real_estate_rental"
+        }
+        if (currentType == "location" && RECRUIT.containsMatchIn(corpus)) {
+            return "recruit_hiring"
+        }
+        if (currentType == "location" && ID_DOCUMENT.containsMatchIn(corpus)) {
+            return "id_document"
         }
         // Pass 2: info + QR-payment language → payment_qr.
         //  Disambiguates the scan-to-pay posters (扫一扫 in
