@@ -1,10 +1,13 @@
 package com.example.intentcam.eval
 
 import com.example.intentcam.CapturedFrame
+import com.example.intentcam.IntentFamily
+import com.example.intentcam.IntentRegistry
 import com.example.intentcam.LlmClient
 import com.example.intentcam.ToolRegistry
 import com.example.intentcam.ToolUseLoop
 import com.example.intentcam.encodeThumbnail
+import com.example.intentcam.registerDefaultIntents
 import com.example.intentcam.registerDefaultTools
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
@@ -31,7 +34,28 @@ import java.io.File
 internal class EvalRunner(private val config: EvalConfig) {
 
     private val client = LlmClient(evalLlmConfig)
-    private val registry = ToolRegistry().also { it.registerDefaultTools() }
+    // [2026-07-10] Intent registry built before tools so the emit_bubble
+    //  schema enum and the system prompt's type list see the same set
+    //  of ids the orchestrator fallbacks point at.  The same registry
+    //  also drives the A2 family-based type scoring below.
+    private val intentRegistry = IntentRegistry()
+        .also { registerDefaultIntents(it) }
+    private val registry = ToolRegistry().also { it.registerDefaultTools(intentRegistry) }
+    // [2026-07-13] The model can only emit `action_ids` that are
+    //  enumerated in the system prompt's `actions ⊆ {...}` block.
+    //  Mirror the Android app's default registry by id so the eval
+    //  cycle sees the same action-id vocabulary as prod.  A registry
+    //  type isn't needed here — we score the bubble's raw proposal
+    //  (`llmProposedActions`) directly against the ground truth, not
+    //  the resolver-filtered `actions` list, so a disabled / future
+    //  action change doesn't silently move the recall number.
+    //  Keep in lockstep with `registerDefaultActions` in `app/`
+    //  (`ActionRegistry.DEFAULT_ID = "view_details"`).
+    private val defaultActionIds = listOf(
+        "view_details",   // no-op chip (DEFAULT_ID in app/)
+        "open_in_maps",   // location → maps
+        "dial_number",    // [2026-07-13] phone → system dialer
+    )
     // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
     // when --debug-fixtures is set, otherwise stay silent like before.
     // The orchestrator's log callback runs in a hot loop so we don't
@@ -40,11 +64,16 @@ internal class EvalRunner(private val config: EvalConfig) {
     // retest: rctw_01/03/10/18).
     private val debugFixtures: Set<String> = config.debugFixtures
     private val currentSceneId = AtomicReference<String?>(null)
-    private val orchestrator = ToolUseLoop(client = client, registry = registry, log = { tag, msg ->
-        if (currentSceneId.get()?.let { it in debugFixtures } == true) {
-            System.err.println("[${currentSceneId.get()}][$tag] $msg")
-        }
-    })
+    private val orchestrator = ToolUseLoop(
+        client = client,
+        registry = registry,
+        intents = intentRegistry,
+        log = { tag, msg ->
+            if (currentSceneId.get()?.let { it in debugFixtures } == true) {
+                System.err.println("[${currentSceneId.get()}][$tag] $msg")
+            }
+        },
+    )
 
     fun run(): Int {
         if (!config.groundTruth.exists()) {
@@ -122,6 +151,11 @@ internal class EvalRunner(private val config: EvalConfig) {
                     fullRes = frame.fullRes,
                     userText = "",
                     cropOcrCap = config.cropOcrCap,
+                    // [2026-07-13] Splice the registered action-id
+                    //  vocabulary into the system prompt.  Empty
+                    //  list = no LLM-proposal branch (legacy
+                    //  applicability filter).
+                    actionIds = defaultActionIds,
                 )
             }
             if (outcome is ToolUseLoop.Outcome.Error) {
@@ -130,7 +164,16 @@ internal class EvalRunner(private val config: EvalConfig) {
 
             val r1 = scoreRound1(outcome, scene)
             val r2 = scoreRound2(outcome, scene)
-            val composite = 0.50 * r1.first + 0.50 * r2.first
+            val r3 = scoreRound3(outcome, scene)
+            // [2026-07-13] Composite gains a third dimension for
+            //  action_recall.  Weights chosen so r1+r2 stays dominant
+            //  (0.90) and r3 is a soft 0.10 nudge.  With only 20/100
+            //  location-class fixtures having ground-truth
+            //  expected_actions, r3 is mostly a 1.0 floor right now
+            //  — the real signal will appear once we annotate more
+            //  fixtures (or pay attention to over-proposals as a
+            //  separate negative signal).
+            val composite = 0.45 * r1.first + 0.45 * r2.first + 0.10 * r3.first
             // Diagnostic side-metrics (do NOT feed composite — kept
             // comparable to the pre-instrumentation baseline).  These
             // separate "model genuinely misread the text" from
@@ -161,11 +204,14 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "r2_text" to r2.first,
                 "r2_type" to r2.second,
                 "r2_text_fuzzy" to r2TextFuzzy,
+                "r3_actions" to r3.first,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
                 "raw_details" to rawDetails,
                 "r1_details" to r1.third,
+                "emitted_action_ids" to r3.second.optJSONArray("emitted_action_ids"),
+                "expected_actions" to r3.second.optJSONArray("expected_actions"),
             ))
             perCategory.getOrPut(category) { mutableListOf() }.add(composite)
 
@@ -192,6 +238,25 @@ internal class EvalRunner(private val config: EvalConfig) {
             val avgDetails = results.map { (it["details_count"] as Int).toDouble() }.average()
             val emptyDetails = results.count { (it["details_count"] as Int) == 0 }
             val avgContentLen = results.map { (it["content_len"] as Int).toDouble() }.average()
+            // [2026-07-13] r3_actions aggregate.  The 1.0 floor for
+            //  un-annotated fixtures makes this metric look
+            //  optimistic when only a few fixtures carry
+            //  expected_actions; pass --fixtures to a location-only
+            //  subset for a real action-recall number.
+            val r3Avg = results.map { it["r3_actions"] as Double }.average()
+            // Recall broken down on the subset that has ground-truth
+            // actions: gives a cleaner signal of the model's
+            //  hit-rate when there's something to hit.
+            val actionableFixtures = results.count {
+                val ea = it["expected_actions"] as JSONArray
+                ea.length() > 0
+            }
+            val r3OnAnnotated = if (actionableFixtures > 0) {
+                results.filter {
+                    val ea = it["expected_actions"] as JSONArray
+                    ea.length() > 0
+                }.map { it["r3_actions"] as Double }.average()
+            } else 0.0
             println(
                 "r2_text strict=${"%.3f".format(r2Strict)} " +
                     "fuzzy=${"%.3f".format(r2Fuzzy)} (gap=${"%.3f".format(r2Fuzzy - r2Strict)} = scorer strictness)"
@@ -199,6 +264,11 @@ internal class EvalRunner(private val config: EvalConfig) {
             println(
                 "details: avg ${"%.1f".format(avgDetails)} rows/fixture, " +
                     "$emptyDetails/${results.size} empty | content avg ${"%.0f".format(avgContentLen)} chars"
+            )
+            println(
+                "r3_actions=${"%.3f".format(r3Avg)} " +
+                    "($actionableFixtures annotated fixtures, " +
+                    "on-annotated avg ${"%.3f".format(r3OnAnnotated)})"
             )
         }
         println()
@@ -247,6 +317,13 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("r2_text", r["r2_text"] as Double)
             o.put("r2_type", r["r2_type"] as Double)
             o.put("r2_text_fuzzy", r["r2_text_fuzzy"] as Double)
+            // [2026-07-13] r3 (action_recall) + raw LLM proposal +
+            //  ground-truth expected actions so post-hoc scorer
+            //  experiments can re-cut the score without re-running
+            //  the LLM.
+            o.put("r3_actions", r["r3_actions"] as Double)
+            o.put("emitted_action_ids", r["emitted_action_ids"] as JSONArray)
+            o.put("expected_actions", r["expected_actions"] as JSONArray)
             o.put("details_count", r["details_count"] as Int)
             o.put("content_len", r["content_len"] as Int)
             o.put("raw_content", r["raw_content"] as String)
@@ -402,8 +479,11 @@ internal class EvalRunner(private val config: EvalConfig) {
 
         // Type match — three-way partial credit instead of binary:
         //   - right bucket                          → 1.0
-        //   - info ↔ location (interchangeable)     → 1.0  (v1.3, 2026-07-10)
-        //   - any valid type but solve mismatch    → 0.5
+        //   - same family, different id             → 1.0  (v1.3, 2026-07-10;
+        //                                              generalizes to all
+        //                                              IntentFamilies, not
+        //                                              just OBSERVE)
+        //   - any registered type, wrong family     → 0.5
         //   - empty / unknown                       → 0.0
         //
         // Why info ↔ location is full credit: signs / storefronts / 商户
@@ -419,20 +499,101 @@ internal class EvalRunner(private val config: EvalConfig) {
         // 9/100 fixtures in 2026-07-07 1-only @100 v2 regressed solely
         // because the model picked a non-info type for fixtures the GT
         // locks at "info", dropping composite by 0.25 each.  The
-        // partial credit (now full for info↔location) restores that
+        // partial credit (now full for same-family pair) restores that
         // without inflating true matches.
-        val expectedType = scene.optString("expected_type", "info")
+        //
+        // [2026-07-10] Family lookup now consults the registered
+        // IntentRegistry instead of the previous `setOf("info",
+        // "location")` literal.  Behavior on the 3 default intents is
+        // unchanged; adding a 4th ACT_ON intent in the future will
+        // automatically pair it with "solve" at 1.0 without editing
+        // this scorer.
+        val expectedType = scene.optString("expected_type", IntentRegistry.FALLBACK_ID)
+        val observeFamily = intentRegistry.idsInFamily(IntentFamily.OBSERVE)
+        val actFamily = intentRegistry.idsInFamily(IntentFamily.ACT_ON)
+        val registeredIds = observeFamily + actFamily
+        // `type` is `String?` from JSON lookups.  Treat null and "" the
+        // same as "no intent was emitted" — both score 0.0.
+        val nonBlankType = type?.takeIf { it.isNotBlank() } ?: ""
+        // Look up the family of an id (null if not registered or empty).
+        fun familyOf(id: String): IntentFamily? = when {
+            id.isBlank() -> null
+            id in observeFamily -> IntentFamily.OBSERVE
+            id in actFamily -> IntentFamily.ACT_ON
+            else -> null
+        }
         val typeScore = when {
-            type == expectedType -> 1.0
-            type.isNullOrBlank() -> 0.0
-            type in setOf("info", "location") &&
-                expectedType in setOf("info", "location") -> 1.0
-            type in setOf("info", "location", "solve") -> 0.5
+            nonBlankType.isEmpty() -> 0.0
+            nonBlankType == expectedType -> 1.0
+            familyOf(nonBlankType) != null && familyOf(nonBlankType) == familyOf(expectedType) -> 1.0
+            nonBlankType in registeredIds -> 0.5
             else -> 0.0
         }
 
         val r2 = 0.50 * textScore + 0.50 * typeScore
         return Pair(r2, typeScore)
+    }
+
+    /**
+     * [2026-07-13] Round 3 — action_recall.  Score the model's
+     * ability to *propose* the right `action_ids` against the
+     * ground truth's `expected_actions` list.
+     *
+     * Scoring rule (intentionally simple for v1):
+     *   - expected_actions absent / empty list  → 1.0 (no signal;
+     *     we don't penalize fixtures that don't exercise this
+     *     dimension — the surface area is small right now)
+     *   - otherwise                             → |predicted ∩ expected|
+     *                                             / |expected|
+     *     ("recall" — every expected id showed up at least once in
+     *     the proposal).  Precision is not penalized: over-proposing
+     *     `[open_in_maps, view_details]` on a fixture that expects
+     *     only `[open_in_maps]` still scores 1.0.  When the surface
+     *     grows beyond 2 actions and we have more ground truth,
+     *     add a precision term to break ties.
+     *
+     * Reads `bubble.llmProposedActions` (the raw list the model
+     * emitted in `emit_bubble.action_ids`) rather than the
+     * resolver-filtered `bubble.actions`.  Decouples the metric
+     * from SettingsStore-enabled changes so the score stays
+     * stable across user-toggle experiments.
+     *
+     * Returns: Pair(recallScore, detail).  The detail is a
+     * JSONObject carrying `emitted_action_ids` + `expected_actions`
+     * arrays so the JSON report can dump them per-fixture.
+     */
+    private fun scoreRound3(
+        outcome: ToolUseLoop.Outcome,
+        scene: JSONObject,
+    ): Pair<Double, JSONObject> {
+        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
+            ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
+        val proposed: List<String> = bubble?.llmProposedActions.orEmpty()
+        val expectedArr = scene.optJSONArray("expected_actions")
+        val expected: List<String> = when {
+            expectedArr == null -> emptyList()
+            else -> (0 until expectedArr.length()).map { expectedArr.getString(it) }
+        }
+        val detail = JSONObject()
+            .put("emitted_action_ids", JSONArray(proposed))
+            .put("expected_actions", JSONArray(expected))
+        if (expected.isEmpty()) {
+            // No ground truth for this fixture — score as full
+            // credit so it doesn't drag composite down.  Inverted
+            // from "absent = 0"; the alternative would penalize
+            // every non-annotated fixture into the floor on a
+            // partial-annotation rollout.
+            return Pair(1.0, detail)
+        }
+        if (proposed.isEmpty()) {
+            // Expected something, got nothing — wrong.  Returning
+            // 0.0 lets r3's 0.10 weight pull composite 0.10 lower
+            // for these fixtures, which is the actionable signal.
+            return Pair(0.0, detail)
+        }
+        val proposedSet = proposed.toSet()
+        val hits = expected.count { it in proposedSet }
+        return Pair(hits.toDouble() / expected.size, detail)
     }
 
     /**

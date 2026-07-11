@@ -26,6 +26,7 @@ import org.json.JSONObject
 class ToolUseLoop(
     private val client: LlmClient,
     private val registry: ToolRegistry,
+    private val intents: IntentRegistry,
     private val log: (tag: String, msg: String) -> Unit = { _, _ -> },
 ) {
 
@@ -71,12 +72,20 @@ class ToolUseLoop(
      *   of crop OCR runs to perform across the whole cycle (0 =
      *   unlimited, prod default).  Round-1 OCR pre-pass is always
      *   counted separately and is unaffected.
+     * @param actionIds [2026-07-13] registered `ActionDef` ids the
+     *   model can propose in `emit_bubble.action_ids`.  Spliced into
+     *   the system prompt (the `actions ⊆ {...}` line).  Empty list
+     *   = no LLM-proposal branch in [com.example.intentcam.ActionResolver];
+     *   non-empty = the model can opt in / out of suggestions per
+     *   cycle.  Defaulted to empty so existing callers (eval, tests)
+     *   don't need to update.
      */
     suspend fun runCycle(
         thumbnail: ByteArray,
         fullRes: ByteArray,
         userText: String,
         cropOcrCap: Int = 0,
+        actionIds: List<String> = emptyList(),
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
@@ -183,7 +192,7 @@ class ToolUseLoop(
             log("TOOL", "→ 第 $round 轮（messages=${messages.length()}）")
             val response: ToolUseResponse = try {
                 client.streamToolUse(
-                    system = LlmClient.TOOL_USE_SYSTEM,
+                    system = LlmClient.toolUseSystemPrompt(intents, actionIds),
                     messages = messages,
                     toolsJson = toolsJson,
                 )
@@ -207,7 +216,7 @@ class ToolUseLoop(
                     Outcome.Bubble(
                         com.example.intentcam.Bubble(
                             id = "bubble-${System.currentTimeMillis()}",
-                            type = "info",
+                            type = IntentRegistry.FALLBACK_ID,
                             title = partial.text.take(40).ifBlank { "未识别" },
                             detail = partial.text.take(200).ifBlank { "（识别超时，已用部分结果）" },
                             // Lower than the normal 0.7 so the UI knows
@@ -511,6 +520,13 @@ class ToolUseLoop(
                         // emit the rows — the r2_text plateau's
                         // companion symptom.
                         details = tb.details,
+                        // [2026-07-13] Persist the model's explicit
+                        // action_ids choice onto the bubble so
+                        // AppViewModel's resolver can use it as the
+                        // LLM-override branch.  Null when emit_bubble
+                        // didn't receive the field (the legacy
+                        // applicability path).
+                        llmProposedActions = tb.proposedActions,
                     ),
                     firstToolName = chosenToolName,
                 )
@@ -533,7 +549,7 @@ class ToolUseLoop(
         return Outcome.Bubble(
             com.example.intentcam.Bubble(
                 id = "bubble-${System.currentTimeMillis()}",
-                type = "info",
+                type = IntentRegistry.FALLBACK_ID,
                 title = finalText.take(40).ifBlank { "未识别" },
                 detail = finalText.take(200).ifBlank { "（模型未给出内容描述）" },
                 confidence = 0.5f,
@@ -551,7 +567,7 @@ class ToolUseLoop(
         detail: String,
     ): com.example.intentcam.Bubble = com.example.intentcam.Bubble(
         id = "bubble-${System.currentTimeMillis()}",
-        type = "info",
+        type = IntentRegistry.FALLBACK_ID,
         title = "需要补充信息",
         detail = detail.ifBlank { "via $toolName" },
         confidence = 0.5f,
@@ -624,14 +640,14 @@ class ToolUseLoop(
             if (parsed != null) {
                 val scene = parsed.optString("scene", "")
                 val intent = parsed.optString("intent", "")
-                val type = parsed.optString("type", "info").ifBlank { "info" }
+                val type = parsed.optString("type", IntentRegistry.FALLBACK_ID).ifBlank { IntentRegistry.FALLBACK_ID }
                 val conf = parsed.optDouble("confidence", 0.7).toFloat().coerceIn(0f, 1f)
                 return ParsedAnswer(scene, intent, type, conf)
             }
         }
         // Fallback: use first sentence as intent.
         val firstSentence = cleaned.take(40).trim().ifBlank { "未识别" }
-        return ParsedAnswer(scene = cleaned.take(160), intent = firstSentence, type = "info", confidence = 0.5f)
+        return ParsedAnswer(scene = cleaned.take(160), intent = firstSentence, type = IntentRegistry.FALLBACK_ID, confidence = 0.5f)
     }
 
     private companion object {

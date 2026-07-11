@@ -92,8 +92,13 @@ data class ToolResult(
      *  the orchestrator can stop without another LLM round. */
     val finalBubble: Boolean = false,
     /** Synthesized bubble fields, populated when [finalBubble] is true
-     *  OR when the tool wants the UI to show a placeholder. */
-    val type: String = "info",
+     *  OR when the tool wants the UI to show a placeholder.
+     *
+     *  Default = the registered IntentRegistry's fallback id (which is
+     *  `"info"` for the default registry).  Kept as a string (not a
+     *  registry handle) so [ToolResult] stays a pure data class with
+     *  no dependency on IntentCam wiring. */
+    val type: String = IntentRegistry.FALLBACK_ID,
     val title: String = "",
     val detail: String = "",
     val confidence: Float = 0.7f,
@@ -114,6 +119,15 @@ data class ToolResult(
      *  context.  Kept raw (not base64) since the orchestrator
      *  base64-encodes it itself. */
     val followUpJpeg: ByteArray? = null,
+    /** [2026-07-13] When `emit_bubble` accepts an `action_ids: List<String>`
+     *  field from the model, populated here so the orchestrator can
+     *  persist it onto [Bubble.llmProposedActions].  Drives the
+     *  LLM-override branch of [com.example.intentcam.ActionResolver]:
+     *  non-null list = the model's explicit pick (intersected with
+     *  enabled ids in the resolver), null = the legacy applicability
+     *  filter.  Kept on the shared ToolResult so the prompt-time
+     *  schema and the orchestrator's plumbing don't drift. */
+    val proposedActions: List<String>? = null,
 )
 
 /**

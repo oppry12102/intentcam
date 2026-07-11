@@ -23,16 +23,65 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val settings = SettingsStore(app)
     private val client = LlmClient(settings.load())
 
+    /** [2026-07-10] Intent registry — the system prompt's type list
+     *  and the `emit_bubble` tool description both read from this.
+     *  Built first so the tool registry below can consult it. */
+    private val intentRegistry = IntentRegistry().also { registerDefaultIntents(it) }
+
+    /** [2026-07-10] Action registry — built alongside the intent
+     *  registry.  Declares which chip actions show up on which
+     *  intent.  Android-only (lives in `app/`) because action bodies
+     *  take `android.content.Context`.  Exposed as a public val so
+     *  MainActivity can resolve `bubble.actions` ids back into
+     *  displayable [ActionDef]s (label / iconKey) for chip rendering. */
+    val actionRegistry = ActionRegistry().also { registerDefaultActions(it) }
+
+    /** [2026-07-10] Action resolver — given a bubble, decides which
+     *  action ids should surface as chips.  Reads the user's
+     *  enabled-actions preference on every cycle (cheap; the Flow is
+     *  just a SharedPreferences lookup).
+     *
+     * [2026-07-13] Two-layer gate:
+     *   1. The legacy `enabledActionIds` set (op-out list).
+     *   2. Per-action `userPrefKey` toggle from SettingsStore.
+     *      An action with a `userPrefKey` is enabled only when the
+     *      corresponding boolean in SharedPreferences is true —
+     *      PII actions (`dial_number`, future `read_id_card`,
+     *      `pay_*`, etc.) ship OFF by default and require an
+     *      explicit opt-in.  Universal actions (`view_details`,
+     *      `open_in_maps`) have `userPrefKey=null` and pass
+     *      through unchanged.  The settings UI to flip these
+     *      toggles arrives with Phase B (PII framework); for now
+     *      they stay disabled. */
+    private val actionResolver = ActionResolver(
+        actions = actionRegistry,
+        intents = intentRegistry,
+        enabledIds = {
+            val base = settings.loadEnabledActions() ?: actionRegistry.allIds().toSet()
+            // Apply userPrefKey gates: remove any action whose
+            // pref key is set but not granted.  Cheap — at most
+            // ~5 actions per rebuild, SharedPreferences is
+            // already a memory cache.
+            val gated = base.toMutableSet()
+            for (def in actionRegistry.list()) {
+                val key = def.userPrefKey ?: continue
+                if (!settings.loadActionPermission(key)) gated.remove(def.id)
+            }
+            gated
+        },
+    )
+
     /** Tool registry used by [toolUseLoop].  Built once at construction
      *  and reused for every recognition cycle.  Adding tools requires
      *  re-registering here. */
     private val toolRegistry = ToolRegistry().also {
-        it.registerDefaultTools()
+        it.registerDefaultTools(intentRegistry)
     }
 
     private val toolUseLoop = ToolUseLoop(
         client = client,
         registry = toolRegistry,
+        intents = intentRegistry,
         log = ::logDebug,
     )
 
@@ -323,20 +372,38 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 thumbnail = frame.thumbnail,
                 fullRes = frame.fullRes,
                 userText = userText,
+                // [2026-07-13] Splice the registered ActionDef ids
+                // into the system prompt so emit_bubble.action_ids
+                // can fire.  All ids registered in the ActionRegistry
+                // are eligible (the resolver still filters by
+                // enabledIds at render time, so a disabled action
+                // never reaches the chip UI).
+                actionIds = actionRegistry.allIds(),
             )
         }
         when (outcome) {
             is ToolUseLoop.Outcome.Bubble -> {
-                val merged = (_state.value.bubbles + outcome.bubble).takeLast(UiState.BUBBLE_MAX)
+                // [2026-07-10] Resolve action ids on the bubble before
+                //  stashing it.  The resolver consults
+                //  IntentRegistry (for "which intent is this bubble")
+                //  and SettingsStore (for "which actions the user has
+                //  disabled").  Returns ids in declaration order; the
+                //  UI looks each one up in ActionRegistry to render
+                //  chips.
+                val withActions = outcome.bubble.copy(
+                    actions = actionResolver.suggestIds(outcome.bubble)
+                )
+                val merged = (_state.value.bubbles + withActions).takeLast(UiState.BUBBLE_MAX)
                 _state.value = _state.value.copy(
-                    scene = outcome.bubble.detail.take(80),
+                    scene = withActions.detail.take(80),
                     bubbles = merged,
                     analyzing = false,
                 )
                 logDebug(
                     "FINAL",
-                    "type=${outcome.bubble.type} intent=${outcome.bubble.title} " +
-                        "via=${outcome.bubble.toolName ?: "?"}"
+                    "type=${withActions.type} intent=${withActions.title} " +
+                        "via=${withActions.toolName ?: "?"} " +
+                        "actions=${withActions.actions.size}"
                 )
             }
             is ToolUseLoop.Outcome.PendingUserInput -> {
@@ -450,11 +517,214 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    // NOTE: `runChip` and `runCycleWithPrePickedTool` removed 2026-07-10
-    // — both were stubs for the deferred action_chips feature.
-    // ActionChipButton in MainActivity was already removed; these
-    // were the only other references.  Re-add when action_chips
-    // come back to the emit_bubble schema.
+    // NOTE: `runCycleWithPrePickedTool` removed 2026-07-10
+    // — was a stub for the deferred action_chips feature.
+    // `runAction` (below) is the re-introduced version, now backed by
+    // the ActionRegistry (intent-action framework step 5+6, 2026-07-10).
+
+    /**
+     * User tapped an action chip on a bubble.  Looks up the
+     * [ActionDef], runs its body with the Application context, and
+     * dispatches the resulting [ActionOutcome] (startActivity for
+     * outbound Intents, Toast for in-app feedback).
+     *
+     * [2026-07-13] Honors `requiresConfirmation`: actions tagged
+     * for it (currently only `dial_number`) park a `pendingConfirmation`
+     * in [UiState] instead of running the body immediately; the
+     * MainActivity renders an AlertDialog; [confirmAction] /
+     * [cancelConfirmation] drive the resolution.
+     *
+     * No-ops silently when the action id is unknown (defensive — a
+     * stale bubble might reference an action that was removed) or
+     * when the bubble id isn't in the current history (e.g. user
+     * navigated away between render and tap).
+     */
+    fun runAction(actionId: String, bubbleId: String) {
+        val bubble = _state.value.bubbles.firstOrNull { it.id == bubbleId }
+        if (bubble == null) {
+            logDebug("ACTION", "tap 收到 actionId=$actionId 但 bubble $bubbleId 不在历史中")
+            return
+        }
+        val def = actionRegistry.get(actionId)
+        if (def == null) {
+            logDebug("ACTION", "未注册 action $actionId (bubble $bubbleId)")
+            return
+        }
+        logDebug("ACTION", "tap ${def.id} for bubble='${bubble.title.take(40)}'")
+        if (def.requiresConfirmation) {
+            // Park a confirmation; MainActivity renders an AlertDialog.
+            // Detail uses the same PhoneExtractor the body uses so the
+            // user sees exactly what number will be handed to the
+            // dialer — no surprise.
+            val pending = PendingConfirmation(
+                actionId = def.id,
+                bubbleId = bubbleId,
+                prompt = "确认拨打?",
+                detail = "即将在系统拨号器中拨打 " +
+                    (PhoneExtractor.firstMatch(bubble) ?: "未知号码"),
+            )
+            _state.value = _state.value.copy(pendingConfirmation = pending)
+            logDebug("ACTION", "request confirm via=${def.id} prompt=${pending.detail}")
+            return
+        }
+        executeAndDispatch(def, bubble, emptyMap(), bubbleId)
+    }
+
+    /** User tapped the action's "Confirm" button on the consent
+     *  AlertDialog.  Drives [runAction]'s parked confirmation through
+     *  [executeAndDispatch].  No-op when no confirmation is parked.
+     *  After successful dispatch we grant the action's userPrefKey
+     *  permission (so the chip stops prompting on subsequent taps)
+     *  — the user just gave explicit consent by tapping "Confirm"
+     *  once, that should persist. */
+    fun confirmAction() {
+        val pending = _state.value.pendingConfirmation ?: return
+        logDebug("ACTION", "confirm ${pending.actionId}")
+        // Clear the dialog first so a body that throws doesn't leave
+        // the dialog visible.
+        _state.value = _state.value.copy(pendingConfirmation = null)
+        val bubble = _state.value.bubbles.firstOrNull { it.id == pending.bubbleId }
+        if (bubble == null) return
+        val def = actionRegistry.get(pending.actionId) ?: return
+        // One-time opt-in: persist userPrefKey so future chips on
+        // phone bubbles don't re-prompt.  Phase B's settings UI
+        // will let the user revoke this.
+        def.userPrefKey?.let { settings.saveActionPermission(it, true) }
+        executeAndDispatch(def, bubble, emptyMap(), pending.bubbleId)
+    }
+
+    /** User dismissed the consent dialog (Cancel / back-press).
+     *  No body invocation.  Clears [UiState.pendingConfirmation]. */
+    fun cancelConfirmation() {
+        val pending = _state.value.pendingConfirmation ?: return
+        logDebug("ACTION", "cancel confirm ${pending.actionId}")
+        _state.value = _state.value.copy(pendingConfirmation = null)
+    }
+
+    /**
+     * User filled in the form parked by
+     * [ActionOutcome.RequestArgs].  Re-runs the action body with the
+     * collected values; the dispatch is identical to [runAction] so
+     * we delegate to the same helper.
+     *
+     * If the body requests more args (e.g. a phone-number action
+     * needs number + body), the new form replaces the current one
+     * via [UiState.pendingAction].  Pure cascade.
+     */
+    fun submitActionArgs(args: Map<String, String>) {
+        val pending = _state.value.pendingAction ?: return
+        val bubble = _state.value.bubbles.firstOrNull { it.id == pending.bubbleId }
+        if (bubble == null) {
+            // Stale pending — bubble already evicted; just clear.
+            logDebug("ACTION", "submit 但 bubble ${pending.bubbleId} 不在历史中")
+            _state.value = _state.value.copy(pendingAction = null)
+            return
+        }
+        val def = actionRegistry.get(pending.actionId)
+        if (def == null) {
+            logDebug("ACTION", "submit 但 action ${pending.actionId} 已下线")
+            _state.value = _state.value.copy(pendingAction = null)
+            return
+        }
+        logDebug(
+            "ACTION",
+            "submit args for ${def.id} keys=${args.keys.joinToString(",")}"
+        )
+        executeAndDispatch(def, bubble, args, pending.bubbleId)
+    }
+
+    /** User dismissed the action-arg form (back-press / cancel).
+     *  Clears [UiState.pendingAction] without firing the body. */
+    fun cancelActionArgs() {
+        val pending = _state.value.pendingAction ?: return
+        logDebug("ACTION", "cancel args for ${pending.actionId}")
+        _state.value = _state.value.copy(pendingAction = null)
+    }
+
+    /**
+     * Shared core for [runAction] + [submitActionArgs]: invoke the
+     * body, catch into a Toast on throw, and dispatch the resulting
+     * [ActionOutcome].  Always runs on [Dispatchers.Main] because
+     * `startActivity` from a non-main thread crashes on Android.
+     */
+    private fun executeAndDispatch(
+        def: ActionDef,
+        bubble: Bubble,
+        args: Map<String, String>,
+        bubbleId: String,
+    ) {
+        viewModelScope.launch(Dispatchers.Main) {
+            val app = getApplication<Application>()
+            val outcome = try {
+                def.body(app, bubble, args)
+            } catch (e: Throwable) {
+                ActionOutcome.ShowUiFeedback("动作失败:${formatThrowable(e)}")
+            }
+            try {
+                when (outcome) {
+                    ActionOutcome.None -> { /* nothing to do */ }
+                    is ActionOutcome.LaunchAndroidIntent -> {
+                        // FLAG_ACTIVITY_NEW_TASK is required when
+                        // starting from an Application context; the
+                        // action body sets it, but we double-check
+                        // here so a future body change doesn't
+                        // silently drop it.
+                        val intent = outcome.intent.apply {
+                            if (flags and android.content.Intent.FLAG_ACTIVITY_NEW_TASK == 0) {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        }
+                        // Action completed cleanly — drop any pending
+                        // form so back-press doesn't reopen it.
+                        if (_state.value.pendingAction != null) {
+                            _state.value = _state.value.copy(pendingAction = null)
+                        }
+                        app.startActivity(intent)
+                    }
+                    is ActionOutcome.ShowUiFeedback -> {
+                        if (_state.value.pendingAction != null) {
+                            _state.value = _state.value.copy(pendingAction = null)
+                        }
+                        android.widget.Toast.makeText(
+                            app,
+                            outcome.message,
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    is ActionOutcome.RequestArgs -> {
+                        // Replace any existing pending form with the
+                        // freshly requested one (cascading args is
+                        // supported: an action can ask for more
+                        // after a partial fill).
+                        val prompt = outcome.args.firstOrNull()?.helpText
+                            ?: "需要补充参数"
+                        _state.value = _state.value.copy(
+                            pendingAction = PendingAction(
+                                actionId = outcome.resumeActionId,
+                                bubbleId = bubbleId,
+                                args = outcome.args,
+                                prompt = prompt,
+                            )
+                        )
+                        logDebug(
+                            "ACTION",
+                            "request args via=${outcome.resumeActionId} " +
+                                "${outcome.args.size} fields"
+                        )
+                    }
+                }
+            } catch (e: Throwable) {
+                // ActivityNotFoundException for actions like
+                // open_in_maps when the user has no maps app
+                // installed; fall through to a Toast.
+                android.widget.Toast.makeText(
+                    app,
+                    "无法执行:${e.message?.take(80) ?: "未知错误"}",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
 
     /** User explicitly tapped "重新扫描" — full reset including bubble history. */
     fun restartScanning() {

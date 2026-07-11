@@ -1,0 +1,207 @@
+{
+  "version": 2,
+  "description": "Per-intent fixture set for location-intent regressions. Standard: 20 fixtures per intent (user-set rule 2026-07-11). Sourced via `profiling/build_intent_all.py select --intent=location --limit=20`. Each fixture carries a `src` field for audit (which intent_all row it came from). When re-running `select`, the order can shift — `src` is the immutable identity. Edit `intent_corrections.json` to override intent misclassifications.",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "scenes": [
+    {
+      "id": "image_1029",
+      "file": "image_1029.jpg",
+      "src": "intent_all image_1029 auto_intent=location conf=1.000 basis={区,号,园,城,西,路}",
+      "category": "storefront_with_address",
+      "what_is_pictured": "卓刀泉古玩珠宝城广告牌，含完整地址：洪山区珞喻路370号（卓刀泉公园内）",
+      "must_have_in_scene_or_observation": ["珞喻路", "370号", "洪山区"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1055",
+      "file": "image_1055.jpg",
+      "src": "intent_all image_1055 auto_intent=location conf=1.000 basis={州,市,栋,街}",
+      "category": "storefront_with_address",
+      "what_is_pictured": "中宣书画馆广告牌，含完整地址：郴州市裕后街沿河6栋 + 电话0735-8884338",
+      "must_have_in_scene_or_observation": ["裕后街", "郴州市"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1059",
+      "file": "image_1059.jpg",
+      "src": "intent_all image_1059 auto_intent=location conf=1.000 basis={园,城,室,州,市,村,道,邮政编码,镇,院}",
+      "category": "institutional_sign",
+      "what_is_pictured": "仙桃市医保定点医院牌匾，含地址：仙桃大道17 邮政编码：433000",
+      "must_have_in_scene_or_observation": ["仙桃大道", "433000"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_111",
+      "file": "image_111.jpg",
+      "src": "intent_all image_111 auto_intent=location conf=1.000 basis={东,中心,州,市,米,街,路}",
+      "category": "sales_banner_with_directions",
+      "what_is_pictured": "碧水源楼盘广告牌，含方向引导：营销中心向前50米，地址：郴州市曹家坪路（东街往东500米）",
+      "must_have_in_scene_or_observation": ["曹家坪路", "郴州市"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1128",
+      "file": "image_1128.jpg",
+      "src": "intent_all image_1128 auto_intent=location conf=1.000 basis={北,南,站,院}",
+      "category": "venue_poster",
+      "what_is_pictured": "湖北剧院 2015年5月12日19:30 中国巡演武汉站海报",
+      "must_have_in_scene_or_observation": ["湖北剧院", "武汉"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1150",
+      "file": "image_1150.jpg",
+      "src": "intent_all image_1150 auto_intent=location conf=1.000 basis={东,南,西,路,院}",
+      "category": "street_sign_english",
+      "what_is_pictured": "东逸南路路牌：Dongyi South Avenue 双向（East / West）",
+      "must_have_in_scene_or_observation": ["Dongyi", "South Avenue"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1166",
+      "file": "image_1166.jpg",
+      "src": "intent_all image_1166 auto_intent=location conf=1.000 basis={东,号,街,道}",
+      "category": "storefront_with_address",
+      "what_is_pictured": "慧佳科技店面招牌，含地址：东街6-7号 电话7553444",
+      "must_have_in_scene_or_observation": ["东街", "6-7号"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1177",
+      "file": "image_1177.jpg",
+      "src": "intent_all image_1177 auto_intent=location conf=1.000 basis={园,室,州,楼}",
+      "category": "rental_posting",
+      "what_is_pictured": "房屋出租小广告：二室二厅一卫 地址复州花园六楼 电话15572898725",
+      "must_have_in_scene_or_observation": ["复州花园", "六楼"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1216",
+      "file": "image_1216.jpg",
+      "src": "intent_all image_1216 auto_intent=location conf=1.000 basis={公交,市,店,站,路}",
+      "category": "storefront_with_transport",
+      "what_is_pictured": "路发车行广告牌，总店地址：天宇市场对面（公交站处）；含售后电话",
+      "must_have_in_scene_or_observation": ["路发车行", "公交站"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1246",
+      "file": "image_1246.jpg",
+      "src": "intent_all image_1246 auto_intent=location conf=1.000 basis={北,省,街,镇}",
+      "category": "heritage_site_sign",
+      "what_is_pictured": "湖北省非物质文化遗产项目牌匾：红安大布传统纺织技艺传习所 地址：长胜街 七里坪镇",
+      "must_have_in_scene_or_observation": ["长胜街", "七里坪镇"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1281",
+      "file": "image_1281.jpg",
+      "src": "intent_all image_1281 auto_intent=location conf=1.000 basis={号,地铁,市,站,街}",
+      "category": "transit_station_sign",
+      "what_is_pictured": "武汉地铁2号线广埠屯站运营时间公告，含过街指引",
+      "must_have_in_scene_or_observation": ["广埠屯", "地铁"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1291",
+      "file": "image_1291.jpg",
+      "src": "intent_all image_1291 auto_intent=location conf=1.000 basis={南,县,路,院}",
+      "category": "institutional_sign",
+      "what_is_pictured": "南江县人民医院标识，背景为焊接/涂装等车间流程图",
+      "must_have_in_scene_or_observation": ["南江县人民医院"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1359",
+      "file": "image_1359.jpg",
+      "src": "intent_all image_1359 auto_intent=location conf=1.000 basis={园,城,店,米,街,路,道}",
+      "category": "restaurant_storefront",
+      "what_is_pictured": "黄焖鸡米饭餐厅招牌，含江城名吃官网 + 佳园路店标识 + 客服电话",
+      "must_have_in_scene_or_observation": ["佳园路", "黄焖鸡米饭"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1380",
+      "file": "image_1380.jpg",
+      "src": "intent_all image_1380 auto_intent=location conf=1.000 basis={东,州,村,路}",
+      "category": "institutional_sign",
+      "what_is_pictured": "苏州特固五金制品公司门牌，地址：屯村东路350号",
+      "must_have_in_scene_or_observation": ["屯村东路", "350"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1391",
+      "file": "image_1391.jpg",
+      "src": "intent_all image_1391 auto_intent=location conf=1.000 basis={区,城,市,楼}",
+      "category": "real_estate",
+      "what_is_pictured": "湘华名邸楼盘宣传：先要走近名校 / 风水宝地·纯住宅小区·稀缺楼梯房",
+      "must_have_in_scene_or_observation": ["湘华名邸"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1422",
+      "file": "image_1422.jpg",
+      "src": "intent_all image_1422 auto_intent=location conf=1.000 basis={号,城,店,路}",
+      "category": "storefront_with_transport",
+      "what_is_pictured": "民主路249号店面招牌，含平价裤业 + 黑木堂民主路店 + 长城TAXI广告",
+      "must_have_in_scene_or_observation": ["民主路", "249号"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1434",
+      "file": "image_1434.jpg",
+      "src": "intent_all image_1434 auto_intent=location conf=1.000 basis={东,店,楼,路}",
+      "category": "storefront_with_address",
+      "what_is_pictured": "立东广告店面招牌，地址：广八路112附1；含招聘广告制作师傅",
+      "must_have_in_scene_or_observation": ["广八路", "112附1"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1443",
+      "file": "image_1443.jpg",
+      "src": "intent_all image_1443 auto_intent=location conf=1.000 basis={中心,园,店,路}",
+      "category": "vehicle_storefront",
+      "what_is_pictured": "酒店用品配套中心招牌，含川M·T3388车牌 + KIA东风悦达起亚标识",
+      "must_have_in_scene_or_observation": ["酒店用品配套中心", "T3388"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_1456",
+      "file": "image_1456.jpg",
+      "src": "intent_all image_1456 auto_intent=location conf=1.000 basis={州,店,道,邮政编码}",
+      "category": "storefront_with_address",
+      "what_is_pictured": "沙氏药店招牌，地址：复州大道233 邮政编码 433000 电话8287373",
+      "must_have_in_scene_or_observation": ["复州大道", "233"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    },
+    {
+      "id": "image_146",
+      "file": "image_146.jpg",
+      "src": "intent_all image_146 auto_intent=location conf=1.000 basis={区,州,市,港}",
+      "category": "factory_sign_with_address",
+      "what_is_pictured": "泰州市高港区润丰年食品加工厂招牌 (Mrs Wu 大不同烧烤)，含品牌 WUTAIDABUTONG",
+      "must_have_in_scene_or_observation": ["润丰年食品加工厂", "泰州市"],
+      "expected_top_intent_type": "location",
+      "expected_actions": ["open_in_maps"]
+    }
+  ]
+}

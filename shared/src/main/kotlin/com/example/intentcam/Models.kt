@@ -33,6 +33,13 @@ data class Detail(
  *                 be empty if the LLM chose not to extract any
  *  - [intentFocus] : which area of the image informs the intent
  *  - [confidence] : 0.0..1.0
+ *  - [actions]    : ids of [com.example.intentcam.ActionDef]s that
+ *                   should render as chips on this bubble.  Populated
+ *                   by AppViewModel after ToolUseLoop returns the
+ *                   bubble (resolver.suggest).  Empty until UI runs
+ *                   the resolver.  Storing IDs (not ActionDef refs)
+ *                   keeps Bubble cross-platform — `shared/` doesn't
+ *                   know about Android-only types.
  *
  * [imageBytes] is the **thumbnail** JPEG (display-only, ~3200 px).
  * The full-res original is NOT held here — for the needs-input resume
@@ -40,6 +47,14 @@ data class Detail(
  * bubble history, so a 4-bubble history stays small.  [needsUserInput]
  * is true for placeholder bubbles parked while the orchestrator waits
  * for the user to type a follow-up.
+ *
+ * [llmProposedActions] (2026-07-13) — when non-null, this is the raw
+ * action_ids list the model emitted in `emit_bubble`.  The resolver
+ * intersects this with the user's enabled set instead of the
+ * applicability filter, so the model can opt in/out of suggestions
+ * per-cycle.  Stays null when the prompt hasn't asked for it (the
+ * "no override" path falls through to applicableIntents /
+ * applicableFamilies as before).
  */
 data class Bubble(
     val id: String,
@@ -53,6 +68,16 @@ data class Bubble(
     val needsUserInput: Boolean = false,
     val intentFocus: String? = null,
     val details: List<Detail> = emptyList(),
+    // [2026-07-10] Action ids; empty until AppViewModel resolves
+    //  them against ActionRegistry + SettingsStore preference.
+    val actions: List<String> = emptyList(),
+    // [2026-07-13] Raw LLM-emitted action_ids (when the prompt's
+    //  emit_bubble schema carries them).  Drives the LLM-override
+    //  branch of ActionResolver.  Null = no override (legacy
+    //  applicability filter).  Kept distinct from `actions` (the
+    //  post-resolve chip list) so debug payloads can tell which
+    //  path produced the final set.
+    val llmProposedActions: List<String>? = null,
 )
 
 /** Whole-screen UI state exposed by [AppViewModel]. */
@@ -76,6 +101,25 @@ data class UiState(
      *  AppViewModel.submitUserInput(text) feeds it back into the
      *  orchestrator. */
     val userInputRequest: UserInputRequest? = null,
+    /** Non-null while an action's [ActionDef.body] has returned
+     *  [com.example.intentcam.ActionOutcome.RequestArgs] and is
+     *  parked waiting for the form values.  The UI shows an
+     *  action-arg input dialog; AppViewModel.submitActionArgs(map)
+     *  re-invokes the action with the form values.  Mutually
+     *  exclusive with [userInputRequest] in practice (the user can
+     *  only interact with one dialog at a time). */
+    val pendingAction: PendingAction? = null,
+    /** [2026-07-13] Non-null while a chip tap has parked an
+     *  AlertDialog confirmation (currently only `dial_number`
+     *  sets this; the dialog asks the user to confirm before
+     *  launching the dialer).  The UI shows a Compose AlertDialog;
+     *  AppViewModel.confirmAction() routes through dispatch,
+     *  cancelConfirmation() dismisses.  Lives separately from
+     *  [pendingAction] so the action-args form and the consent
+     *  dialog stay disjoint states — a confirmation is a
+     *  yes/no gate, an args form is a fields-to-fill gate, mixing
+     *  them would compose badly. */
+    val pendingConfirmation: PendingConfirmation? = null,
 ) {
     companion object {
         /** Hard cap on bubble count.  When a new bubble arrives and we're
@@ -94,6 +138,12 @@ data class UserInputRequest(
     val toolName: String,
     val prompt: String,
 )
+
+/** [PendingAction] / [ActionArgSpec] / [ArgKind] live in
+ *  [com.example.intentcam.ActionArgs.kt] so the data carriers are
+ *  shared between the cross-platform [UiState] (here) and the
+ *  Android-only [com.example.intentcam.ActionOutcome].  See that file
+ *  for the rationale on the split. */
 
 /** One entry in the recognition debug log.  Surfaced on screen as a
  *  scrolling overlay while [UiState.debugEnabled] is true. */

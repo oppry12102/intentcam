@@ -451,8 +451,9 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "**请先相信 crop OCR 的字符**：它是高保真重扫，比 round-1 OCR 更可靠。crop OCR 的字符**直接 verbatim 引用**到 emit_bubble（[LOW] 行也 verbatim 引用——[LOW] 只是 OCR 引擎 confidence 低，字符本身仍然是你能直接用的 verbatim 字符；标记 \"[LOW]\" 让用户在 UI 看到这一行 OCR 不太确定）。\n" +
                     "\n" +
                     "### Step 4: emit_bubble\n" +
-                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?) 总结。\n" +
-                    "type ∈ {info, location, solve}。\n" +
+                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?, action_ids?) 总结。\n" +
+                    "__INTENT_BLOCK__\n" +
+                    "__ACTIONS_BLOCK__\n" +
                     "\n" +
                     "## 工具 1: zoom_in —— 看清细节 + 自动 OCR\n" +
                     "**新行为（Phase 2a）**：每次 zoom_in 的裁剪结果**自动附带 OCR hint**，所以你不需要再为看清裁剪区域再调 read_text——zoom_in 已经给你了高保真 OCR 字符。\n" +
@@ -515,6 +516,41 @@ class LlmClient(@Volatile var config: LlmConfig) {
             "你是 IntentCam 的视觉意图助手。系统已经替你跑过选定的工具，并返回了工具结果摘要。" +
                     "请用一段简短的中文 JSON 总结：scene（看到了什么，一句话）, intent（用户最可能的意图，动宾短语≤12字），" +
                     "type（info|location|solve）, confidence（0-1）。不要 markdown 围栏，不要多余解释。"
+
+        /** Build the live tool-use system prompt by splicing the
+         *  dynamic intent + action blocks into [TOOL_USE_SYSTEM] at
+         *  the `__INTENT_BLOCK__` / `__ACTIONS_BLOCK__` placeholders.
+         *
+         *  The placeholders MUST exist verbatim in [TOOL_USE_SYSTEM];
+         *  a missing placeholder is treated as a programmer error
+         *  (silent drift would let a future prompt edit silently drop
+         *  the dynamic block, which defeats the whole point of this
+         *  indirection).
+         *
+         *  [actionIds] is the registered `ActionDef` id list (empty
+         *  list = no actions block; rendered as a one-line "no
+         *  actions" note so the model can leave `action_ids` blank).
+         *  Lives in `shared/` so the call site (ToolUseLoop) hands
+         *  pre-resolved strings, not the Android-only ActionRegistry
+         *  type — `app/` passes `actionRegistry.allIds()`.
+         */
+        fun toolUseSystemPrompt(intents: IntentRegistry, actionIds: List<String> = emptyList()): String {
+            val renderedIntents = intents.renderIntentBlock()
+            val renderedActions = if (actionIds.isEmpty()) {
+                "actions ∈ {}（暂无动作可选；emit_bubble.action_ids 留空即可）"
+            } else {
+                "actions ∈ {${actionIds.joinToString(", ")}}。"
+            }
+            require(TOOL_USE_SYSTEM.contains("__INTENT_BLOCK__")) {
+                "TOOL_USE_SYSTEM missing __INTENT_BLOCK__ placeholder"
+            }
+            require(TOOL_USE_SYSTEM.contains("__ACTIONS_BLOCK__")) {
+                "TOOL_USE_SYSTEM missing __ACTIONS_BLOCK__ placeholder"
+            }
+            return TOOL_USE_SYSTEM
+                .replace("__INTENT_BLOCK__", renderedIntents)
+                .replace("__ACTIONS_BLOCK__", renderedActions)
+        }
     }
 }
 

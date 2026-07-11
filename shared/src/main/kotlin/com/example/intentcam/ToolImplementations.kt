@@ -23,7 +23,7 @@ import org.json.JSONObject
  * just looks at the image, zooms for detail, and emits a bubble.
  * Less ceremony, more of the LLM's real capability on the table.
  */
-fun ToolRegistry.registerDefaultTools() {
+fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
 
     // ── 1. zoom_in ───────────────────────────────────────────────
     // Detail-on-demand.  The LLM asks for a sub-region of whatever
@@ -321,9 +321,23 @@ fun ToolRegistry.registerDefaultTools() {
     // End the cycle with a structured final answer.  Two stages:
     //   - content:        what you see in the image (after any zoom_ins)
     //   - intent:         what the user probably wants to do with it
-    //   - type:           info / location / solve — coarse intent category
+    //   - type:           coarse intent category — the list is driven
+    //                     by the IntentRegistry (currently info /
+    //                     location / solve; new intents get added by
+    //                     registering one IntentDecl, NOT by editing
+    //                     this tool description)
     //   - intent_focus:   which area of the image informs the intent
     //                     (optional; helps the detail view highlight it)
+    //   - action_ids:     [2026-07-13] which [ActionDef]s should
+    //                     light up as chips on this bubble.  Optional —
+    //                     leaving it blank / empty means "fall through
+    //                     to the applicability filter" (the pre-A
+    //                     behavior).  Listing ids explicitly overrides
+    //                     the filter: only the listed ids become chips
+    //                     (intersected with user-enabled ids).  Lets
+    //                     the model opt in / out of suggestions per
+    //                     bubble instead of letting every applicable
+    //                     action show by default.
     //   - confidence:     0.0 .. 1.0
     register(
         ToolDef(
@@ -331,12 +345,13 @@ fun ToolRegistry.registerDefaultTools() {
             description = "当你完全理解了图片内容和用户意图后，调这个工具结束识别循环。" +
                 "**content** 字段：详细描述你看到了什么（一两句话），并原样写出所有可见文字。" +
                 "**intent** 字段：用户想用这张图做什么（动宾短语，≤30字）。" +
-                "**type** 字段：info（信息查询）/ location（位置相关）/ solve（求解/操作）" +
+                "**type** 字段：${intents.renderTypeList()}" +
                 "**intent_focus** 字段：哪一块图像区域支持这个意图（可空）。" +
                 "**details** 字段（**重要**）：图里每一处独立的文字/数字/品牌/日期/价格都要有一行，" +
                 "value 写逐字原文（勿意译、勿概括）。图里有文字却 details 为空 = 没完成任务。" +
                 "**confidence** 字段：0.0~1.0 的置信度。" +
-                "**action_chips** 字段暂缓实现，先不填。" +
+                "**action_ids** 字段（可空 / 不填）：列出建议给用户的下一步动作 id（见系统提示里的 actions ∈ {...}）。" +
+                "不填 = 走系统按 intent 类型自动匹配的旧行为；填了 = 以你列出的为准（用户关闭的动作会被系统过滤）。" +
                 "**必须**调这个工具结束循环，不能用纯文本收尾。",
             inputSchema = JSONObject().apply {
                 put("type", "object")
@@ -351,7 +366,12 @@ fun ToolRegistry.registerDefaultTools() {
                     })
                     put("type", JSONObject().apply {
                         put("type", "string")
-                        put("enum", JSONArray().put("info").put("location").put("solve"))
+                        // Schema enum follows the registered intents —
+                        // adding a new IntentDecl automatically extends
+                        // the valid set the model can emit.
+                        put("enum", JSONArray().apply {
+                            intents.allIds().forEach { put(it) }
+                        })
                         put("description", "意图大类")
                     })
                     put("intent_focus", JSONObject().apply {
@@ -401,6 +421,19 @@ fun ToolRegistry.registerDefaultTools() {
                         put("type", "number")
                         put("description", "置信度 0.0~1.0")
                     })
+                    // [2026-07-13] action_ids optional.  No enum here:
+                    // the registered ids are spliced into the system
+                    // prompt (the `actions ∈ {...}` block).  A stricter
+                    // schema with `enum` would duplicate that list and
+                    // drift whenever the registry changes.
+                    put("action_ids", JSONObject().apply {
+                        put("type", "array")
+                        put("description", "（可空）建议给用户的下一步动作 id 列表。" +
+                            "不填 / [] 表示『走系统默认』——按意图类型 + 用户开关筛选；填了表示『以你列出的为准』——只点亮列出的 id（用户关闭的会被系统过滤）。")
+                        put("items", JSONObject().apply {
+                            put("type", "string")
+                        })
+                    })
                 })
                 put("required", JSONArray().put("content").put("intent").put("type").put("confidence"))
                 put("additionalProperties", false)
@@ -425,14 +458,41 @@ fun ToolRegistry.registerDefaultTools() {
                         )
                     }
                 }
+                // [2026-07-13] Parse action_ids.  Reserved parser
+                // doesn't strictly enforce id existence — that's the
+                // resolver's job (ActionResolver.suggestIds does
+                // mapNotNull on the registry); we just hand the raw
+                // list through.  Empty list (or absent field) =
+                // `null` so the resolver's "fall back to
+                // applicability filter" branch fires.
+                val actionIdsArr = input.optJSONArray("action_ids")
+                val proposedActions: List<String>? = when {
+                    actionIdsArr == null -> null
+                    actionIdsArr.length() == 0 -> null  // [] treated
+                        // as "no override" — model explicitly meant
+                        // "don't propose actions"
+                    else -> (0 until actionIdsArr.length())
+                        .mapNotNull { i ->
+                            val s = actionIdsArr.optString(i, "")
+                            s.takeIf { it.isNotBlank() }
+                        }
+                        .takeIf { it.isNotEmpty() }
+                }
                 ToolResult(
                     toolSummary = "emit_bubble 收尾（${details.size} 条 detail）",
                     finalBubble = true,
-                    type = input.optString("type", "info").ifBlank { "info" },
+                    // Schema enum is the source of truth — this is just
+                    // a defensive fallback for malformed input.  The
+                    // registered IntentRegistry's fallback id takes over
+                    // for both the absent-key default AND the blank-string
+                    // downgrade so the two stay in lockstep.
+                    type = input.optString("type", IntentRegistry.FALLBACK_ID)
+                        .ifBlank { IntentRegistry.FALLBACK_ID },
                     title = input.optString("intent", "").ifBlank { "查看图片细节" },
                     detail = input.optString("content", ""),
                     confidence = input.optDouble("confidence", 0.7).toFloat().coerceIn(0f, 1f),
                     details = details,
+                    proposedActions = proposedActions,
                 )
             },
         )

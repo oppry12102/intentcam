@@ -60,7 +60,8 @@
         ["街道", "地址", "路名"],
         ["导航", "怎么去", "Main"],
         ["中心", "去中心", "Center"]
-      ]
+      ],
+      "expected_actions": ["open_in_maps"]
     },
     {
       "id": "F_MATH_PROBLEM",

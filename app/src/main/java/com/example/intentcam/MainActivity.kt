@@ -25,6 +25,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -34,6 +35,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -52,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -154,6 +157,10 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
             DetailScreen(
                 bubble = state.selectedBubble!!,
                 onRestart = viewModel::clearBubbleSelection,
+                onActionTap = { actionId -> viewModel.runAction(actionId, state.selectedBubble!!.id) },
+                actionDefs = state.selectedBubble!!.actions.mapNotNull {
+                    viewModel.actionRegistry.get(it)
+                },
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -186,7 +193,11 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                         .fillMaxWidth()
                         .padding(vertical = 16.dp),
                 )
-                IntentBubbles(state = state, onPick = viewModel::selectBubble)
+                IntentBubbles(
+                    state = state,
+                    onPick = viewModel::selectBubble,
+                    viewModel = viewModel,
+                )
             }
         }
 
@@ -197,6 +208,29 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 request = req,
                 onSubmit = viewModel::submitUserInput,
                 onCancel = viewModel::cancelUserInput,
+            )
+        }
+        // Action-arg input dialog: an action body returned
+        // [ActionOutcome.RequestArgs] and is parked waiting for the
+        // user to fill the form.  Distinct composable so the two
+        // surfaces don't fight over the same TextField / focus state.
+        state.pendingAction?.let { pending ->
+            ActionArgInputDialog(
+                pending = pending,
+                onSubmit = viewModel::submitActionArgs,
+                onCancel = viewModel::cancelActionArgs,
+            )
+        }
+        // [2026-07-13] Action confirmation dialog: a chip-tap
+        // landed on an [ActionDef] whose `requiresConfirmation` is
+        // true (currently `dial_number` only).  Two-button
+        // confirm/cancel gate.  Once-confirmed actions persist
+        // their userPrefKey grant so the chip doesn't re-prompt.
+        state.pendingConfirmation?.let { pending ->
+            ActionConfirmDialog(
+                pending = pending,
+                onConfirm = viewModel::confirmAction,
+                onCancel = viewModel::cancelConfirmation,
             )
         }
     }
@@ -386,7 +420,11 @@ private fun TopOverlay(
 }
 
 @Composable
-private fun IntentBubbles(state: UiState, onPick: (Bubble) -> Unit) {
+private fun IntentBubbles(
+    state: UiState,
+    onPick: (Bubble) -> Unit,
+    viewModel: AppViewModel,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -406,13 +444,30 @@ private fun IntentBubbles(state: UiState, onPick: (Bubble) -> Unit) {
         // preview / bottom edge.  The bubble list is a FIFO queue capped at
         // UiState.BUBBLE_MAX; older bubbles have already been evicted.
         state.bubbles.forEach { bubble ->
-            BubbleCard(bubble = bubble, onPick = onPick)
+            // [2026-07-10] Resolve bubble.actions ids through the
+            //  registry at render time.  Stale ids (e.g., a retired
+            //  action referenced by an older bubble in history) are
+            //  silently dropped via mapNotNull.
+            val actionDefs = bubble.actions.mapNotNull {
+                viewModel.actionRegistry.get(it)
+            }
+            BubbleCard(
+                bubble = bubble,
+                onPick = onPick,
+                actionDefs = actionDefs,
+                onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
+            )
         }
     }
 }
 
 @Composable
-private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
+private fun BubbleCard(
+    bubble: Bubble,
+    onPick: (Bubble) -> Unit,
+    actionDefs: List<ActionDef> = emptyList(),
+    onActionTap: (actionId: String) -> Unit = {},
+) {
     val accent = when (bubble.type) {
         "location" -> Color(0xFF37D399)
         "solve" -> Color(0xFFFFAF54)
@@ -489,6 +544,28 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
+                // [2026-07-10] Action chips: each chip is a tap target
+                //  that fires `onActionTap(actionId)`.  Horizontal
+                //  scroll keeps a long chip list from squashing the
+                //  title / detail columns above.  Empty list → the
+                //  Row collapses to zero-height and no visual change
+                //  (existing bubble card layout is preserved).
+                if (actionDefs.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        actionDefs.forEach { def ->
+                            ActionChip(
+                                label = def.label,
+                                onClick = { onActionTap(def.id) },
+                            )
+                        }
+                    }
+                }
             }
             Text(
                 "${(bubble.confidence * 100).toInt()}%",
@@ -496,6 +573,32 @@ private fun BubbleCard(bubble: Bubble, onPick: (Bubble) -> Unit) {
                 style = MaterialTheme.typography.labelMedium
             )
         }
+    }
+}
+
+/**
+ * Small pill-shaped chip rendered for each [ActionDef] suggested on a
+ * bubble.  Tap fires [onClick] (which the caller wires to
+ * `AppViewModel.runAction`).
+ *
+ * V1 uses a synthetic accent (matches the bubble's intent color)
+ * rather than the icon mapping from [ActionDef.iconKey] — icon
+ * assets aren't in scope for this iteration; later we'll plumb a
+ * proper Material icon set.
+ */
+@Composable
+private fun ActionChip(label: String, onClick: () -> Unit) {
+    Surface(
+        color = Color(0x553F6CD8),
+        shape = RoundedCornerShape(10.dp),
+        onClick = onClick,
+    ) {
+        Text(
+            label,
+            color = Color(0xFFE7ECF7),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
     }
 }
 
@@ -540,6 +643,8 @@ private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
 private fun DetailScreen(
     bubble: Bubble,
     onRestart: () -> Unit,
+    onActionTap: (actionId: String) -> Unit,
+    actionDefs: List<ActionDef>,
     modifier: Modifier
 ) {
     val fullImage = remember(bubble.imageBytes) {
@@ -662,6 +767,33 @@ private fun DetailScreen(
                         )
                         Spacer(Modifier.height(4.dp))
                         DetailsTable(bubble.details)
+                    }
+                    // [2026-07-10] Action chips in the detail panel —
+                    //  same source of truth as the bubble card; the
+                    //  caller passes the resolved [ActionDef]s and
+                    //  the tap handler.  Empty list → no row, no
+                    //  visual change.
+                    if (actionDefs.isNotEmpty()) {
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            "可执行操作",
+                            color = Color(0xFFB9C4DE),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            actionDefs.forEach { def ->
+                                ActionChip(
+                                    label = def.label,
+                                    onClick = { onActionTap(def.id) },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -866,6 +998,152 @@ private fun UserInputDialog(
                 onClick = { if (text.isNotBlank()) onSubmit(text.trim()) },
                 enabled = text.isNotBlank(),
             ) { Text("发送") }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) { Text("取消") }
+        },
+    )
+}
+
+/**
+ * Form for an [ActionOutcome.RequestArgs] park.  Renders one
+ * [OutlinedTextField] per [ActionArgSpec], validates required fields
+ * on submit, and submits a `Map<key, value>` to the view model.
+ *
+ * `keyboardType` is chosen per [ArgKind] so numeric / phone fields
+ * pop the right IME variant.  Required-field state is checked on
+ * submit (not per-keystroke) to avoid spurious disabled-button flicker.
+ */
+@Composable
+private fun ActionArgInputDialog(
+    pending: PendingAction,
+    onSubmit: (Map<String, String>) -> Unit,
+    onCancel: () -> Unit,
+) {
+    // Per-field text state.  Default values from
+    // [ActionArgSpec.default] pre-fill on first composition.
+    val fieldState = remember(pending) {
+        mutableStateMapOf<String, String>().apply {
+            pending.args.forEach { put(it.key, it.default ?: "") }
+        }
+    }
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("动作需要补充信息")
+                Spacer(Modifier.width(8.dp))
+                ToolChip(toolName = pending.actionId)
+            }
+        },
+        text = {
+            // Cap height so a long form scrolls inside the dialog
+            // and the screen keyboard doesn't shove the confirm
+            // button off-screen.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 360.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    pending.prompt,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(12.dp))
+                pending.args.forEach { spec ->
+                    OutlinedTextField(
+                        value = fieldState[spec.key] ?: "",
+                        onValueChange = { fieldState[spec.key] = it },
+                        label = { Text(spec.label) },
+                        placeholder = spec.default?.let { { Text(it) } },
+                        singleLine = spec.kind == ArgKind.NUMERIC ||
+                            spec.kind == ArgKind.PHONE,
+                        keyboardOptions = when (spec.kind) {
+                            ArgKind.NUMERIC -> KeyboardOptions(
+                                keyboardType = KeyboardType.Number
+                            )
+                            ArgKind.PHONE -> KeyboardOptions(
+                                keyboardType = KeyboardType.Phone
+                            )
+                            ArgKind.TEXT -> KeyboardOptions.Default
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    spec.helpText?.let {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            it,
+                            color = Color(0xFF7B8FB8),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        },
+        confirmButton = {
+            val submitEnabled = pending.args.all { spec ->
+                !spec.required || !(fieldState[spec.key] ?: "").isBlank()
+            }
+            TextButton(
+                onClick = {
+                    val args = pending.args.associate { spec ->
+                        spec.key to (fieldState[spec.key] ?: "").trim()
+                    }
+                    onSubmit(args)
+                },
+                enabled = submitEnabled,
+            ) { Text("执行") }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) { Text("取消") }
+        },
+    )
+}
+
+/**
+ * [2026-07-13] Yes/no confirmation dialog parked by an [ActionDef]
+ * whose `requiresConfirmation` is true (currently only
+ * `dial_number`).  Two buttons: "确认" (calls `onConfirm`) and
+ * "取消" (calls `onCancel`); `onDismissRequest` (back-press) routes
+ * to cancel so an impatient back-press never silently fires the
+ * side-effect.
+ *
+ * Body of the dialog is [PendingConfirmation.detail] — pre-baked
+ * in AppViewModel when the chip was tapped, so the same wording
+ * appears whether the user is online or offline, and so a future
+ * "show help icon in this dialog" change has a single source of
+ * truth (the parked state, not the body lambda at click-time).
+ *
+ * Distinct from [UserInputDialog] (free-text follow-up) and
+ * [ActionArgInputDialog] (form-fill) so the mutually-exclusive
+ * `state.x?.let { ... }` overlays don't compose-conflict: each
+ * composable owns its own focus / TextField / layout height.
+ */
+@Composable
+private fun ActionConfirmDialog(
+    pending: PendingConfirmation,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(pending.prompt)
+                Spacer(Modifier.width(8.dp))
+                ToolChip(toolName = pending.actionId)
+            }
+        },
+        text = {
+            Text(
+                pending.detail,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("确认") }
         },
         dismissButton = {
             TextButton(onClick = onCancel) { Text("取消") }

@@ -1,0 +1,1113 @@
+{
+  "ground_truth": "ground_truth_location_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.9400000000000001,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "transit_station_sign": 0.9,
+    "vehicle_storefront": 0.9,
+    "street_sign_english": 1,
+    "storefront_with_transport": 0.9,
+    "institutional_sign": 0.9333333333333332,
+    "restaurant_storefront": 1,
+    "venue_poster": 0.9,
+    "storefront_with_address": 0.96,
+    "factory_sign_with_address": 0.9,
+    "rental_posting": 0.9,
+    "sales_banner_with_directions": 1,
+    "heritage_site_sign": 1,
+    "real_estate": 0.9
+  },
+  "fixtures": [
+    {
+      "raw_content": "公交车车身广告：红色横幅宣传「卓刀泉·古玩珠宝城」开业\u2014\u2014「4.26卓刀泉·古玩珠宝城 隆重开业」，同期举办「首届古玩艺术博览交易会 诚邀共赏」。地址：洪山区珞瑜路370号(卓刀泉公园内)。车身另标有线路号「510」和车辆编号「Y1774」，以及公交标准提示「严禁携带易燃易爆物品」。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "date",
+          "label": "开业日期",
+          "value": "4.26"
+        },
+        {
+          "kind": "brand",
+          "label": "活动名称",
+          "value": "卓刀泉·古玩珠宝城 隆重开业"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "首届古玩艺术博览交易会"
+        },
+        {
+          "kind": "text",
+          "label": "邀请语",
+          "value": "诚邀共赏"
+        },
+        {
+          "kind": "address",
+          "label": "地址",
+          "value": "洪山区珞瑜路370号(卓刀泉公园内)"
+        },
+        {
+          "kind": "text",
+          "label": "公交线路",
+          "value": "510"
+        },
+        {
+          "kind": "text",
+          "label": "车辆编号",
+          "value": "Y1774"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1029",
+      "category": "storefront_with_address",
+      "content_len": 142,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色店铺招牌「中宣书画馆 / 中宣书画网」，主营：名家字画、玉器根雕、奇木陶艺、古玩杂项、红木家俱、展览拍卖、美术培训、礼仪培训、企业内训、公考培训、文化沙龙、书画定制。官网：www.zxsh001.com。电话：0735-8884338。地址：郴州裕后街沿河六栋2-3楼。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店招",
+          "value": "中宣书画馆"
+        },
+        {
+          "kind": "brand",
+          "label": "品牌",
+          "value": "中宣书画网"
+        },
+        {
+          "kind": "text",
+          "label": "官网",
+          "value": "www.zxsh001.com"
+        },
+        {
+          "kind": "text",
+          "label": "主营项目1",
+          "value": "名家字画 玉器根雕 奇木陶艺 古玩杂项"
+        },
+        {
+          "kind": "text",
+          "label": "主营项目2",
+          "value": "红木家俱 展览拍卖 美术培训 礼仪培训"
+        },
+        {
+          "kind": "text",
+          "label": "主营项目3",
+          "value": "企业内训 公考培训 文化沙龙 书画定制"
+        },
+        {
+          "kind": "text",
+          "label": "电话",
+          "value": "0735-8884338"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "郴州裕后街沿河六栋2-3楼"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1055",
+      "category": "storefront_with_address",
+      "content_len": 137,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑入口处悬挂多条竖式白色横幅标识机构身份：仙桃市城镇职工基本医疗保险定点医疗机构、仙桃市城镇居民基本医疗保险定点医院、仙桃市城镇职工工伤保险定点医院、仙桃市公安局干河水陆派出所复州花园警务室、仙桃市新型农村合作医疗定点医院。右侧蓝底白字门牌显示地址「仙桃大道 17」，邮政编码 433000。玻璃橱窗内可见「民主 法治」「平等 友善」等社会主义核心价值观标语。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "地址牌",
+          "value": "仙桃大道 17"
+        },
+        {
+          "kind": "text",
+          "label": "邮政编码",
+          "value": "邮政编码：433000"
+        },
+        {
+          "kind": "text",
+          "label": "右侧横幅(部分截断)",
+          "value": "桃市新型农村合作医疗定点医疗"
+        },
+        {
+          "kind": "text",
+          "label": "横幅1(左)",
+          "value": "仙桃市城镇职工基本医疗保险定点医疗机构"
+        },
+        {
+          "kind": "text",
+          "label": "横幅2",
+          "value": "仙桃市城镇居民基本医疗保险定点医院"
+        },
+        {
+          "kind": "text",
+          "label": "横幅3",
+          "value": "仙桃市城镇职工工伤保险定点医院"
+        },
+        {
+          "kind": "text",
+          "label": "横幅4",
+          "value": "仙桃市公安局干河水陆派出所复州花园警务室"
+        },
+        {
+          "kind": "text",
+          "label": "橱窗标语(部分)",
+          "value": "民主 法治 / 平等 友善 / 公正 (部分文字 OCR 模糊)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1059",
+      "category": "institutional_sign",
+      "content_len": 181,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色楼盘导视广告牌，顶部品牌\"碧水源\"，副标题\"-健康生活奢享之源-\"，主体大字\"营销中心，向前50米\"，下方一个黄色右指箭头；底部信息栏：销售热线\"2905888\"，项目地址\"郴州市曹家坪路（东街往东500米）\"，开发商\"郴州飞天房地产开发有限公司\"。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "品牌名",
+          "value": "碧水源"
+        },
+        {
+          "kind": "text",
+          "label": "品牌副标题",
+          "value": "-健康生活奢享之源-"
+        },
+        {
+          "kind": "text",
+          "label": "导视文字",
+          "value": "营销中心，向前50米"
+        },
+        {
+          "kind": "number",
+          "label": "销售热线",
+          "value": "2905888"
+        },
+        {
+          "kind": "text",
+          "label": "项目地址",
+          "value": "郴州市曹家坪路（东街往东500米）"
+        },
+        {
+          "kind": "text",
+          "label": "开发商",
+          "value": "郴州飞天房地产开发有限公司"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_111",
+      "category": "sales_banner_with_directions",
+      "content_len": 127,
+      "r1": 1
+    },
+    {
+      "raw_content": "现代玻璃幕墙建筑外观，玻璃幕墙上贴有大红色汉字\"湖 北 · 光 谷 · 科 技\"（中间为圆形间隔），应为湖北·光谷·科技会展中心类场馆。建筑前有三根高耸的旗杆，可见一面红色旗和右侧白色旗（白旗上文字部分可辨为\"ei Perform...\"，被旗子自身遮挡不全）。建筑二层的玻璃幕墙上贴有一条演出 banner：「2015年5月12日 19:30 湖上剧院 · 中国巡演武汉站」，并有票务电话「027-627-1988」及网址（OCR 部分识别为\"7977.com.cn\"）。",
+      "r2_text": 1,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "建筑红色大字 #1",
+          "value": "湖"
+        },
+        {
+          "kind": "text",
+          "label": "建筑红色大字 #2",
+          "value": "北"
+        },
+        {
+          "kind": "text",
+          "label": "建筑红色大字 #3",
+          "value": "光"
+        },
+        {
+          "kind": "text",
+          "label": "建筑红色大字 #4",
+          "value": "谷"
+        },
+        {
+          "kind": "text",
+          "label": "建筑红色大字 #5（OCR 模糊，crop OCR 读到\"科\"）",
+          "value": "科"
+        },
+        {
+          "kind": "date",
+          "label": "演出时间",
+          "value": "2015年5月12日 19:30"
+        },
+        {
+          "kind": "text",
+          "label": "演出场馆",
+          "value": "湖上剧院"
+        },
+        {
+          "kind": "text",
+          "label": "巡演信息",
+          "value": "中国巡演武汉站"
+        },
+        {
+          "kind": "text",
+          "label": "票务电话",
+          "value": "027-627-1988"
+        },
+        {
+          "kind": "text",
+          "label": "网址 [LOW]",
+          "value": "www.7977.com.cn（OCR 部分）"
+        },
+        {
+          "kind": "text",
+          "label": "右旗子文字",
+          "value": "ei Perform...（被旗子遮挡，不完整）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1128",
+      "category": "venue_poster",
+      "content_len": 237,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一条校园街道，蓝色路牌上写有\"东逸南路\"（Dongyi South Avenue），左右两端分别标注\"西\"和\"东\"方向。路牌下方小字写着捐建说明：\"徐文飞于2003年学院三十周年校庆时捐建此路\"。周围是白色瓷砖外墙的教学楼、马路、雪松和柏树绿化带。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "街名（中文）",
+          "value": "东逸南路"
+        },
+        {
+          "kind": "text",
+          "label": "方向标识",
+          "value": "东 →"
+        },
+        {
+          "kind": "text",
+          "label": "街名（英文）",
+          "value": "West Dongyi South Avenue East"
+        },
+        {
+          "kind": "text",
+          "label": "捐建说明",
+          "value": "校神只三人]徐文飞于2003年学院三十周年校庆时捐建此路"
+        },
+        {
+          "kind": "object",
+          "label": "路牌类型",
+          "value": "蓝色双向指示牌（西 / 东）"
+        },
+        {
+          "kind": "object",
+          "label": "场景",
+          "value": "校园内街道，多层教学楼、雪松、柏树绿化带"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1150",
+      "category": "street_sign_english",
+      "content_len": 127,
+      "r1": 1
+    },
+    {
+      "raw_content": "一家临街店铺，蓝色招牌上挂着三家相邻商户：左侧\"惠佳科技\"（蓝色招牌，下方有联系电话），中间是\"联塑管道\"（白色招牌，黄色背景列出\"江西分公司监制 / 联塑管道 / 联塑家装专用 / 联塑给水 / 联塑电工套管\"等品牌内容），右侧\"中国移动 中国铁通\"运营商营业厅，标牌显示地址：东街6-7号，电话：7553444。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店名（右）",
+          "value": "中国移动 中国铁通"
+        },
+        {
+          "kind": "logo",
+          "label": "店名（中）",
+          "value": "联塑管道"
+        },
+        {
+          "kind": "logo",
+          "label": "店名（左）",
+          "value": "惠佳科技"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "东街6-7号"
+        },
+        {
+          "kind": "text",
+          "label": "电话",
+          "value": "7553444"
+        },
+        {
+          "kind": "text",
+          "label": "服务范围（黄色背景）",
+          "value": "江西分公司监制 / 联塑管道 / 联塑家装专用 / 联塑给水 / 联塑电工套管"
+        },
+        {
+          "kind": "text",
+          "label": "联系电话（左店）",
+          "value": "电话:7553009 161"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1166",
+      "category": "storefront_with_address",
+      "content_len": 158,
+      "r1": 1
+    },
+    {
+      "raw_content": "白色瓷砖墙体建筑入口（蓝色金属门框 + 浅蓝色铁门 + 圆形壁灯），墙贴一张白色\"房屋出租\"告示与一张黄色\"高价收购驾照分\"小广告。告示内容：'房屋出租（二室二厅一卫），地址：复州花园六楼，电话：15572898725'；小广告内容：'高价收购驾照分，电话:18672822958'。门锁可见但仅部分字符模糊（'我畏'/'#旺'，OCR confidence 较低，非重要信息）。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "告示标题",
+          "value": "房屋出租"
+        },
+        {
+          "kind": "text",
+          "label": "户型",
+          "value": "（二室二厅一卫）"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "地址：复州花园六楼"
+        },
+        {
+          "kind": "text",
+          "label": "招租联系电话",
+          "value": "电话：15572898725"
+        },
+        {
+          "kind": "text",
+          "label": "小广告标题",
+          "value": "高价收购驾照分"
+        },
+        {
+          "kind": "text",
+          "label": "收购联系电话",
+          "value": "电话:18672822958"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1177",
+      "category": "rental_posting",
+      "content_len": 190,
+      "r1": 1
+    },
+    {
+      "raw_content": "The license plate shows \"川·M A58333\" (Sichuan province motorcycle plate). The crop OCR got it clearly. Let me also verify the shop name details at the bottom of the sign.",
+      "r2_text": 1,
+      "details_count": 0,
+      "raw_details": [],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1216",
+      "category": "storefront_with_transport",
+      "content_len": 170,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「湖北省非物质文化遗产项目」\u2014\u2014「红安大布传统纺织技艺传习所」的入口。红褐色招牌配有金色「中国非物质文化遗产」圆形徽章。门口是一扇双开木门,室内可见大型传统木质织布机、彩色线轴(红、绿),墙上悬挂着成品织布及文字展板,几位游客正在里面参观休憩。门旁蓝底白字门牌写着「七里坪镇长胜街 98」。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "徽标文字",
+          "value": "中国非物质文化遗产 (CHINA INTANGIBLE CULTURAL) [LOW] 圆形徽章"
+        },
+        {
+          "kind": "text",
+          "label": "招牌上排文字",
+          "value": "湖北省非物质文化遗产项目"
+        },
+        {
+          "kind": "brand",
+          "label": "招牌主标题",
+          "value": "红安大布传统纺织技艺传习所"
+        },
+        {
+          "kind": "object",
+          "label": "门口室内陈设",
+          "value": "大型传统木质织布机、线轴(红、绿两色)、墙上悬挂的成品纺织布、展板介绍"
+        },
+        {
+          "kind": "text",
+          "label": "门牌号",
+          "value": "七里坪镇长胜街 98"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1246",
+      "category": "heritage_site_sign",
+      "content_len": 147,
+      "r1": 1
+    },
+    {
+      "raw_content": "蓝色告示牌：'请过街市民掌握好出行时间'。'武汉地铁2号线广埠屯站运营时间如下'。'周一至周五：6:00-22:30'。'节假日：6：30-22:30'。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "提示语",
+          "value": "请过街市民掌握好出行时间"
+        },
+        {
+          "kind": "text",
+          "label": "站点说明",
+          "value": "武汉地铁2号线广埠屯站运营时间如下"
+        },
+        {
+          "kind": "text",
+          "label": "工作日运营时间",
+          "value": "周一至周五：6:00-22:30"
+        },
+        {
+          "kind": "text",
+          "label": "节假日运营时间",
+          "value": "节假日：6：30-22:30"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1281",
+      "category": "transit_station_sign",
+      "content_len": 77,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一辆红白条纹涂装的救护车车身侧面特写。车身中部为急救标志（蓝色生命之星+蛇杖图案，外围麦穗环绕），上方用蓝色字体分两排印着「县人民医院 / 急救」（上排印刷体\"县人民医院\"，下排为草书体\"急救\"）。车窗上贴有\"温馨提示\"小标贴和一张绿色年检/保险信息表格。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "车身标识",
+          "value": "县人民医院"
+        },
+        {
+          "kind": "text",
+          "label": "车身标识(下排草书)",
+          "value": "急救"
+        },
+        {
+          "kind": "logo",
+          "label": "急救标志",
+          "value": "蓝色生命之星 + 蛇杖 + 麦穗环绕 (Star of Life 急救徽标)"
+        },
+        {
+          "kind": "text",
+          "label": "车窗贴纸",
+          "value": "温馨提示"
+        },
+        {
+          "kind": "object",
+          "label": "年检/保险标",
+          "value": "车窗内侧绿色表格标牌（检验/保险/有效期表）"
+        },
+        {
+          "kind": "object",
+          "label": "车身涂装",
+          "value": "红白相间条纹（救护车标准涂装）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1291",
+      "category": "institutional_sign",
+      "content_len": 130,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边两层旧居民楼下的两家相邻餐厅：左侧是「黄焖鸡米饭」（佳园路店）红底黄字招牌；右侧是「楚一品® 热干面馆」深底金字招牌，下方一行小字写着「官网www.jcmcw.com 中文域名:江城名吃 客服电话:027-87875310 佳园路店」。店门两侧贴着红色春联「一道菜的餐厅」；右侧还有「经洗实」店铺招牌（部分被裁切）。门口地面有几把红色塑料凳，右侧一名穿校服的女孩正走过。左侧店铺门牌号「D.1603」；门玻璃上隐约能看到「欢迎您光临」「??位」字样。",
+      "r2_text": 1,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主招牌（左店）",
+          "value": "黄焖鸡米饭"
+        },
+        {
+          "kind": "text",
+          "label": "分店标识（左店）",
+          "value": "佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "品牌（右店）",
+          "value": "楚一品®"
+        },
+        {
+          "kind": "text",
+          "label": "主招牌（右店）",
+          "value": "热干面馆"
+        },
+        {
+          "kind": "text",
+          "label": "网址+客服（右店）",
+          "value": "官网www.jcmcw.com 中文域名:江城名吃 客服电话:027-87875310 佳园路店"
+        },
+        {
+          "kind": "text",
+          "label": "春联（右柱）",
+          "value": "一道菜的餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "右侧招牌",
+          "value": "经洗实"
+        },
+        {
+          "kind": "text",
+          "label": "左侧招牌（部分）",
+          "value": "包"
+        },
+        {
+          "kind": "text",
+          "label": "门牌号（左侧）",
+          "value": "D.1603"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 门口贴纸（右店）",
+          "value": "欢迎您光猛"
+        },
+        {
+          "kind": "text",
+          "label": "门口贴纸（右店）",
+          "value": "您光位"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1359",
+      "category": "restaurant_storefront",
+      "content_len": 227,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色大理石公司招牌位于白墙建筑前，上方有厂房/办公楼。招牌上中英双语写明：\"苏州特固五金制品有限公司 / SUZHOU TOOGO HARDWARE GOODS CO.,LTD.\"。招牌右上角有一块蓝色门牌，标注门牌号\"350\"，下方有行政区名和邮政编码（OCR 模糊不清，字数难以辨认）。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "公司中文名",
+          "value": "苏州特固五金制品有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "公司英文名",
+          "value": "SUZHOU TOOGO HARDWARE GOODS CO.,LTD."
+        },
+        {
+          "kind": "number",
+          "label": "门牌号",
+          "value": "350"
+        },
+        {
+          "kind": "text",
+          "label": "行政区 [LOW]",
+          "value": "村米岛 (OCR 模糊)"
+        },
+        {
+          "kind": "number",
+          "label": "邮政编码 [LOW]",
+          "value": "??? (OCR 模糊)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1380",
+      "category": "institutional_sign",
+      "content_len": 145,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一处待拆迁/施工的空地，背景是砖瓦平房与旧式居民楼，墙上挂着多条横幅广告。\n\n主要文字内容（按区域）：\n\u2022 左侧红色横幅：\"湘华名邸\"，副标题\"风水宝地·纯住宅小区·稀缺楼梯房\"，下方还有\"#名校 先西主诉之校\"等楼盘宣传字样（OCR 模糊）\n\u2022 右侧白色横幅：\"创建文明城市 建和谐\"（下半部分被树枝遮挡）\n\u2022 右上角蓝色招牌：\"正青世都程\"（OCR 模糊，可能是店铺名）\n\u2022 画面左侧有红色灯笼（疑为节庆装饰或门头）\n\n场景解读：这是一个老旧城区改造现场，前方是工地/拆迁地块，墙面上同时张贴着房地产楼盘广告和\"创建文明城市\"宣传标语。\n\n注：多行 OCR 置信度较低，字符可能不准确，特别是被树枝遮挡和远距离拍摄的文字。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "楼盘名",
+          "value": "湘华名邸"
+        },
+        {
+          "kind": "text",
+          "label": "楼盘宣传语",
+          "value": "风水宝地·纯住宅小区·稀缺楼梯房"
+        },
+        {
+          "kind": "text",
+          "label": "文明城市横幅1",
+          "value": "创建文明城市"
+        },
+        {
+          "kind": "text",
+          "label": "文明城市横幅2",
+          "value": "建和谐（OCR 模糊，部分被树枝遮挡）"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 楼盘广告语",
+          "value": "#名校 先西主诉之校（OCR 不确定）"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 楼盘副标语",
+          "value": "中业物内步行可国动的华检：选高水，颜高杀，一奖心（OCR 字符混乱）"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 右上角招牌",
+          "value": "正青世都程（OCR 模糊，可能是\"正骨推拿\"之类）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1391",
+      "category": "real_estate",
+      "content_len": 316,
+      "r1": 1
+    },
+    {
+      "raw_content": "街景照片，路边三家店铺：左侧红色招牌\"黑木堂 民主路店\"；中间蓝色招牌\"欧文教育\"，小字含\"开业辅导：英语培优 作文入门 精品小班\"，下方有地址\"三井??小学对面\"和电话\"18321412998 / 88607285\"（部分字符 OCR 模糊）；右侧红色招牌\"牛仔 平价裤业\"，下方地址\"民主路249号\"。街边停有出租车和红车。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "左侧店招品牌",
+          "value": "黑木堂"
+        },
+        {
+          "kind": "text",
+          "label": "左侧店招分店名",
+          "value": "民主路店"
+        },
+        {
+          "kind": "brand",
+          "label": "中间蓝色店招",
+          "value": "欧文教育"
+        },
+        {
+          "kind": "text",
+          "label": "欧文教育业务[LOW] (OCR 模糊)",
+          "value": "开业辅导：英语培优 作文入门 精品小班"
+        },
+        {
+          "kind": "text",
+          "label": "欧文教育地址/电话[LOW] (OCR 模糊)",
+          "value": "地址：三井??小学对面  电话：18321412998 / 88607285"
+        },
+        {
+          "kind": "brand",
+          "label": "右侧店招品牌",
+          "value": "牛仔 平价裤业"
+        },
+        {
+          "kind": "address",
+          "label": "右侧店招地址",
+          "value": "民主路249号"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1422",
+      "category": "storefront_with_transport",
+      "content_len": 164,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一家名为\"巧东广告\"的广告制作店铺，位于路边一楼店面。招牌两侧紧邻\"网吧 名字(右上，OCR模糊)\"、\"照相 请上二楼\"、\"住宿\"等多家店铺。门面上红色字体列出了其主要服务项目：店面装修、工程图复印、喷绘写真、展柜制作、彩色印刷、广告招牌、会议礼品、丝印、有机加工、发光字、水晶字等；并贴有招聘广告制作师傅和学徒的告示。门牌号位置可见\"112\"字样（部分字符 OCR 模糊）。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店招",
+          "value": "巧东广告"
+        },
+        {
+          "kind": "text",
+          "label": "店面服务(部分OCR模糊)",
+          "value": "店固装修 兄程图有印"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "喷绘写真 展柜制作"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "彩色印刷 广告招牌"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "会议礼品 丝印 有机加工 发光字 水晶字"
+        },
+        {
+          "kind": "text",
+          "label": "招聘",
+          "value": "招聘 广告制作师傅 广告制作学徒"
+        },
+        {
+          "kind": "text",
+          "label": "隔壁店铺",
+          "value": "照相 请上二楼"
+        },
+        {
+          "kind": "text",
+          "label": "隔壁店铺",
+          "value": "住宿"
+        },
+        {
+          "kind": "text",
+          "label": "隔壁店铺",
+          "value": "网吧 名字[LOW]"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_1434",
+      "category": "storefront_with_address",
+      "content_len": 190,
+      "r1": 1
+    },
+    {
+      "raw_content": "图中是一辆银色起亚 (KIA) SUV，前脸可见 KIA 车标和川M·T3388 蓝色车牌，前挡风玻璃上贴有\"2017\"标识。右侧停着一辆白色面包车（侧面带金色拉花）。背景是一栋建筑，招牌红字疑似\"酒店用品配套\"（OCR 不确定），前方广告牌写有\"漫步美景家 / 享赠更多空间\"，旁边还有疑似电话\"1094292\"（OCR [LOW]）。地面是方砖人行道。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "车标",
+          "value": "KIA"
+        },
+        {
+          "kind": "object",
+          "label": "车型",
+          "value": "银色起亚 SUV"
+        },
+        {
+          "kind": "text",
+          "label": "车牌号",
+          "value": "川M·T3388"
+        },
+        {
+          "kind": "text",
+          "label": "前挡风玻璃标识",
+          "value": "2017"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 背景招牌",
+          "value": "酒店用品配套 (OCR 模糊)"
+        },
+        {
+          "kind": "text",
+          "label": "背景广告牌",
+          "value": "漫步美景家 / 享赠更多空间"
+        },
+        {
+          "kind": "object",
+          "label": "邻车",
+          "value": "白色面包车/客货车 (侧面有金色拉花)"
+        },
+        {
+          "kind": "text",
+          "label": "联系电话(背景招牌)",
+          "value": "1094292 (OCR [LOW])"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1443",
+      "category": "vehicle_storefront",
+      "content_len": 178,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「沙氏药店」的店铺门头：绿色招牌上有红色十字医药标识，主营中成药、中药饮片、化学药制剂、抗生素、生化药品。店铺位于「复州大道 233」，电话 8287373，邮政编码 433000。店门口两侧贴有红色对联（左侧\"精耕细\u2026\"，右侧\"善建\u2026做好药\u2026\"，OCR 模糊处用 [LOW] 标记），上方还有\"福德美满\"的红色横幅。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店名",
+          "value": "沙氏药店"
+        },
+        {
+          "kind": "text",
+          "label": "门牌地址",
+          "value": "复州大道 233"
+        },
+        {
+          "kind": "number",
+          "label": "电话",
+          "value": "8287373"
+        },
+        {
+          "kind": "text",
+          "label": "主营业务",
+          "value": "中成药 中药饮片 化学药制剂 抗生素 生化药品"
+        },
+        {
+          "kind": "text",
+          "label": "邮编",
+          "value": "郞政编码 433000"
+        },
+        {
+          "kind": "text",
+          "label": "红色横幅",
+          "value": "福德美满"
+        },
+        {
+          "kind": "text",
+          "label": "右侧对联(上)",
+          "value": "善建"
+        },
+        {
+          "kind": "text",
+          "label": "右侧对联(下)",
+          "value": "做好药"
+        },
+        {
+          "kind": "text",
+          "label": "左侧对联",
+          "value": "精耕细"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1456",
+      "category": "storefront_with_address",
+      "content_len": 161,
+      "r1": 1
+    },
+    {
+      "raw_content": "牛皮纸包装箱正面印刷：左侧为女性人物黑白头像 logo（下方标注 \"WUTAIDABUTONG\"），右侧大字红色 \"吴大姐\" 品牌名（右上角有红色圆形商标章，章内含 \"燧\" 字），英文标语 \"Mrs. Wu's different barbecue / The traditional formula of modern technology\"，产品类别 \"特色风味串\"，最下方生产厂家 \"泰州市高港区润丰年食品加工厂\"。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌英文",
+          "value": "WUTAIDABUTONG"
+        },
+        {
+          "kind": "text",
+          "label": "品牌主标",
+          "value": "吴大姐"
+        },
+        {
+          "kind": "text",
+          "label": "英文标语",
+          "value": "Mrs. Wu's different barbecue"
+        },
+        {
+          "kind": "text",
+          "label": "英文副标",
+          "value": "The traditional formula of modern technology"
+        },
+        {
+          "kind": "text",
+          "label": "产品类别",
+          "value": "特色风味串"
+        },
+        {
+          "kind": "text",
+          "label": "生产厂家",
+          "value": "泰州市高港区润丰年食品加工厂"
+        },
+        {
+          "kind": "logo",
+          "label": "右上圆形商标章 [LOW]",
+          "value": "燧"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_146",
+      "category": "factory_sign_with_address",
+      "content_len": 211,
+      "r1": 1
+    }
+  ]
+}
