@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-12",
-    "last_updated_commit": "d2d36e3"
+    "last_updated_commit": "f646af8"
   },
   "suites": [
     {
@@ -87,6 +87,16 @@
       "quality": 90,
       "baseline_commit": "d2d36e3",
       "note": "54-fixture scaled suite — 20 seed + 34 auto-scaled; 7 hand-curated. 2 API errors in v1 run (image_7162 90s timeout + image_3798 HTTP 500 sensitive-image); 52-fixture clean composite = 0.9549; full 54-fixture = 0.9337 (Δ -0.021 from contamination). Threshold band [0.88, 0.98]."
+    },
+    {
+      "name": "service_institution_60",
+      "baseline": 0.9508,
+      "gt": "profiling/ground_truth_service_institution_60.json",
+      "limit": 60,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "f646af8",
+      "note": "60-fixture Phase I suite — 13th intent, OBSERVE family, targets 514-imgs service_institution cluster. 5 categories (medical 21 / education 20 / government_admin 11 / financial 5 / government_law 3). 1 API error (image_6117 HTTP 500 sensitive-image); 59-fixture clean composite = 0.9608; full 60-fixture = 0.9508 (Δ -0.010). Threshold band [0.90, 1.00]."
     }
   ]
 }
