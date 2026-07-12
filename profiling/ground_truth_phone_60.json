@@ -64,10 +64,12 @@
       "id": "image_1583",
       "file": "image_1583.jpg",
       "src": "intent_all image_1583 conf=1.000 phone cluster (0728-3200612)",
-      "category": "storefront_with_phone",
+      "category": "service_ads_with_phone",
       "what_is_pictured": "全友家居开业广告牌 — 仙桃沔阳大道 + 全国统一服务热线 0728-3200612",
       "must_have_in_scene_or_observation": [
-        "0728-3200612"
+        "全友",
+        "3201778",
+        "仙桃"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -81,7 +83,8 @@
       "category": "classified_ads_with_phone",
       "what_is_pictured": "厂房 / 门面 / 套房出租出售小广告 — 联系电话 13706258255",
       "must_have_in_scene_or_observation": [
-        "13706258255"
+        "13706258255",
+        "屯村西路"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -123,7 +126,9 @@
       "category": "clinic_sign",
       "what_is_pictured": "王俊平个体诊所执业信息牌 — 联系电话 13407272442 / 监督电话 3324061",
       "must_have_in_scene_or_observation": [
-        "13407272442"
+        "王俊平",
+        "13407272442",
+        "仙桃市复州大道"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -137,7 +142,9 @@
       "category": "restaurant_with_phone",
       "what_is_pictured": "三川 麻辣风 川菜馆 — 4F + 电话 027-87878057 + 光谷步行街地址",
       "must_have_in_scene_or_observation": [
-        "027-87878057"
+        "三川",
+        "027-87878057",
+        "光谷步行街"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -176,9 +183,11 @@
       "id": "image_2458",
       "file": "image_2458.jpg",
       "src": "intent_all image_2458 conf=1.000 phone cluster (13085136276,13385229849)",
-      "category": "storefront_with_phone",
+      "category": "restaurant_with_phone",
       "what_is_pictured": "京味香酱饼 / 袁市分店菜单 — 13085136276 / 13385229849 两条电话",
       "must_have_in_scene_or_observation": [
+        "京味香",
+        "13085136276",
         "13385229849"
       ],
       "expected_top_intent_type": "phone",
@@ -384,9 +393,13 @@
       "id": "image_1755",
       "file": "image_1755.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
+      "category": "service_ads_with_phone",
       "what_is_pictured": "城市之佳装饰 承接店面装修设计 15907162019唐 5 电话：13307167387陈 地址：关山大道哈乐城A2栋2102",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "城市之佳",
+        "15907162019",
+        "13307167387"
+      ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
         "dial_number"
@@ -446,7 +459,10 @@
       "src": "scale_fixtures.py auto-scale conf=1.000",
       "category": "clinic_sign",
       "what_is_pictured": "东湖风景朱铁生西医外科诊所 登记号:66349177942012017D2112 武汉中凯瓶装气供应站 ### 公共场所 请灭烟 小心碰头 请随手关门 135542274",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "朱铁生",
+        "135542274"
+      ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
         "dial_number"
@@ -772,6 +788,8 @@
     "auto_scaled_count": 40,
     "regex": "1[3-9]\\d{9}|0\\d{2,3}[\\s-]?\\d{7,8}",
     "fallback_category": "storefront_with_phone",
-    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
+    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
+    "hand_curated_count": 7,
+    "last_curated": "2026-07-12"
   }
 }

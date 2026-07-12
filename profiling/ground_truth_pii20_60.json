@@ -67,10 +67,11 @@
       "id": "image_3285",
       "file": "image_3285.jpg",
       "src": "intent_all image_3285 conf=1.000 basis={吉房急售,复州花园,南北通透,平米}",
-      "category": "residential_listing",
+      "category": "residential_development_billboard",
       "what_is_pictured": "吉房急售 — 复州花园 3室2厅 126平 南北通透 + QQ 313521397 + 联系看房",
       "must_have_in_scene_or_observation": [
         "吉房急售",
+        "15607",
         "复州花园"
       ],
       "expected_top_intent_type": "real_estate_rental",
@@ -315,9 +316,13 @@
       "id": "image_572",
       "file": "image_572.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "building_rental_banner",
+      "category": "residential_development_billboard",
       "what_is_pictured": "世界城营销中心 东新公安社会治安监控 报警电话：110 027-85393898 70平米 每年收租150万 GREAT 70m 每年收租 150万 世界城 # ### 证 #章",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "世界城",
+        "027-85393898",
+        "70平米"
+      ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
         "copy_listing"
@@ -327,9 +332,12 @@
       "id": "image_6214",
       "file": "image_6214.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "building_rental_banner",
+      "category": "residential_development_billboard",
       "what_is_pictured": "10月11日 11月8日 哆啦A梦 全球巡展郴州站 100个蓝胖空降郴州 888 0707 8880505 116-125平米精品住宅首度献世 VIP一千抵两万火爆认筹！ ### 项目地址 郴州市沙滩公园旁",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "116-125平米精品住宅",
+        "8880505"
+      ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
         "copy_listing"
@@ -339,9 +347,12 @@
       "id": "image_7215",
       "file": "image_7215.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "building_rental_banner",
+      "category": "residential_development_billboard",
       "what_is_pictured": "腾飞、鹿鸣、湖畔 一万斤大米 全城疯抢 转发此图到朋友圈并集满20个赞 送5公斤装大米一袋 领取地址：学院路与南海街交会处 0374-6086666 2000元抵20000元 每位客户只可领取一次礼品 每天仅限前100名 准现房！ 珍藏房源",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "2000元抵20000元",
+        "0374-6086666"
+      ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
         "copy_listing"
@@ -351,9 +362,13 @@
       "id": "image_2562",
       "file": "image_2562.jpg",
       "src": "scale_fixtures.py auto-scale conf=0.800",
-      "category": "building_rental_banner",
+      "category": "residential_development_billboard",
       "what_is_pictured": "珍稀江景豪宅 最高优惠 3000元 110-137平米零公摊超值户型，赠送面积高达约30平米 碧水源 ### 2905888 城市中央",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "珍稀江景豪宅",
+        "2905888",
+        "110-137平米"
+      ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
         "copy_listing"
@@ -387,9 +402,12 @@
       "id": "image_3406",
       "file": "image_3406.jpg",
       "src": "scale_fixtures.py auto-scale conf=0.600",
-      "category": "building_rental_banner",
+      "category": "residential_development_billboard",
       "what_is_pictured": "御景天成 接待中心有此进 2200元/平米起 抢购热线:027-87518566",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "御景天成",
+        "027-87518566"
+      ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
         "copy_listing"
@@ -461,7 +479,9 @@
       "src": "scale_fixtures.py auto-scale conf=0.100",
       "category": "building_rental_banner",
       "what_is_pictured": "急售",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "急售"
+      ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
         "copy_listing"
@@ -475,6 +495,8 @@
     "auto_scaled_count": 15,
     "regex": "出租[房套房]|出售[房套]|二手房|二手房源|房源|楼盘出售|急售|吉房|精装[房套]|户型|平米|押一付三",
     "fallback_category": "building_rental_banner",
-    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
+    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
+    "hand_curated_count": 7,
+    "last_curated": "2026-07-12"
   }
 }

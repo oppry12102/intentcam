@@ -106,7 +106,8 @@
       "category": "phase_h_dw_only",
       "what_is_pictured": "星娱电玩 由此前行 光谷世界城",
       "must_have_in_scene_or_observation": [
-        "前行"
+        "由此前行",
+        "光谷世界城"
       ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
@@ -217,8 +218,8 @@
       "category": "phase_h_dw_dist",
       "what_is_pictured": "世界文化遗产 退思园 向前50米",
       "must_have_in_scene_or_observation": [
-        "向前",
-        "50米"
+        "向前50米",
+        "退思园"
       ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
@@ -246,7 +247,8 @@
       "category": "phase_h_dw_only",
       "what_is_pictured": "佰乐星KTV 请直走 坐电梯至四楼",
       "must_have_in_scene_or_observation": [
-        "直走"
+        "请直走",
+        "佰乐星"
       ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
@@ -285,9 +287,13 @@
       "id": "image_111",
       "file": "image_111.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "phase_h_dw_only",
+      "category": "phase_h_dw_dist",
       "what_is_pictured": "碧水源 健康生活奢享之源 营销中心，向前50米 2905888 项目地址/郴州市曹家坪路（东街往东500米 开发商/郴州飞天房地产开发有限公司",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "向前50米",
+        "2905888",
+        "曹家坪路"
+      ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
         "open_in_maps"
@@ -321,9 +327,12 @@
       "id": "image_478",
       "file": "image_478.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "phase_h_dw_only",
+      "category": "phase_h_dw_dist",
       "what_is_pictured": "前行50米 春风门诊部 电话 87568110 ICEU ### LLumar 3M 平安光谷 东谷 宾馆 东来顺 饭庄 武汉分公司 汽车膜建筑膜专营店 东谷宾馆 请上二楼 交发驾校 卡网吧 四季贴膜 北京东来顺 东谷商###",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "前行50米",
+        "87568110"
+      ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
         "open_in_maps"
@@ -371,7 +380,10 @@
       "src": "scale_fixtures.py auto-scale conf=1.000",
       "category": "phase_h_dw_only",
       "what_is_pictured": "3F 9号食堂 德意风情街最大的人气美食城 左转上楼 ### 栢乐星 CGV 星聚汇 电影 昌最大光谷唯一儿童 ##si# TELNET",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "左转上楼",
+        "德意风情街"
+      ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
         "open_in_maps"
@@ -381,9 +393,12 @@
       "id": "image_6753",
       "file": "image_6753.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "phase_h_dw_only",
+      "category": "phase_h_dw_dist",
       "what_is_pictured": "HOME NN 武汉光谷佳园路店 此路口右转200米 订房电话：027-87531777 地址：武汉东湖高新开发区关东科技园3号楼（佳园路） 全国订房电话;400.820.3333 网址：www.homeinns.com ### 珞瑜东路 ",
-      "must_have_in_scene_or_observation": [],
+      "must_have_in_scene_or_observation": [
+        "右转200米",
+        "027-87531777"
+      ],
       "expected_top_intent_type": "route_to",
       "expected_actions": [
         "open_in_maps"
@@ -697,6 +712,8 @@
     "auto_scaled_count": 34,
     "regex": "(?:[→←↑↓])|(?:向左|向右|向前|向后)|(?:左转|右转|直走|直行|左拐|右拐|前行)|(?:步行.{0,8}(?:米|公里|分钟|分|步))|(?:出口|入口).{0,6}(?:左|右|前)",
     "fallback_category": "phase_h_dw_only",
-    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
+    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
+    "hand_curated_count": 7,
+    "last_curated": "2026-07-12"
   }
 }
