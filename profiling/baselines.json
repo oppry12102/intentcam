@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-12",
-    "last_updated_commit": "4277516"
+    "last_updated_commit": "4e97879"
   },
   "suites": [
     {
@@ -67,6 +67,16 @@
       "quality": 90,
       "baseline_commit": "4277516",
       "note": "60-fixture scaled suite — 20 seed + 40 auto-scaled; 7 hand-curated; matches phone_20 (0.9575) within noise; statistically more reliable"
+    },
+    {
+      "name": "pii20_60",
+      "baseline": 0.9675,
+      "gt": "profiling/ground_truth_pii20_60.json",
+      "limit": 35,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "4e97879",
+      "note": "35-fixture scaled suite (corpus-limited; real_estate_rental cluster only 131 imgs after dedup) — 20 seed + 15 auto-scaled; 7 hand-curated; Δ -0.0113 vs pii_20 0.9788, within noise"
     }
   ]
 }
