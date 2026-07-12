@@ -1,0 +1,702 @@
+{
+  "version": 1,
+  "description": "Phase H direction_arrow_20 mini-suite (2026-07-12). 20 fixtures from RCTW-171 train_images corpus, all with verbatim DIRECTION_ARROW regex matches in their OCR-matched text. Goal: validate Phase H `route_to` intent + Verifier Pass 11 (info|location + DIRECTION_ARROW → route_to) + open_in_maps action injection. Categories: 方位词 (左转/右转/直走/前行), 距离 (步行/走 N 米/公里/分钟), 出口/入口 (rare in RCTW), 箭头字符 (rare, 0 candidates with raw arrow unicode).",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "scenes": [
+    {
+      "id": "image_4310",
+      "file": "image_4310.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "藏诺集团 向前20米 藏方养生馆",
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "20米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6521",
+      "file": "image_6521.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "前行 真功夫 餐厅",
+      "must_have_in_scene_or_observation": [
+        "前行"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_949",
+      "file": "image_949.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "turnleft 左转",
+      "must_have_in_scene_or_observation": [
+        "左转"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4116",
+      "file": "image_4116.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "地下停车场 向前135米",
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "135米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7162",
+      "file": "image_7162.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "韩国炸鸡 营业 前行10米左拐",
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "10米",
+        "左拐"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_5641",
+      "file": "image_5641.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "办理取票 候车室 向前20米",
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "20米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4770",
+      "file": "image_4770.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "直行 右转 米乐星世界 STARKTV",
+      "must_have_in_scene_or_observation": [
+        "直行",
+        "右转"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4932",
+      "file": "image_4932.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "星娱电玩 由此前行 光谷世界城",
+      "must_have_in_scene_or_observation": [
+        "前行"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6027",
+      "file": "image_6027.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "民主路236 前行30米",
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "30米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_1429",
+      "file": "image_1429.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "单间淋浴 直走30米 酒坊",
+      "must_have_in_scene_or_observation": [
+        "直走",
+        "30米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6259",
+      "file": "image_6259.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "CGV电影院 洗手间（左转）佰乐星4F",
+      "must_have_in_scene_or_observation": [
+        "左转"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_1302",
+      "file": "image_1302.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "耐克专柜请往前面走30米",
+      "must_have_in_scene_or_observation": [
+        "往前面",
+        "走30米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_5092",
+      "file": "image_5092.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "金凤国旅 前行300米右转即到",
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "300米",
+        "右转"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7143",
+      "file": "image_7143.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "直行 右转 米乐星世界 MILO",
+      "must_have_in_scene_or_observation": [
+        "直行",
+        "右转"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_5087",
+      "file": "image_5087.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "商户专用货梯 向前50米 光谷天地",
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "50米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6374",
+      "file": "image_6374.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "世界文化遗产 退思园 向前50米",
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "50米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_1330",
+      "file": "image_1330.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "前行300米右转即到 国家特许经营",
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "300米",
+        "右转"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6423",
+      "file": "image_6423.jpg",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "佰乐星KTV 请直走 坐电梯至四楼",
+      "must_have_in_scene_or_observation": [
+        "直走"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_3907",
+      "file": "image_3907.jpg",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "耐克专柜请往前面走30米 NIKE FREE",
+      "must_have_in_scene_or_observation": [
+        "往前面",
+        "走30米"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_3796",
+      "file": "image_3796.jpg",
+      "category": "phase_h_dist_only",
+      "what_is_pictured": "森之旅 巷内行走三十步 设计师客栈",
+      "must_have_in_scene_or_observation": [
+        "行走",
+        "三十步"
+      ],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_111",
+      "file": "image_111.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "碧水源 健康生活奢享之源 营销中心，向前50米 2905888 项目地址/郴州市曹家坪路（东街往东500米 开发商/郴州飞天房地产开发有限公司",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_3408",
+      "file": "image_3408.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "全省名校 街舞 爵士 民族舞 拉丁 芭蕾舞 现代舞 精舞门 国标舞学校 舞动 密码 13507225885 15871883584 高老师 田老师 （步行街校区）步行中街靠东桥第一个天桥处 地址:（车站校区）皇朝家居5楼跆拳道馆内",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_3806",
+      "file": "image_3806.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "WUHAN ZHENAI MATERNITY HOSPITAL 24小时电话 咨询电话 87189999 美容外科 妇科专业 产科专业 ### 武汉真爱妇产医院 地址：洪山区雄楚大道489号领秀城 地铁二号线杨家湾站D出口前行500米 意尔",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_478",
+      "file": "image_478.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "前行50米 春风门诊部 电话 87568110 ICEU ### LLumar 3M 平安光谷 东谷 宾馆 东来顺 饭庄 武汉分公司 汽车膜建筑膜专营店 东谷宾馆 请上二楼 交发驾校 卡网吧 四季贴膜 北京东来顺 东谷商###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4932",
+      "file": "image_4932.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "星娱电玩 由此前行 光谷世界城德国风情街三楼 F东区6号楼星娱电玩城",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6374",
+      "file": "image_6374.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "世界文化遗产 退思园 向前50米 吴江市消费者权益保护委员会 消费争议和解示范街 世界遗产",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6451",
+      "file": "image_6451.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "政务服务 Administrative Affairs Service Center 鄂A.G5 of Wuchang Shouyilu Sub-district 行政事务服务中心 武昌区首义路街 向前30m 服务电话:88923728 6",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6613",
+      "file": "image_6613.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "3F 9号食堂 德意风情街最大的人气美食城 左转上楼 ### 栢乐星 CGV 星聚汇 电影 昌最大光谷唯一儿童 ##si# TELNET",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6753",
+      "file": "image_6753.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "HOME NN 武汉光谷佳园路店 此路口右转200米 订房电话：027-87531777 地址：武汉东湖高新开发区关东科技园3号楼（佳园路） 全国订房电话;400.820.3333 网址：www.homeinns.com ### 珞瑜东路 ",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7364",
+      "file": "image_7364.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_dist",
+      "what_is_pictured": "全省名校 9F玖富徽 无抵押无担保纯信用贷款 ### 13429999518 精武门国标舞学校 地址：（车站校区）皇朝家居5楼跆拳道馆内 （步行街校区）步行中街靠东桥第一个天桥处 舞动 密码 13507225885 高老师 15871883",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7925",
+      "file": "image_7925.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "武汉有线 神州租车 CAR 全民健清基 武汉邗江古籍书店 向内直走100米 巷内100米 巷内50米 http://shop.kongfz.com/22994 地址：武汉市洪山区珞喻路281号（融科珞瑜中心）T3-005（现六七二医院隔壁）",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6027",
+      "file": "image_6027.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "### 民主路 236 杰广告电话：88 民主路店 鱼糕 前行30米",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_639",
+      "file": "image_639.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "承恩堂 向前10米 南豪弄 庭院私房菜 沙锅王 馄饨水饺 农家客 订餐：18912705383 NANHAO LONG 豆腐花 经济# ### 庭院深深 鸟语花香 古朴典雅 温馨舒适",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6423",
+      "file": "image_6423.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "佰乐星纯K ### 佰乐星KTV 请直走 坐电梯至四楼 400-880-3093 德国风情街9栋4楼",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_1429",
+      "file": "image_1429.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "单间淋浴 直走30米 淋浴 酒 九##浆酒坊 荞麦大#小麦苞谷 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4641",
+      "file": "image_4641.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "时尚向前 活力无限 吃馄饨到吉祥 新鲜上市 热干馄饨 世好 Gll Wont 吉祥馄饨 新鲜 招聘 真材实料的你 服务员:3000-4000元/月 钟点工:10-15/小时 新店开业 咨询电话 我们需要 ### 祥馄饨 名发世家 美丽帝国 ",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4770",
+      "file": "image_4770.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "直行 右转 MiLO 米乐星世界 STARKTV 安全通道07",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_5087",
+      "file": "image_5087.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "商户专用货梯 向前50米 湖北光谷天地商业投资运营有限公司 光谷天地 THE PALACE",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_5641",
+      "file": "image_5641.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "办理互联网取票的旅客 请至自助售票处 候车室 向前20米",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6259",
+      "file": "image_6259.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "CGV电影院3F 洗手间（左转） 佰乐星4F 9号食堂3F 跨界集2F",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7143",
+      "file": "image_7143.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "直行 右转 米乐星世界 MILO 安全通道07 STARKTV 消火栓 ### 119",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7652",
+      "file": "image_7652.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.600",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "天赢建材 干混砌筑、抹灰及地坪砂浆 向内100米 苏州晨新轮胎有限公司 向前100米 ### Suzhou Chenxin Tyre Co.Ltd.",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_1330",
+      "file": "image_1330.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "前行300米右转即到 国家特许经营中国公民 保障您的合法权益及人身安全，请选择有合法出 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4116",
+      "file": "image_4116.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "地下停车场 向前135米 P ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_4310",
+      "file": "image_4310.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "藏诺集团 R 向前20米 # 现代藏方养生 藏诺养正堂",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_5092",
+      "file": "image_5092.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "金凤国旅已搬迁至规划局 门面第一家（中百仓储对面） 前行300米右转即到 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7162",
+      "file": "image_7162.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "### 韩国炸鸡 照常 营业 前行10米左拐",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7353",
+      "file": "image_7353.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "长江名车会所 威固 V-KOOL #BMW7系。##世界不断向前。 以前行力量，指引世界方向。 ### 福 GREE 格力",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7936",
+      "file": "image_7936.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.500",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "单间淋浴 直走30米 荞麦 高粱 主酿 祖传手艺 手工酿造 苞谷 小# 九妹#浆酒# 口感独# 头 高粱荞麦酒 电话.135##1###01 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_1303",
+      "file": "image_1303.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.100",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "禁止向右转弯 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_3798",
+      "file": "image_3798.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.100",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "要成功先发疯， 闭着眼睛向前冲！",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6521",
+      "file": "image_6521.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.100",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "前行 真功夫 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6720",
+      "file": "image_6720.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.100",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "向前冲",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_949",
+      "file": "image_949.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.100",
+      "category": "phase_h_dw_only",
+      "what_is_pictured": "turnleft 左转 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "route_to",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    }
+  ],
+  "_meta": {
+    "seed_gt": "ground_truth_direction_arrow_20.json",
+    "target": 60,
+    "seed_count": 20,
+    "auto_scaled_count": 34,
+    "regex": "(?:[→←↑↓])|(?:向左|向右|向前|向后)|(?:左转|右转|直走|直行|左拐|右拐|前行)|(?:步行.{0,8}(?:米|公里|分钟|分|步))|(?:出口|入口).{0,6}(?:左|右|前)",
+    "fallback_category": "phase_h_dw_only",
+    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
+  }
+}
