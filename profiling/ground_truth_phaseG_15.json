@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "description": "Phase G 15-fixture mini-suite (2026-07-12). 5 warning_safety + 5 menu_food + 5 hours_schedule. 1 fixture (image_1114) tests post-guard menu_food+hours_schedule + MOBILE/LANDLINE → phone. 1 fixture (image_12) is a NEGATIVE — sparse '营业部' content; should stay info (no time pattern).",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "scenes": [
+    {
+      "id": "image_103",
+      "file": "image_103.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "请勿戏水 安全警告标识",
+      "must_have_in_scene_or_observation": [
+        "请勿",
+        "戏水"
+      ],
+      "expected_top_intent_type": "warning_safety",
+      "expected_actions": [
+        "copy_warning"
+      ]
+    },
+    {
+      "id": "image_1006",
+      "file": "image_1006.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "禁止通行 武汉东湖景区",
+      "must_have_in_scene_or_observation": [
+        "请勿通过"
+      ],
+      "expected_top_intent_type": "warning_safety",
+      "expected_actions": [
+        "copy_warning"
+      ]
+    },
+    {
+      "id": "image_1061",
+      "file": "image_1061.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "禾和谷 快餐超市 入口处警告",
+      "must_have_in_scene_or_observation": [
+        "请勿堵塞"
+      ],
+      "expected_top_intent_type": "warning_safety",
+      "expected_actions": [
+        "copy_warning"
+      ]
+    },
+    {
+      "id": "image_1088",
+      "file": "image_1088.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "办公区域非请勿入",
+      "must_have_in_scene_or_observation": [
+        "非请勿入"
+      ],
+      "expected_top_intent_type": "warning_safety",
+      "expected_actions": [
+        "copy_warning"
+      ]
+    },
+    {
+      "id": "image_1097",
+      "file": "image_1097.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "梅园打药季禁止挖野菜",
+      "must_have_in_scene_or_observation": [
+        "严禁"
+      ],
+      "expected_top_intent_type": "warning_safety",
+      "expected_actions": [
+        "copy_warning"
+      ]
+    },
+    {
+      "id": "image_1938",
+      "file": "image_1938.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "排骨汤面馆菜单（汤/面/粉/小吃/饮料/甜品）",
+      "must_have_in_scene_or_observation": [
+        "排骨汤",
+        "面",
+        "甜品"
+      ],
+      "expected_top_intent_type": "menu_food",
+      "expected_actions": [
+        "copy_menu"
+      ]
+    },
+    {
+      "id": "image_1753",
+      "file": "image_1753.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "WELCOME COFFEE 茶饮 咖啡 甜品",
+      "must_have_in_scene_or_observation": [
+        "咖啡",
+        "甜品"
+      ],
+      "expected_top_intent_type": "menu_food",
+      "expected_actions": [
+        "copy_menu"
+      ]
+    },
+    {
+      "id": "image_3697",
+      "file": "image_3697.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "两个老大的私房甜品",
+      "must_have_in_scene_or_observation": [
+        "甜品"
+      ],
+      "expected_top_intent_type": "menu_food",
+      "expected_actions": [
+        "copy_menu"
+      ]
+    },
+    {
+      "id": "image_2350",
+      "file": "image_2350.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "小时光 脖 咖啡 简餐 红酒 冰淇淋 奶茶 甜品",
+      "must_have_in_scene_or_observation": [
+        "咖啡",
+        "甜品"
+      ],
+      "expected_top_intent_type": "menu_food",
+      "expected_actions": [
+        "copy_menu"
+      ]
+    },
+    {
+      "id": "image_4109",
+      "file": "image_4109.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "湘辣王 私房菜 招聘 + 菜品",
+      "must_have_in_scene_or_observation": [
+        "菜品",
+        "湘辣"
+      ],
+      "expected_top_intent_type": "menu_food",
+      "expected_actions": [
+        "copy_menu"
+      ]
+    },
+    {
+      "id": "image_1012",
+      "file": "image_1012.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "门面转让亏本清仓 营业时间标识",
+      "must_have_in_scene_or_observation": [
+        "营业时间"
+      ],
+      "expected_top_intent_type": "hours_schedule",
+      "expected_actions": [
+        "copy_hours"
+      ]
+    },
+    {
+      "id": "image_1114",
+      "file": "image_1114.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "同畅堂餐厅 渝和 黄焖鸡米饭 华科店 订餐电话 营业时间 10:00-14:00",
+      "must_have_in_scene_or_observation": [
+        "18007177856"
+      ],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1186",
+      "file": "image_1186.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "德国风情街 时间 17:00~24:00 WORLD CITY",
+      "must_have_in_scene_or_observation": [
+        "17:00",
+        "24:00"
+      ],
+      "expected_top_intent_type": "hours_schedule",
+      "expected_actions": [
+        "copy_hours"
+      ]
+    },
+    {
+      "id": "image_1230",
+      "file": "image_1230.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "安华 火锅 营业时间 上午10:00-凌晨4:00",
+      "must_have_in_scene_or_observation": [
+        "营业时间",
+        "10:00"
+      ],
+      "expected_top_intent_type": "hours_schedule",
+      "expected_actions": [
+        "copy_hours"
+      ]
+    },
+    {
+      "id": "image_12",
+      "file": "image_12.jpg",
+      "src": "phaseG candidate from intent_all.json (matched via Phase G regex cluster)",
+      "category": "phase_g_eval",
+      "what_is_pictured": "武汉关山大道证券营业部",
+      "must_have_in_scene_or_observation": [
+        "营业部"
+      ],
+      "expected_top_intent_type": "info",
+      "expected_actions": []
+    }
+  ]
+}
