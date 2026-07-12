@@ -800,6 +800,7 @@ auto-injection path adds actions).
 |---|---|---|---|---|
 | 1 | `location` → `phone` | `MOBILE = 1[3-9]\d{9}` | E | Strongest signal; cell on storefronts |
 | 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
+| 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **(a) test** | Stub-only since F2 reject; promoted 2026-07-12 to rescue image_1359 027-87875310 where LLM emits `location` and post-guard can't reach. Single-var fix. |
 | 1c | `location` → `real_estate_rental` | `REAL_ESTATE` | **F** | Location + 房源 keyword |
 | 1d | `location` → `recruit_hiring` | `RECRUIT` | F | Location + 招聘 keyword |
 | 1e | `location` → `id_document` | `ID_DOCUMENT` | F | Location + 证照 keyword |
@@ -813,6 +814,7 @@ auto-injection path adds actions).
 | 9 | `info` → `menu_food` | `MENU` | G | 菜单 / 招牌菜 / 套餐 |
 | 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
 | **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c)** | Final safety net for landline + service lines |
+| 1b' | `location` → `phone` | `LANDLINE` | **(a) SHIPPED** | Promoted from stub; post-guard (a) single-var test rescued post-guard (c)'s -0.026 phone_20 regression. Verified @20: 0.9081 → **0.9450 (+0.0369 net, 6 lifts / 1 drop bounded)**. Post-guard (c) kept as defense-in-depth. |
 
 **Pass ordering** (`IntentVerifier.kt` body): 1-1e run on
 `location` source first, 2-10 on `info` source, Pass 7 last

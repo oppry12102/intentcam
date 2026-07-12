@@ -97,8 +97,11 @@ object IntentVerifier {
      *  flipping location→phone on a landline is riskier than on
      *  a mobile, so we currently DO NOT use this; reserved for
      *  future Phase E iterations if data shows missing
-     *  fixtures.  Kept here as a stub. */
-    @Suppress("unused")
+     *  fixtures.  Kept here as a stub (Phase F2 reject —
+     * v1.2 LT: but post-guard (option c) re-evaluation showed
+     * image_1359 text emits landline 027-87875310 alongside
+     * LLM `location` type and never gets flipped, so activating
+     * Pass 1b' is the targeted single-var rescue). */
     private val LANDLINE = Regex("""\b0\d{2,3}[\s-]?\d{7,8}\b""")
 
     /**
@@ -180,6 +183,18 @@ object IntentVerifier {
         //  reasoning; service lines on storefront signs are
         //  dial-first signals for the user.
         if (currentType == "location" && SERVICE.containsMatchIn(corpus)) {
+            return "phone"
+        }
+        // Pass 1b' (post-guard option (a) single-var test, 2026-07-12):
+        //  location + landline (0xxx-xxxxxxx) → phone.  Same
+        //  reasoning as 1/1b — storefront landline is a dial-first
+        //  signal.  Was a stub-only regex until post-guard (option c,
+        //  2026-07-12) re-evaluation showed image_1359 (restaurant
+        //  with 027-87875310) emits `location` and post-guard can't
+        //  rescue location→phone.  Promoting LANDLINE to a real rule
+        //  is the targeted single-var fix.  Ordered AFTER 1b so
+        //  service-line fixtures win the 400/800 pattern first.
+        if (currentType == "location" && LANDLINE.containsMatchIn(corpus)) {
             return "phone"
         }
         // Pass 1c-1e (2026-07-11, Phase F enablement): location + strong

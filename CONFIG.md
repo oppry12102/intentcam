@@ -270,6 +270,7 @@ actions).
 |---|---|---|---|---|
 | 1 | `location` → `phone` | `MOBILE = 1[3-9]\d{9}` | E (2026-07-11) | Strongest signal; cell on storefronts |
 | 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
+| 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **post-guard option (a) test (2026-07-12)** | Stub-only since F2 reject; rescued image_1359 (027-87875310) when post-guard option (c) couldn't reach `location` source. Single-var fix. |
 | 1c | `location` → `real_estate_rental` | `REAL_ESTATE` | **F (2026-07-11)** | Location + 房源 keyword |
 | 1d | `location` → `recruit_hiring` | `RECRUIT` | F | Location + 招聘 keyword |
 | 1e | `location` → `id_document` | `ID_DOCUMENT` | F | Location + 证照 keyword |
@@ -283,6 +284,7 @@ actions).
 | 9 | `info` → `menu_food` | `MENU` | G | 菜单 / 招牌菜 / 套餐 |
 | 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
 | **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c, 2026-07-12)** | Final safety net for landline + service lines. LANDLINE regex activated here (was stub-only since Phase F2 reject). |
+| 1b' | `location` → `phone` | `LANDLINE` | **post-guard (option a) SHIPPED 2026-07-12** | Promoted from stub. Single-var rescue for image_1359 et al. when LLM emits `location` source + landline corpus. Verified @20 phone_20 0.9081 → **0.9450 (+0.0369 net)**. Post-guard (c) kept as defense-in-depth. |
 
 **Regex anchors** (`IntentVerifier.kt` line numbers): `MOBILE`
 43, `LANDLINE` 102, `REAL_ESTATE` 73, `WARNING` 84, `MENU` 85,
