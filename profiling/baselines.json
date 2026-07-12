@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-12",
-    "last_updated_commit": "fc1cae2"
+    "last_updated_commit": "4277516"
   },
   "suites": [
     {
@@ -57,6 +57,16 @@
       "quality": 90,
       "baseline_commit": "bfd7a47",
       "note": "RCTW @20 sanity — bounded by historical 0.92 ceiling; all-info expected_actions"
+    },
+    {
+      "name": "phone_60",
+      "baseline": 0.9567,
+      "gt": "profiling/ground_truth_phone_60.json",
+      "limit": 60,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "4277516",
+      "note": "60-fixture scaled suite — 20 seed + 40 auto-scaled; 7 hand-curated; matches phone_20 (0.9575) within noise; statistically more reliable"
     }
   ]
 }
