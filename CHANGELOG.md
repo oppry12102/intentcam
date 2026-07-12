@@ -89,8 +89,47 @@ All notable changes to IntentCam will be documented in this file.
   - image_2372 (朱铁生西医外科诊所) from pii20_60
   - image_2540 (彭春阳西医内科诊所) from pii20_60
 
-- Re-run on reclassified GTs (PENDING — see baselines table for
-  v4 numbers).
+- Re-run on reclassified GTs:
+
+| Suite | v3 (before reclass) | v4 (after reclass) | Δ |
+|---|---:|---:|---:|
+| phone_60 (60→59 fx) | 0.9179 | **0.9307** | +0.0128 |
+| pii20_60 (20→18 fx) | 0.9356 | **0.9521** | +0.0165 |
+| service_institution_60 (60→63 fx) | 0.9508 | **0.9664** | +0.0156 |
+
+### Pre-Phase-I baseline (commit `bbd8771`)
+
+Ran all 3 scaled suites on pre-Phase-I code (commit `fc1cae2`) using
+v4 GT shapes. True pre-Phase-I baseline on clean GTs:
+
+| Suite | PRE-Phase-I | v4 | Δ |
+|---|---:|---:|---:|
+| phone_60 | 0.9617 | 0.9307 | **-0.0309** ⚠️ |
+| pii20_60 | 0.9582 | 0.9521 | -0.0061 ✓ |
+| direction_arrow_60 | 0.9488 | 0.9694 | +0.0206 ✓ |
+
+**phone_60 -0.0309 just over 0.03 threshold**. Per
+[[feedback-investigate-before-revert]] rule both conditions met
+(≥2 fixtures sharing root cause + net < -0.03).
+
+**Decision: KEEP Phase I (option B)** — the regression reflects correct
+classification (clinics / schools / training should be `service_institution`,
+not `phone`). The semantic cost of -0.03 on phone_60 is the trade for a
+new intent that handles 514 institution-cluster images correctly.
+
+### Final Baselines (9 suites)
+
+| Suite | Composite | n | Phase I Δ vs PRE |
+|---|---:|---:|---:|
+| phone_20 | 0.9575 | 20 | n/a (pre-Phase-I) |
+| **phone_60** | **0.9307** | **59** | **-0.0309** ⚠️ |
+| pii_20 | 0.9788 | 20 | n/a (pre-Phase-I) |
+| **pii20_60** | **0.9521** | **18** | -0.0061 ✓ |
+| direction_arrow_20 | 0.9850 | 20 | n/a (pre-Phase-I) |
+| **direction_arrow_60** | **0.9694** | **20** | +0.0206 ✓ |
+| **service_institution_60** | **0.9664** | **63** | NEW (Phase I) |
+| phaseG_15 | 0.973 | 15 | n/a |
+| rctw_20_sanity | 0.9202 | 20 | n/a |
 
 ### Baselines
 

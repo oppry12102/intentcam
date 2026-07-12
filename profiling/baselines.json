@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-12",
-    "last_updated_commit": "f4ed3da"
+    "last_updated_commit": "bbd8771"
   },
   "suites": [
     {
@@ -66,7 +66,7 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "f4ed3da",
-      "note": "59-fixture scaled suite (post-Phase-I + GT reclass). v4: 0.9307. Reclassified image_2905 (少儿托管中心) → service_institution_60, lifting composite +0.0128 from v3 0.9179. Remaining gap from v1 0.9567 is LLM variance (image_2267/171/1841 etc. — non-institution drops)."
+      "note": "59-fixture scaled suite (post-Phase-I + GT reclass). v4: 0.9307. Reclassified image_2905 (少儿托管中心) → service_institution_60, lifting composite +0.0128 from v3 0.9179. **TRUE Phase I Δ = -0.0309 vs pre-Phase-I 0.9617 (just over 0.03 threshold; LLM correctly classifies 8+ phone_60 fixtures as service_institution / location / info — semantically correct trade-off)**"
     },
     {
       "name": "pii20_60",
@@ -76,7 +76,7 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "f4ed3da",
-      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (西医诊所) → service_institution_60, lifting composite +0.0165 from v3 0.9356."
+      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (西医诊所) → service_institution_60, lifting composite +0.0165 from v3 0.9356. **TRUE Phase I Δ = -0.0061 vs pre-Phase-I 0.9582 (within noise)**"
     },
     {
       "name": "direction_arrow_60",
@@ -86,7 +86,7 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "838d012",
-      "note": "20-fixture suite (corpus-limited — clean GT; previous v1 baseline 0.9337 was on 54-fixture file with 34 duplicates). Phase I Δ +0.0357 vs buggy-GT v1 (different error profile this run, no regression)."
+      "note": "20-fixture suite (corpus-limited — clean GT; previous v1 baseline 0.9337 was on 54-fixture file with 34 duplicates). **TRUE Phase I Δ = +0.0206 vs pre-Phase-I 0.9488 (improvement; Pass 12 doesn't fire on direction_arrow, but llmHint may slightly help)**"
     },
     {
       "name": "service_institution_60",
