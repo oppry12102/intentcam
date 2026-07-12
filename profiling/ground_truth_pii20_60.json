@@ -67,11 +67,10 @@
       "id": "image_3285",
       "file": "image_3285.jpg",
       "src": "intent_all image_3285 conf=1.000 basis={吉房急售,复州花园,南北通透,平米}",
-      "category": "residential_development_billboard",
+      "category": "residential_listing",
       "what_is_pictured": "吉房急售 — 复州花园 3室2厅 126平 南北通透 + QQ 313521397 + 联系看房",
       "must_have_in_scene_or_observation": [
         "吉房急售",
-        "15607",
         "复州花园"
       ],
       "expected_top_intent_type": "real_estate_rental",
@@ -287,216 +286,15 @@
       "expected_actions": [
         "redact_id"
       ]
-    },
-    {
-      "id": "image_1906",
-      "file": "image_1906.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "building_rental_banner",
-      "what_is_pictured": "### 便民服务箱 综合管理站 出租房屋和流动人口 南山社区警务室 公安 大凌河公安分局 DALINGHEGONGANFENJU POLICE 大凌河街道办事处南山社区",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_3285",
-      "file": "image_3285.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "residential_development_billboard",
-      "what_is_pictured": "吉房急售 复州花园黄金楼层低价急 售，3室2厅1厨1卫126 平，南北通透，家电齐全 有证！可过户！一套您看 了就想买的靠谱房，是您居 QQ：313521397 欢迎随时来电咨询看房 电话：15607225103 陈先生 家养育后代之绝选！",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_572",
-      "file": "image_572.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "residential_development_billboard",
-      "what_is_pictured": "世界城营销中心 东新公安社会治安监控 报警电话：110 027-85393898 70平米 每年收租150万 GREAT 70m 每年收租 150万 世界城 # ### 证 #章",
-      "must_have_in_scene_or_observation": [
-        "世界城",
-        "027-85393898",
-        "70平米"
-      ],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_6214",
-      "file": "image_6214.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "residential_development_billboard",
-      "what_is_pictured": "10月11日 11月8日 哆啦A梦 全球巡展郴州站 100个蓝胖空降郴州 888 0707 8880505 116-125平米精品住宅首度献世 VIP一千抵两万火爆认筹！ ### 项目地址 郴州市沙滩公园旁",
-      "must_have_in_scene_or_observation": [
-        "116-125平米精品住宅",
-        "8880505"
-      ],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_7215",
-      "file": "image_7215.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "residential_development_billboard",
-      "what_is_pictured": "腾飞、鹿鸣、湖畔 一万斤大米 全城疯抢 转发此图到朋友圈并集满20个赞 送5公斤装大米一袋 领取地址：学院路与南海街交会处 0374-6086666 2000元抵20000元 每位客户只可领取一次礼品 每天仅限前100名 准现房！ 珍藏房源",
-      "must_have_in_scene_or_observation": [
-        "2000元抵20000元",
-        "0374-6086666"
-      ],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_2562",
-      "file": "image_2562.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.800",
-      "category": "residential_development_billboard",
-      "what_is_pictured": "珍稀江景豪宅 最高优惠 3000元 110-137平米零公摊超值户型，赠送面积高达约30平米 碧水源 ### 2905888 城市中央",
-      "must_have_in_scene_or_observation": [
-        "珍稀江景豪宅",
-        "2905888",
-        "110-137平米"
-      ],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_3034",
-      "file": "image_3034.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.800",
-      "category": "building_rental_banner",
-      "what_is_pictured": "械 联系：13862528959 联系人：王女士 本楼底层出租 面积600平米",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_1956",
-      "file": "image_1956.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.600",
-      "category": "building_rental_banner",
-      "what_is_pictured": "武漢 精神 金地天悦 EMINENCE 全系舒适户型 满足名仕苛求 87674888 ### 敢为人先 追求卓越 创建全国文明城市 做文明有礼武汉人",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_3406",
-      "file": "image_3406.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.600",
-      "category": "residential_development_billboard",
-      "what_is_pictured": "御景天成 接待中心有此进 2200元/平米起 抢购热线:027-87518566",
-      "must_have_in_scene_or_observation": [
-        "御景天成",
-        "027-87518566"
-      ],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_5429",
-      "file": "image_5429.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.600",
-      "category": "building_rental_banner",
-      "what_is_pictured": "整体招商 二楼2000平米商铺 盛世龙腾 福 源興旺旺九洲 门 15 ### 售楼热线：3",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_5674",
-      "file": "image_5674.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.600",
-      "category": "building_rental_banner",
-      "what_is_pictured": "国际青年互动特区 强者PK胜者为王 典藏户型推荐 潜 实力之上 品质来源于 近乎苛刻的使命感 NORTH STAR AWARDS GLORY 北辰实业 ### 优+",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_231",
-      "file": "image_231.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.500",
-      "category": "building_rental_banner",
-      "what_is_pictured": "爱屋吉屋 iwjw。com 400-700-6622 爱 在金市驾校 ### 二手房佣金 7 共1%",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_6915",
-      "file": "image_6915.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.500",
-      "category": "building_rental_banner",
-      "what_is_pictured": "当代 优 全通透户型 北辰 热抢进行时 UP 789 物品上车 上车门 形象宣传暂不预售 510S1241 ### 80-140m2 下车门 DOWN",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_1090",
-      "file": "image_1090.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.100",
-      "category": "building_rental_banner",
-      "what_is_pictured": "创爱莲湖户型奇迹 2886789 91㎡≥110㎡",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
-    },
-    {
-      "id": "image_5024",
-      "file": "image_5024.jpg",
-      "src": "scale_fixtures.py auto-scale conf=0.100",
-      "category": "building_rental_banner",
-      "what_is_pictured": "急售",
-      "must_have_in_scene_or_observation": [
-        "急售"
-      ],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ]
     }
   ],
   "_meta": {
     "seed_gt": "ground_truth_pii20.json",
     "target": 60,
     "seed_count": 20,
-    "auto_scaled_count": 15,
+    "auto_scaled_count": 0,
     "regex": "出租[房套房]|出售[房套]|二手房|二手房源|房源|楼盘出售|急售|吉房|精装[房套]|户型|平米|押一付三",
     "fallback_category": "building_rental_banner",
-    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
-    "hand_curated_count": 7,
-    "last_curated": "2026-07-12"
+    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
   }
 }

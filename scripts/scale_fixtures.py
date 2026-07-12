@@ -155,12 +155,19 @@ def auto_category(text: str, cfg: dict) -> str:
 
 
 def find_candidates(cfg: dict, exclude: set[str], need: int) -> list[dict]:
+    """Find up to `need` candidate items from intent_all.json whose
+    matched_text matches the intent's regex. `exclude` is a set of
+    scene IDs (e.g. "image_1177") — compare against the stem of the
+    full image path."""
     idx = json.loads(INDEX.read_text())
     items = idx.get("items", [])
     rx = cfg["regex"]
     matches: list[tuple[float, str, str]] = []
     for it in items:
-        if it["image"] in exclude:
+        # Normalize: it["image"] is "train_images/image_1177.jpg",
+        # exclude has "image_1177" — compare stems.
+        stem = Path(it["image"]).stem
+        if stem in exclude:
             continue
         text = it.get("matched_text") or ""
         if not rx.search(text):

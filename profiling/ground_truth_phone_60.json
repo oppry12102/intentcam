@@ -64,12 +64,10 @@
       "id": "image_1583",
       "file": "image_1583.jpg",
       "src": "intent_all image_1583 conf=1.000 phone cluster (0728-3200612)",
-      "category": "service_ads_with_phone",
+      "category": "storefront_with_phone",
       "what_is_pictured": "全友家居开业广告牌 — 仙桃沔阳大道 + 全国统一服务热线 0728-3200612",
       "must_have_in_scene_or_observation": [
-        "全友",
-        "3201778",
-        "仙桃"
+        "0728-3200612"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -83,8 +81,7 @@
       "category": "classified_ads_with_phone",
       "what_is_pictured": "厂房 / 门面 / 套房出租出售小广告 — 联系电话 13706258255",
       "must_have_in_scene_or_observation": [
-        "13706258255",
-        "屯村西路"
+        "13706258255"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -126,9 +123,7 @@
       "category": "clinic_sign",
       "what_is_pictured": "王俊平个体诊所执业信息牌 — 联系电话 13407272442 / 监督电话 3324061",
       "must_have_in_scene_or_observation": [
-        "王俊平",
-        "13407272442",
-        "仙桃市复州大道"
+        "13407272442"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -142,9 +137,7 @@
       "category": "restaurant_with_phone",
       "what_is_pictured": "三川 麻辣风 川菜馆 — 4F + 电话 027-87878057 + 光谷步行街地址",
       "must_have_in_scene_or_observation": [
-        "三川",
-        "027-87878057",
-        "光谷步行街"
+        "027-87878057"
       ],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -183,11 +176,9 @@
       "id": "image_2458",
       "file": "image_2458.jpg",
       "src": "intent_all image_2458 conf=1.000 phone cluster (13085136276,13385229849)",
-      "category": "restaurant_with_phone",
+      "category": "storefront_with_phone",
       "what_is_pictured": "京味香酱饼 / 袁市分店菜单 — 13085136276 / 13385229849 两条电话",
       "must_have_in_scene_or_observation": [
-        "京味香",
-        "13085136276",
         "13385229849"
       ],
       "expected_top_intent_type": "phone",
@@ -294,23 +285,11 @@
       ]
     },
     {
-      "id": "image_1055",
-      "file": "image_1055.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "school_ad_with_phone",
-      "what_is_pictured": "中宣书画馆 www.zxsh001.com 中宣书画网 主营 电话0735-8884338 地址：郴州市裕后街沿河6栋 名家字画 玉器根雕 奇木陶艺 古玩杂项 红木家具 展览拍卖 美术培训 礼仪培训 企业内训 公考培训 文化沙龙 书画定制",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_1177",
-      "file": "image_1177.jpg",
+      "id": "image_5263",
+      "file": "image_5263.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
       "category": "storefront_with_phone",
-      "what_is_pictured": "房屋出租 （二室二厅一卫） 地址：复州花园六楼 电话：15572898725 ### 高价收购驾照分 电话：18672822958 三（1）班 找我#",
+      "what_is_pictured": "So Young 单间出租 无中介费，家电齐全 诚信出租，拎包入住！ 15623811220 TEL.027 866 888 武汉市青山区和平大道与新村路 致：“青春”",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -318,11 +297,11 @@
       ]
     },
     {
-      "id": "image_1216",
-      "file": "image_1216.jpg",
+      "id": "image_600",
+      "file": "image_600.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
       "category": "storefront_with_phone",
-      "what_is_pictured": "Welcome ### 川·M A58333 路发车行 世纪豪情电动车 总店：天宇市场对面（公交站处） 二分店：三贤弘乐府对面（公交站处） 售后电话：18328277720 伊耐#",
+      "what_is_pictured": "释放你的放肆 力量与夜店完美结合 订做热线02786869898 地址武汉市洪山区光谷意大利风情街多莫多大教堂三楼 ###",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -330,23 +309,11 @@
       ]
     },
     {
-      "id": "image_1359",
-      "file": "image_1359.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "restaurant_with_phone",
-      "what_is_pictured": "蒸的健康 真的美味 包 黄焖鸡米饭 热干面馆 官网 www.jcmcw.com 中文域名：江城名吃 客服电话：027-87875310 佳园路店 经济实 一道菜的餐厅 ### ® O.1603 欢迎您光临 楚街一品",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_1573",
-      "file": "image_1573.jpg",
+      "id": "image_6167",
+      "file": "image_6167.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
       "category": "storefront_with_phone",
-      "what_is_pictured": "书画展览拍卖 请上二楼 地址：郴州市裕后街沿河6栋 电话：0735-8884338 ###",
+      "what_is_pictured": "上汽通用五菱 宝骏汽车 川A·518HB 四川嘉驰羊西店：028-87505566 n suo 定制衣柜 钰竹春茶 广东九木 本幢二楼 028-260 ### 电话：0### 粮 锁 东旭 乐驰12 四川嘉驰",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -354,11 +321,11 @@
       ]
     },
     {
-      "id": "image_1583",
-      "file": "image_1583.jpg",
+      "id": "image_6196",
+      "file": "image_6196.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
       "category": "service_ads_with_phone",
-      "what_is_pictured": "全友 ### 盛大开业 买家具 抽汽车 地址：仙桃沔阳大道西瑞全友家居 全友家私有限公司 地址：勉阳大道西瑞（西桥乘风电器二楼） 电话：3201778 全国统一服务热线 中国驰名商标 中国环境标志产品认证 中国质量环保产品认证 全友家居 中",
+      "what_is_pictured": "紫燕黄莺弹妙音 金猴玉兔弄春色 长城宽带 超宽带 玉米热狗 冰红茶 200-1000M 服务热线：95079 鲜橙多 亲 君子动口 不动手哦 监粮荞酒 祥 吉 富 贵 诚信礼品回收 承接宴席烟酒 欢迎团购 五粮液 贵州茅台酒 中外驰名 中国",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -366,11 +333,299 @@
       ]
     },
     {
-      "id": "image_1653",
-      "file": "image_1653.jpg",
+      "id": "image_6336",
+      "file": "image_6336.jpg",
       "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "1958 飞达电器商城店 中商店 8200010 萨米特陶 前锋 前锋厨房电器 UMM 客服电话.3494518 总经理.恒笛建材二期十栋133号 专业品质 源自 CHIFFO 地址:德政园中心街127-129# 电话:0728-82855",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_6524",
+      "file": "image_6524.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "restaurant_with_phone",
+      "what_is_pictured": "晨光文具 尚勤文具 家兴禧迎九州福 M&G ### 尚勤文具，已### 豪庭对面、东鑫酒店旁， 珞喻路大黄村车站 电话：15307160883",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_6636",
+      "file": "image_6636.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "school_ad_with_phone",
+      "what_is_pictured": "湖北省书协少年分会书法教育实验基地 仙桃市书法家协会定点培训基地 翰艺书法 培训地点：复州花园北门翰艺书法 联系人：汪老师 18907226968 常年招生 随到随学",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_6726",
+      "file": "image_6726.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "service_ads_with_phone",
+      "what_is_pictured": "免费 咨询 教育 学生平安保险 医疗 养老保险 意外 汽车 财产保险 保额递增 理财保险 ### 南三区 十六栋 一门 珈#社区惠民项目 16栋 服务 疑问解答 各类理赔 生存金领取 发票补发 珍爱生命 远离毒品 贷 中国平安保险工作室 电",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_6870",
+      "file": "image_6870.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "service_ads_with_phone",
+      "what_is_pictured": "利息低至6厘7 房可贷车可贷无房无车工资贷 电话：18708206291 ### 不看征信、不看经营主体、贷款金额最 高可达评估价值100% 四川米米邦金融服务外包有限公司 地址：资阳市娇子大道领地坐标16栋F-1-8 网址：www.mim",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_6975",
+      "file": "image_6975.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "艾米.1895 电影街 playsing 陌乐星纯K IVIMOVIE 4-6F 4-5F 房天下 MOMO 雪花 不止相遇 派队时间:8月20日-8月21日 派对地点:中国MOMO连锁酒吧 相约七夕 武汉光谷德国风情街9号楼1楼 027-",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7296",
+      "file": "image_7296.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "school_ad_with_phone",
+      "what_is_pictured": "如家托管中心 全托 午托 晚托 作业辅导 周末培优 地址：复州花园华菊园28栋二单元一楼（实验二小旁） 电话：13407228298 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7376",
+      "file": "image_7376.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "service_ads_with_phone",
+      "what_is_pictured": "江南片区固定办卡点 1、武昌区政务服务中心 武昌区临江大道59号武昌房地产交易大厦1楼27号窗口 2、洪山区政务服务中心 洪山区文秀街9号（丽岛紫园小区斜对面）3楼5号窗口 3、凤凰山综合服务中心 武昌区中山路193号附10号（农村商业银行",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7510",
+      "file": "image_7510.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "地大照相馆 China unicom中国联通 烫染请上二楼 美丽热线:027-63480099 地大照相 像 同步销售 150M国际主流4G网络 ### 住宿 大屏机 好4G 好优惠 沃地带 鲁磨路 388附5 MONS WAL 不贵 三楼",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7631",
+      "file": "image_7631.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "芝麻黑 芝麻灰 工程板/园林地铺/墓碑/异形 丰宝 地 址：福建漳州长泰县林墩工业区五十亩 联系人:林清印 手机:13605070251 石业 福建 长泰 G654",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7658",
+      "file": "image_7658.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "clinic_sign",
+      "what_is_pictured": "全国连锁专卖 袁市专卖店 送酒电话：15826930569 百老泉 现代美发 名师精剪 医疗机构名称：王俊平个体诊 诊疗范围：妇科 诊疗对象 诊疗方式：门诊 执业地址：仙桃市复州大道袁市 联系电话：13407272442 院 ### 负责人",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7690",
+      "file": "image_7690.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "shopping_mall_with_phone",
+      "what_is_pictured": "马德里 时尚百货 城市之佳装饰 承楼店面装修设计 铺面 招租 你还等什么呢 甘先生13437143188 一楼商铺招租 联系人汤女士 Madrid Fashion Department Store ### 佳装潢 #秘 Sp###yle 1",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7723",
+      "file": "image_7723.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "事 中公教育 网址：hu.offcn.com 中公总部地址：武汉市洪山区鲁磨路中公教育大厦9楼 电话：027-8720159，3986235661 offcn",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7770",
+      "file": "image_7770.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "空门面转让 13975522825（吴 安徽省泾县汪同和宣纸厂直销中心 郴州市人民文房四宝专营店 阳光家私 ### 重装开业",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_7996",
+      "file": "image_7996.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "光谷国际广场 当代国际花园 DONGDE INTERNATIONAL GARD VIP LINE 光谷之都五星级优生活特区 8096m2国际品牌精装 027 87923456 武汉市东湖新技术开发区光谷大道与三环线交汇处光谷金融 5千元享开",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_8001",
+      "file": "image_8001.jpg",
+      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "电话：18982955119 位于河心地南海长城超 市楼顶，屋顶花园上，4个 单间 单间出租",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_104",
+      "file": "image_104.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "丽丽花坊 电话:15072356079 首义路店",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1163",
+      "file": "image_1163.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "急诊 Emergencydept. 电话：13980292702 此商住楼出租 商务酒 配镜中心 ### 千方百计体现医者仁术高风 20 三面翻广告 公交车身广告 18682742683 13 CCC CL j佳节 欢度 NO 公交车身广告",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1255",
+      "file": "image_1255.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "酒楼 雷师三贤店 广 GUAN 雷师饭馆 请上二楼 面积1160平方米 398086660 先生 18784348996 ### 长虹 转让 078685 茶楼：26078686",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1547",
+      "file": "image_1547.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "树商贸有限公司 咨询电话:0827-8856668 UCC国际洗衣 UCC International Laundry ### WWW.UCC.CN 400-7188-866 南江店 家纺 洗护 奢侈品 迎您 瑞丽江 地址:小河人社局滨河路",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1610",
+      "file": "image_1610.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "新派川菜 4F 电话02787878057 地址武汉光谷步行街意大利风情街5号楼四楼",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1639",
+      "file": "image_1639.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "小朋友 童鞋 折扣店 联系电话：13797023251 地址：果壳世界二楼52063 往右10米 断码特卖 不议价 一果一 2F ### 消防栓",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_171",
+      "file": "image_171.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "storefront_with_phone",
+      "what_is_pictured": "盲人按摩 武汉市东升门业有限公司 ### 吉 王老吉 同安堂 按摩请上二楼 手机：13554222748 武汉市顺达卷闸门厂制造",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_1806",
+      "file": "image_1806.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "restaurant_with_phone",
+      "what_is_pictured": "星湖园餐厅 红影 你的味道驿站 订餐电话：027-68771023 星湖园 XINGHUYUAN 暖锅暖冬 大巴传奇水库胖头鱼 星 你的 牛一锅 胖头鱼的肌纤维比较短，蛋白质组织结构松散，水分含量比较多 因此，肉质比较鲜嫩，和禽畜肉相比，吃",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "phone",
+      "expected_actions": [
+        "dial_number"
+      ]
+    },
+    {
+      "id": "image_2001",
+      "file": "image_2001.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "classified_ads_with_phone",
-      "what_is_pictured": "苏CX5565 厂房、#面、套房出租、出售 联系人：#先生 联系电话：13706258255 屯村西路 38号",
+      "what_is_pictured": "發恭 財喜 永吉红包 新年 快樂 #乔 禧迁 大鸿 展圖 之彌 喜月 天真活泼 幸福成长 囍 同永 心结 萬如 事意 永吉 呈兴 ### 房屋出售 世纪花园小区三房两厅121 m^2七楼，带房顶花园两房一 听。全装修，价格面 收药 信用卡兑",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -378,11 +633,11 @@
       ]
     },
     {
-      "id": "image_1658",
-      "file": "image_1658.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2067",
+      "file": "image_2067.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "shopping_mall_with_phone",
-      "what_is_pictured": "巷广场购物中心 xiang plaza shopping center 名仕台球 屈臣氏 512H1086 13986295970 广告位招租热线 华夏影城 ### 鲁巷广场 渝尚煌 仓桥家 P 立体车库",
+      "what_is_pictured": "阜华地产 GANS ### 学会计 到恒企 租:15327175835 视窗购物广场 城管 来自美国的早教 阜华大厦 袁宝华题",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -390,39 +645,11 @@
       ]
     },
     {
-      "id": "image_1755",
-      "file": "image_1755.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "service_ads_with_phone",
-      "what_is_pictured": "城市之佳装饰 承接店面装修设计 15907162019唐 5 电话：13307167387陈 地址：关山大道哈乐城A2栋2102",
-      "must_have_in_scene_or_observation": [
-        "城市之佳",
-        "15907162019",
-        "13307167387"
-      ],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_1882",
-      "file": "image_1882.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "clinic_sign",
-      "what_is_pictured": "医疗机构名称 王俊平个体诊所 诊疗范围：妇科 诊疗对象：社会 诊疗方式：门诊 负责人：王俊平 执业地址：仙桃市复州大道袁市社区13号 联系电话：13407272442 监督电话：3324061 中 王健",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_2173",
-      "file": "image_2173.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2091",
+      "file": "image_2091.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "storefront_with_phone",
-      "what_is_pictured": "三川 麻辣风 新派川菜 Fashion Sichuan Cuisine 让生活更有味道 MAKE LIFE MORE FLAVOR 4F 电话：027-87878057 地址：武汉光谷步行街意大利风情街5号楼4楼",
+      "what_is_pictured": "Civilized City 文明城市，让生活更美 单间13707119677 单间出租 18971216549 单间独卫 15207182527 一室一厅 单独厨卫 13697329997 13469951358 单间 137071196",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -430,11 +657,11 @@
       ]
     },
     {
-      "id": "image_2267",
-      "file": "image_2267.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2237",
+      "file": "image_2237.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "storefront_with_phone",
-      "what_is_pictured": "小南小区东十六巷 XIAONANXIAOQUDONG16XIANG 13797031332 办证 仙桃大发搬家 13972177732 18771159411 74911726 分糕蛋鸡 室内清洗 装卸空调 空调加氟 拆装柜子 墙面打孔 地",
+      "what_is_pictured": "兴嘉 悦湖山 爱莲湖 87-142m2奢贵小豪宅全城热销 项目地址：湖南郴州##########开发商兴嘉地产 0753 2886789 航天品质铝材 LOW-",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -442,38 +669,11 @@
       ]
     },
     {
-      "id": "image_2338",
-      "file": "image_2338.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "service_ads_with_phone",
-      "what_is_pictured": "8810000 的网络出口在中 世界触手 站服务器在中国电 ### 天翼宽带 装电信百兆宽 看高清电视大 中国 宽带快装电 创建文明城市 建设美好仙 18458289994 美女少妇 时尚大片 精彩体育 时政要",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_2372",
-      "file": "image_2372.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "clinic_sign",
-      "what_is_pictured": "东湖风景朱铁生西医外科诊所 登记号:66349177942012017D2112 武汉中凯瓶装气供应站 ### 公共场所 请灭烟 小心碰头 请随手关门 135542274",
-      "must_have_in_scene_or_observation": [
-        "朱铁生",
-        "135542274"
-      ],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_2458",
-      "file": "image_2458.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2642",
+      "file": "image_2642.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "storefront_with_phone",
-      "what_is_pictured": "京味香酱饼 千层饼 鸡蛋饼 手抓饼 韭菜饼 包菜饼 南瓜饼 鸡柳卷 热狗卷 卤鸡蛋 牛奶饮料 袁市分店 # 湖北邦尔 13085136276 电话 电话：13385229849",
+      "what_is_pictured": "幼儿园 盛世龙腾 商贸有限公司 建材销售 金融理财 投资咨询 电话 3207999 戴经理 15671139111 地址 袁市集贸市场二楼 星吧台球会所 2F ### #",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -481,59 +681,11 @@
       ]
     },
     {
-      "id": "image_2696",
-      "file": "image_2696.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "school_ad_with_phone",
-      "what_is_pictured": "比亚教育 BEXONG 专注5岁-成人英语培训 地址：德政园中心花坛 复州花园北门第一排 电话：18995988846 #活健康 音艺术 丝笛萧主题专业连锁 ### 仙桃市育才幼儿园小",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_2852",
-      "file": "image_2852.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "神童口才 神童少儿口才教育 好口才的孩子赢天下 地址：复州花园北门向东100米 电话：18972170338",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_2905",
-      "file": "image_2905.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "店 萌乐园 少儿托管中心 UEDU.CC 专注少儿学后托管教育 学盟教育 www.xuedu.cc 全国 连锁 湖北省武汉市光谷分校 TEL：027-88185606 以人为本 # ### 上股交上市企业 代码：202702 幸福童年",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_2912",
-      "file": "image_2912.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "clinic_sign",
-      "what_is_pictured": "德帝实木全 书柜、酒窖、护墙板、办 0512-63127378 盛泽镇南环路金轮国 屋定制专家 公家具、卫生间隔断等 际家居广场2楼电话：0512-63972949",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_3030",
-      "file": "image_3030.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2833",
+      "file": "image_2833.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "recruit_ad_with_phone",
-      "what_is_pictured": "机动车车道 13098873188 招贤 纳士 食艺餐厅 因公司发展需要，现诚聘以下工作人员 联系方式：027-87658220 地址:洪山区民族路97号（湖北测绘二楼） 严禁入内 办公区域 概不入内 车位已满 外来车辆 ### 机动车通道",
+      "what_is_pictured": "韦亮记 中旅 绅宝驾校 承诺业内良心价 黄焖鸡米饭 全国加盟热线：400-096-8328 武汉加盟热线: 13971614340 18037806958 A110 光明 植物活力 维他奶 百事可乐 不涨价 驾培 一口价 湖北经视 招聘 洗",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -541,59 +693,11 @@
       ]
     },
     {
-      "id": "image_3097",
-      "file": "image_3097.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "school_ad_with_phone",
-      "what_is_pictured": "翰昌教育秋季小学课程简章 招生对象 班型 课时 学费 四年级 语文写作班 数学写作班 英语写作班 五年级 六年级 20课时 800元 初一学生 初二学生 数学同步班 英语同步班 语文同步班 物理同步班 1000元 详情请进校咨询 咨询电话：",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_3190",
-      "file": "image_3190.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "购铺正当时 8999000 8178777 8米超值店面 补贴契税.全城疯抢 返乡投资·一折起售 红叶广场 ### 89###",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_3285",
-      "file": "image_3285.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "吉房急售 复州花园黄金楼层低价急 售，3室2厅1厨1卫126 平，南北通透，家电齐全 有证！可过户！一套您看 了就想买的靠谱房，是您居 QQ：313521397 欢迎随时来电咨询看房 电话：15607225103 陈先生 家养育后代之绝选！",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_3408",
-      "file": "image_3408.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "school_ad_with_phone",
-      "what_is_pictured": "全省名校 街舞 爵士 民族舞 拉丁 芭蕾舞 现代舞 精舞门 国标舞学校 舞动 密码 13507225885 15871883584 高老师 田老师 （步行街校区）步行中街靠东桥第一个天桥处 地址:（车站校区）皇朝家居5楼跆拳道馆内",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_3534",
-      "file": "image_3534.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2885",
+      "file": "image_2885.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "service_ads_with_phone",
-      "what_is_pictured": "告 广埠屯社区服务点 防盗门锁芯升级 代购阴暗锁具 照相 广八路 112附1 金辉 玥玛金 脉动 统一 绿 富工 匙机 香 立东广告公众微信号 上二楼 ### 统一阿萨# 胖子急开锁换锁芯配钥匙 电话：15327192985 胖子开锁 网吧",
+      "what_is_pictured": "商务车出租 手机：13163277453(许) 承接学生搬家，飞机场 火车站，汽车站，旅游景点 院校等包车服务，长期有效",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -601,35 +705,11 @@
       ]
     },
     {
-      "id": "image_3673",
-      "file": "image_3673.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "clinic_sign",
-      "what_is_pictured": "逗乐堡 亲子早教课程 0至6岁 日托班 15人班 1.5至5岁 ### 地点：德政金园北 涓之蓝舞蹈 中国舞 爵士舞 芭蕾舞 民族舞 现代舞 北京舞蹈学院（仙桃地区）指定考点 中国舞蹈家协会教师培训基地 北京舞蹈学院中国舞教学基地 国际艺术",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_3968",
-      "file": "image_3968.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "8737 6717 老村长 LAOCUNZHANG 私募菜 VIP 会员储值卡开始办理啦！ 现只要现金储值达500元即可加入老村长私募会员大家庭，立享VIP待遇 实惠真真切切，看得见 即享 优惠 9折 超值 特价菜 生日当天到店 免费领取精",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_4012",
-      "file": "image_4012.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_2897",
+      "file": "image_2897.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "school_ad_with_phone",
-      "what_is_pictured": "主营 地址：郴州裕后街沿河六栋2-3楼 电话0735-8884338 企业内训 公考培训 文化沙龙 书画定制 名家字画 玉器根雕 奇木陶艺 古玩杂项 红木家俱 展览拍卖 美术培训 礼仪培训 www.zxsh001.com 加工 销售",
+      "what_is_pictured": "消火栓 FIRE HYDRANT 腾达 会计培训 电脑培训 大专本科学历 15982777778 ### 格力 联系电话 广播室信息中心 ##务站",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -637,11 +717,11 @@
       ]
     },
     {
-      "id": "image_4078",
-      "file": "image_4078.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_3309",
+      "file": "image_3309.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "restaurant_with_phone",
-      "what_is_pictured": "BULL公牛 明楚日杂店 30 珞珈山路 32 玉如意 放心豆芽 武汉市净菜上市工程 雅洁地毯 CW13-0138 信用借款 毛巾香皂大量批发 竹宝 ZhuBao 竹宝系列 可触摸的柔顺 不可复制的柔韧 28 插座专家与领导者 电话:878",
+      "what_is_pictured": "HOTLne 4006-151-561 4006-900-650 湖经店 黄焖鸡米饭 一道菜的餐厅 一只鸡的传说 Http://www.ymyhmj.com 订餐电话：18086503965 杨铭宇 全国加盟热线 R 5133 347806",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -649,11 +729,11 @@
       ]
     },
     {
-      "id": "image_4110",
-      "file": "image_4110.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_3411",
+      "file": "image_3411.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "storefront_with_phone",
-      "what_is_pictured": "红塔大道二段 HONG TA DA DAO ER DUAN 映像传媒 专业户外整体推广运营商 城区公交站台 路明导视牌 环保灯箱等 广告招商中。。。 招商电话：15882703983 ### 1月23日",
+      "what_is_pictured": "添彩文印 添彩文印 从未改名 十年老店仅此一家 门厂 15807177978 lea #务 #养卡 111180 #卡 67877577 拿东西到 隔壁彩票店 13545111008 1592737305# 18271400066 1534",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -661,11 +741,11 @@
       ]
     },
     {
-      "id": "image_430",
-      "file": "image_430.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
+      "id": "image_3441",
+      "file": "image_3441.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
       "category": "storefront_with_phone",
-      "what_is_pictured": "金谷鑫城 027-87807788 金谷 鑫城 享光谷荣誉 虎泉街 成熟社区 全路# ### 展 以诚信求# 地",
+      "what_is_pictured": "佳业围挡 提升福城形象 提升城市品位 共建美好郴城 13787770001 13973543335 民 共建美丽郴城 共创美好家园 共建美好福城 ###",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -673,107 +753,11 @@
       ]
     },
     {
-      "id": "image_4368",
-      "file": "image_4368.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "少儿托管中心 学盟教育 www.xuedu.cc 全国 连锁 湖北省武汉市光谷分校 TEL：027-88185606 萌乐园 上股交上市企业 代码：202702",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_4543",
-      "file": "image_4543.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "厂前钢材市场 15807116008 1359 袁# 【武汉】武汉市青山区友谊大道938号 #话：027-86372358 QQ：1149935513 网址：www.xtbef.com 【仙桃】仙 电话：072 QQ：12545 网址：ww",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_470",
-      "file": "image_470.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "shopping_mall_with_phone",
-      "what_is_pictured": "地址：上西街长城超市东方教育六楼 电话：26275533 18708283877",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_487",
-      "file": "image_487.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "钰竹 R 资阳市钰竹春茶厂 天然本色 自然出色 新茶上市 50g钰竹飘雪 20元/袋 100g茉莉毛尖 250g茉莉花茶 15元/袋 100g钰竹花毛峰 10元/袋 直销地址：火车站右下行100米 电话：13330684377 春茶厂 抵押",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_5021",
-      "file": "image_5021.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "沃德地产 加州阳光店 016 4栋1层 027-51233828",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_503",
-      "file": "image_503.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "山东荣成浩大石材 浩大 石材 联系人：潘峰 电话：13561835999 地址：山东荣成人和镇石材工业区 石岛红 皇室珍珠 皇室咖 紫晶钻 中国棕 荣成灰",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_5187",
-      "file": "image_5187.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "德玉 小学 高中 鹦鹉花园14栋 88188647 钟家村汉商写字楼904室 18986119227 559路 728路 职场定向培养 40080802 一对一 ### 武汉 84850000 友好医 内 城 医保定 子#犯罪的施设力电# ",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_5191",
-      "file": "image_5191.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "storefront_with_phone",
-      "what_is_pictured": "CITY SALON 都市沙龙潮雅男装 米隆步行街 南内20号 天时表 10元3双 15元2双 ### 3双 Venus 维纳斯整形 捷路直营店 零基础 六个月 NIKE 忘不了商务男装 地址:兴隆步行街南内20号 浦发银行 美白神器 20",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
-      "id": "image_5247",
-      "file": "image_5247.jpg",
-      "src": "scale_fixtures.py auto-scale conf=1.000",
-      "category": "school_ad_with_phone",
-      "what_is_pictured": "惊喜送不停 名师 授课 精品 小班 精准 1对1 快速提高 提高 前五十名更有豪礼相送 易佳教育 易 北京易佳 仙桃分 地址：复州花园北门斜对 电话：13872987797 13429993993 微信：jinkoucai201208 QQ",
+      "id": "image_3597",
+      "file": "image_3597.jpg",
+      "src": "scale_fixtures.py auto-scale conf=0.800",
+      "category": "classified_ads_with_phone",
+      "what_is_pictured": "过桥米线 东北 水饺 18163557770 二手设备 整体 迅速腾空 委托 15527717744 三星门厂 订做维修 87385900 86627789 52345544 87406170 1500216##",
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "phone",
       "expected_actions": [
@@ -788,8 +772,6 @@
     "auto_scaled_count": 40,
     "regex": "1[3-9]\\d{9}|0\\d{2,3}[\\s-]?\\d{7,8}",
     "fallback_category": "storefront_with_phone",
-    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
-    "hand_curated_count": 7,
-    "last_curated": "2026-07-12"
+    "note": "Auto-scaled from 20 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
   }
 }
