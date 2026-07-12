@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "threshold": 0.05,
+    "threshold_rationale": "±0.03 typical 20-fixture LLM variance; 0.05 catches true regressions without false-positive noise. See [[feedback-529-contamination-awareness]] for variance bands.",
+    "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
+    "image_dir": "/home/oppry/RCTW-171/train_images",
+    "last_updated": "2026-07-12",
+    "last_updated_commit": "fc1cae2"
+  },
+  "suites": [
+    {
+      "name": "phone_20",
+      "baseline": 0.9575,
+      "gt": "profiling/ground_truth_phone_20.json",
+      "limit": 20,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "656aed1",
+      "note": "post Pass 1b' (LANDLINE) + Phase H ship — history-high"
+    },
+    {
+      "name": "pii_20",
+      "baseline": 0.9788,
+      "gt": "profiling/ground_truth_pii20.json",
+      "limit": 20,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "fc1cae2",
+      "note": "post Phase H v2 cumulative — history-high"
+    },
+    {
+      "name": "direction_arrow_20",
+      "baseline": 0.9850,
+      "gt": "profiling/ground_truth_direction_arrow_20.json",
+      "limit": 20,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "6f0cd1b",
+      "note": "Phase H v2 — DIRECTION_ARROW regex loosened + Pass 11 real_estate guard"
+    },
+    {
+      "name": "phaseG_15",
+      "baseline": 0.973,
+      "gt": "profiling/ground_truth_phaseG_15.json",
+      "limit": 15,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "f7345dc",
+      "note": "Phase G mini-suite — warning/menu/hours intents"
+    },
+    {
+      "name": "rctw_20_sanity",
+      "baseline": 0.9202,
+      "gt": "profiling/ground_truth_100.json",
+      "limit": 20,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "bfd7a47",
+      "note": "RCTW @20 sanity — bounded by historical 0.92 ceiling; all-info expected_actions"
+    }
+  ]
+}
