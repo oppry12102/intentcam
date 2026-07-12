@@ -173,11 +173,15 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "open_in_maps",
         label = "在地图中打开",
         iconKey = "map",
-        applicableIntents = setOf("location"),
+        applicableIntents = setOf("location", "route_to"),
         body = { _, bubble, _ ->
             // Query = the user's intent (动宾短语) if present, else
             // the scene description.  Maps app will resolve however
             // it's configured (geocode search vs literal match).
+            // [2026-07-12 Phase H] Also serves `route_to` bubbles —
+            // the same geo: URI maps-app-launch covers both "find
+            // this place" and "navigate to this place"; differs in
+            // intent classification only.  See IntentVerifier Pass 11.
             val query = bubble.title.takeIf { it.isNotBlank() }
                 ?: bubble.detail.take(40).ifBlank { "附近" }
             val intent = android.content.Intent(

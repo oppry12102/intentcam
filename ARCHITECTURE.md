@@ -740,6 +740,7 @@ intents (dial / share sheet) are Android-platform-specific
 | `warning_safety` | OBSERVE | 警示: 请勿/禁止/警告/危险/注意 |
 | `menu_food` | OBSERVE | 菜单: 菜品/套餐/招牌菜/主厨推荐/价格表 |
 | `hours_schedule` | OBSERVE | 营业时间: 营业中/HH:MM-HH:MM/营业时段 |
+| `route_to` | OBSERVE | 导航: 箭头/方位词/步行 N 米/步行 N 分钟/前方/出口/入口 |
 
 **Family equivalence** (scoring): same family → 1.0;
 cross-family (OBSERVE↔ACT_ON) → 0.5; empty → 0.0.  v1.3's A2
@@ -815,6 +816,7 @@ auto-injection path adds actions).
 | 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
 | **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c)** | Final safety net for landline + service lines |
 | 1b' | `location` → `phone` | `LANDLINE` | **(a) SHIPPED** | Promoted from stub; post-guard (a) single-var test rescued post-guard (c)'s -0.026 phone_20 regression. Verified @20: 0.9081 → **0.9450 (+0.0369 net, 6 lifts / 1 drop bounded)**. Post-guard (c) kept as defense-in-depth. |
+| 11 | `info`/`location` → `route_to` | `DIRECTION_ARROW` | **H** | New direction_arrow regex. Targets RCTW's largest untapped cluster (895 imgs, 11.1%). Action reuses `open_in_maps` (no new ActionDef). |
 
 **Pass ordering** (`IntentVerifier.kt` body): 1-1e run on
 `location` source first, 2-10 on `info` source, Pass 7 last
@@ -846,6 +848,7 @@ use for additive injection:
 "warning_safety"     -> "copy_warning"
 "menu_food"          -> "copy_menu"
 "hours_schedule"     -> "copy_hours"
+"route_to"           -> "open_in_maps"   // [Phase H] reuses existing action
 // "info", "solve" -> null (no canonical action; view_details is implicit)
 ```
 
@@ -940,6 +943,8 @@ side doesn't:
 | C3 v3 — prompt table | 2026-07-11 | type→action table 6→9 rows | pii_20 +0.015 |
 | G — 3 OBSERVE | 2026-07-12 | warning / menu / hours + verifier Pass 8/9/10 + post-guard | Phase G 15-fixture 0.973 |
 | GT schema dual-read | 2026-07-12 | EvalRunner reads expected_top_intent_type | pii_20 +0.0837 cumulative |
+| post-guard option (a) — Pass 1b' | 2026-07-12 | LANDLINE in Pass 1 (was stub) | phone_20 0.9081 → **0.9450 (+0.037)** |
+| H — `route_to` (architecture) | 2026-07-12 | new direction_arrow intent + Verifier Pass 11 + open_in_maps.applicableIntents widens + C3 v3 row 10→11 | (fixtures PENDING — pure add, regression risk LOW) |
 
 **Why this stays plumbing-only** (per `eval-type-guide-D1-
 rejected-2026-07-11.md`): the verifier changes `bubble.type`

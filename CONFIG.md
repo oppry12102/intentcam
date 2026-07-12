@@ -193,6 +193,7 @@ register in BOTH registries + update three lockstep sites
 | `warning_safety` | OBSERVE | 警示 | 警示: 请勿/禁止/警告/危险/注意 | G (2026-07-12) |
 | `menu_food` | OBSERVE | 菜单 | 菜单: 菜品/套餐/招牌菜/主厨推荐/价格表 | G (2026-07-12) |
 | `hours_schedule` | OBSERVE | 营业 | 营业时间: 营业中/HH:MM-HH:MM/营业时段 | G (2026-07-12) |
+| `route_to` | OBSERVE | 导航 | 导航: 箭头/方位词/步行 N 米/步行 N 分钟/前方/出口/入口 标记 | **H (2026-07-12)** |
 
 **Family equivalence** (`EvalRunner.kt:413-433`): same family →
 1.0; cross-family (OBSERVE↔ACT_ON) → 0.5; empty → 0.0.
@@ -271,6 +272,8 @@ actions).
 | 1 | `location` → `phone` | `MOBILE = 1[3-9]\d{9}` | E (2026-07-11) | Strongest signal; cell on storefronts |
 | 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
 | 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **post-guard option (a) test (2026-07-12)** | Stub-only since F2 reject; rescued image_1359 (027-87875310) when post-guard option (c) couldn't reach `location` source. Single-var fix. |
+| 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
+| 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **post-guard option (a) test (2026-07-12)** | Stub-only since F2 reject; rescued image_1359 (027-87875310) when post-guard option (c) couldn't reach `location` source. Single-var fix. |
 | 1c | `location` → `real_estate_rental` | `REAL_ESTATE` | **F (2026-07-11)** | Location + 房源 keyword |
 | 1d | `location` → `recruit_hiring` | `RECRUIT` | F | Location + 招聘 keyword |
 | 1e | `location` → `id_document` | `ID_DOCUMENT` | F | Location + 证照 keyword |
@@ -285,6 +288,7 @@ actions).
 | 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
 | **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c, 2026-07-12)** | Final safety net for landline + service lines. LANDLINE regex activated here (was stub-only since Phase F2 reject). |
 | 1b' | `location` → `phone` | `LANDLINE` | **post-guard (option a) SHIPPED 2026-07-12** | Promoted from stub. Single-var rescue for image_1359 et al. when LLM emits `location` source + landline corpus. Verified @20 phone_20 0.9081 → **0.9450 (+0.0369 net)**. Post-guard (c) kept as defense-in-depth. |
+| 11 | `info`/`location` → `route_to` | `DIRECTION_ARROW` | **H (2026-07-12)** | New direction_arrow regex: arrows / 方位词 / 距离短语 / 出口-入口+方位. Targets RCTW's largest untapped cluster (895 images, 11.1%). Action reuses `open_in_maps` (Pass 11 maps `route_to` → `open_in_maps`). |
 
 **Regex anchors** (`IntentVerifier.kt` line numbers): `MOBILE`
 43, `LANDLINE` 102, `REAL_ESTATE` 73, `WARNING` 84, `MENU` 85,
@@ -322,6 +326,7 @@ fun actionFor(type: String): String? = when (type) {
     "warning_safety"      -> "copy_warning"
     "menu_food"           -> "copy_menu"
     "hours_schedule"      -> "copy_hours"
+    "route_to"            -> "open_in_maps"   // [Phase H] reuses existing action
     else                  -> null   // "info", "solve" — no canonical action
 }
 ```

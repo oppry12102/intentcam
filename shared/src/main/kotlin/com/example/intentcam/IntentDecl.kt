@@ -179,6 +179,25 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "营业时间：营业中 / HH:MM-HH:MM / 营业时段 / 周一至周日",
         family = IntentFamily.OBSERVE,
     ))
+    // [2026-07-12] Phase H: `route_to` — directions / wayfinding
+    //  signal on a sign or in OCR text.  895 RCTW images in the
+    //  `direction_arrow` cluster (#2 after location), the largest
+    //  untapped group in the corpus.  Maps to the existing
+    //  `open_in_maps` action (open InMaps via geo: URI) so no new
+    //  ActionDef is needed — only `open_in_maps.applicableIntents`
+    //  widens to include this id (single line edit, lockstep-safe).
+    //  Family OBSERVE: user wants to know how to GET to a place /
+    //  follow the arrow / walk the route; not pure-dial or
+    //  pure-locate.  The `location` family-equivalence (1.0 vs
+    //  `info`) still applies: a sign with both directions + landmark
+    //  name should interchangeably score against `info` or
+    //  `route_to` (Phase F invariant).
+    reg.register(IntentDecl(
+        id = "route_to",
+        label = "导航",
+        llmHint = "导航：箭头 / 方位词 / 步行 N 米 / 步行 N 分钟 / 前方/出口/入口 标记",
+        family = IntentFamily.OBSERVE,
+    ))
 }
 
 /**

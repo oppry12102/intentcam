@@ -76,6 +76,22 @@ object IntentVerifier {
      *  one thing in the Chinese scene-text distribution. */
     private val ID_DOCUMENT = Regex("""(?:身份证|居民身份证|营业执照|登记号|统一社会信用代码|工商注册号)""")
 
+    /** Direction-arrow / wayfinding signal — captures arrows
+     *  (→←↑↓⬆⬇➡⬅), Chinese 方位词 (左转/右转/直走/前方向后/...), 距离词
+     *  with N unit (步行 N 米 / 公里 / 分钟), or destination markers
+     *  (出口 / 入口 / 火车站 / 机场).  Targets the `route_to`
+     *  intent (Phase H, 2026-07-12).  Tuned conservatively — pure
+     *  arrow characters won't fire (avoid false-positive on
+     *  arrow-as-decoration in 装饰海报), only arrow + (方位 OR
+     *  距离 OR 目的地) combo fires. */
+    private val DIRECTION_ARROW = Regex(
+        """[→←↑↓⬆⬇➡⬅🔼🔽]""" +                       // arrow char (alone ok if paired with below)
+        """|(?:向左|向右|向前|向后|往[东南西北])""" +      // 方位前缀词
+        """|(?:左转|右转|直走|直行|左拐|右拐|前行)""" +    // 方位动词
+        """|(?:步行|走).{0,4}(?:米|公里|分钟|分|步)""" +  // 距离短语
+        """|.{0,10}(?:出口|入口).{0,6}(?:左|右|直|前|后)"""  // 出口/入口 + 方位
+    )
+
     // [2026-07-12] Phase G — high-signal observe-only markers.
     //  Each is intentionally tight (rare false positives in scene-
     //  text distribution) so the verifier can flip `info` →
@@ -167,6 +183,12 @@ object IntentVerifier {
         "warning_safety"      -> "copy_warning"
         "menu_food"           -> "copy_menu"
         "hours_schedule"      -> "copy_hours"
+        // [2026-07-12] Phase H — route_to maps to the existing
+        //  open_in_maps action (geo: URI is the same surface; the
+        //  distinction is intent classification only).  This is the
+        //  canonical 3-register lockstep site (mirrors ActionDecl +
+        //  EvalRunner).  No new action needed.
+        "route_to"            -> "open_in_maps"
         else                  -> null   // info / solve — no action
     }
 
@@ -280,6 +302,21 @@ object IntentVerifier {
             && (HOURS.containsMatchIn(corpus) || HOUR_PATTERN.containsMatchIn(corpus))
         ) {
             return "hours_schedule"
+        }
+        // Pass 11 (Phase H, 2026-07-12): info | location +
+        //  DIRECTION_ARROW → route_to.  Catches arrows (→←↑↓⬆⬇),
+        //  方位词 (向前/向后/左转/右转/直走), 距离短语 (步行 N 米 /
+        //  公里 / 分钟), and 出口/入口 + 方位 pair.  Targets the
+        //  largest untapped RCTW cluster (direction_arrow: 895
+        //  images, 11.1% of corpus).  Ordered AFTER Pass 10 because
+        //  some hours+direction storefronts (e.g. "营业至 22:00 出口
+        //  右转 50米") can satisfy either regex; route_to is the
+        //  narrower intent here — only flip if HOURS didn't already
+        //  fire (above).  Pure add — never blocks an earlier pass.
+        if ((currentType == "info" || currentType == "location")
+            && DIRECTION_ARROW.containsMatchIn(corpus)
+        ) {
+            return "route_to"
         }
         // Pass 7 (E3, 2026-07-11): real_estate_rental + mobile, but no
         //  real-estate signal → phone.  Catches image_1216 (电动车商铺
