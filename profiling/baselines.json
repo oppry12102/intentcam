@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-12",
-    "last_updated_commit": "4e97879"
+    "last_updated_commit": "d2d36e3"
   },
   "suites": [
     {
@@ -77,6 +77,16 @@
       "quality": 90,
       "baseline_commit": "4e97879",
       "note": "35-fixture scaled suite (corpus-limited; real_estate_rental cluster only 131 imgs after dedup) — 20 seed + 15 auto-scaled; 7 hand-curated; Δ -0.0113 vs pii_20 0.9788, within noise"
+    },
+    {
+      "name": "direction_arrow_60",
+      "baseline": 0.9337,
+      "gt": "profiling/ground_truth_direction_arrow_60.json",
+      "limit": 54,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "d2d36e3",
+      "note": "54-fixture scaled suite — 20 seed + 34 auto-scaled; 7 hand-curated. 2 API errors in v1 run (image_7162 90s timeout + image_3798 HTTP 500 sensitive-image); 52-fixture clean composite = 0.9549; full 54-fixture = 0.9337 (Δ -0.021 from contamination). Threshold band [0.88, 0.98]."
     }
   ]
 }
