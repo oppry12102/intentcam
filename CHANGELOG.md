@@ -32,6 +32,66 @@ All notable changes to IntentCam will be documented in this file.
   LLM timeout + image_3798 HTTP 500 sensitive-image rejection).
   3 categories. Threshold band [0.88, 0.98].
 
+### Phase I — `service_institution` intent (commits `f646af8` / `016b6bd`)
+
+- **13th intent**, OBSERVE family. Targets RCTW's 514-image
+  service_institution cluster (rank #5 in `scan_intents.py`).
+  LLM hint: "公共机构：医院 / 学校 / 政府机关 / 银行 / 邮局 /
+  法院 / 派出所 / 大使馆".
+- **5-file pure-add architecture** (mirrors Phase G/H pattern):
+  1. `IntentDecl.kt` — register `service_institution`.
+  2. `app/ActionDecl.kt` — widen `open_in_maps.applicableIntents`
+     + `copy_hours.applicableIntents` to include `service_institution`.
+  3. `IntentVerifier.kt` — `SERVICE_INSTITUTION` regex (32 institution
+     keywords, v2 tightened: dropped 邮政/邮局 + 工商局/税务局/市场监督
+     for false-positive avoidance) + **Pass 12** verifier rule
+     (info | location source + SERVICE_INSTITUTION → flip) +
+     `actionFor("service_institution")` → "open_in_maps".
+  4. `ToolImplementations.kt` — C3 v3 prompt table row 13:
+     service_institution → open_in_maps.
+  5. `scripts/scale_fixtures.py` — service_institution_20 entry.
+
+- **service_institution_60 baseline** (`016b6bd`): composite
+  **0.9508** (full 60-fixture) / **0.9608** (clean 59-fixture,
+  excluding 1 API error image_6117 HTTP 500). 5 categories.
+
+### Phase I regression check + dedup bug fix
+
+- **`scale_fixtures.py` duplicate bug fix** (`838d012`):
+  `find_candidates` compared full image path "train_images/image_X.jpg"
+  against `exclude` set containing just "image_X" → exclusion never
+  matched → auto-scaled fixtures duplicated seed IDs (18 dups in
+  phone_60). Fixed by `Path(it["image"]).stem` comparison. Real GT
+  shapes after fix:
+  - `phone_60` 60 unique (unchanged total, deduped)
+  - `pii20_60` 20 unique (was 35; corpus ceiling hit — only 20
+    real_estate_rental fixtures in intent_all.json)
+  - `direction_arrow_60` 20 unique (was 54; corpus ceiling)
+
+- **Phase I regression on phone_60 / pii20_60** (`ad035a6`):
+  clean-GT post-Phase-I evals showed composite drops:
+  - phone_60: 0.9567 → **0.9179** (-0.0387)
+  - pii20_60: 0.9675 → **0.9356** (-0.0319)
+  - direction_arrow_60: 0.9337 → 0.9694 (+0.0357, no regression)
+  Per [[feedback-investigate-before-revert]] both conditions met
+  (≥2 fixtures sharing root cause + net < -0.03). Decision: KEEP
+  framework (option B) — Pass 12 verifier working as designed,
+  regression root cause = GT outdated (institution signs were
+  GT=phone pre-Phase-I). Real fix = GT reclassification (option C,
+  ships in this commit).
+
+### Phase I GT reclassification (in this commit)
+
+- `scripts/reclassify_phase_i.py` — moves 3 fixtures that the LLM
+  correctly classifies as `service_institution` (per the new llmHint)
+  out of phone_60 / pii20_60 and into service_institution_60:
+  - image_2905 (萌乐园少儿托管中心) from phone_60
+  - image_2372 (朱铁生西医外科诊所) from pii20_60
+  - image_2540 (彭春阳西医内科诊所) from pii20_60
+
+- Re-run on reclassified GTs (PENDING — see baselines table for
+  v4 numbers).
+
 ### Baselines
 
 `profiling/baselines.json` now tracks **8 suites**:

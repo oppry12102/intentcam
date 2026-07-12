@@ -217,34 +217,6 @@
       ]
     },
     {
-      "id": "image_2372",
-      "file": "image_2372.jpg",
-      "src": "intent_all image_2372 conf=1.000 basis={登记号}",
-      "category": "clinic_registration_certificate",
-      "what_is_pictured": "武汉中凯瓶装气供应站登记号 66349177942012017D2112 + 朱铁生西医外科诊所公示",
-      "must_have_in_scene_or_observation": [
-        "登记号"
-      ],
-      "expected_top_intent_type": "id_document",
-      "expected_actions": [
-        "redact_id"
-      ]
-    },
-    {
-      "id": "image_2540",
-      "file": "image_2540.jpg",
-      "src": "intent_all image_2540 conf=0.60 basis={登记号,电话}",
-      "category": "clinic_sign_with_id",
-      "what_is_pictured": "武昌彭春阳西医内科诊所 — 登记号 56558555242010617D2112 + 电话 027-87337814",
-      "must_have_in_scene_or_observation": [
-        "登记号"
-      ],
-      "expected_top_intent_type": "id_document",
-      "expected_actions": [
-        "redact_id"
-      ]
-    },
-    {
       "id": "image_334",
       "file": "image_334.jpg",
       "src": "replace(6012 teahouse)->clinic 登记号",

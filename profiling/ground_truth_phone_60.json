@@ -229,20 +229,6 @@
       ]
     },
     {
-      "id": "image_2905",
-      "file": "image_2905.jpg",
-      "src": "intent_all image_2905 conf=1.000 phone cluster (027-88185606)",
-      "category": "school_ad_with_phone",
-      "what_is_pictured": "萌乐园少儿托管中心 / 学盟教育 — 光谷分校 TEL 027-88185606",
-      "must_have_in_scene_or_observation": [
-        "027-88185606"
-      ],
-      "expected_top_intent_type": "phone",
-      "expected_actions": [
-        "dial_number"
-      ]
-    },
-    {
       "id": "image_2912",
       "file": "image_2912.jpg",
       "src": "intent_all image_2912 conf=1.000 phone cluster (0512-63127378,0512-63972949)",

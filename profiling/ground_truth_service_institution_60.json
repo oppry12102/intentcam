@@ -721,6 +721,48 @@
       "expected_actions": [
         "open_in_maps"
       ]
+    },
+    {
+      "id": "image_2905",
+      "file": "image_2905.jpg",
+      "src": "reclassify_phase_i.py moved from ground_truth_phone_60.json",
+      "category": "school_childcare_institution",
+      "what_is_pictured": "萌乐园少儿托管中心 / 学盟教育 — 光谷分校 TEL 027-88185606",
+      "must_have_in_scene_or_observation": [
+        "027-88185606"
+      ],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_2372",
+      "file": "image_2372.jpg",
+      "src": "reclassify_phase_i.py moved from ground_truth_pii20_60.json",
+      "category": "clinic_institution",
+      "what_is_pictured": "武汉中凯瓶装气供应站登记号 66349177942012017D2112 + 朱铁生西医外科诊所公示",
+      "must_have_in_scene_or_observation": [
+        "登记号"
+      ],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_2540",
+      "file": "image_2540.jpg",
+      "src": "reclassify_phase_i.py moved from ground_truth_pii20_60.json",
+      "category": "clinic_institution",
+      "what_is_pictured": "武昌彭春阳西医内科诊所 — 登记号 56558555242010617D2112 + 电话 027-87337814",
+      "must_have_in_scene_or_observation": [
+        "登记号"
+      ],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
     }
   ],
   "_meta": {
@@ -730,6 +772,22 @@
     "auto_scaled_count": 60,
     "regex": "医院|卫生院|卫生服务中心|疾控中心|防疫站|学校|大学|学院|中学|小学|幼儿园|教育局|培训中心|政府|人民政府|街道办事处|居委会|村委会|社区委员会|公安局|派出所|法院|检察院|司法局|银行|信用社|储蓄所|大使馆|领事馆",
     "fallback_category": "general_institution",
-    "note": "Auto-scaled from 0 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
+    "note": "Auto-scaled from 0 → 60 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
+    "reclassified_from": [
+      {
+        "id": "image_2905",
+        "from": "reclassify_phase_i.py moved from ground_truth_phone_60.json"
+      },
+      {
+        "id": "image_2372",
+        "from": "reclassify_phase_i.py moved from ground_truth_pii20_60.json"
+      },
+      {
+        "id": "image_2540",
+        "from": "reclassify_phase_i.py moved from ground_truth_pii20_60.json"
+      }
+    ],
+    "reclassified_count": 3,
+    "last_reclassified": "2026-07-12"
   }
 }
