@@ -173,7 +173,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "open_in_maps",
         label = "在地图中打开",
         iconKey = "map",
-        applicableIntents = setOf("location", "route_to"),
+        applicableIntents = setOf("location", "route_to", "service_institution"),
         body = { _, bubble, _ ->
             // Query = the user's intent (动宾短语) if present, else
             // the scene description.  Maps app will resolve however
@@ -401,7 +401,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "copy_hours",
         label = "复制营业时间",
         iconKey = "schedule",
-        applicableIntents = setOf("hours_schedule"),
+        applicableIntents = setOf("hours_schedule", "service_institution"),
         body = { _, bubble, _ ->
             val payload = buildString {
                 append(bubble.title.takeIf { it.isNotBlank() } ?: "营业时间")

@@ -198,6 +198,22 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "导航：箭头 / 方位词 / 步行 N 米 / 步行 N 分钟 / 前方/出口/入口 标记",
         family = IntentFamily.OBSERVE,
     ))
+    // [2026-07-12] Phase I — `service_institution`: public-service
+    //  institution sign (医院 / 学校 / 政府机关 / 银行 / 邮局 / 法院 /
+    //  派出所 etc.).  Target cluster = 514 images / 6.4% of RCTW corpus
+    //  (rank #5 in `scan_intents.py`).  Family OBSERVE — user wants
+    //  to identify / locate the institution, not dial or purchase.
+    //  Maps to the existing `open_in_maps` action (geo: URI is the
+    //  same surface as `location`/`route_to`); `copy_hours` widens
+    //  too so institution signs carrying 营业时间 still get the
+    //  share-sheet chip.  Single canonical action = `open_in_maps`
+    //  (primary need); verifier injects if LLM missed it.
+    reg.register(IntentDecl(
+        id = "service_institution",
+        label = "机构",
+        llmHint = "公共机构：医院 / 学校 / 政府机关 / 银行 / 邮局 / 法院 / 派出所 / 大使馆",
+        family = IntentFamily.OBSERVE,
+    ))
 }
 
 /**

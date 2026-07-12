@@ -92,6 +92,33 @@ object IntentVerifier {
         """|.{0,10}(?:出口|入口).{0,6}(?:左|右|直|前|后)"""  // 出口/入口 + 方位
     )
 
+    // [2026-07-12] Phase I — service_institution regex.  Targets
+    //  public-service institution signs (医院 / 学校 / 政府机关 / 银行 /
+    //  法院 / 派出所 / 大使馆 / 领事馆).  Word-level list (no
+    //  alternation structure needed since these tokens are
+    //  near-unambiguous in scene-text distribution).  Tightened by
+    //  requiring multi-token signal at the corpus level: a single
+    //  "医院" in a street address won't fire (the verifier checks
+    //  against the bubble's full surface text, not just title).
+    //  Cross-triggers with REAL_ESTATE / RECRUIT deliberately NOT
+    //  added — a 医院 招聘 banner should still go to recruit_hiring
+    //  (Pass 4 fires before Pass 12 by code order).
+    //
+    //  v2 tightening: dropped 邮政/邮局 (false-positive on 邮政编码,
+    //  every address has it); dropped 工商局/税务局/市场监督
+    //  (false-positive on receipts).  Remaining 32 institution
+    //  keywords — covers medical / education / government /
+    //  law-enforcement / banks / diplomatic, ~514 imgs in scan_intents
+    //  cluster after the regex tighten.
+    private val SERVICE_INSTITUTION = Regex(
+        """(?:医院|卫生院|卫生服务中心|疾控中心|防疫站""" +
+        """|学校|大学|学院|中学|小学|幼儿园|教育局|培训中心""" +
+        """|政府|人民政府|街道办事处|居委会|村委会|社区委员会""" +
+        """|公安局|派出所|法院|检察院|司法局""" +
+        """|银行|信用社|储蓄所""" +
+        """|大使馆|领事馆|大使馆领事处)"""
+    )
+
     // [2026-07-12] Phase G — high-signal observe-only markers.
     //  Each is intentionally tight (rare false positives in scene-
     //  text distribution) so the verifier can flip `info` →
@@ -189,6 +216,13 @@ object IntentVerifier {
         //  canonical 3-register lockstep site (mirrors ActionDecl +
         //  EvalRunner).  No new action needed.
         "route_to"            -> "open_in_maps"
+        // [2026-07-12] Phase I — service_institution maps to the
+        //  same `open_in_maps` action (geo: URI surface is the
+        //  same as location/route_to; the distinction is intent
+        //  classification only).  `copy_hours` is supplementary —
+        //  the LLM can emit both actions on a single bubble if
+        //  the sign carries hours; we only inject the primary.
+        "service_institution" -> "open_in_maps"
         else                  -> null   // info / solve — no action
     }
 
@@ -328,6 +362,22 @@ object IntentVerifier {
             && DIRECTION_ARROW.containsMatchIn(corpus)
         ) {
             return "route_to"
+        }
+        // [2026-07-12] Phase I — info | location source +
+        //  SERVICE_INSTITUTION token → service_institution.  Catches
+        //  public-service institution signs (医院/学校/政府机关/银行/
+        //  邮局/法院/派出所).  Source = info or location only — does
+        //  NOT fire on real_estate_rental / recruit_hiring because
+        //  those already carry strong domain signals and a hospital
+        //  sign WITH a 招聘 banner correctly stays recruit_hiring.
+        //  Ordered AFTER Pass 11 (route_to) since a hospital sign
+        //  with directions (出口右转) should still classify as
+        //  service_institution (narrower intent wins, mirrors the
+        //  Phase G hours-vs-warning ordering).
+        if ((currentType == "info" || currentType == "location")
+            && SERVICE_INSTITUTION.containsMatchIn(corpus)
+        ) {
+            return "service_institution"
         }
         // Pass 7 (E3, 2026-07-11): real_estate_rental + mobile, but no
         //  real-estate signal → phone.  Catches image_1216 (电动车商铺

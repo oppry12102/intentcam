@@ -350,7 +350,7 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                 "**details** 字段（**重要**）：图里每一处独立的文字/数字/品牌/日期/价格都要有一行，" +
                 "value 写逐字原文（勿意译、勿概括）。图里有文字却 details 为空 = 没完成任务。" +
                 "**confidence** 字段：0.0~1.0 的置信度。" +
-                "**action_ids** 字段：**默认应填**，并且按 type 强制映射 — phone → **dial_number**；real_estate_rental → **copy_listing**；recruit_hiring → **save_posting**；id_document → **redact_id**；payment_qr → **scan_to_pay**；location → **open_in_maps**；warning_safety → **copy_warning**；menu_food → **copy_menu**；hours_schedule → **copy_hours**；route_to → **open_in_maps**（上述映射的 id 必填，可再叠加 view_details 等通用 id）。把你认为对当前 bubble 有用的 chip id 列出来（系统提示里 actions ∈ {...} 的子集）。" +
+                "**action_ids** 字段：**默认应填**，并且按 type 强制映射 — phone → **dial_number**；real_estate_rental → **copy_listing**；recruit_hiring → **save_posting**；id_document → **redact_id**；payment_qr → **scan_to_pay**；location → **open_in_maps**；warning_safety → **copy_warning**；menu_food → **copy_menu**；hours_schedule → **copy_hours**；route_to → **open_in_maps**；service_institution → **open_in_maps**（上述映射的 id 必填，可再叠加 view_details 等通用 id）。把你认为对当前 bubble 有用的 chip id 列出来（系统提示里 actions ∈ {...} 的子集）。" +
                 "只有当你判断「这个 bubble 完全不需要任何 chip」（最常见：纯文字 type=info 的描述，如" +
                 "读一条不带联系方式 / 地址 / 价格 / 时间的签名）→ 留空 `[]`。" +
                 "其余 case 都应填至少 1 个。" +
