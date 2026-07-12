@@ -76,6 +76,21 @@ object IntentVerifier {
      *  one thing in the Chinese scene-text distribution. */
     private val ID_DOCUMENT = Regex("""(?:身份证|居民身份证|营业执照|登记号|统一社会信用代码|工商注册号)""")
 
+    // [2026-07-12] Phase G — high-signal observe-only markers.
+    //  Each is intentionally tight (rare false positives in scene-
+    //  text distribution) so the verifier can flip `info` →
+    //  specialized intent without over-triggering on incidental
+    //  mentions.  Mirror scan_intents.py cluster definitions.
+    private val WARNING = Regex("""(?:请勿|禁止|警告|严禁|违禁|高危|危险|注意|小心|当心|触电|高压|易燃|易爆|剧毒|辐射|严禁烟火|当心触电|注意安全|禁止入内|禁止通行|高压危险|小心地滑)""")
+    private val MENU = Regex("""(?:菜单|菜谱|菜品|招牌菜|主厨推荐|今日特价|主菜|配菜|汤品|甜品|主推|套餐价|今日菜单|厨师推荐)""")
+    /** Hours — matches both time-pattern style ("9:00-22:00", "09:00 至
+     *  21:30") and chinese-keyword style ("营业时间", "营业中").  The
+     *  HOUR_PATTERN half covers 24h clock (with optional minute) and
+     *  上下午 prefixes.  Keyword list is deliberately narrow — generic
+     *  "营业" alone is too noisy (shows up on half the storefronts). */
+    private val HOUR_PATTERN = Regex("""(?:\d{1,2}:\d{2}\s*[-—~至]\s*\d{1,2}:\d{2}|[上中下]午\d{1,2}[点:：]\d{0,2}|周一至周日|周一至周五|周一至周[日六])""")
+    private val HOURS = Regex("""(?:营业时间|营业中|开张营业|打烊|店休|休业|暂停营业|营业时段|营业|开门|关门|停止营业|今日营业|24小时营业)""")
+
     /** Chinese landline (area code 3-4 + 7-8 digits, hyphenated
      *  or not).  Separated from MOBILE because landlines more
      *  often live on "store backdrops" alongside addresses —
@@ -145,6 +160,10 @@ object IntentVerifier {
         "recruit_hiring"      -> "save_posting"
         "payment_qr"          -> "scan_to_pay"
         "id_document"         -> "redact_id"
+        // [2026-07-12] Phase G — high-value observe intents with copy-style actions.
+        "warning_safety"      -> "copy_warning"
+        "menu_food"           -> "copy_menu"
+        "hours_schedule"      -> "copy_hours"
         else                  -> null   // info / solve — no action
     }
 
@@ -220,6 +239,33 @@ object IntentVerifier {
         if (currentType == "info" && ID_DOCUMENT.containsMatchIn(corpus)) {
             return "id_document"
         }
+        // [2026-07-12] Phase G — info + observe-intent markers
+        //  → specialized type.  Ordered after the PII-flip rules
+        //  (Pass 1c-1e pre-empt earlier, Pass 4-6 right above) so a
+        //  a phone/payment-qr real-estate ad still wins over a
+        //  warning-style poster; only flips when no PII signal.
+        // Pass 8: info + warning / safety token → warning_safety.
+        //  请勿 / 禁止 / 警告 / 危险 are unambiguous in the safety
+        //  sign distribution.  Ordering before menu/hours because
+        //  warning signs sometimes carry "营业" incidentally (e.g.
+        //  "营业场所 禁止吸烟") — pass 8 fires first.
+        if (currentType == "info" && WARNING.containsMatchIn(corpus)) {
+            return "warning_safety"
+        }
+        // Pass 9: info + menu / dish keywords → menu_food.  菜单 /
+        //  招牌菜 / 主厨推荐 are restaurant-specific.
+        if (currentType == "info" && MENU.containsMatchIn(corpus)) {
+            return "menu_food"
+        }
+        // Pass 10: info + hours keywords OR time pattern →
+        //  hours_schedule.  Either HOURS regex (营业中 / 打烊 /
+        //  营业时间) or HOUR_PATTERN (HH:MM-HH:MM, 上下午H) suffices
+        //  — storefront signs often have one but not both.
+        if (currentType == "info"
+            && (HOURS.containsMatchIn(corpus) || HOUR_PATTERN.containsMatchIn(corpus))
+        ) {
+            return "hours_schedule"
+        }
         // Pass 7 (E3, 2026-07-11): real_estate_rental + mobile, but no
         //  real-estate signal → phone.  Catches image_1216 (电动车商铺
         //  with 售后电话 183...), image_2267 (小南小区 大发搬家 with
@@ -239,6 +285,37 @@ object IntentVerifier {
         if (currentType == "real_estate_rental"
             && MOBILE.containsMatchIn(corpus)
             && !REAL_ESTATE.containsMatchIn(corpus)
+        ) {
+            return "phone"
+        }
+        // [2026-07-12] Phase G post-guards — fix the LLM self-
+        //  classify mistake observed on phone_20 image_1359 (黄焖鸡
+        //  米饭 + 热干面馆 + 027-87875310): LLM emitted `type=
+        //  menu_food` directly, Pass 9 didn't catch it (corpus has
+        //  no `招牌菜`/`菜品`/etc. — MENU regex is strict), so the
+        //  fixture regressed 0.90 → 0.79.  Post-flip here to `phone`
+        //  recovers the user's actual intent ("call this restaurant
+        //  service line").
+        //
+        //  Mirrors Pass 7 structure (real_estate_rental + MOBILE +
+        //  !REAL_ESTATE → phone): only fires on a strong out-family
+        //  signal (any of MOBILE / LANDLINE / SERVICE match).
+        //  Restricted to currently over-firing observe intents
+        //  (menu_food + hours_schedule).  warning_safety NOT
+        //  covered — a "请勿拨打 119" warning IS the user-relevant
+        //  intent.
+        //
+        //  LANDLINE regex un-suppressed here (was stub-only since
+        //  F2 reject): covers 027-xxxx-xxxx area-coded numbers
+        //  MOBILE / SERVICE patterns don't.  Combined
+        //  (MOBILE|LANDLINE|SERVICE) matches image_1359's 027-
+        //  87875310 (LANDLINE pattern fires).  Hours-with-callback
+        //  sign (e.g. "营业 9-21, 客服 400-xxx-xxxx") would flip
+        //  to phone — arguably correct, acceptable trade.
+        if ((currentType == "menu_food" || currentType == "hours_schedule")
+            && (MOBILE.containsMatchIn(corpus)
+                || LANDLINE.containsMatchIn(corpus)
+                || SERVICE.containsMatchIn(corpus))
         ) {
             return "phone"
         }

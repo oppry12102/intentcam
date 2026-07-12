@@ -147,6 +147,38 @@ fun registerDefaultIntents(reg: IntentRegistry) {
     // an info bubble (read it for context).  No PII action ships —
     // the existing `info` family already serves the model's
     // `type=info` classification for these fixtures.
+
+    // [2026-07-12] Phase G — high-value single-purpose observe intents.
+    //  All three are OBSERVE (read-and-keep) rather than ACT_ON: the
+    //  user wants to UNDERSTAND / preserve the content (warning text,
+    //  menu items, business hours), not trigger an outbound side-effect.
+    //  Actions are copy-to-clipboard-style (verbatim text retention,
+    //  share-sheet handed off to the user) so the consumption UX is
+    //  uniform across the three.
+    //
+    //  Source data: `scan_intents.py` top-20 candidates
+    //  (profiling/INTENT_TOP20_CANDIDATES.md):
+    //    - warning_safety   (#6, 509 hits / 6.3%)
+    //    - menu_food        (#9, 308 hits / 3.8%)
+    //    - hours_schedule   (#12, 140 hits / 1.7%)
+    reg.register(IntentDecl(
+        id = "warning_safety",
+        label = "警示",
+        llmHint = "警示：请勿 / 禁止 / 警告 / 危险 / 注意（高风险/合规标识）",
+        family = IntentFamily.OBSERVE,
+    ))
+    reg.register(IntentDecl(
+        id = "menu_food",
+        label = "菜单",
+        llmHint = "菜单：菜品 / 套餐 / 招牌菜 / 主厨推荐 / 价格表",
+        family = IntentFamily.OBSERVE,
+    ))
+    reg.register(IntentDecl(
+        id = "hours_schedule",
+        label = "营业",
+        llmHint = "营业时间：营业中 / HH:MM-HH:MM / 营业时段 / 周一至周日",
+        family = IntentFamily.OBSERVE,
+    ))
 }
 
 /**

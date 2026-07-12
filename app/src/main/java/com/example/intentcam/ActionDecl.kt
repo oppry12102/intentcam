@@ -338,6 +338,80 @@ fun registerDefaultActions(reg: ActionRegistry) {
             )
         },
     ))
+    // [2026-07-12] Phase G — three high-value observe-and-share
+    //  actions.  All three follow the same share-sheet pattern as
+    //  `copy_listing` / `save_posting` (Phase B), to keep the
+    //  consumption path uniform: the user gets an Android share
+    //  intent so they can route the text to Notes / WeChat / etc.
+    //
+    //  These actions do NOT require consent gating (no PII leak,
+    //  no outbound call) — `requiresConfirmation` stays false so
+    //  the chip is a one-tap UX.  The user's only point of
+    //  friction is the share-sheet target picker (which is itself
+    //  a confirmation step).
+    //
+    //  defaults enabled = true in SettingsStore (omitted userPrefKey
+    //  → SettingsStore defaults to true; see SettingsStore.kt).
+    reg.register(ActionDef(
+        id = "copy_warning",
+        label = "复制警示",
+        iconKey = "warning",
+        applicableIntents = setOf("warning_safety"),
+        body = { _, bubble, _ ->
+            val payload = buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: "警示标识")
+                append('\n')
+                append(bubble.detail)
+            }.trim()
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享警示"))
+        },
+    ))
+    reg.register(ActionDef(
+        id = "copy_menu",
+        label = "复制菜单",
+        iconKey = "restaurant",
+        applicableIntents = setOf("menu_food"),
+        body = { _, bubble, _ ->
+            // Menu bubble is detail-heavy (long item list).  Cap the
+            //  payload at 600 chars so a share-sheet target doesn't
+            //  truncate weirdly.
+            val payload = buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: "菜单")
+                append('\n')
+                append(bubble.detail)
+            }.trim().take(600)
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享菜单"))
+        },
+    ))
+    reg.register(ActionDef(
+        id = "copy_hours",
+        label = "复制营业时间",
+        iconKey = "schedule",
+        applicableIntents = setOf("hours_schedule"),
+        body = { _, bubble, _ ->
+            val payload = buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: "营业时间")
+                append('\n')
+                append(bubble.detail)
+            }.trim()
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享营业时间"))
+        },
+    ))
 }
 
 /** Pull the first plausible phone number from a bubble's surface text.
