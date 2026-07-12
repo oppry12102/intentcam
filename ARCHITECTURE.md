@@ -62,14 +62,28 @@ in one round-trip, with no need for a separate `read_text` call.
 emit_bubble(
   content,        // 一两句话整体描述 — must include all visible text
   intent,         // 用户想做什么（动宾短语，≤30字）
-  type,           // info | location | solve
+  type,           // 11 intent ids — see §15 / CONFIG §H.1
+                  //   OBSERVE family: info | location | warning_safety
+                  //                  | menu_food | hours_schedule
+                  //   ACT_ON family:  solve | phone | real_estate_rental
+                  //                  | recruit_hiring | payment_qr | id_document
   intent_focus?,  // 可空
   confidence,     // 0.0~1.0
+  action_ids?,    // 可空 — Intent↔Action framework (Phase A+, 2026-07-10)
+                  //   list of canonical action ids the model recommends:
+                  //   dial_number / copy_listing / save_posting /
+                  //   scan_to_pay / redact_id / open_in_maps /
+                  //   copy_warning / copy_menu / copy_hours
   details: [      // 详情页表格行
     {kind, label, value, bbox?}, ...
   ]
 )
 ```
+
+The expanded `type` vocabulary (11 ids vs the original 3) is
+backed by the **Intent↔Action framework** — see §15 for the
+full design, CONFIG §H for the registry knobs, and §7 below for
+how the resulting `Bubble` carries `actionIds` through the UI.
 
 **`content` is critical** — the system prompt forces the model to
 list all visible text/numbers/brands/dates/prices in the content
@@ -395,28 +409,37 @@ data class Detail(
 
 data class Bubble(
     val id: String,
-    val type: String,            // "info" | "location" | "solve"
+    val type: String,            // 11 intent ids — see §15 / CONFIG §H.1
     val title: String,            // user-facing intent, ≤30 chars
     val detail: String,           // content description
     val confidence: Float,
-    val imageBytes: ByteArray,   // 2048-px fullRes JPEG for detail view
+    val imageBytes: ByteArray,   // 4096-px fullRes JPEG for detail view
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
     val intentFocus: String? = null,
     val details: List<Detail> = emptyList(),  // details table rows
+    val actionIds: List<String> = emptyList(),  // Phase A+, 2026-07-10
+    val llmProposedActions: List<String>? = null,  // raw model emit (audit trail)
 )
 ```
 
 `Bubble` is FIFO-capped at 4 in `UiState.bubbles`; older bubbles
-evict when a new one arrives. `imageBytes` is the 2048-px fullRes
-JPEG (not the 1568-px thumbnail), so the detail view can show a
+evict when a new one arrives. `imageBytes` is the 4096-px fullRes
+JPEG (not the 3200-px thumbnail), so the detail view can show a
 sharper image.
 
 The `details` list drives the structured table in the DetailScreen
 (kind | label | value columns). Each row is something the LLM
 extracted from the image — text, numbers, brand names, dates, etc.
 The LLM populates these in `emit_bubble`'s `details` input field.
+
+`actionIds` is populated by **either** the model's `action_ids`
+emit (C3 v3 prompt table — see §15.4) or by the verifier's
+additive inject path (`IntentVerifier.actionFor(type)` —
+Phase F invariant: never delete, only add).  This is the
+per-bubble action surface the chip UI renders in the detail
+screen header — see §15 for the full design.
 
 ## 8. Cancellation & concurrency
 
@@ -463,6 +486,11 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 | `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
 | `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
 | `extract_text` (v1.1) | text-only OCR | `ToolImplementations.kt:210-330` | v1.1: new tool. Same crop path as `zoom_in` follow-up but no `followUpJpeg` — returns only OCR text. Model picks it for 25-30% of fixtures when the region is already visible in the round-1 thumbnail. |
+| `IntentDecl.registerDefaultIntents()` | **11 ids** | `shared/.../IntentDecl.kt:82-182` | Phase G — what the user wants (intent classification). The 3 v1.0 ids (`info`/`location`/`solve`) plus 4 PII (real_estate/recruit/payment_qr/id_document) plus 3 OBSERVE Phase G (warning/menu/hours) plus `phone` (Phase A). |
+| `ActionDecl.registerDefaultActions()` | **10 defs** | `app/.../ActionDecl.kt:158-415` | what the app can do per-intent. 5 carry `userPrefKey` (SettingsStore consent toggle, OFF default). `scan_to_pay` and `redact_id` are Toast-only by design. |
+| `IntentVerifier` | **10 passes + post-guard** | `shared/.../IntentVerifier.kt` | post-emit_bubble regex flip — `info`/`location` → `phone`/`payment_qr`/`recruit`/`real_estate`/`id_document`/`warning`/`menu`/`hours` based on corpus signal. Phase F invariant: modifies `bubble.type` only, never `bubble.actionIds`. |
+| `actionFor(type)` | **11 type → 9 canonical action maps** | `IntentVerifier.kt:156-167` | Phase F — ToolUseLoop additive inject. **3-register lockstep** when adding a new intent: ActionDecl + EvalRunner.defaultActionIds + actionFor(). Drift = silent r3 regression. |
+| **3-register lockstep** | invariant | Phase F (2026-07-11) | Adding a new intent requires lockstep edits in 3 files (or 4 if you also add a C3 v3 prompt row). See §15.5 / CONFIG §J.1. |
 
 ## 10. Debug overlay
 
@@ -530,17 +558,46 @@ dataset's XML labels.
 
 ### Baseline chain
 
-| Date | composite | Δ | Key change |
-|---|---|---|---|
-| 2026-07-06 | 0.652 | — | (1-only image strategy landed) |
-| 2026-07-07 | 0.819 | +0.167 | timeout 60s + 兜底 Bubble + details cap + type-partial-credit |
-| 2026-07-08 | 0.835 | +0.016 | OCR-aware collaboration (端云协同) |
-| 2026-07-10 | 0.838 | +0.003 | softened prompt (no over-hedge on imperfect OCR) |
-| 2026-07-10 | 0.841 | +0.003 | 1568 thumb + zoom_in=original + "thumbnail ≠ 原图" nudge |
-| 2026-07-10 | **0.853** | +0.012 | @100 verification of the above (12W/8L/0T) |
-| 2026-07-10 | 0.898 | +0.045 | `MAX_FULL_DIM` 4096→2048 (counter-intuitive win) |
-| 2026-07-11 | 0.874 | +0.021 | **Phase 2a**: auto-OCR on every zoom_in crop + 4-step workflow prompt + `isCropHint` flag on `OcrResult.formatHint` |
-| 2026-07-11 | **0.868** | -0.006 | **Phase 2** (this release): `read_text` tool removed — auto-OCR + workflow prompt cover both [LOW] verification and missed-region re-scan. Net composite in noise; empty 27/100 → 19/100 (better); content 103 → 116 (better); per-fixture volatility +1/-1 (some Phase 2a successes go empty, some Phase 2a empties succeed). Ship. |
+The RCTW-100 column is the legacy OCR-aware baseline;
+`phone_20` / `pii_20` / Phase G are the Intent↔Action framework's
+**true validation suites** (RCTW's `expected_type="info"` doesn't
+exercise intent diversity — see CONFIG §L).  All suites run on
+the same `:shared:eval` Kotlin code path; the deltas are
+architectural, not noise.
+
+| Date | RCTW @100 | phone_20 @20 | pii_20 @20 | Phase G @15 | Key change |
+|---|---|---|---|---|---|
+| 2026-07-06 | 0.652 | — | — | — | 1-only image strategy landed |
+| 2026-07-07 | 0.819 | — | — | — | timeout 60s + 兜底 Bubble + details cap + type-partial-credit |
+| 2026-07-08 | 0.835 | — | — | — | OCR-aware collaboration (端云协同) |
+| 2026-07-10 | 0.838 | — | — | — | softened prompt (no over-hedge on imperfect OCR) |
+| 2026-07-10 | 0.841 | — | — | — | 1568 thumb + zoom_in=original + "thumbnail ≠ 原图" nudge |
+| 2026-07-10 | **0.853** | — | — | — | @100 verification (12W/8L/0T) |
+| 2026-07-10 | 0.898 | — | — | — | `MAX_FULL_DIM` 4096→2048 (counter-intuitive win) |
+| 2026-07-11 | 0.874 | — | — | — | **Phase 2a**: auto-OCR on every zoom_in crop + 4-step workflow prompt |
+| 2026-07-11 | **0.868** | — | — | — | **Phase 2**: `read_text` tool removed |
+| 2026-07-10 | 0.939 | 0.933 | — | — | **v1.3 ship (A2 scorer fix)**: `info↔location=1.0`; MAX_TOKENS=3072 |
+| 2026-07-11 | 0.951 | — | — | — | Step 2-5 ship: SettingsStore enabledActionIds + chip UI + open_in_maps |
+| 2026-07-11 | — | 0.941 | 0.872 | — | **Phase A+B**: phone + 4 PII intents shipped; C2 nudge |
+| 2026-07-11 | — | 0.963 | 0.864 | — | **C2 prompt**: "action_ids 默认应填" lifts phone r3 0.75→0.85 |
+| 2026-07-11 | — | 0.917 | 0.853 | — | **Phase E**: 6-rule verifier post-emit_bubble flip; image_1359 lifted |
+| 2026-07-11 | — | 0.929 | 0.852 | — | **E3**: rule 8 `real_estate_rental + MOBILE + !REAL_ESTATE → phone` |
+| 2026-07-11 | — | **0.9394** | 0.864 | — | **Phase F**: actionFor() + additive inject — phone history-high |
+| 2026-07-11 | — | 0.9394 | **0.8794** | — | **C3 v3**: prompt table 6→9 replaces soft C2 nudge; +0.015 pii_20 |
+| 2026-07-12 | — | 0.9344 | 0.8794 | 0.973 | **Phase G**: warning/menu/hours + verifier Pass 8/9/10 + post-guard |
+| 2026-07-12 | — | — | **0.9631** | 0.973 | **GT schema dual-read** (cumulative Phase F + C3 v3 + this fix) |
+
+**Lift provenance** for the pii_20 headline jump
+(`0.8794 → 0.9631 = +0.0837`):
+
+- Phase F (verifier flips): ~ +0.005-0.01
+- C3 v3 (prompt table): ~ +0.015
+- **GT schema dual-read (this fix)**: image_3285 alone lifted `r2_type
+  0.5 → 1.0` = +0.225 on that fixture; ~80% of the headline delta
+- The RCTW @100 column is **unchanged** by Phase F/C3/G (RCTW uses
+  `expected_type="info"` and was already read correctly) — only
+  intent-diverse suites (`phone_20` / `pii_20` / Phase G) carry
+  the Intent↔Action lift.
 
 `profiling/eval_*.json` keeps every JSON dump; use
 `profiling/diff_eval.py` to compare two runs side-by-side.
@@ -609,3 +666,282 @@ v1.0 layout:
   sensor-res frames, install v1.0 and run a 20-fixture manual
   smoke test on a real photo set — confirm the eval @0.903 ceiling
   is reproducible in hand (not just `:shared:eval`).
+- Verify post-guard phone_20 lift (`-0.026` net at 0.9081) — pending
+  decision (a) add LANDLINE to Pass 1, (b) add `!MOBILE` guard to
+  Pass 8, (c) revert post-guard, (d) accept + monitor. See
+  `eval-phone20-postguard-2026-07-12.md`.
+- Ship C3 v3's `copy_menu` 600-char cap into the eval scorer
+  (Phase G action body has it but the LLM isn't advised about it
+  in the prompt).
+
+## 15. Intent↔Action framework (2026-07-10 → 2026-07-12)
+
+Added on top of the visual pipeline as a separate classification +
+action layer.  Each `emit_bubble` now carries an 11-vocabulary
+intent `type` and a list of canonical `action_ids` the app can
+render as chips.  A 10-pass verifier + post-guard silently
+correct mis-classifications using on-image signals.
+
+### 15.1 Module map
+
+```
+                    ┌─────────────────────────────────────────────┐
+                    │ IntentDecl.kt (shared)                      │
+                    │   registerDefaultIntents() — 11 ids        │
+                    │   family / label / LLM hint / fallback     │
+                    └────────────────┬────────────────────────────┘
+                                     │ IntentDecl.byId(...)
+                                     │
+   User photo  ─►  LLM  ─emit_bubble(type, action_ids)─►       Bubble
+                                              │                ▲
+                                              ▼                │
+                    ┌─────────────────────────────────────────┐  │
+                    │ IntentVerifier.kt (shared)               │  │
+                    │   post-emit_bubble — silent type flip    │──┘
+                    │   pass 1-1e (location source)             │
+                    │   pass 2-10 (info source)                │
+                    │   pass 7 (real_estate MOBILE guard)      │
+                    │   post-guard (final LANDLINE / SERVICE)  │
+                    │   actionFor(type) — canonical injection  │
+                    └────────────────┬──────────────────────────┘
+                                     │ flip + additive inject
+                                     ▼
+                    ┌─────────────────────────────────────────┐
+                    │ ActionDecl.kt (app)                      │
+                    │   registerDefaultActions() — 10 defs    │
+                    │   applicableIntents / applicableFamilies │
+                    │   userPrefKey (consent toggle, OFF def.) │
+                    │   Toast-only for scan_to_pay, redact_id │
+                    └────────────────┬──────────────────────────┘
+                                     │
+                                     ▼
+                              Bubble UI chips
+                              (runAction on tap)
+```
+
+**`shared` vs `app` split is intentional**: `IntentDecl` and
+`IntentVerifier` live in `:shared` because `:shared:eval`
+imports them; `ActionDecl` lives in `:app` because action
+intents (dial / share sheet) are Android-platform-specific
+(Toast, `ACTION_SEND`, `ACTION_DIAL`).
+
+### 15.2 IntentDecl — 11 ids, 2 families
+
+| Intent id | Family | LLM hint (Chinese) |
+|---|---|---|
+| `info` (`FALLBACK_ID`) | OBSERVE | 描述信息（默认）: 物体/文字/数字/概念 |
+| `location` | OBSERVE | 定位: 路标/地名/找这家店 |
+| `solve` | ACT_ON | 解决问题: 翻译/公式/解题 |
+| `phone` | ACT_ON | 拨号: 手机号/座机/400电话/服务热线 |
+| `real_estate_rental` | ACT_ON | 租房: 出租/二手房/房源/中介 |
+| `recruit_hiring` | ACT_ON | 招聘: 招工/求职/兼职/高薪 |
+| `payment_qr` | ACT_ON | 支付: 扫一扫/收款码/付款码/转账 |
+| `id_document` | ACT_ON | 证件: 身份证/营业执照/车牌 |
+| `warning_safety` | OBSERVE | 警示: 请勿/禁止/警告/危险/注意 |
+| `menu_food` | OBSERVE | 菜单: 菜品/套餐/招牌菜/主厨推荐/价格表 |
+| `hours_schedule` | OBSERVE | 营业时间: 营业中/HH:MM-HH:MM/营业时段 |
+
+**Family equivalence** (scoring): same family → 1.0;
+cross-family (OBSERVE↔ACT_ON) → 0.5; empty → 0.0.  v1.3's A2
+fix promoted `info ↔ location` 0.5 → 1.0; Phase G extends the
+OBSERVE family with 3 more ids (`warning_safety` / `menu_food`
+/ `hours_schedule`) so they interchange with `info` for full
+credit too.
+
+### 15.3 ActionDecl — 10 defs, 5 user-consented, 2 Toast-only
+
+```kotlin
+data class ActionDef(
+    val id: String,
+    val label: String,
+    val applicableIntents: Set<String>,         // OR-semantics with families
+    val applicableFamilies: Set<IntentFamily>,  // reserved for universal actions
+    val requiresConsent: Boolean,
+    val userPrefKey: String? = null,            // SettingsStore backed
+    val enabledByDefault: Boolean = false,
+    val body: suspend (Bubble) -> Unit
+)
+```
+
+| Action id | Applicable to | Consent | Default | Notes |
+|---|---|---|---|---|
+| `view_details` | info / location / solve | no | ON | no-op (card tap opens detail) |
+| `open_in_maps` | location | no | ON | `geo:0,0?q={title}` |
+| `dial_number` | phone | yes | **OFF** | `ACTION_DIAL` via `PhoneExtractor.firstMatch` |
+| `copy_listing` | real_estate_rental | yes | **OFF** | share-sheet |
+| `save_posting` | recruit_hiring | yes | **OFF** | share-sheet |
+| `scan_to_pay` | payment_qr | yes | **OFF** | **Toast only — never auto-launch payment** |
+| `redact_id` | id_document | yes | **OFF** | **Toast only — real redaction is Phase C** |
+| `copy_warning` | warning_safety | no | ON | share-sheet |
+| `copy_menu` | menu_food | no | ON | share-sheet (capped 600 chars) |
+| `copy_hours` | hours_schedule | no | ON | share-sheet |
+
+**Safety contract**: `scan_to_pay` is deliberately Toast-only
+even with consent — the QR could be in a screenshot / phishing
+context; even with consent we route the user to physically scan
+a *new* code, never the one in the photo.  `redact_id` is
+Toast-only in v1 as the safest first ship; real redaction
+(mask middle 6 of 18-digit 身份证) is Phase C.
+
+**Applicability filter** (`ActionResolver.suggestIds(bubble)`):
+OR-semantics — `intent ∈ applicableIntents || intent.family ∈
+applicableFamilies` matches.  Both empty = applies to nothing
+(misconfiguration guard).
+
+### 15.4 IntentVerifier — 10 passes + post-guard
+
+Runs *post-emit_bubble* in `ToolUseLoop`; silently overwrites
+`bubble.type` when a strong out-of-family signal fires.  **The
+model's `proposedActions` array is NEVER modified** (Phase F
+invariant: r3 recall monotonic — only the verifier's
+auto-injection path adds actions).
+
+| Pass | source → flip target | Trigger | Phase | Notes |
+|---|---|---|---|---|
+| 1 | `location` → `phone` | `MOBILE = 1[3-9]\d{9}` | E | Strongest signal; cell on storefronts |
+| 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
+| 1c | `location` → `real_estate_rental` | `REAL_ESTATE` | **F** | Location + 房源 keyword |
+| 1d | `location` → `recruit_hiring` | `RECRUIT` | F | Location + 招聘 keyword |
+| 1e | `location` → `id_document` | `ID_DOCUMENT` | F | Location + 证照 keyword |
+| 2 | `info` → `payment_qr` | QR-payment language | E | 收款码 / 付款码 |
+| 3 | `info` → `phone` | MOBILE | E | 售后电话 / 联系电话 prefix |
+| 4 | `info` → `recruit_hiring` | RECRUIT | E | |
+| 5 | `info` → `real_estate_rental` | REAL_ESTATE | E | |
+| 6 | `info` → `id_document` | ID_DOCUMENT | E | |
+| 7 | `real_estate_rental` → `phone` | MOBILE + **!REAL_ESTATE** | **E3** | `!REAL_ESTATE` guard prevents mis-fire on 吉房急售 + 手机号 |
+| 8 | `info` → `warning_safety` | `WARNING` | **G** | 请勿 / 禁止 / 警告 / 危险 / 注意 |
+| 9 | `info` → `menu_food` | `MENU` | G | 菜单 / 招牌菜 / 套餐 |
+| 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
+| **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c)** | Final safety net for landline + service lines |
+
+**Pass ordering** (`IntentVerifier.kt` body): 1-1e run on
+`location` source first, 2-10 on `info` source, Pass 7 last
+on `real_estate_rental` source; post-guard runs AFTER all type
+flips and re-checks the corpus for any phone signal that the
+upstream passes missed.  **Ordering is load-bearing**:
+multi-intent fixtures like "营业场所 禁止吸烟" must resolve to
+`warning_safety` (Pass 8) not `hours_schedule` (Pass 10) — Pass
+8 runs first because it's a stronger direct-safety signal.
+
+**Why plumbing-only, not prompt-side**: per `eval-type-guide-D1-
+rejected-2026-07-11`, a third attempt at prompt-side verbose type
+descriptions was rejected (composite -0.035); the verifier
+touches `bubble.type` only, never the LLM's text, so r2_type lift
+stays distinct from r2_text lift — when a regression happens,
+you can tell which pass went wrong from which signal moved.
+
+**`actionFor(type)` map** (IntentVerifier.kt:156-167): the
+canonical type → action id mapping the verifier + ToolUseLoop
+use for additive injection:
+
+```kotlin
+"phone"              -> "dial_number"
+"real_estate_rental" -> "copy_listing"
+"recruit_hiring"     -> "save_posting"
+"id_document"        -> "redact_id"
+"payment_qr"         -> "scan_to_pay"
+"location"           -> "open_in_maps"
+"warning_safety"     -> "copy_warning"
+"menu_food"          -> "copy_menu"
+"hours_schedule"     -> "copy_hours"
+// "info", "solve" -> null (no canonical action; view_details is implicit)
+```
+
+### 15.5 ⚠️ 3-register lockstep (Phase F invariant)
+
+When adding a new intent that maps to a canonical action,
+the following THREE sites must be updated **in the same
+commit**, or the eval scorer's `defaultActionIds` and the
+verifier's auto-inject drift apart silently:
+
+1. **`app/.../ActionDecl.kt`** `registerDefaultActions()` —
+   add the `ActionDef`
+2. **`shared/.../eval/EvalRunner.kt`** `defaultActionIds` —
+   add the action id to the eval baseline (otherwise r3 baseline
+   reference is wrong)
+3. **`shared/.../IntentVerifier.kt`** `actionFor()` — add the
+   `type → action` entry (otherwise auto-inject misses and r3
+   recall drops)
+
+Plus optionally:
+
+4. **`shared/.../LlmClient.kt`** system prompt — the C3 v3
+   type→action table so the model emits the right
+   `action_ids` from round 1 (see §15.6)
+
+**Drift = silent r3 recall regression on the new intent**:
+eval thinks defaultActions doesn't include it; verifier doesn't
+auto-inject it.  Phase F ship verification
+(`pii_20 @20 = 0.8644` + `phone_20 @20 = 0.9394` history-high)
+confirmed lockstep held across the F → C3 v3 chain.
+
+### 15.6 C3 v3 — type→action table in prompt
+
+`LlmClient.TOOL_USE_SYSTEM` Step 2 paragraph carries an
+explicit type → action mapping table (commit `668ec6f`).
+Replaces C2's soft "默认应填" prompt (rejected 2026-07-10 —
+single-line nudge wasn't enough; see
+`eval-action-ids-nudge-C2-2026-07-11.md`).
+
+The table mirrors §15.4's `actionFor()` map exactly.  By
+construction, the prompt table and the verifier injection
+**don't conflict**:
+- Prompt table → model emits the right `action_ids` from start
+- Verifier injection → covers cases where the model missed one
+- Net effect: r3 (action recall) is monotonic with intent
+  coverage
+
+**Ship verification** @20: `pii_20` 0.8644 → **0.8794 (+0.015)**,
+3+ fixtures real-lift, no r2_type regression.  See
+`eval-c3-v3-ship-2026-07-11.md`.
+
+### 15.7 SettingsStore — 5 consent toggles
+
+`app/.../SettingsStore.kt` backs 5 PII consent gates; default
+OFF (user must opt-in once in Settings screen).  Phase G's 3
+`copy_*` actions have no `userPrefKey` → default ON (the
+share-sheet is its own consent step).  Keys:
+`action_dial_number_enabled`, `action_copy_listing_enabled`,
+`action_save_posting_enabled`, `action_scan_to_pay_enabled`,
+`action_redact_id_enabled`.
+
+### 15.8 Eval-side wiring
+
+The eval pipeline (`EvalRunner.kt`) does three things the prod
+side doesn't:
+
+1. **GT schema dual-read** — reads
+   `expected_top_intent_type` first, falls back to `expected_type`
+   so the new intent-diverse suites (phone_20 / pii_20 / Phase G)
+   are scored correctly.  RCTW-171 stays on `expected_type` for
+   backward compat (don't re-tag 8034 images).
+2. **Composite formula** — `r2_score` weights `text ∪ type` each
+   0.45 + `action_ids` (r3) 0.10; production doesn't need the
+   r3 component (the chip UI runs the actions).
+3. **Action applicability filter bypass** —
+   `EvalRunner.defaultActionIds` returns ALL 10 ids; the prod
+   `ActionResolver.suggestIds(bubble)` filters by
+   applicableIntents.
+
+### 15.9 Phase ship timeline
+
+| Phase | Date | Ship | Lift |
+|---|---|---|---|
+| A — phone | 2026-07-10 | IntentDecl.kt + 7 literal `"info"`→FALLBACK_ID | composite phone_20 0.933 (noise) |
+| Step 2-5 | 2026-07-11 | ActionDecl + SettingsStore + chip UI + open_in_maps | @20 0.951 (+0.018 noise) |
+| B — 4 PII | 2026-07-11 | 4 PII intents + 4 actions | pii_20 r3 0.0 (smoke) |
+| C2 — action_ids nudge | 2026-07-11 | single-line "默认应填" | phone r3 0.75→0.85 |
+| D — type-guide verbose | 2026-07-11 | **REJECTED** | phone r3 +0.05 but composite -0.035 |
+| E — verifier (6 rules) | 2026-07-11 | post-emit_bubble flip on 6 intents | pii_20 image_1359 r2_type 0.5→1.0 |
+| E3 — Pass 7 guard | 2026-07-11 | `real_estate_rental + MOBILE + !REAL_ESTATE → phone` | phone_20 +0.012 |
+| F — lockstep | 2026-07-11 | actionFor() + additive inject | phone_20 history-high 0.9394 |
+| C3 v3 — prompt table | 2026-07-11 | type→action table 6→9 rows | pii_20 +0.015 |
+| G — 3 OBSERVE | 2026-07-12 | warning / menu / hours + verifier Pass 8/9/10 + post-guard | Phase G 15-fixture 0.973 |
+| GT schema dual-read | 2026-07-12 | EvalRunner reads expected_top_intent_type | pii_20 +0.0837 cumulative |
+
+**Why this stays plumbing-only** (per `eval-type-guide-D1-
+rejected-2026-07-11.md`): the verifier changes `bubble.type`
+only, never the LLM's text.  That keeps r2_type lift distinct
+from r2_text lift — when a regression happens, you can tell
+which pass went wrong from which signal moved.  Prompt-side
+changes (C3 v3 in §15.6) shift r3 instead.
