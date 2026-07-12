@@ -88,7 +88,7 @@ object IntentVerifier {
         """[→←↑↓⬆⬇➡⬅🔼🔽]""" +                       // arrow char (alone ok if paired with below)
         """|(?:向左|向右|向前|向后|往[东南西北])""" +      // 方位前缀词
         """|(?:左转|右转|直走|直行|左拐|右拐|前行)""" +    // 方位动词
-        """|(?:步行|走).{0,4}(?:米|公里|分钟|分|步)""" +  // 距离短语
+        """|(?:步行|走).{0,8}(?:米|公里|分钟|分|步|个红绿灯)""" +  // 距离短语 (v2 loosened 4→8 to capture "行走三十步" / "右拐后约 50 米")
         """|.{0,10}(?:出口|入口).{0,6}(?:左|右|直|前|后)"""  // 出口/入口 + 方位
     )
 
@@ -303,17 +303,28 @@ object IntentVerifier {
         ) {
             return "hours_schedule"
         }
-        // Pass 11 (Phase H, 2026-07-12): info | location +
-        //  DIRECTION_ARROW → route_to.  Catches arrows (→←↑↓⬆⬇),
+        // Pass 11 (Phase H, 2026-07-12): info | location |
+        //  real_estate_rental + DIRECTION_ARROW (and !REAL_ESTATE
+        //  keyword) → route_to.  Catches arrows (→←↑↓⬆⬇),
         //  方位词 (向前/向后/左转/右转/直走), 距离短语 (步行 N 米 /
         //  公里 / 分钟), and 出口/入口 + 方位 pair.  Targets the
         //  largest untapped RCTW cluster (direction_arrow: 895
         //  images, 11.1% of corpus).  Ordered AFTER Pass 10 because
-        //  some hours+direction storefronts (e.g. "营业至 22:00 出口
-        //  右转 50米") can satisfy either regex; route_to is the
-        //  narrower intent here — only flip if HOURS didn't already
-        //  fire (above).  Pure add — never blocks an earlier pass.
-        if ((currentType == "info" || currentType == "location")
+        //  some hours+direction storefronts can satisfy either;
+        //  route_to is narrower — flip only if HOURS didn't already
+        //  fire.
+        //
+        //  **v2 (2026-07-12)** extended source to real_estate_rental
+        //  with !REAL_ESTATE corpus guard (mirrors Pass 7's structure).
+        //  Image_6423 (佰乐星KTV 请直走) LLM-classifies as
+        //  real_estate (KTV-as-listing); without v2, Pass 11 didn't
+        //  reach.  !REAL_ESTATE guard prevents false-fire on
+        //  "前方面积 80 平米" + "右转即到" combo where the direction
+        //  phrase is part of address, not the intent.
+        if ((currentType == "info"
+                || currentType == "location"
+                || (currentType == "real_estate_rental"
+                    && !REAL_ESTATE.containsMatchIn(corpus)))
             && DIRECTION_ARROW.containsMatchIn(corpus)
         ) {
             return "route_to"
