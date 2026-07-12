@@ -1,0 +1,3563 @@
+{
+  "ground_truth": "ground_truth_service_institution_60.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 67,
+  "overall_composite": 0.9701119402985074,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 67,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "general_institution": 0.8875000000000001,
+    "school_childcare_institution": 1,
+    "medical_institution": 0.97875,
+    "childcare_institution": 1,
+    "financial_institution": 0.9574999999999999,
+    "clinic_institution": 1,
+    "education_institution": 0.9773148148148146,
+    "government_service_institution": 0.9,
+    "government_law_institution": 0.9418181818181818,
+    "training_institution": 0.8875000000000001,
+    "government_admin_institution": 1
+  },
+  "fixtures": [
+    {
+      "raw_content": "街边停放的蓝色「中际眼镜™」广告车，车身广告印有「每店每年」标语、两个黄色星形促销贴（爱尔康护理液 355ml+60ml 中际价 38 元/盒、强生日抛隐形眼镜 30 盒装 中际价 30 元/盒）。车门右侧印有「咨询电话：02\u2026」（号码后半段被画面右边裁掉，疑似 027-xxx 武汉电话）。下方地址：「第一经营部：珞狮北路2号樱花大厦B座23楼（国立武汉大学斜对面）」。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌 logo",
+          "value": "中际眼镜™"
+        },
+        {
+          "kind": "text",
+          "label": "车顶广告",
+          "value": "每店每年"
+        },
+        {
+          "kind": "phone",
+          "label": "咨询电话",
+          "value": "咨询电话 :02（号码后半段被裁掉，疑似 027-xxxx，武汉区号）"
+        },
+        {
+          "kind": "price",
+          "label": "促销价（爱尔康护理液）",
+          "value": "中际价：38 元/盒"
+        },
+        {
+          "kind": "price",
+          "label": "促销价（强生日抛）",
+          "value": "中际价：30 元/盒"
+        },
+        {
+          "kind": "text",
+          "label": "经营部",
+          "value": "第一经营部："
+        },
+        {
+          "kind": "address",
+          "label": "地址",
+          "value": "珞狮北路2号樱花大厦B座23楼"
+        },
+        {
+          "kind": "address",
+          "label": "地标",
+          "value": "（国立武汉大学斜对面）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_7103",
+      "category": "education_institution",
+      "content_len": 186,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张「腾飞鹿鸣湖畔」楼盘的宣传海报。主标题：'一万斤大米 全城疯抢'，活动规则：'转发此图到朋友圈并集满20个赞 送5公斤装大米一袋'。领取地址：'学院路与南海街交会处'，联系电话：0374-6086666。下方楼盘信息：'准现房！珍藏房源钜惠认筹中! 2000元抵20000元'，'每位客户只可领取一次礼品 每天仅限前100名'。顶部 logo 旁有英文字样（OCR 模糊）：Tngeeloeldrddeiran / 腾飞鹿鸣湖畔（[LOW]）。",
+      "r2_text": 0.75,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "项目名 (OCR 模糊)",
+          "value": "腾飞鹿鸣湖畔"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "一万斤大米 全城疯抢"
+        },
+        {
+          "kind": "text",
+          "label": "活动规则",
+          "value": "转发此图到朋友圈并集满20个赞 送5公斤装大米一袋"
+        },
+        {
+          "kind": "text",
+          "label": "领取地址",
+          "value": "领取地址：学院路与南海街交会处"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "0374-6086666"
+        },
+        {
+          "kind": "text",
+          "label": "房产标题",
+          "value": "准现房！"
+        },
+        {
+          "kind": "text",
+          "label": "房产副标题",
+          "value": "珍藏房源钜惠认筹中!"
+        },
+        {
+          "kind": "price",
+          "label": "认筹优惠",
+          "value": "2000元抵20000元"
+        },
+        {
+          "kind": "text",
+          "label": "活动限制",
+          "value": "每位客户只可领取一次礼品 每天仅限前100名"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_7215",
+      "category": "education_institution",
+      "content_len": 226,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一栋大型公立医院建筑外景，蓝天背景。建筑顶部正中悬挂红色大字招牌「湖北省妇幼保健院」，下方一行英文「HUBEI MATERNAL AND CHILD HEALTH HOSPITAL」，招牌正中是红色十字医疗机构 logo。主楼中央玻璃幕墙从顶到底竖排三个红色大字「门诊部」。建筑左侧蓝色横排招牌写「湖北省妇女儿童医院」，右侧蓝色横排招牌写「湖北省生殖保健中心」\u2014\u2014同一机构多块牌子。建筑底层有「入口」标牌，最左侧可见「急诊」。主楼后方是一栋更高的白色建筑，顶部有塔吊。前景为城市马路，路上有白色和暗红色轿车驶过，路边有绿色行道树和隔离绿化带。门廊处 LED 屏滚动显示社会主义核心价值观公益广告字样（部分 OCR [LOW]：「活洁环种大霖 又明率 你我他」、「谢建无如医院间家建康生活」）。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主楼名称（顶部红字）",
+          "value": "湖北省妇幼保健院"
+        },
+        {
+          "kind": "text",
+          "label": "主楼名称（英文）",
+          "value": "HUBEI MATERNAL AND CHILD HEALTH HOSPITAL"
+        },
+        {
+          "kind": "text",
+          "label": "左翼招牌",
+          "value": "湖北省妇女儿童医院"
+        },
+        {
+          "kind": "text",
+          "label": "右翼招牌",
+          "value": "湖北省生殖保健中心"
+        },
+        {
+          "kind": "text",
+          "label": "中央玻璃幕墙竖排红字",
+          "value": "门诊部"
+        },
+        {
+          "kind": "logo",
+          "label": "标志",
+          "value": "红色十字医疗机构 logo"
+        },
+        {
+          "kind": "object",
+          "label": "出入口标识",
+          "value": "入口（右侧柱形标牌）、急诊（左侧建筑）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_7224",
+      "category": "medical_institution",
+      "content_len": 349,
+      "r1": 1
+    },
+    {
+      "raw_content": "黄色户外广告牌：门国标舞学校招生广告。顶部蓝色小贴纸为「9F玖富微贷」无抵押无担保纯信用贷款（与舞蹈学校无关，贴在广告牌上）。学校信息：全省名校，开设街舞、霸士、民族舞、拉丁、芭蕾舞、现代舞等课程。地址两处：（车站校区）皇朝家居5楼跆举道馆内；（步行街校区）步行中街靠东桥第一个天桥处。红色印章「舞动密码」。联系方式：高老师 13507225885，田老师 15871883584。右下角有一位穿黑色舞蹈服的舞者插图。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "学校名称",
+          "value": "门国标舞学校"
+        },
+        {
+          "kind": "text",
+          "label": "课程类型",
+          "value": "全省名校 街舞 霸士 民族舞 拉丁 芭蕾舞 现代舞"
+        },
+        {
+          "kind": "text",
+          "label": "车站校区地址",
+          "value": "（车站校区）皇朝家居5楼跆举道馆内"
+        },
+        {
+          "kind": "text",
+          "label": "步行街校区地址",
+          "value": "（步行街校区）步行中街靠东桥第一个天桥处"
+        },
+        {
+          "kind": "text",
+          "label": "印章",
+          "value": "舞动密码"
+        },
+        {
+          "kind": "phone",
+          "label": "高老师电话",
+          "value": "13507225885"
+        },
+        {
+          "kind": "phone",
+          "label": "田老师电话",
+          "value": "15871883584"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 顶部蓝色贴纸",
+          "value": "9F玖富微 / 无抵押 无担保 纯信用贷款 / ?29999 518"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_7364",
+      "category": "education_institution",
+      "content_len": 209,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片是中国科学院武汉植物园的游客入口处，可见：右侧巨幅竖排标牌「中国科学院武汉植物园」；左侧蓝色牌「大武汉年卡通道，温馨提示：由于系统设置年卡每天只能使用一次，请勿重复使用。入园时间：8:00\u201417:00」；中间蓝色牌「检票口」；旁边携程（Ctrip）标识牌「取票处 / 携程在手 说走就走 / www.ctrip.com」；入口处有游客正在排队。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "园区名称（竖排大标牌）",
+          "value": "中国科学院武汉植物园"
+        },
+        {
+          "kind": "text",
+          "label": "通道标牌（大武汉年卡通道）",
+          "value": "大武汉年卡通道"
+        },
+        {
+          "kind": "text",
+          "label": "温馨提示",
+          "value": "温馨提示：由于系统设置年卡每天只能使用一次，请勿重复使用。"
+        },
+        {
+          "kind": "hours_schedule",
+          "label": "入园时间",
+          "value": "入园时间：8:00\u201417:00"
+        },
+        {
+          "kind": "text",
+          "label": "检票口",
+          "value": "检票口"
+        },
+        {
+          "kind": "text",
+          "label": "取票处",
+          "value": "取票处"
+        },
+        {
+          "kind": "text",
+          "label": "携程标识",
+          "value": "Ctrip 携程 携程在手 说走就走 www.ctrip.com"
+        },
+        {
+          "kind": "text",
+          "label": "关心未成年（出口提示牌）",
+          "value": "关心未成年"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_7365",
+      "category": "education_institution",
+      "content_len": 174,
+      "r1": 1
+    },
+    {
+      "raw_content": "湖北艺术职业学院（PROFESSIONAL ARTS INSTITUTE OF HUBEI）校门入口全景。校门为石砌拱形建筑，上方有黄色立体金属字校名，下方拱顶上嵌有蓝色玻璃顶棚；拱门内嵌一条红色 LED 滚动屏，循环显示「\u2026\u2026火热报名中\u2026\u2026现已开办！」招生宣传字样。拱门右侧标有「进口」字样，门内可见校园建筑、绿树及停放的一辆小型面包车。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校名（中文）",
+          "value": "湖北艺术职业学院"
+        },
+        {
+          "kind": "text",
+          "label": "校名（英文）",
+          "value": "PROFESSIONAL ARTS INSTITUTE OF HUBEI"
+        },
+        {
+          "kind": "text",
+          "label": "LED 红色滚动屏",
+          "value": "火热报名中\u2026\u2026现已开办！"
+        },
+        {
+          "kind": "text",
+          "label": "门牌（进口）",
+          "value": "进口"
+        },
+        {
+          "kind": "object",
+          "label": "建筑",
+          "value": "石砌拱形校门，上方带黄色立体金属字校名，蓝色玻璃顶棚"
+        },
+        {
+          "kind": "object",
+          "label": "环境",
+          "value": "门内可见校园建筑、绿树、停车的小型面包车"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_7406",
+      "category": "education_institution",
+      "content_len": 170,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面为仙桃市第二实验小学校门口，墙上蓝色公告牌张贴\"校园管理规定\"，全文如下：\n\n为了有效的保护校园环境，提升全体师生、家长的文明意识，请自觉遵守以下规定：\n一、严禁车辆进入校园。\n二、严禁在校内抽烟。\n三、严禁在草坪内撒石英沙。\n四、严禁穿高跟鞋进入运动场。\n五、严禁成人雨天进入运动场。\n六、严禁携带零食、早点、饮料进校园。\n七、严禁在校内乱吐口香糖,乱扔果皮纸屑。\n八、严禁在校内乱撒垃圾、油污和污水。\n\n落款：仙桃市第二实验小学，二〇一三年九月。\n\n右侧另有蓝色\"温馨提示\"牌及红色条幅各一张，因拍摄角度与分辨率原因文字模糊，无法逐字识别。",
+      "r2_text": 1,
+      "details_count": 14,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "校园管理规定"
+        },
+        {
+          "kind": "text",
+          "label": "前言",
+          "value": "为了有效的保护校园环境，提升全体师生、家长的文明意识，请自觉遵守以下规定："
+        },
+        {
+          "kind": "text",
+          "label": "第一条",
+          "value": "一、严禁车辆进入校园。"
+        },
+        {
+          "kind": "text",
+          "label": "第二条",
+          "value": "二、严禁在校内抽烟。"
+        },
+        {
+          "kind": "text",
+          "label": "第三条",
+          "value": "三、严禁在草坪内撒石英沙。"
+        },
+        {
+          "kind": "text",
+          "label": "第四条",
+          "value": "四、严禁穿高跟鞋进入运动场。"
+        },
+        {
+          "kind": "text",
+          "label": "第五条",
+          "value": "五、严禁成人雨天进入运动场。"
+        },
+        {
+          "kind": "text",
+          "label": "第六条",
+          "value": "六、严禁携带零食、早点、饮料进校园。"
+        },
+        {
+          "kind": "text",
+          "label": "第七条",
+          "value": "七、严禁在校内乱吐口香糖,乱扔果皮纸屑。"
+        },
+        {
+          "kind": "text",
+          "label": "第八条",
+          "value": "八、严禁在校内乱撒垃圾、油污和污水。"
+        },
+        {
+          "kind": "text",
+          "label": "落款单位",
+          "value": "仙桃市第二实验小学"
+        },
+        {
+          "kind": "date",
+          "label": "发布日期",
+          "value": "二〇一三年九月"
+        },
+        {
+          "kind": "text",
+          "label": "右侧公告(模糊)",
+          "value": "温馨提示(文字部分模糊，未能完整识别)"
+        },
+        {
+          "kind": "text",
+          "label": "右侧红色条幅(模糊)",
+          "value": "红色条幅(文字模糊未能识别)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_warning",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_7450",
+      "category": "education_institution",
+      "content_len": 274,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一栋高层公共建筑，正面外墙顶部有红十字 LOGO 和红色大字\"南江县人民医院\"（OCR 读作\"南工县人民医院\"，按地理应为南江县）。建筑前方路边立有一块圆形禁令标志（蓝底红边红叉，标注\"全路段\"），下方辅助牌写\"违反禁令标志 罚款100元,记三分\"，提示此处全路段禁止停车。右侧为另一栋住宅楼。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "医院名称",
+          "value": "南江县人民医院 (round-1 OCR 读作\"南工县人民医院\"，\"工/江\"形近易误，按地理常识应为\"南江县\")"
+        },
+        {
+          "kind": "logo",
+          "label": "医院标识",
+          "value": "红十字医疗标志 (白色十字嵌于红色花瓣形/十字形 LOGO)"
+        },
+        {
+          "kind": "text",
+          "label": "禁停范围",
+          "value": "全路段"
+        },
+        {
+          "kind": "text",
+          "label": "违法提示",
+          "value": "违反禁令标志"
+        },
+        {
+          "kind": "text",
+          "label": "处罚",
+          "value": "罚款100元,记三分"
+        },
+        {
+          "kind": "object",
+          "label": "禁停标志牌",
+          "value": "圆形禁令标志 (蓝底红边，红叉，标注\"全路段\")"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_7488",
+      "category": "medical_institution",
+      "content_len": 150,
+      "r1": 1
+    },
+    {
+      "raw_content": "南江县人民医院(PEOPLE'S HOSPITAL OF NANJIANG)内部指引牌,指示「体检科」和「病理科」两个科室,箭头向上,提示「请上二楼」。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "医院名称(中文)",
+          "value": "南江县人民医院"
+        },
+        {
+          "kind": "text",
+          "label": "医院名称(英文)",
+          "value": "PEOPLE'S HOSPITAL OF NANJIANG"
+        },
+        {
+          "kind": "text",
+          "label": "科室1",
+          "value": "体 检科"
+        },
+        {
+          "kind": "text",
+          "label": "科室2",
+          "value": "病 理 科"
+        },
+        {
+          "kind": "text",
+          "label": "指引方向",
+          "value": "请上二楼"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_7638",
+      "category": "medical_institution",
+      "content_len": 76,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一个公交站牌，显示本站为「弘文中学」站，共有 4 条线路经过：\n\u2022 10路：下一站 纽芬兰酒店，开往黄荆村\n\u2022 3路：当前站 妇幼保健院，下一站 汉江路口，开往健康北路\n\u2022 6路：下一站 纽芬兰酒店，开往千秋学校\n\u2022 12路：下一站 纽芬兰酒店，开往叶王村\n\n画面下方可见一辆 10 路公交车正停靠进站。背景中有「干河街道党工委祝福全办人...」等红色横幅字样。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "10路 - 当前站/下一站",
+          "value": "弘文中学 → 纽芬兰酒店"
+        },
+        {
+          "kind": "text",
+          "label": "10路 - 终点",
+          "value": "开往黄荆村"
+        },
+        {
+          "kind": "text",
+          "label": "3路 - 当前站/下一站",
+          "value": "妇幼保健院 → 汉江路口"
+        },
+        {
+          "kind": "text",
+          "label": "3路 - 终点",
+          "value": "开往健康北路"
+        },
+        {
+          "kind": "text",
+          "label": "6路 - 当前站/下一站",
+          "value": "弘文中学 → 纽芬兰酒店"
+        },
+        {
+          "kind": "text",
+          "label": "6路 - 终点",
+          "value": "开往千秋学校"
+        },
+        {
+          "kind": "text",
+          "label": "12路 - 当前站/下一站",
+          "value": "弘文中学 → 纽芬兰酒店"
+        },
+        {
+          "kind": "text",
+          "label": "12路 - 终点",
+          "value": "开往叶王村"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_7826",
+      "category": "education_institution",
+      "content_len": 183,
+      "r1": 1
+    },
+    {
+      "raw_content": "路边四个商家指示牌（左→右）：① 神州租车「向内直走100米」；② 武汉有线「巷内100米」←；③ 全民健清基「巷内50米」←；④ 武汉邗江古籍书店 电话 027-87886991「巷内50米」←。背景为一栋白色旧厂房/仓库建筑，门窗破损，院内停着面包车。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店铺1",
+          "value": "神州租车"
+        },
+        {
+          "kind": "text",
+          "label": "店铺1-指引",
+          "value": "向内直走100米"
+        },
+        {
+          "kind": "brand",
+          "label": "店铺2",
+          "value": "武汉有线"
+        },
+        {
+          "kind": "text",
+          "label": "店铺2-指引",
+          "value": "巷内100米"
+        },
+        {
+          "kind": "brand",
+          "label": "店铺3",
+          "value": "全民健清基"
+        },
+        {
+          "kind": "text",
+          "label": "店铺3-指引",
+          "value": "巷内50米"
+        },
+        {
+          "kind": "brand",
+          "label": "店铺4",
+          "value": "武汉邗江古籍书店"
+        },
+        {
+          "kind": "phone",
+          "label": "店铺4-电话",
+          "value": "027-87886991"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_7925",
+      "category": "medical_institution",
+      "content_len": 128,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面为马路边一辆公交车（车牌 514Y1782）车身广告，紫底黄色字。广告完整文字：\n\n- 机构名：武汉五洲美莱整形美容医院\n- 英文名：WUHAN WUZHOU MYLIKE COSMETIC SURGERY HOSPITAL\n- 广告标语：整形美容 到五洲（车尾另有一行 [LOW]「亚洲美莱美丽成:」OCR 置信度偏低）\n- 联系电话：88077777（带拨号图标 ☏）\n- 地址：武昌徐东大街97号\n\n前景白色车辆为拍摄者所乘；背景有行道树和临街建筑。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "机构中文名",
+          "value": "武汉五洲美莱整形美容医院"
+        },
+        {
+          "kind": "brand",
+          "label": "机构英文名",
+          "value": "WUHAN WUZHOU MYLIKE COSMETIC SURGERY HOSPITAL"
+        },
+        {
+          "kind": "text",
+          "label": "广告标语",
+          "value": "整形美容 到五洲"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "88077777"
+        },
+        {
+          "kind": "address",
+          "label": "机构地址",
+          "value": "地址：武昌徐东大街97号"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 尾部标语（OCR置信度低）",
+          "value": "亚洲美莱美丽成:"
+        },
+        {
+          "kind": "text",
+          "label": "公交车牌号",
+          "value": "514Y1782"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_7953",
+      "category": "medical_institution",
+      "content_len": 230,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是地铁站出口指示牌。主出口为 H 出口 → 珞瑜路 (Luoyu Road)，附近地标：武汉大学口腔医学院 (Hospital of Stomatology Wuhan University)、广埠屯小学 (Guangbutun Primary School)、武汉市第二中西医结合医院 (Wuhan No.2 Chinese and Western Medicine Hospital)。牌面左上角另有一个\"出口 / Exit / 珞瑜路 Luoyu Road\"标识，但被张贴的黄色警告贴纸「暂未开通」覆盖，提示该方向出口暂未开放。左上方有方向箭头（↑）指向左前方。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "object",
+          "label": "黄色警告贴纸",
+          "value": "暂未开通"
+        },
+        {
+          "kind": "text",
+          "label": "出口标签(上,未开通)",
+          "value": "出口 Exit"
+        },
+        {
+          "kind": "text",
+          "label": "出口路名(上,未开通)",
+          "value": "珞瑜路 Luoyu Road"
+        },
+        {
+          "kind": "logo",
+          "label": "出口标识 H",
+          "value": "H"
+        },
+        {
+          "kind": "text",
+          "label": "出口路名(下,H出口)",
+          "value": "珞瑜路 Luoyu Road"
+        },
+        {
+          "kind": "text",
+          "label": "地标1",
+          "value": "武汉大学口腔医学院 Hospital of Stomatology Wuhan University"
+        },
+        {
+          "kind": "text",
+          "label": "地标2",
+          "value": "广埠屯小学 Guangbutun Primary School"
+        },
+        {
+          "kind": "text",
+          "label": "地标3",
+          "value": "武汉市第二中西医结合医院 Wuhan No.2 Chinese and Western Medicine Hospital"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_821",
+      "category": "medical_institution",
+      "content_len": 285,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一间名为「查尔斯顿眼镜 Charleston」的眼镜店门店（全国连锁 武昌店），地址为 广八路 94附2 号（上方红色门牌另写 94号）。店门旁贴有一张「公安 POLICE」民警提示牌，提示内容为「请面购物时包在前、手机在手、谨防扒窃」。下方 LED 跑马灯滚动播报店内活动/服务（具体字句因滚动而模糊）。左侧可见一个竖排大字「验」（疑为「配镜验光」类服务标识的一部分）。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店铺招牌",
+          "value": "查尔斯顿眼镜"
+        },
+        {
+          "kind": "brand",
+          "label": "英文 Logo",
+          "value": "Charleston"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "全国连锁 武昌店"
+        },
+        {
+          "kind": "text",
+          "label": "门牌路名",
+          "value": "广八路"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号（上）",
+          "value": "94号"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号（下）",
+          "value": "94附2"
+        },
+        {
+          "kind": "text",
+          "label": "公安提示标题",
+          "value": "民警提示"
+        },
+        {
+          "kind": "text",
+          "label": "公安提示正文",
+          "value": "请面购物时包在前、手机在手、谨防扒窃"
+        },
+        {
+          "kind": "text",
+          "label": "左侧大字",
+          "value": "验"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_823",
+      "category": "government_law_institution",
+      "content_len": 188,
+      "r1": 1
+    },
+    {
+      "raw_content": "武汉集贤路公交站 (No.0675)，站牌顶部绿色路牌写着\"集贤路 Jixian Rd.\"，南(S)←→北(N) 双向指示。下方广告灯箱是\"武汉首佳耳鼻喉医院\"（医保定点医院），广告语\"治鼻炎 到首佳\"。医院资质编号（OCR 模糊）：鄂卫计（鄂）东L外字[2014]第094 号 + (鄂)公（2015）第06-05号。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "路名 [LOW]",
+          "value": "集贤路"
+        },
+        {
+          "kind": "text",
+          "label": "路名拼音",
+          "value": "Jixian Rd."
+        },
+        {
+          "kind": "text",
+          "label": "方向 南",
+          "value": "(S)南"
+        },
+        {
+          "kind": "text",
+          "label": "方向 北",
+          "value": "北(N)"
+        },
+        {
+          "kind": "text",
+          "label": "公交站编号",
+          "value": "No.0675"
+        },
+        {
+          "kind": "text",
+          "label": "医院名称",
+          "value": "武汉首佳耳鼻喉医院"
+        },
+        {
+          "kind": "text",
+          "label": "医院资质",
+          "value": "医保定点医院"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "治鼻炎 到首佳"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_836",
+      "category": "medical_institution",
+      "content_len": 160,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「郴州市北湖实验中学」的学校大门入口。门楼为白色瓷砖贴面的拱形建筑,前方有伸缩铁门,墙上镶嵌大型红色大字校名:上方为\"郴 州 市\",下方为\"北湖实验中学\"。门楼上立有数根旗杆,顶部可见彩色旗帜。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校名前缀",
+          "value": "郴 州 市"
+        },
+        {
+          "kind": "text",
+          "label": "校名",
+          "value": "北湖实验中学"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1142",
+      "category": "education_institution",
+      "content_len": 99,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是仙桃市第二实验小学（Xiantao No.2 Experimental Primary School）门口的荣誉公示栏。红色背景，左侧为校徽，右侧为校名中英文。下方表格三列：姓名 / 类别及题目 / 组织单位，列出学生在《中小学生报》上发表的文章获奖名单，组织单位均为\"湖北省教育厅\"。可辨识的学生有：翁羽欣《八月的玉龙河》、赵卓凡《成长的滋味》、崔智恒《快乐的旅行》，底部还可见一行\"周方权《爱读书的我》\"（行被图片下边裁切，OCR 不太确定）。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校名",
+          "value": "仙桃市第二实验小学"
+        },
+        {
+          "kind": "text",
+          "label": "校名英文",
+          "value": "Xiantao No.2 Experimental Primary School"
+        },
+        {
+          "kind": "text",
+          "label": "表头",
+          "value": "姓名 / 类别及题目 / 组织单位"
+        },
+        {
+          "kind": "text",
+          "label": "学生1",
+          "value": "翁羽欣 \u2014 中小学生报《八月的玉龙河》\u2014 湖北省教育厅"
+        },
+        {
+          "kind": "text",
+          "label": "学生2",
+          "value": "赵卓凡 \u2014 中小学生报《成长的滋味》\u2014 湖北省教育厅"
+        },
+        {
+          "kind": "text",
+          "label": "学生3",
+          "value": "崔智恒 \u2014 中小学生报《快乐的旅行》\u2014 湖北省教育厅"
+        },
+        {
+          "kind": "text",
+          "label": "学生4 [LOW]",
+          "value": "周方权 \u2014 中小学生报《爱读书的我》\u2014 湖北省教育厅（底部行被截）"
+        },
+        {
+          "kind": "logo",
+          "label": "校徽",
+          "value": "圆形校徽，蓝色飘带 + 水纹图样，外圈含\"仙桃市第二实验小学\"字样"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1222",
+      "category": "education_institution",
+      "content_len": 226,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是湖北省水文应急监测管理中心的院门。门楣上方有黄色大字招牌\"水神客舍\"，下挂黑色牌匾\"湖北省水文应急监测管理中心\"。右侧红墙上两根门柱竖排白字分别写有\"湖北省水文仪器修试所\"和\"湖北省水文职业教育培训中心培训基地\"，左侧门柱竖排\"湖北省生...\"（后半部分被植被遮挡）。院门内可见楼顶红色\"??酒家\"招牌；街道对面左侧商铺招牌为\"艳阳天时尚旅[?]\"，电话号码 400-888-797?。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "院门主名",
+          "value": "湖北省水文应急监测管理中心"
+        },
+        {
+          "kind": "text",
+          "label": "门顶招牌",
+          "value": "水神客舍"
+        },
+        {
+          "kind": "text",
+          "label": "右侧门柱(白字竖排)",
+          "value": "湖北省水文仪器修试所"
+        },
+        {
+          "kind": "text",
+          "label": "右侧门柱(白字竖排)",
+          "value": "湖北省水文职业教育培训中心培训基地"
+        },
+        {
+          "kind": "text",
+          "label": "左侧门柱(竖排)",
+          "value": "湖北省生[LOW]..."
+        },
+        {
+          "kind": "text",
+          "label": "院内楼顶红色招牌",
+          "value": "??酒家"
+        },
+        {
+          "kind": "text",
+          "label": "左侧商铺招牌",
+          "value": "艳阳天时尚旅[?]"
+        },
+        {
+          "kind": "text",
+          "label": "左侧商铺电话",
+          "value": "400-888-797?"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_123",
+      "category": "general_institution",
+      "content_len": 195,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是南江镇西门沟附近的一条街景，中央是 **中国工商银行 (ICBC)** 网点，红色 ICBC 标志显著，配有红色 LED 横幅「防范通讯诈骗欢度平安春节。」和「24h」自助标识。银行二楼为「闲情网咖」，右侧相邻是「爱心献血屋」（海报写着「无偿献血」，人物是护士），再往右招牌写着「巅峰竞[猜]」（\"巅峰竞速/巅峰竞技\"之类被遮挡）。左侧为「亚军广告」红色招牌（电话 75720116 / 82765846 / 51793123，请上三[楼]）、下方是「☆ 中国体育彩票」。大楼高位挂着「宜家美居 YIJIA HOME · 宜美·装点生活之美」的广告横幅，标注「地址：南江镇西门沟」。街上有行人、停放的 SUV 和面包车。",
+      "r2_text": 1,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "ICBC 银行标识",
+          "value": "ICBC"
+        },
+        {
+          "kind": "text",
+          "label": "银行名称",
+          "value": "中国工商银行"
+        },
+        {
+          "kind": "text",
+          "label": "楼上店铺",
+          "value": "闲情网咖"
+        },
+        {
+          "kind": "text",
+          "label": "右侧店铺",
+          "value": "巅峰竞[猜]（巅峰竞速 / 巅峰竞技）"
+        },
+        {
+          "kind": "text",
+          "label": "右侧店铺",
+          "value": "爱心献血屋"
+        },
+        {
+          "kind": "text",
+          "label": "献血屋海报",
+          "value": "无偿献血"
+        },
+        {
+          "kind": "address",
+          "label": "楼上品牌",
+          "value": "宜家美居 YIJIA HOME（宜美·装点生活之美）"
+        },
+        {
+          "kind": "address",
+          "label": "宜家美居地址",
+          "value": "地址：南江镇西门沟"
+        },
+        {
+          "kind": "text",
+          "label": "银行LED横幅",
+          "value": "防范通讯诈骗欢度平安春节。"
+        },
+        {
+          "kind": "text",
+          "label": "左侧店铺",
+          "value": "亚军广告"
+        },
+        {
+          "kind": "text",
+          "label": "体彩店",
+          "value": "☆ 中国体育彩票"
+        },
+        {
+          "kind": "text",
+          "label": "广告电话",
+          "value": "75720116 / 82765846 / 51793123"
+        },
+        {
+          "kind": "text",
+          "label": "右侧标识",
+          "value": "ICBC（24h自助）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1248",
+      "category": "financial_institution",
+      "content_len": 312,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一家基层公安机关办公点。蓝色招牌上写有\"余杭区公安分局 / 南苑派出所 / 水景社区警务室\"，中央为警察徽章，下方配英文 \"SHUIJING COMMUNITY POLICE OFFICE OF NANYUAN POLICE STATION\"。门面为玻璃门，右上贴有\"接待室\"门牌，门外左侧设有警务公开栏（贴有警员照片，文字过小未识别）。停有警用摩托车，前景为红色汽车和深色车辆。建筑外墙为米黄色瓷砖，上方是住宅楼窗户和空调外机。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "警徽",
+          "value": "中华人民共和国警察徽章（位于招牌中央）"
+        },
+        {
+          "kind": "text",
+          "label": "上级机构",
+          "value": "余杭区公安分局"
+        },
+        {
+          "kind": "text",
+          "label": "派出所名称",
+          "value": "南苑派出所"
+        },
+        {
+          "kind": "text",
+          "label": "警务室名称",
+          "value": "水景社区警务室"
+        },
+        {
+          "kind": "text",
+          "label": "英文名称",
+          "value": "SHUIJING COMMUNITY POLICE OFFICE OF NANYUAN POLICE STATION"
+        },
+        {
+          "kind": "object",
+          "label": "门口公告板",
+          "value": "警务公开栏（贴有警员照片，未识别到可读文字）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1325",
+      "category": "government_law_institution",
+      "content_len": 217,
+      "r1": 1
+    },
+    {
+      "raw_content": "图中是「芜湖市旭光学校」的情海楼\u2014\u2014一栋蓝色玻璃幕墙的教学楼，玻璃上贴着红色横幅标语「文明从我做起 我与文明同行 共建美好家园」，建筑顶部有金色立体字「情海楼」，中部有学校 logo（绿色图案+红色太阳）。建筑外为电动伸缩门，内部可见绿化带和停车区。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "object",
+          "label": "楼名",
+          "value": "情海楼"
+        },
+        {
+          "kind": "logo",
+          "label": "学校名（中文）",
+          "value": "芜湖市旭光学校"
+        },
+        {
+          "kind": "logo",
+          "label": "学校名（拼音）[LOW]",
+          "value": "WU HU XU GUANG XUE XIAO"
+        },
+        {
+          "kind": "text",
+          "label": "红色横幅标语",
+          "value": "文明从我做起 我与文明同行 共建美好家园"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1425",
+      "category": "education_institution",
+      "content_len": 125,
+      "r1": 1
+    },
+    {
+      "raw_content": "华中科技大学东十二楼 106 房间门口的标牌，上半部为蓝底白字写有「华中科技大学东十二楼」及 HUST 校徽 logo 和房间号「106」，下半部为白底黑字「电教办公室」。门牌采用蓝白配色金属边框，安装在灰色墙面上，门下方可见透光的玻璃窗。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "办公室名称",
+          "value": "电教办公室"
+        },
+        {
+          "kind": "number",
+          "label": "房间号",
+          "value": "106"
+        },
+        {
+          "kind": "text",
+          "label": "所属楼栋",
+          "value": "华中科技大学东十二楼"
+        },
+        {
+          "kind": "logo",
+          "label": "学校 logo (HUST) [LOW]",
+          "value": "HUST 华中科技大学 logo"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1450",
+      "category": "education_institution",
+      "content_len": 120,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一间『绝味鸭脖』连锁店的店面照：红色招牌上有醒目的黄底黑边字\"绝味鸭脖\"，雨棚上印着\"鸭脖连锁领导品牌\"。店门口挂着气球、中国结福字挂饰及红灯笼，橱窗内陈列黑鸭、酱香、招牌系列等海报和真空装产品。店内贴有红色促销海报\"真空装产品 第二包 半价\"。门口另有公安民警提示牌，写有\"逛街购物时包背在身前，手机放在包里，谨防扒窃\"的安全提醒。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "招牌品牌",
+          "value": "绝味鸭脖"
+        },
+        {
+          "kind": "text",
+          "label": "雨棚文字",
+          "value": "鸭脖连锁领导品牌"
+        },
+        {
+          "kind": "price",
+          "label": "促销标语",
+          "value": "真空装产品 第二包 半价"
+        },
+        {
+          "kind": "object",
+          "label": "产品海报（橱窗内）",
+          "value": "黑鸭、酱香、招牌系列产品海报"
+        },
+        {
+          "kind": "text",
+          "label": "提示牌",
+          "value": "公安 POLICE 民警提示：逛街购物时包背在身前，手机放在包里，谨防扒窃"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1560",
+      "category": "government_law_institution",
+      "content_len": 169,
+      "r1": 1
+    },
+    {
+      "raw_content": "图里是一栋老旧居民楼外墙上挂着一块圆弧形招牌(红底金边),上面是粉红色立体美术字,只看得到招牌下半部分的几个字,底部能辨认出\"幼儿园\"三个字,上半部分\"蓝爵\"二字我看到了形状但不太确定。招牌左侧的楼面贴着小方块白瓷砖,窗户反射着蓝色天空,左侧墙上挂着一台空调外机。整体场景看起来像是在某条街道拍到的幼儿园外观。",
+      "r2_text": 1,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "logo",
+        "label": "招牌文字(疑似)",
+        "value": "??幼儿园(部分模糊,可能是\"蓝爵幼儿园\")"
+      }],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_177",
+      "category": "education_institution",
+      "content_len": 155,
+      "r1": 1
+    },
+    {
+      "raw_content": "图中是一块文物保护单位石碑，立于户外土坡旁，背景为树木和栏杆。石碑为白色大理石板镶嵌于灰色水泥边框中，正面文字（自上而下）为：「湖北省文物保护单位」「抱 冰 堂」「湖北省人民政府」「〇〇八年三月二十七日公布」「武汉市人民政府 立」。其中日期中的前两位数字因石碑表面污渍难以辨认，OCR 标记为「0〇」。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "保护级别",
+          "value": "湖北省文物保护单位"
+        },
+        {
+          "kind": "text",
+          "label": "文物名称",
+          "value": "抱 冰 堂"
+        },
+        {
+          "kind": "text",
+          "label": "公布单位",
+          "value": "湖北省人民政府"
+        },
+        {
+          "kind": "date",
+          "label": "公布日期",
+          "value": "〇〇八年三月二十七日公布"
+        },
+        {
+          "kind": "text",
+          "label": "立碑单位",
+          "value": "武汉市人民政府 立"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1782",
+      "category": "government_admin_institution",
+      "content_len": 151,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙上挂着\"苏州市文物保护单位 杨天骥故居\"铭牌，落款为\"苏州市人民政府2014年6月30日公布 吴江区人民政府2015年6月30日 立\"。牌匾被树枝光影投射在灰墙上，牌匾下方可见一个红色塑料小盆。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "单位级别",
+          "value": "苏州市文物保护单位"
+        },
+        {
+          "kind": "text",
+          "label": "文物名称",
+          "value": "杨天骥故居"
+        },
+        {
+          "kind": "date",
+          "label": "公布日期",
+          "value": "苏州市人民政府2014年6月30日公布"
+        },
+        {
+          "kind": "date",
+          "label": "立牌日期",
+          "value": "吴江区人民政府2015年6月30日 立"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1827",
+      "category": "government_admin_institution",
+      "content_len": 98,
+      "r1": 1
+    },
+    {
+      "raw_content": "绿色应急避难场所指示牌。文字内容：「应急避难场所 EMERGENCY SHELTER」；指定避难点：「爱莲湖公园」（白色箭头向右指示方向）；落款：「郴州市政府应急办 / 郴州市地震局 监制」。标牌左侧有人形奔跑图示（绿色奔跑小人 + 白色三角地标）。OCR 还扫出一行 [LOW] 置信度的 '同沙雜'（位于标题区域），属于 OCR 误识别，忽略。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "应急避难场所 (标题)",
+          "value": "应急避难场所"
+        },
+        {
+          "kind": "text",
+          "label": "英文标题",
+          "value": "EMERGENCY SHELTER"
+        },
+        {
+          "kind": "location",
+          "label": "避难场所名称",
+          "value": "爱莲湖公园"
+        },
+        {
+          "kind": "text",
+          "label": "主办单位",
+          "value": "郴州市政府应急办"
+        },
+        {
+          "kind": "text",
+          "label": "主办单位",
+          "value": "郴州市地震局"
+        },
+        {
+          "kind": "text",
+          "label": "落款",
+          "value": "监制"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1965",
+      "category": "government_admin_institution",
+      "content_len": 174,
+      "r1": 1
+    },
+    {
+      "raw_content": "中国建设银行（China Construction Bank）营业网点，门头招牌可见蓝白色建行 logo 与中英文行名，下方红色横幅写着「高速ETC 免费安装点」，上方 LED 滚动屏为优惠/活动信息（OCR 模糊，仅部分可辨：\"受3.5的优惠，详询运行各营业网点...\"）。左侧蓝色街道门牌显示「佳园路 JIAYUANLU」，旁边停有一辆白色奥迪 SUV，车牌 鄂A·YQ755。建筑为多层蓝色玻璃幕墙写字楼，底层临街为建行营业厅。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "银行Logo",
+          "value": "中国建设银行（中国建设银行标志）"
+        },
+        {
+          "kind": "text",
+          "label": "银行名称（中）",
+          "value": "中国建设银行"
+        },
+        {
+          "kind": "text",
+          "label": "银行名称（英）",
+          "value": "China Construction Bank"
+        },
+        {
+          "kind": "text",
+          "label": "街道门牌",
+          "value": "佳园路"
+        },
+        {
+          "kind": "text",
+          "label": "红色横幅",
+          "value": "高速ETC 免费安装点"
+        },
+        {
+          "kind": "text",
+          "label": "LED滚动屏[LOW]",
+          "value": "（OCR模糊）受3.5的优惠，详询运行各营业网点\u2026"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2000",
+      "category": "financial_institution",
+      "content_len": 217,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是位于武汉大学校园内的两个机构标牌，左侧为不锈钢牌：「LCCI / EXAMINATION CENTRE HUBEI / 湖北国际考试中心」；右侧不锈钢牌：「武汉大学 国际交流部 / 学生出国事务办公室」。右上角门柱上有竖排门牌「学生出国事务办公室」。牌后为石阶和铁艺门，环境为校园石墙与棕榈树。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "机构标识",
+          "value": "LCCI"
+        },
+        {
+          "kind": "text",
+          "label": "英文名称",
+          "value": "EXAMINATION CENTRE HUBEI"
+        },
+        {
+          "kind": "text",
+          "label": "中文名称",
+          "value": "湖北国际考试中心"
+        },
+        {
+          "kind": "text",
+          "label": "上级机构",
+          "value": "武潢大学 国际交流部"
+        },
+        {
+          "kind": "text",
+          "label": "办公室名",
+          "value": "学生出国事务办公室"
+        },
+        {
+          "kind": "text",
+          "label": "竖排门牌",
+          "value": "学生出国事务办公室"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_2028",
+      "category": "education_institution",
+      "content_len": 149,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片显示一处大门门柱上悬挂的两块铜牌（武汉大学相关机构挂牌），旁有铁栏门。图中所有可见文字逐字如下：\n\n【上方铜牌】校徽logo + \"武漢大学\"；\"生命科学学院\u2014\u2014桂林三金\"；\"学生科学研究训练实验室\"\n\n【下方铜牌】校徽logo + \"武漢大学\"；\"生命科学学院\u2014\u2014桂林三金\"；\"教职工与学生活动中心\"\n\n两块牌子均为武汉大学生命科学学院（与桂林三金药业合作）下属机构的挂牌。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "校徽logo",
+          "value": "武汉大学校徽"
+        },
+        {
+          "kind": "text",
+          "label": "学校名称（上牌）",
+          "value": "武漢大学"
+        },
+        {
+          "kind": "text",
+          "label": "合作单位名称（上牌）",
+          "value": "生命科学学院\u2014\u2014桂林三金"
+        },
+        {
+          "kind": "text",
+          "label": "挂牌名称（上牌）",
+          "value": "学生科学研究训练实验室"
+        },
+        {
+          "kind": "text",
+          "label": "学校名称（下牌）",
+          "value": "武漢大学"
+        },
+        {
+          "kind": "text",
+          "label": "合作单位名称（下牌）",
+          "value": "生命科学学院\u2014\u2014桂林三金"
+        },
+        {
+          "kind": "text",
+          "label": "挂牌名称（下牌）",
+          "value": "教职工与学生活动中心"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_2111",
+      "category": "education_institution",
+      "content_len": 190,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面是一栋红褐色外立面的多层医院建筑，楼顶安装有黄色大字招牌\"湖北省口腔医院\"，右侧有红色\"武大口腔\"标识牌，底部入口上方有\"武汉大学口腔医院\"招牌。建筑前方为带护栏的马路，可见路灯、出租车和公交车。整体为医院外景实拍，机构为湖北省口腔医院（武汉大学口腔医院）。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "楼顶招牌",
+          "value": "湖北省口腔医院"
+        },
+        {
+          "kind": "text",
+          "label": "右侧红色标识",
+          "value": "武大口腔"
+        },
+        {
+          "kind": "text",
+          "label": "底部入口招牌",
+          "value": "武汉大学口腔医院"
+        },
+        {
+          "kind": "text",
+          "label": "OCR确认",
+          "value": "口腔医院"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2498",
+      "category": "medical_institution",
+      "content_len": 131,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是苏州市文物保护单位「普安桥」的文保石碑。碑文为红色楷体：顶部\"苏州市文物保护单位\"，主标题大字\"普安桥\"，落款\"苏州市人民政府2014年6月30日公布 / 吴江区人民政府2015年6月30日立\"。石碑立于运河边的石阶旁，背景可见水乡河道、传统民居和古树。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "普安桥"
+        },
+        {
+          "kind": "text",
+          "label": "保护级别",
+          "value": "苏州市文物保护单位"
+        },
+        {
+          "kind": "date",
+          "label": "公布日期",
+          "value": "2014年6月30日"
+        },
+        {
+          "kind": "text",
+          "label": "公布单位",
+          "value": "苏州市人民政府"
+        },
+        {
+          "kind": "date",
+          "label": "立碑日期",
+          "value": "2015年6月30日"
+        },
+        {
+          "kind": "text",
+          "label": "立碑单位",
+          "value": "吴江区人民政府"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2903",
+      "category": "government_admin_institution",
+      "content_len": 129,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「湖北开放职业学院」的校门口（金色大字门楣）。旁边可见「北京大学中*武汉教育培训基地」标识牌。校门为蓝白配色，前方有白色隔离护栏和绿化带。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校门名称",
+          "value": "湖北开放职业学院"
+        },
+        {
+          "kind": "text",
+          "label": "附属机构",
+          "value": "北京大学中*武汉教育培训基地"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 右侧牌",
+          "value": "想系下(品管刷"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_3128",
+      "category": "education_institution",
+      "content_len": 71,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块挂在白墙上的蓝白门牌。门牌主体白底黑字，正中写着「值 班 室」（值班室）；右上角蓝底白字标注房间号「107」；左上角蓝条为机构标识，疑似「华中科技大学\u2026十二栋」字样（OCR 模糊，缩放后仍不清晰，仅供参考），蓝条左端有一个白色校徽/Logo。右侧画面边缘可见门框。整体用途为值班室房门标识。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "门牌主文字",
+          "value": "值 班 室"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号",
+          "value": "107"
+        },
+        {
+          "kind": "text",
+          "label": "蓝色栏标题 [LOW] (OCR 模糊)",
+          "value": "华中科技大学\u2026十二栋（OCR 模糊，疑似）"
+        },
+        {
+          "kind": "logo",
+          "label": "校徽/logo",
+          "value": "蓝色标牌左侧白色校徽图形"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_3543",
+      "category": "education_institution",
+      "content_len": 149,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面显示汉口学院学生志愿者在车站（地面为光滑石砖，背景有 LED 广告牌\"超值套餐 ¥5早餐\"等快餐广告）手持两块红底白字欢迎牌迎接新生，牌上文字为「汉口学院 欢迎您！」。志愿者统一穿白色 T 恤、配蓝绳工作证。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "左侧红牌上行",
+          "value": "汉口学院"
+        },
+        {
+          "kind": "text",
+          "label": "左侧红牌下行",
+          "value": "欢迎您！"
+        },
+        {
+          "kind": "text",
+          "label": "右侧红牌上行",
+          "value": "汉口学院"
+        },
+        {
+          "kind": "text",
+          "label": "右侧红牌下行",
+          "value": "欢迎您！"
+        },
+        {
+          "kind": "price",
+          "label": "背景LED广告",
+          "value": "¥5早餐"
+        },
+        {
+          "kind": "text",
+          "label": "背景LED广告",
+          "value": "超值套餐"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_3633",
+      "category": "education_institution",
+      "content_len": 106,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「湖北省高等学校综合工程训练中心」的铜质铭牌，由湖北省教育厅于二〇〇七年十二月颁发。铭牌上中英文对照：HIGHER EDUCATION INSTITUTIONS OF HUBEI PROVINCE / ENGINEERING TRAINING CENTER / HUBEIPROVINCIAL DEPARTMENT OF EDUCATION。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "机构名称（上）",
+          "value": "湖北省高等学校"
+        },
+        {
+          "kind": "text",
+          "label": "机构名称（中）",
+          "value": "综合工程训练中心"
+        },
+        {
+          "kind": "text",
+          "label": "颁发单位",
+          "value": "湖 北 省 教 育 厅"
+        },
+        {
+          "kind": "date",
+          "label": "日期",
+          "value": "二〇〇七年十二月"
+        },
+        {
+          "kind": "text",
+          "label": "英文（上）",
+          "value": "HIGHER EDUCATION INSTITUTIONS OF HUBEI PROVINCE"
+        },
+        {
+          "kind": "text",
+          "label": "英文（中）",
+          "value": "ENGINEERING TRAINING CENTER"
+        },
+        {
+          "kind": "text",
+          "label": "英文（颁发单位）",
+          "value": "HUBEIPROVINCIAL DEPARTMENT OF EDUCATION"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_379",
+      "category": "education_institution",
+      "content_len": 173,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是武汉大学的一件红色纪念摆件，正面刻有\"武漢大学\"中文校名及花体英文 \"Wuhan University\"，中部为行政大楼（原工学院）的立体浮雕图案。下方文字注明：\"武汉大学行政大楼（原工学院），武汉大学优秀历史名建筑之一，2001年被列入全国重点文物保护单位。\"",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校名（中文）",
+          "value": "武漢大学"
+        },
+        {
+          "kind": "text",
+          "label": "校名（英文，花体）[LOW]",
+          "value": "Wuhan University"
+        },
+        {
+          "kind": "object",
+          "label": "图案",
+          "value": "行政大楼（原工学院）立体浮雕图案"
+        },
+        {
+          "kind": "text",
+          "label": "建筑名称",
+          "value": "武汉大学行政大楼（原工学院）"
+        },
+        {
+          "kind": "text",
+          "label": "建筑简介",
+          "value": "武汉大学优秀历史名建筑之一，2001年被列入全国重点文物保护单位。"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_3800",
+      "category": "education_institution",
+      "content_len": 133,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色主题学校展板：标题「仙桃市第二实验小学」（英文：Xiantao No. 2 Experimental Primary School），左侧为圆形校徽（蓝红配色，内含山水图形，校名环绕）。展板主体为「学校荣誉」表格，列表头：姓名 / 类别及题目 / 组织单位 / 级别 / 获奖等次 / 时间（部分右侧列被边框裁切）。表格奖项条目均为「第二实小」获奖，组织单位均为「仙桃市教育局」，级别均为「市级」。依次为：综合考核优胜单位、先进基层党组织、教学质量先进单位、党风廉政先进单位、平安校园、仙桃市第十届学生艺术节先进单位、仙桃市2015年小学生男子组篮球比赛、中小学生经典诵读大赛（三等奖），以及底部被截断的「仙桃市少先队红旗中队」一行。各条目最右侧时间列被照片右边缘裁切，仅可看到「201」「20」年份字样的片段。",
+      "r2_text": 1,
+      "details_count": 14,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "学校中文名",
+          "value": "仙桃市第二实验小学"
+        },
+        {
+          "kind": "text",
+          "label": "学校英文名",
+          "value": "Xiantao No. 2 Experimental Primary School"
+        },
+        {
+          "kind": "logo",
+          "label": "校徽",
+          "value": "圆形校徽（蓝色山/水图案 + 红色校名环绕）"
+        },
+        {
+          "kind": "text",
+          "label": "展板主题",
+          "value": "学校荣誉（主体颜色：红色 + 黄色）"
+        },
+        {
+          "kind": "text",
+          "label": "表格列名",
+          "value": "姓名 / 类别及题目 / 组织单位 / 级别 / 获奖等次 / 时间"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目1",
+          "value": "第二实小 / 综合考核优胜单位 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目2",
+          "value": "第二实小 / 先进基层党组织 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目3",
+          "value": "第二实小 / 教学质量先进单位 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目4",
+          "value": "第二实小 / 党风廉政先进单位 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目5",
+          "value": "第二实小 / 平安校园 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目6",
+          "value": "第二实小 / 仙桃市第十届学生艺术节先进单位 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目7",
+          "value": "第二实小 / 仙桃市2015年小学生男子组篮球比赛 / 仙桃市教育局 / 市级"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目8",
+          "value": "第二实小 / 中小学生经典诵读大赛 / 仙桃市教育局 / 市级 / 三等奖"
+        },
+        {
+          "kind": "text",
+          "label": "获奖条目9(部分)",
+          "value": "第二实小 / 仙桃市少先队红旗中队（条目底部被截断）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_4196",
+      "category": "education_institution",
+      "content_len": 358,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张微信\"钱包\"页面截图（副标题\"微信安全支付\"，左上角返回\"我\"）。顶部两个一级入口：零钱 ¥0.41（左侧，圆角向下箭头图标）、银行卡（右侧，信用卡图标）。下方是 5×3 九宫格功能图标，依次为：刷卡、转账、手机充值、理财通、Q币充值、生活缴费、城市服务、信用卡还款、微信红包、AA收款、腾讯公益、滴滴出行、火车票机票、美丽说、京东精选。状态栏：中国移动 20:50。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "页面标题",
+          "value": "钱包"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "微信安全支付"
+        },
+        {
+          "kind": "text",
+          "label": "零钱金额",
+          "value": "零钱 ￥0.41"
+        },
+        {
+          "kind": "text",
+          "label": "银行卡入口",
+          "value": "银行卡"
+        },
+        {
+          "kind": "text",
+          "label": "返回",
+          "value": "我"
+        },
+        {
+          "kind": "object",
+          "label": "九宫格入口列表",
+          "value": "刷卡 / 转账 / 手机充值 / 理财通 / Q币充值 / 生活缴费 / 城市服务 / 信用卡还款 / 微信红包 / AA收款 / 腾讯公益 / 滴滴出行 / 火车票机票 / 美丽说 / 京东精选"
+        },
+        {
+          "kind": "text",
+          "label": "状态栏",
+          "value": "中国移动 20:50"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0.5,
+      "emitted_action_ids": ["scan_to_pay"],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_4638",
+      "category": "financial_institution",
+      "content_len": 188,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片为一个机关/学校大院入口：右侧红柱上挂有金属牌匾\"治安保卫重点单位\"，落款\"仙桃市人民政府\"，日期\"二〇一五年二月\"；门内可见多层建筑，建筑上有蓝色\"2栋\"标牌，红色横幅\"面向\"（后续字模糊），还有\"一中\"字样；院内停放几辆车，其中一辆车上可见\"缆线路抢\"字样（疑似抢修车）；右侧是关闭的卷帘门，左侧有铁门。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "牌匾标题",
+          "value": "治安保卫重点单位"
+        },
+        {
+          "kind": "text",
+          "label": "落款单位",
+          "value": "仙桃市人民政府"
+        },
+        {
+          "kind": "date",
+          "label": "挂牌日期",
+          "value": "二0一五年二月"
+        },
+        {
+          "kind": "text",
+          "label": "楼栋号",
+          "value": "2栋"
+        },
+        {
+          "kind": "text",
+          "label": "建筑标识",
+          "value": "一中"
+        },
+        {
+          "kind": "text",
+          "label": "建筑红色横幅",
+          "value": "面向"
+        },
+        {
+          "kind": "text",
+          "label": "车辆涂装文字",
+          "value": "缆线路抢"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_5060",
+      "category": "government_admin_institution",
+      "content_len": 156,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「笔架山派出所 建北社区警务室」(Jian Bei Community Policing Office Of Bi Jia Shan Police Station) 的门头照片。蓝色招牌上有警徽标志，中英文双语标识；下方为玻璃门入口，门左侧有门牌号（15D，OCR较模糊），右侧墙面有蓝色「警务公开栏」信息牌（OCR模糊）。这是一处社区警务服务机构。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标题（中文）",
+          "value": "笔架山派出所 建北社区警务室"
+        },
+        {
+          "kind": "text",
+          "label": "主标题（英文）",
+          "value": "Jian Bei Community Policing Office Of Bi Jia Shan Police Station"
+        },
+        {
+          "kind": "logo",
+          "label": "警徽",
+          "value": "警徽标志"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 门牌号",
+          "value": "15D（OCR模糊）"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 右侧蓝色牌匾",
+          "value": "警务公开栏（OCR模糊）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_508",
+      "category": "government_law_institution",
+      "content_len": 177,
+      "r1": 1
+    },
+    {
+      "raw_content": "街头场景：左侧白色立柱印有\"湖北广电网络\"logo，竖排红字\"电视宽带专家家居\" / \"宽带新锐智慧城\"（部分被裁）；旁边水泥墙上蓝字三行写着\"中国民办教育百强学校\"、\"湖北省五星级民办学校\"、\"仙桃市教学质量先进单位\"，右侧红色大字\"仙桃京\"（可能为\"仙桃市某学校\"开头，后段被画面右缘裁掉）；墙根停着一辆贴有\"事韦通电动\"字样贴纸的三轮车；背景是电线杆、树枝和远处多层居民楼。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "机构logo",
+          "value": "湖北广电网络"
+        },
+        {
+          "kind": "text",
+          "label": "柱上竖排文字（左列）",
+          "value": "电视宽带专家家居"
+        },
+        {
+          "kind": "text",
+          "label": "柱上竖排文字（右列）",
+          "value": "宽带新锐智慧城"
+        },
+        {
+          "kind": "text",
+          "label": "墙上一排大字",
+          "value": "中国民办教育百强学校"
+        },
+        {
+          "kind": "text",
+          "label": "墙上二排",
+          "value": "湖北省五星级民办学校"
+        },
+        {
+          "kind": "text",
+          "label": "墙上三排",
+          "value": "仙桃市教学质量先进单位"
+        },
+        {
+          "kind": "text",
+          "label": "墙体红字",
+          "value": "仙桃京"
+        },
+        {
+          "kind": "text",
+          "label": "三轮车贴字",
+          "value": "事韦通电动"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_5081",
+      "category": "education_institution",
+      "content_len": 190,
+      "r1": 1
+    },
+    {
+      "raw_content": "照片中是武汉大学附近的「珞珈山街派出所 / 珞珈社区警务室」蓝色牌匾。牌匾正中从上到下三行文字：\n第一行：'珞珈山街派出所'\n第二行：'珞珈社区警务室'\n第三行：'Luo jia Community Police Office'\n牌匾左侧带有警徽（人民警察徽章），右侧外侧还有一块党徽（中国共产党党徽）背景板。建筑物为白色外墙现代建筑，前方有绿树遮挡。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "机构名称（上）",
+          "value": "珞珈山街派出所"
+        },
+        {
+          "kind": "text",
+          "label": "机构名称（下）",
+          "value": "珞珈社区警务室"
+        },
+        {
+          "kind": "text",
+          "label": "英文名称",
+          "value": "Luo jia Community Police Office"
+        },
+        {
+          "kind": "logo",
+          "label": "徽章（左）",
+          "value": "警徽（人民警察徽章）"
+        },
+        {
+          "kind": "logo",
+          "label": "徽章（右）",
+          "value": "党徽（中国共产党党徽）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_5405",
+      "category": "government_law_institution",
+      "content_len": 176,
+      "r1": 1
+    },
+    {
+      "raw_content": "中国工商银行（ICBC）24小时自助银行服务网点。门头招牌为\"中国工商银行\"及 ICBC 圆形 logo，右侧立柱标识\"24h 自助银行服务 Self-Service Banking\"。门口玻璃门贴有宣传海报\"购买国债 利国利民\"，左侧墙面张贴有\"中国工商银行 24小时自助银行服务\"收费表。整家网点为 24 小时自助服务型。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌 logo",
+          "value": "ICBC 中国工商银行"
+        },
+        {
+          "kind": "text",
+          "label": "主招牌",
+          "value": "中国工商银行"
+        },
+        {
+          "kind": "text",
+          "label": "英文标识",
+          "value": "ICBC"
+        },
+        {
+          "kind": "text",
+          "label": "服务类型",
+          "value": "24h 自助银行服务 Self-Service Banking"
+        },
+        {
+          "kind": "text",
+          "label": "宣传标语",
+          "value": "购买国债 利国利民"
+        },
+        {
+          "kind": "object",
+          "label": "营业类型",
+          "value": "24小时自助银行服务网点"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_5492",
+      "category": "financial_institution",
+      "content_len": 163,
+      "r1": 1
+    },
+    {
+      "raw_content": "门牌为「武汉东湖新技术开发区 武汉职业技术学院武装部」，安装在建筑外墙上，背景为灰色水泥墙与六边形镂空格栅装饰，左侧可见楼梯入口。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "区域名",
+          "value": "新技术开发区"
+        },
+        {
+          "kind": "text",
+          "label": "地名",
+          "value": "武汉东湖"
+        },
+        {
+          "kind": "text",
+          "label": "部门",
+          "value": "武汉职业技术学院武装部"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_5658",
+      "category": "education_institution",
+      "content_len": 65,
+      "r1": 1
+    },
+    {
+      "raw_content": "医院入口处的白色金属警示牌（立柱式，底部被一根生锈短柱挡住一部分），红字写着：\"确保病员安全，院内禁止非机动车入内。\" 落款\"保卫部\"。牌前有四个黄黑相间的防撞柱，地面是灰色铺砖。背景是街道、行人、车辆和商铺。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "警示语首行",
+          "value": "确保病员"
+        },
+        {
+          "kind": "text",
+          "label": "警示语第二行",
+          "value": "安全，院内"
+        },
+        {
+          "kind": "text",
+          "label": "警示语第三行",
+          "value": "禁止非机动"
+        },
+        {
+          "kind": "text",
+          "label": "警示语第四行",
+          "value": "车入内。"
+        },
+        {
+          "kind": "text",
+          "label": "落款",
+          "value": "保卫部"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_warning"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_5915",
+      "category": "medical_institution",
+      "content_len": 105,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑物墙面竖排蓝底白字牌匾：从上到下完整文字为「北京大学 老教授协会 基教中心 武汉教育培训基地」。\n\n背景可见一条红色横幅，上排文字为「湖北开放职（业）学院（8450.??）」，括号内电话号码被旗杆挡住；下排文字为「学前带薪（实）习 入?签订?业协议」（多处被旗杆和树叶遮挡）。\n\n路边停有一辆车，车牌「鄂A·U9899」。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "牌匾第一行",
+          "value": "北京大学"
+        },
+        {
+          "kind": "text",
+          "label": "牌匾第二行",
+          "value": "基教中心"
+        },
+        {
+          "kind": "text",
+          "label": "牌匾第二行（右侧）",
+          "value": "老教授协会"
+        },
+        {
+          "kind": "text",
+          "label": "牌匾第三行",
+          "value": "武汉教育培训基地"
+        },
+        {
+          "kind": "text",
+          "label": "背景横幅上排（被旗杆遮挡）",
+          "value": "湖北开放职（业）学院（8450.??）"
+        },
+        {
+          "kind": "text",
+          "label": "背景横幅下排（被旗杆/树遮挡）",
+          "value": "学前带薪（实）习 入（?）签订（?）业协议"
+        },
+        {
+          "kind": "text",
+          "label": "车牌",
+          "value": "鄂A·U9899"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_5927",
+      "category": "education_institution",
+      "content_len": 163,
+      "r1": 1
+    },
+    {
+      "raw_content": "武汉市公安局警务综合服务站 (站点编号 J01)，门头为深蓝色建筑，顶部设有警用红蓝警灯和警徽，下方有「110」报警电话标识。右侧塔楼标注「安 / ICE / J01」(应为「POLICE」被塔楼边沿截断)。玻璃幕墙入口，门前的玻璃上有周边建筑（武汉华美达光谷大酒店等）的反射。设有石质防撞球和不锈钢护栏。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "站点名称",
+          "value": "武汉市公安局警务综合服务站"
+        },
+        {
+          "kind": "number",
+          "label": "报警电话",
+          "value": "110"
+        },
+        {
+          "kind": "text",
+          "label": "站点编号",
+          "value": "J01"
+        },
+        {
+          "kind": "text",
+          "label": "英文标识(部分)",
+          "value": "ICE (疑似 POLICE 被塔楼边缘截断)"
+        },
+        {
+          "kind": "logo",
+          "label": "警徽",
+          "value": "人民警察警徽(塔楼上)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_5964",
+      "category": "government_law_institution",
+      "content_len": 153,
+      "r1": 1
+    },
+    {
+      "raw_content": "路边黄色提示牌，标题\"提 示\"，正文：\"邱舍路桥梁限载20吨，严禁大型、重型车辆驶入，请绕道行驶。\"落款：吴江区公安局同里交巡警中队。位置位于一条双向公路旁。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "提 示"
+        },
+        {
+          "kind": "text",
+          "label": "路名",
+          "value": "邱舍路桥梁限载"
+        },
+        {
+          "kind": "number",
+          "label": "限载吨位",
+          "value": "20吨"
+        },
+        {
+          "kind": "text",
+          "label": "警示正文",
+          "value": "严禁大型、重型车辆驶入，请绕道行驶。"
+        },
+        {
+          "kind": "text",
+          "label": "落款单位",
+          "value": "吴江区公安局同里交巡警中队"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_warning",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_6085",
+      "category": "government_law_institution",
+      "content_len": 79,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0,
+      "emitted_action_ids": [],
+      "composite": 0.36,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(error)",
+      "id": "image_6134",
+      "category": "government_law_institution",
+      "content_len": 0,
+      "r1": 0.3
+    },
+    {
+      "raw_content": "这是「钟家庄派出所 东谢匠社区警务室」外景。一栋白墙蓝腰线的平房，深灰色机瓦屋顶，居中是蓝色警徽图案（招牌上\"派出所\"和\"社区警务室\"两侧对称排列），下方蓝漆木门一扇，左右各一扇带铁栅栏的窗户。门左侧墙上挂有一块小牌匾（红底金字，OCR 未能稳定识别，疑似岗位职责/公示牌）；门右侧墙上有蓝色背景的社区警务公开告示栏。招牌主文字（高置信度）：「钟家庄派出所」「东谢匠社区警务室」。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "单位名称（左）",
+          "value": "钟家庄派出所"
+        },
+        {
+          "kind": "text",
+          "label": "单位名称（右）",
+          "value": "东谢匠社区警务室"
+        },
+        {
+          "kind": "logo",
+          "label": "警徽",
+          "value": "警徽标志（蓝底招牌中央）"
+        },
+        {
+          "kind": "object",
+          "label": "建筑外观",
+          "value": "白墙蓝腰线平房，深灰色机瓦屋顶，蓝漆木门，左右各一扇带铁栅栏窗户"
+        },
+        {
+          "kind": "text",
+          "label": "左墙小牌匾",
+          "value": "[LOW] 未能稳定识别（OCR 模糊），疑似红底金字的公告/职责牌"
+        },
+        {
+          "kind": "text",
+          "label": "右侧告示栏",
+          "value": "门右侧墙上贴有蓝色背景的社区警务公开栏/告示（细节不清晰）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_6211",
+      "category": "government_law_institution",
+      "content_len": 190,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一座大型政府/司法机关建筑的正门：米黄色石材立面配中央蓝色玻璃幕墙，正门檐下悬挂金色国徽，建筑顶部中央立有旗杆悬挂国旗（半降状态）。正门入口立有白底黑字竖排标牌「武汉东湖新技术开发区人民法院」。门前方有一条宽阔的石阶步道，步道底部（画面前景）为车辆/行人通道入口，左右各设一座自动闸机。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "机构名称",
+          "value": "武汉东湖新技术开发区人民法院"
+        },
+        {
+          "kind": "object",
+          "label": "国徽",
+          "value": "正门檐下悬挂中华人民共和国国徽（金色天安门图案）"
+        },
+        {
+          "kind": "object",
+          "label": "国旗",
+          "value": "建筑顶部中央立有旗杆，悬挂国旗（半降状态）"
+        },
+        {
+          "kind": "object",
+          "label": "建筑外观",
+          "value": "大型现代公共建筑，米黄色石材立面配蓝色玻璃幕墙，正门前有宽阔石阶，门口两侧有铁树盆栽"
+        },
+        {
+          "kind": "shape",
+          "label": "地面闸机",
+          "value": "画面前景底部有两个自动闸机（人行通道入口）"
+        },
+        {
+          "kind": "object",
+          "label": "标牌样式",
+          "value": "白底黑字竖排立牌，位于大门右侧"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6268",
+      "category": "government_law_institution",
+      "content_len": 145,
+      "r1": 1
+    },
+    {
+      "raw_content": "华中科技大学东十二楼408教师休息室门牌。门牌为蓝白配色，左上角有 HUST 校徽（蓝底白字）+ \"华中科技大学东十二楼\" 行，右上角标号 \"408\"，下方白底黑字大标题 \"教师休息室\"，整体为悬挂在墙面/门侧的房间标识牌。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "华中科技大学 HUST logo",
+          "value": "HUST 华中科技大学"
+        },
+        {
+          "kind": "text",
+          "label": "楼栋名称",
+          "value": "华中科技大学东十二楼"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号",
+          "value": "408"
+        },
+        {
+          "kind": "text",
+          "label": "房间用途",
+          "value": "教师休息室"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6270",
+      "category": "education_institution",
+      "content_len": 112,
+      "r1": 1
+    },
+    {
+      "raw_content": "透过不锈钢护栏看到一栋白色教学楼（疑似某实验小学），屋顶有红色金属大字校名（\"??教??实验小学\"，缩略图+zoom 后仍有部分字符难以辨识）；楼下操场为绿色塑胶场地 + 红色跑道。右侧走廊外侧立有一块蓝底白边公告牌，标题为\"2015年秋季学期年级办公室分布示意图 / 教学楼\"，牌上列出楼层办公室分布：六（8）六（9）、五（2）（3）（4）（5）（6）（7）（8）（9）、四楼（模糊）、杨教室、五楼等。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "校名（屋顶大字）",
+          "value": "??教??实验小学"
+        },
+        {
+          "kind": "text",
+          "label": "公告牌标题",
+          "value": "2015年秋季学期年级办公室分布示意图"
+        },
+        {
+          "kind": "text",
+          "label": "建筑名称",
+          "value": "教学楼"
+        },
+        {
+          "kind": "text",
+          "label": "教室行（顶部）",
+          "value": "六 (8)  六 (9)"
+        },
+        {
+          "kind": "text",
+          "label": "教室行（中部）",
+          "value": "五 (2) 五 (3) 五 (4) 五 (5) 五 (6) 五 (7) 五 (8) 五 (9)"
+        },
+        {
+          "kind": "text",
+          "label": "楼层标签",
+          "value": "四楼 [LOW]"
+        },
+        {
+          "kind": "text",
+          "label": "办公室列",
+          "value": "五楼  杨教室"
+        },
+        {
+          "kind": "object",
+          "label": "前景",
+          "value": "不锈钢护栏（拍摄视角位于二楼/三楼走廊）"
+        },
+        {
+          "kind": "object",
+          "label": "建筑外观",
+          "value": "白色多层教学楼，顶楼屋顶有红色金属大字校名，操场为绿色塑胶跑道 + 红色跑道"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_6478",
+      "category": "education_institution",
+      "content_len": 202,
+      "r1": 1
+    },
+    {
+      "raw_content": "城市街景照片：主体是\"华中数码城\"大楼（蓝色玻璃幕墙外立面，竖排红色大字），楼下招牌\"手机市场\"。大楼右侧是白色弧形建筑\"中国银行 BANK OF CHINA\"。人行道旁还能看到一家餐厅招牌（\"早餐、家常炒菜\"），标有订餐电话 51654972 及电话 133421510?（末位 OCR [LOW]）。街道有金属隔离护栏、卡车、电动车和行人，是典型的城市商业街。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "大楼招牌",
+          "value": "华中数码城"
+        },
+        {
+          "kind": "text",
+          "label": "楼下市场招牌",
+          "value": "手机市场"
+        },
+        {
+          "kind": "logo",
+          "label": "相邻机构",
+          "value": "中国银行 BANK OF CHINA"
+        },
+        {
+          "kind": "text",
+          "label": "餐厅招牌",
+          "value": "餐厅（早餐、家常炒菜）"
+        },
+        {
+          "kind": "text",
+          "label": "餐厅电话",
+          "value": "电话：133421510?（OCR 末位 [LOW]）"
+        },
+        {
+          "kind": "text",
+          "label": "餐厅订餐",
+          "value": "订餐：51654972"
+        },
+        {
+          "kind": "text",
+          "label": "市场招牌竖字",
+          "value": "建设国家 创业中华 复立全国（OCR [LOW]，可能意译）"
+        },
+        {
+          "kind": "object",
+          "label": "街道场景",
+          "value": "道路中央金属隔离护栏、卡车、电动车、行人，汽车通行"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_656",
+      "category": "financial_institution",
+      "content_len": 182,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一块\"视频监控区\"警示牌，顶部为警察徽章。牌面信息：江夏分局藏龙岛派出所、湖北经济学院保卫处主管；值班电话 81973779；报警电话 13871101013。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "监控区名称",
+          "value": "视频监控区"
+        },
+        {
+          "kind": "text",
+          "label": "主管单位1",
+          "value": "江夏分局藏龙岛派出所"
+        },
+        {
+          "kind": "text",
+          "label": "主管单位2",
+          "value": "湖北经济学院保卫处"
+        },
+        {
+          "kind": "phone",
+          "label": "值班电话",
+          "value": "81973779"
+        },
+        {
+          "kind": "phone",
+          "label": "报警电话",
+          "value": "13871101013"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_warning"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_6679",
+      "category": "education_institution",
+      "content_len": 82,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片显示一家基层公安机关的临街门面，蓝色招牌上写着\"长春路派出所\"，右上方小字为\"洛阳公安局\"，右侧为\"社区警务室\"。门前有几名群众在树荫下乘凉聊天。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "机构名",
+          "value": "长春路派出所"
+        },
+        {
+          "kind": "text",
+          "label": "上级单位",
+          "value": "洛阳公安局"
+        },
+        {
+          "kind": "text",
+          "label": "下设机构",
+          "value": "社区警务室"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_6848",
+      "category": "government_law_institution",
+      "content_len": 75,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一栋临街建筑的门面照，主招牌为「武汉恒春和中醫醫院」（底部门牌 + 二楼招牌均有同一名称），地址为「武昌民主路301号」。建筑右侧相邻店铺招牌为「通用药业」+「口腔 / 医保定点」。建筑为三层砖混结构，二楼有大型玻璃窗，外观贴有中式飞檐装饰。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主门牌",
+          "value": "武汉恒春和中醫醫院"
+        },
+        {
+          "kind": "text",
+          "label": "二楼招牌",
+          "value": "武汉恒春和中醫醫院"
+        },
+        {
+          "kind": "text",
+          "label": "门牌号",
+          "value": "武昌民主路301号"
+        },
+        {
+          "kind": "text",
+          "label": "右侧招牌",
+          "value": "通用药业"
+        },
+        {
+          "kind": "text",
+          "label": "右侧副招牌",
+          "value": "口腔"
+        },
+        {
+          "kind": "text",
+          "label": "医保信息",
+          "value": "医保定点"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_6867",
+      "category": "medical_institution",
+      "content_len": 123,
+      "r1": 1
+    },
+    {
+      "raw_content": "湖北省文物保护单位石碑：「湖北省文物保护单位」「孙中山先生纪念碑」「湖北省人民政府 二〇〇八年三月二十七日公布」「武汉市人民政府 立」。石碑位于石阶旁的草地上，背景可见铁链护栏与石碑基座。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "保护级别",
+          "value": "湖北省文物保护单位"
+        },
+        {
+          "kind": "text",
+          "label": "文物名称",
+          "value": "孙中山先生纪念碑"
+        },
+        {
+          "kind": "text",
+          "label": "公布单位",
+          "value": "湖北省人民政府"
+        },
+        {
+          "kind": "date",
+          "label": "公布日期",
+          "value": "二〇〇八年三月二十七日"
+        },
+        {
+          "kind": "text",
+          "label": "设立单位",
+          "value": "武汉市人民政府 立"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6879",
+      "category": "government_admin_institution",
+      "content_len": 94,
+      "r1": 1
+    },
+    {
+      "raw_content": "学校宣传栏：位于建筑物外墙上，是仙桃市第二实验小学（Xiantao No. 2 Experimental Primary School）的展板。版面整体为红色，左上角有圆形校徽，标题右侧有一个大大的红色\"福\"字（[LOW] OCR 误读为\"院\"已修正）。版面左侧有竖排红字标题\"领导关...\"（剩余部分被裁切）。正文段落为：\"长期以来，第二实验小学一直得到各级领导的高度重视和大力支持，得到各位专家的工作督导和精心指导，他们践行党的群众路线教育实践活动，深入学校，深入基层，关心师生进步...\"。右下角有人物照片配说明文字：\"市委书记冯云参加第一个...\"（后续被裁切）。展览板装在不锈钢框内，前方有粉白瓷砖柱和拱形建筑立面。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "学校中文名",
+          "value": "仙桃市第二实验小学"
+        },
+        {
+          "kind": "text",
+          "label": "学校英文名 [LOW]（OCR 不可靠）",
+          "value": "Xiantao No. 2 Experimental Primary School"
+        },
+        {
+          "kind": "text",
+          "label": "右上方大字",
+          "value": "福"
+        },
+        {
+          "kind": "text",
+          "label": "左侧竖排红字标题（部分）",
+          "value": "领导关..."
+        },
+        {
+          "kind": "text",
+          "label": "正文段落",
+          "value": "长期以来，第二实验小学一直得到各级领导的高度重视和大力支持，得到各位专家的工作督导和精心指导，他们践行党的群众路线教育实践活动，深入学校，深入基层，关心师生进步"
+        },
+        {
+          "kind": "text",
+          "label": "右侧人像说明文字",
+          "value": "市委书记冯云参加第一个"
+        },
+        {
+          "kind": "object",
+          "label": "校徽",
+          "value": "圆形校徽（位于标题左侧，含 'Y' 形图案）"
+        },
+        {
+          "kind": "object",
+          "label": "人物照片",
+          "value": "右侧人物照片（深色西装男子站在群众中发言）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_7042",
+      "category": "education_institution",
+      "content_len": 313,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「萌乐园 少儿托管中心」武汉光谷分校的门店。橙色木条外立面，门牌写着品牌名「萌乐园」和「少儿托管中心」，左侧副标「专注少儿学后托管教育」（学盟教育旗下 / www.xuedu.cc / 全国连锁）；右上角标注分校区「湖北省武汉市光谷分校」，联系电话 TEL:027-88185606，底部注明「上股交上市企业 代码：202702」。玻璃门上隐约可见「萌乐园」字样与「以人为本 幸福童年」标语（OCR 模糊）。",
+      "r2_text": 1,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "品牌（顶部招牌）",
+          "value": "萌乐园"
+        },
+        {
+          "kind": "text",
+          "label": "顶部副标题",
+          "value": "少儿托管中心"
+        },
+        {
+          "kind": "brand",
+          "label": "品牌（橙色门面招牌）",
+          "value": "萌乐园"
+        },
+        {
+          "kind": "text",
+          "label": "橙色门牌主标题",
+          "value": "少儿托管中心"
+        },
+        {
+          "kind": "text",
+          "label": "业务介绍",
+          "value": "专注少儿学后托管教育"
+        },
+        {
+          "kind": "brand",
+          "label": "教育品牌",
+          "value": "学盟教育"
+        },
+        {
+          "kind": "text",
+          "label": "总部属性",
+          "value": "全国连锁"
+        },
+        {
+          "kind": "website",
+          "label": "官网",
+          "value": "www.xuedu.cc"
+        },
+        {
+          "kind": "text",
+          "label": "分校区",
+          "value": "湖北省武汉市光谷分校"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "TEL:027-88185606"
+        },
+        {
+          "kind": "text",
+          "label": "公司属性",
+          "value": "上股交上市企业 代码：202702"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 底部标语",
+          "value": "以人为本 幸福童年"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 玻璃门内文字",
+          "value": "萌乐园"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2905",
+      "category": "school_childcare_institution",
+      "content_len": 206,
+      "r1": 1
+    },
+    {
+      "raw_content": "图为一栋居民楼底层的门面，绿色招牌挂着红十字标识，写着「东湖风景朱铁生西医外科诊所」（登记号：66349177942012017D2112）。诊所玻璃门上贴着「小心碰头」「请随手关门」等提示，旁边还有「公共场所 请灭烟」标牌。门口放着一个绿色「其他垃圾」桶和一辆电动自行车。右侧远处能看到一块红色横幅（文字太模糊无法辨识）和疑似「武汉中\u2026瓶装气供应站」（OCR 不全）的蓝色卷帘门店面。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "诊所名称",
+          "value": "东湖风景朱铁生西医外科诊所"
+        },
+        {
+          "kind": "text",
+          "label": "登记号",
+          "value": "登记号：66349177942012017D2112"
+        },
+        {
+          "kind": "logo",
+          "label": "标识",
+          "value": "红十字医疗标志（绿色招牌左侧）"
+        },
+        {
+          "kind": "text",
+          "label": "门玻璃提示",
+          "value": "小心碰头"
+        },
+        {
+          "kind": "text",
+          "label": "门玻璃提示",
+          "value": "请随手关门"
+        },
+        {
+          "kind": "text",
+          "label": "禁烟标识",
+          "value": "公共场所 请灭烟"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 右侧横幅文字",
+          "value": "??（远处红色横幅，OCR 模糊无法辨识）"
+        },
+        {
+          "kind": "text",
+          "label": "邻店招牌",
+          "value": "武汉中鼠瓶装气供应站（OCR 部分可能不准，原文疑似「武汉中\u2026瓶装气供应站」）"
+        },
+        {
+          "kind": "object",
+          "label": "门口物件",
+          "value": "绿色垃圾桶（带「其他垃圾」标识）、自行车/电动自行车（停在门口）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_2372",
+      "category": "clinic_institution",
+      "content_len": 193,
+      "r1": 1
+    },
+    {
+      "raw_content": "诊所招牌照片：店名为「武昌彭春阳西医内科诊所」，招牌上有红色十字医疗标志，下方玻璃门入口上方也有一个红色十字标志。招牌文字内容：登记号 56558555242010617D2112，电话 027-87337814。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "医疗标志",
+          "value": "红色十字（六边形医疗标志）"
+        },
+        {
+          "kind": "text",
+          "label": "诊所名称",
+          "value": "武昌彭春阳西医内科诊所"
+        },
+        {
+          "kind": "number",
+          "label": "登记号",
+          "value": "56558555242010617D2112"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "027-87337814"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2540",
+      "category": "clinic_institution",
+      "content_len": 107,
+      "r1": 1
+    },
+    {
+      "raw_content": "蓝色诊所招牌：'医疗机构名称: 王俊平个体诊所'、'诊疗范围: 妇科'、'诊疗方式: 门诊'、'诊疗对象: 社会'、'负责人: 王俊平'、'执业地址: 仙桃市复州大道袁市社区13号'、'联系电话: 13407272442'、'监督电话: 3324061'。招牌右侧有红十字医疗标志；旁边红色店招为'王健'（部分可见）。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "医疗机构名称",
+          "value": "王俊平个体诊所"
+        },
+        {
+          "kind": "text",
+          "label": "诊疗方式",
+          "value": "门诊"
+        },
+        {
+          "kind": "text",
+          "label": "诊疗对象",
+          "value": "社会"
+        },
+        {
+          "kind": "text",
+          "label": "负责人",
+          "value": "王俊平"
+        },
+        {
+          "kind": "text",
+          "label": "执业地址",
+          "value": "仙桃市复州大道袁市社区13号"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "13407272442"
+        },
+        {
+          "kind": "phone",
+          "label": "监督电话",
+          "value": "3324061"
+        },
+        {
+          "kind": "text",
+          "label": "诊疗范围[LOW]",
+          "value": "范 圖长秘"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "dial_number"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_1882",
+      "category": "clinic_institution",
+      "content_len": 159,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色招牌广告\u2014\u2014「翰艺书法」招生海报。机构资质：湖北省书协少年分会书法教育实验基地、仙桃市书法家协会定点培训基地。培训地点：复州花园北门翰艺书法。联系人：汪老师，电话 18907226968。常年招生，随到随学。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "品牌名称",
+          "value": "翰艺书法"
+        },
+        {
+          "kind": "text",
+          "label": "上级机构",
+          "value": "湖北省书协少年分会书法教育实验基地"
+        },
+        {
+          "kind": "text",
+          "label": "挂靠单位",
+          "value": "仙桃市书法家协会定点培训基地"
+        },
+        {
+          "kind": "text",
+          "label": "培训地点",
+          "value": "复州花园北门翰艺书法"
+        },
+        {
+          "kind": "text",
+          "label": "联系人",
+          "value": "汪老师"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "18907226968"
+        },
+        {
+          "kind": "text",
+          "label": "招生说明",
+          "value": "常年招生 随到随学"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "save_posting",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6636",
+      "category": "training_institution",
+      "content_len": 106,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙上贴着「如家托管中心」广告牌，提供全托、午托、晚托、作业辅导、周末培优服务。地址：复州花园华菊园28栋二单元一楼（实验二旁），电话：13407228298。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "机构名称",
+          "value": "如家托管中心"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目",
+          "value": "全托 午托 晚托 作业辅导 周末培优"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "复州花园华菊园28栋二单元一楼（实验二旁）"
+        },
+        {
+          "kind": "text",
+          "label": "电话",
+          "value": "13407228298"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_7296",
+      "category": "childcare_institution",
+      "content_len": 79,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "江南片区固定办卡点"
+        },
+        {
+          "kind": "text",
+          "label": "办卡点1",
+          "value": "1、武昌区政务服务中心"
+        },
+        {
+          "kind": "text",
+          "label": "地址1",
+          "value": "武昌区临江大道59号武昌房地产交易大厦1楼27号窗口"
+        },
+        {
+          "kind": "text",
+          "label": "办卡点2",
+          "value": "2、洪山区政务服务中心"
+        },
+        {
+          "kind": "text",
+          "label": "地址2",
+          "value": "洪山区文秀街9号（丽岛紫园小区斜对面）3楼5号窗口"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_7376",
+      "category": "government_service_institution",
+      "content_len": 0,
+      "r1": 1
+    }
+  ]
+}

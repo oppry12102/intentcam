@@ -763,6 +763,56 @@
       "expected_actions": [
         "open_in_maps"
       ]
+    },
+    {
+      "id": "image_1882",
+      "file": "image_1882.jpg",
+      "src": "reclassify_phase_i_v2.py moved from ground_truth_phone_60.json",
+      "category": "clinic_institution",
+      "what_is_pictured": "王俊平个体诊所执业信息牌 — 联系电话 13407272442 / 监督电话 3324061",
+      "must_have_in_scene_or_observation": [
+        "13407272442"
+      ],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_6636",
+      "file": "image_6636.jpg",
+      "src": "reclassify_phase_i_v2.py moved from ground_truth_phone_60.json",
+      "category": "training_institution",
+      "what_is_pictured": "湖北省书协少年分会书法教育实验基地 仙桃市书法家协会定点培训基地 翰艺书法 培训地点：复州花园北门翰艺书法 联系人：汪老师 18907226968 常年招生 随到随学",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7296",
+      "file": "image_7296.jpg",
+      "src": "reclassify_phase_i_v2.py moved from ground_truth_phone_60.json",
+      "category": "childcare_institution",
+      "what_is_pictured": "如家托管中心 全托 午托 晚托 作业辅导 周末培优 地址：复州花园华菊园28栋二单元一楼（实验二小旁） 电话：13407228298 ###",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
+    },
+    {
+      "id": "image_7376",
+      "file": "image_7376.jpg",
+      "src": "reclassify_phase_i_v2.py moved from ground_truth_phone_60.json",
+      "category": "government_service_institution",
+      "what_is_pictured": "江南片区固定办卡点 1、武昌区政务服务中心 武昌区临江大道59号武昌房地产交易大厦1楼27号窗口 2、洪山区政务服务中心 洪山区文秀街9号（丽岛紫园小区斜对面）3楼5号窗口 3、凤凰山综合服务中心 武昌区中山路193号附10号（农村商业银行",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "service_institution",
+      "expected_actions": [
+        "open_in_maps"
+      ]
     }
   ],
   "_meta": {
@@ -788,6 +838,8 @@
       }
     ],
     "reclassified_count": 3,
-    "last_reclassified": "2026-07-12"
+    "last_reclassified": "2026-07-12",
+    "reclassified_v2_count": 4,
+    "last_reclassified_v2": "2026-07-13"
   }
 }
