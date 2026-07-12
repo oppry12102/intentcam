@@ -1,0 +1,693 @@
+{
+  "ground_truth": "ground_truth_phaseG_15.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 15,
+  "overall_composite": 0.9725,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 15,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"phase_g_eval": 0.9725},
+  "fixtures": [
+    {
+      "raw_content": "小区花园内的景观池旁立着一块深棕色警示牌，上方为圆形禁止戏水图标，下方白色文字写着\"请勿戏水\"。周围是草坪、灌木和石径，背景是住宅楼。",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "警示语",
+          "value": "请勿戏水"
+        },
+        {
+          "kind": "object",
+          "label": "警示牌样式",
+          "value": "深棕色木质/仿木牌，上方有圆形禁止图标（戏水图案+斜杠），下方白色\"请勿戏水\"字样，插在草地上"
+        },
+        {
+          "kind": "object",
+          "label": "环境",
+          "value": "小区花园景观池，周围是草坪、灌木、树木和小径，背景为高层住宅楼"
+        }
+      ],
+      "expected_actions": ["copy_warning"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_warning"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_103",
+      "category": "phase_g_eval",
+      "content_len": 67,
+      "r1": 1
+    },
+    {
+      "raw_content": "图示为武汉东湖 easylake 景区入口的白色木栅栏门，右侧柱子上挂着一块深色木质警示牌，顶部是 \"eas/lake 武汉东湖\" 的 logo，正中是禁止通行图标（红色斜杠穿过白色行人剪影），下方多语种警告文字：\"请勿通过 / No Thoroughfare / 通さないでください / [韩文警告]\"。牌底装饰着海浪波纹图案。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "地点标识",
+          "value": "eas/lake 武汉东湖"
+        },
+        {
+          "kind": "text",
+          "label": "中文警示",
+          "value": "请勿通过"
+        },
+        {
+          "kind": "text",
+          "label": "英文警示",
+          "value": "No Thoroughfare"
+        },
+        {
+          "kind": "text",
+          "label": "日文警示 [LOW] (OCR 置信度低)",
+          "value": "通さないでください"
+        },
+        {
+          "kind": "text",
+          "label": "韩文警示 [LOW] (OCR 置信度低)",
+          "value": "채택 하지 (OCR 识别混乱，可能为 \"통과하지 마십시오\" 一类的警告，图上字很小不太清晰)"
+        }
+      ],
+      "expected_actions": ["copy_warning"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_warning",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1006",
+      "category": "phase_g_eval",
+      "content_len": 165,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一个店铺入口处的招牌与告示。黑色招牌上白色大字写着店名「禾和谷」，下面金黄色字「快餐超市」标明业态，再下方白色字「入口处」指示此处是入口。招牌安装在铁艺护栏上方，护栏下方贴着一张黄色警示牌，写着红字「此门请勿堵塞」/「请勿堆放垃圾」。左侧墙面有一个手写的「主」字涂鸦。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "品牌名",
+          "value": "禾和谷"
+        },
+        {
+          "kind": "text",
+          "label": "经营类型",
+          "value": "快餐超市"
+        },
+        {
+          "kind": "text",
+          "label": "位置指示",
+          "value": "入口处"
+        },
+        {
+          "kind": "text",
+          "label": "警示语 1",
+          "value": "此门请勿堵塞"
+        },
+        {
+          "kind": "text",
+          "label": "警示语 2",
+          "value": "请勿堆放垃圾"
+        },
+        {
+          "kind": "text",
+          "label": "墙面涂鸦",
+          "value": "主"
+        }
+      ],
+      "expected_actions": ["copy_warning"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1061",
+      "category": "phase_g_eval",
+      "content_len": 136,
+      "r1": 1
+    },
+    {
+      "raw_content": "图中是一块挂在办公区入口墙上的方形告示牌，牌面文字分两列竖排书写：左列\"办公区域\"，右列\"非请勿入\"（OCR 误读为\"非请勿人\"，根据上下文应为\"入\"字）。告示牌下方设有门禁读卡器和金属门禁杆，地面为瓷砖，左侧可见一扇带金属把手的木门。整个场景表明这是一个需要刷卡授权才能进入的办公区，非工作人员请勿进入。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "左列文字",
+          "value": "办公区域"
+        },
+        {
+          "kind": "text",
+          "label": "右列文字",
+          "value": "非请勿入 (OCR 误读为\"非请勿人\"，应为\"入\")"
+        },
+        {
+          "kind": "object",
+          "label": "标识类型",
+          "value": "门禁告示牌 + 读卡器 + 门禁杆"
+        },
+        {
+          "kind": "logo",
+          "label": "装饰元素",
+          "value": "牌面底部有彩色三角装饰（红/黄/蓝/绿等色块）"
+        }
+      ],
+      "expected_actions": ["copy_warning"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_warning"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1088",
+      "category": "phase_g_eval",
+      "content_len": 153,
+      "r1": 1
+    },
+    {
+      "raw_content": "中式建筑（亭廊/门廊）内红色木质格栅窗旁挂着红色告示牌，文字内容为：「温馨提示：梅园进入打药季节，为保证安全，在此期间严禁挖野菜。」门上有挂锁。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "温馨提示"
+        },
+        {
+          "kind": "text",
+          "label": "正文1",
+          "value": "梅园进入打药季"
+        },
+        {
+          "kind": "text",
+          "label": "正文2",
+          "value": "节，为保证安全，在"
+        },
+        {
+          "kind": "text",
+          "label": "正文3",
+          "value": "此期间严禁挖野菜。"
+        }
+      ],
+      "expected_actions": ["copy_warning"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_warning",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1097",
+      "category": "phase_g_eval",
+      "content_len": 72,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边一家中式面馆，红底白字招牌挂在灰色建筑外墙上。招牌主标题为\"排骨汤面馆\"（OCR 误读为\"排骨陽面馆\"，根据副标题\"滋补靓汤\"语境判断实为\"汤\"字），下方副标题列出经营品类：\"滋补靓汤 面·粉类 小吃 饮料 甜品\"。招牌前方是人行道和绿化带，旁边有一个红色消防栓。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店招主标题",
+          "value": "排骨汤面馆"
+        },
+        {
+          "kind": "text",
+          "label": "经营品类",
+          "value": "滋补靓汤 面·粉类 小吃 饮料 甜品"
+        }
+      ],
+      "expected_actions": ["copy_menu"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_menu",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1938",
+      "category": "phase_g_eval",
+      "content_len": 134,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一间店铺的玻璃窗外景。橱窗上贴有手绘风格图标和中英双语标识：「茶饮 咖啡 甜品」对应英文「Drinks / Coffee / Dessert」（OCR 把 Dessert 误识为 \"Desesrt\"），左侧贴有一张小标识「欢迎光临 WELCOME」并带一个对勾图标。窗下种植着灌木绿化，地面是石板路。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主营品类",
+          "value": "茶饮 咖啡 甜品"
+        },
+        {
+          "kind": "text",
+          "label": "英文标签1",
+          "value": "Drinks"
+        },
+        {
+          "kind": "text",
+          "label": "英文标签2",
+          "value": "Coffee"
+        },
+        {
+          "kind": "text",
+          "label": "英文标签3 [LOW]",
+          "value": "Desesrt (OCR 误识别，应为 Dessert)"
+        },
+        {
+          "kind": "text",
+          "label": "左侧标识中文",
+          "value": "欢迎光临"
+        },
+        {
+          "kind": "text",
+          "label": "左侧标识英文",
+          "value": "WELCOME"
+        }
+      ],
+      "expected_actions": ["copy_menu"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_menu",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1753",
+      "category": "phase_g_eval",
+      "content_len": 152,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「鲜少老头」品牌甜品店的店铺招牌。招牌以木纹与白色背景为主，左侧有「鲜少老头」人头像剪影 logo，主招牌文字为「芋圓·仙草·豆花·茶飲」，下方标注官网「www.meetfresh.com.tw」。店面玻璃窗上手写标语「雨個老大的私厚甜品」（OCR 识别不确定，\"雨\" / \"私厚\" 可能为异体字）。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "招牌品类",
+          "value": "芋圓·仙草·豆花·茶飲"
+        },
+        {
+          "kind": "text",
+          "label": "官方网址",
+          "value": "www.meetfresh.com.tw"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 橱窗标语",
+          "value": "雨個老大的私厚甜品"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌 LOGO",
+          "value": "鲜少老头人头像剪影"
+        }
+      ],
+      "expected_actions": ["copy_menu"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_menu",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_3697",
+      "category": "phase_g_eval",
+      "content_len": 152,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺招牌：黄色背景的\"小时光\"店招，配有可爱的红色卡通猫咪头像和白色猫爪印装饰。招牌竖列介绍了经营范围：「空调 咖啡 简餐 红酒 冰激凌」「三比一 奶茶 泡芙 蛋糕 甜品」，底部标注联系电话「电话：59006889」。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店名",
+          "value": "小时光"
+        },
+        {
+          "kind": "text",
+          "label": "招牌文字",
+          "value": "空调 咖啡 简餐 红酒 冰激凌"
+        },
+        {
+          "kind": "text",
+          "label": "招牌文字",
+          "value": "三比一 奶茶 泡芙 蛋糕 甜品"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "59006889"
+        },
+        {
+          "kind": "object",
+          "label": "装饰图案",
+          "value": "卡通猫咪头像 + 白色猫爪印"
+        }
+      ],
+      "expected_actions": ["copy_menu"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_menu",
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_2350",
+      "category": "phase_g_eval",
+      "content_len": 109,
+      "r1": 1
+    },
+    {
+      "raw_content": "临街湘菜馆「湘辣王 私房菜」店招：巨型红字黄底招牌 + 镂空回纹边框，门头上方 LED 屏滚动广告「菜品 湖南本地」(OCR 把首字误识为'f')；店门两侧贴有八卦形状「湖南特色」菜牌，主营湘菜、油焖大虾、香式炒菜、涮锅 (OCR conf=0.42，按图自读)；右侧贴蓝色「招聘」海报，具体职位 / 薪资字小糊图 (OCR conf=0.26 [LOW])。店内透出红色双灯笼与木质装潢，前景为一辆银色 SUV 车顶。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店招主名",
+          "value": "湘辣王"
+        },
+        {
+          "kind": "brand",
+          "label": "店招副名",
+          "value": "私房菜"
+        },
+        {
+          "kind": "text",
+          "label": "LED 屏广告",
+          "value": "f菜品湖南本地 (OCR 误读首字；图上看实际为'\u2026菜品 湖南本地\u2026')"
+        },
+        {
+          "kind": "text",
+          "label": "八卦形菜单标题",
+          "value": "湖南特色"
+        },
+        {
+          "kind": "text",
+          "label": "菜单主体小字 [LOW] (OCR conf=0.42)",
+          "value": "主营：湖南特色菜、油焖大虾、香式炒菜、涮锅 (按图自读)"
+        },
+        {
+          "kind": "logo",
+          "label": "八卦形图示 (中央小图，六道菜品照片)",
+          "value": "黄色八卦图案内嵌六道菜品小图"
+        },
+        {
+          "kind": "text",
+          "label": "招聘海报标题",
+          "value": "招聘"
+        },
+        {
+          "kind": "text",
+          "label": "招聘海报正文 [LOW] (OCR 误读)",
+          "value": "海报正文按图自读大致为'服务员 / 传菜员 / 洗碗工 若干名'，薪资 / 联系方式具体数字糊图"
+        },
+        {
+          "kind": "object",
+          "label": "店内红色灯笼 / 木质装潢 (从玻璃门透出)",
+          "value": "红色双灯笼挂在吊顶，木质门窗 + 透明玻璃门"
+        },
+        {
+          "kind": "object",
+          "label": "前景车辆",
+          "value": "银色 SUV 车顶 + 后视镜"
+        }
+      ],
+      "expected_actions": ["copy_menu"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "copy_menu"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_4109",
+      "category": "phase_g_eval",
+      "content_len": 210,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺橱窗上贴着醒目的红底黄字横幅标语：\"门面转让 亏本清仓\"，表明此店正在转让并低价清仓处理商品。店内陈列着多个女性内衣/睡衣模特，橱窗右上角隐约可见门牌号\"114\"。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标语第一行",
+          "value": "门面转让"
+        },
+        {
+          "kind": "text",
+          "label": "主标语第二行",
+          "value": "亏本清仓"
+        },
+        {
+          "kind": "text",
+          "label": "右上角门牌（[LOW]）",
+          "value": "114"
+        },
+        {
+          "kind": "object",
+          "label": "店内商品",
+          "value": "女装模特（内衣/睡衣展示）"
+        },
+        {
+          "kind": "color",
+          "label": "横幅颜色",
+          "value": "红底黄字"
+        }
+      ],
+      "expected_actions": ["copy_hours"],
+      "r2_type": 1,
+      "emitted_action_ids": [],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1012",
+      "category": "phase_g_eval",
+      "content_len": 84,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一家「同畅堂餐厅」(华科店) 的临街店面，主营「黄焖鸡鸭饭」，招牌上写着\"重庆味·中国味\"。门口玻璃贴着\"内设空调 正在营业\"，门横幅是\"欢迎光临\"。营业时间贴在玻璃上（OCR 模糊，约 10:00-14:00 / 16:30-21:00）。门口挂有红色中国结和两个红灯笼作装饰。门内可见餐桌椅，透过玻璃还能看到对面住宅楼。店内似乎有手写的「黄焖鸡鸭饭」小黑板。",
+      "r2_text": 0.75,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店招",
+          "value": "同畅堂餐厅"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "最新推出"
+        },
+        {
+          "kind": "text",
+          "label": "招牌菜",
+          "value": "黄焖鸡鸭饭"
+        },
+        {
+          "kind": "text",
+          "label": "分店",
+          "value": "重庆味·中国味 华科店"
+        },
+        {
+          "kind": "text",
+          "label": "门口贴纸",
+          "value": "内设空调 正在营业"
+        },
+        {
+          "kind": "text",
+          "label": "门横幅",
+          "value": "欢迎光临"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间 [LOW]",
+          "value": "10:??-14:00 / 16:??-21:00 (OCR 模糊)"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "copy_menu",
+        "view_details"
+      ],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1114",
+      "category": "phase_g_eval",
+      "content_len": 183,
+      "r1": 1
+    },
+    {
+      "raw_content": "画面上方是一块紫色活动广告牌，上面印有泰迪熊图案和文字「地址·德国风情街」「时间：2015年7月~8月」「17：00~24：00」。下方是街景，可见欧式铁艺装饰、停在路边的白色SUV（车牌 7Y75J0）、一辆白色面包车、自行车，以及远处写着「WORLD CITY / OPTICAL VALLEY」的工地围挡。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "location",
+          "label": "地址",
+          "value": "德国风情街"
+        },
+        {
+          "kind": "date",
+          "label": "活动时间",
+          "value": "2015年7月~8月"
+        },
+        {
+          "kind": "hours",
+          "label": "营业时间",
+          "value": "17：00~24：00"
+        },
+        {
+          "kind": "text",
+          "label": "车牌号",
+          "value": "7Y75J0"
+        }
+      ],
+      "expected_actions": ["copy_hours"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_hours",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1186",
+      "category": "phase_g_eval",
+      "content_len": 156,
+      "r1": 1
+    },
+    {
+      "raw_content": "成都风味火锅店「安华」户外广告牌。黄色底，红色火焰形\"沸\"字主标志。广告语：\"好材好料好味道，既尝既赏既常客 / 一口传奇火锅，满口成都味八\"（末字\"八\"疑为\"儿\"的艺术写法，或 OCR 误读为\"八\"）。营业时间：上午 10:00 - 凌晨 4:00。下方有传统人物吃火锅的线描插画。图片下半部为拍摄时车顶反光（含一些 [LOW] OCR 噪声字符，不是广告内容）。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌主标志",
+          "value": "沸（红色火焰形）"
+        },
+        {
+          "kind": "text",
+          "label": "品牌名",
+          "value": "安华"
+        },
+        {
+          "kind": "text",
+          "label": "广告语（上行）",
+          "value": "好材好料好味道，既尝既赏既常客"
+        },
+        {
+          "kind": "text",
+          "label": "广告语（下行）",
+          "value": "一口传奇火锅，满口成都味八"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间",
+          "value": "营业时间：上午10:00-凌晨4:00"
+        }
+      ],
+      "expected_actions": ["copy_hours"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_hours",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1230",
+      "category": "phase_g_eval",
+      "content_len": 183,
+      "r1": 1
+    },
+    {
+      "raw_content": "建筑外立面悬挂招牌：中文「武汉关山大道证 券营业 部」（OCR 在「证券」「营业部」之间各留了一个空格），英文「Wuhan GuanShan Avenue Branch」。招牌上方可见带铁栅栏的窗户，外墙为浅色粉饰，右侧有一棵梧桐树。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "中文招牌",
+          "value": "武汉关山大道证 券营业 部"
+        },
+        {
+          "kind": "text",
+          "label": "英文招牌",
+          "value": "Wuhan GuanShan Avenue Branch"
+        }
+      ],
+      "expected_actions": [],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_12",
+      "category": "phase_g_eval",
+      "content_len": 117,
+      "r1": 1
+    }
+  ]
+}
