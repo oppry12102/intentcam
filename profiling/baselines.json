@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-12",
-    "last_updated_commit": "838d012"
+    "last_updated_commit": "f4ed3da"
   },
   "suites": [
     {
@@ -60,23 +60,23 @@
     },
     {
       "name": "phone_60",
-      "baseline": 0.9179,
+      "baseline": 0.9307,
       "gt": "profiling/ground_truth_phone_60.json",
-      "limit": 60,
+      "limit": 59,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "838d012",
-      "note": "60-fixture scaled suite (clean GT, post-Phase-I) — composite dropped from 0.9567 (buggy-GT v1) to 0.9179 due to (a) scale_fixtures.py duplicate bug fix exposing real numbers, (b) Phase I llmHint + Pass 12 verifier correctly flipping institution signs (clinics, schools) from `phone` to `service_institution`. 8 fixtures < 0.85 in v3 (vs 0 in v1). Decision PENDING: reclassify institution fixtures to service_institution_60 to fix."
+      "baseline_commit": "f4ed3da",
+      "note": "59-fixture scaled suite (post-Phase-I + GT reclass). v4: 0.9307. Reclassified image_2905 (少儿托管中心) → service_institution_60, lifting composite +0.0128 from v3 0.9179. Remaining gap from v1 0.9567 is LLM variance (image_2267/171/1841 etc. — non-institution drops)."
     },
     {
       "name": "pii20_60",
-      "baseline": 0.9356,
+      "baseline": 0.9521,
       "gt": "profiling/ground_truth_pii20_60.json",
-      "limit": 20,
+      "limit": 18,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "838d012",
-      "note": "20-fixture suite (corpus-limited — clean GT; previous v1 baseline 0.9675 was on 35-fixture file with 15 duplicates from auto-scaling). Phase I regression Δ -0.0319 vs pii_20 0.9788: real_estate_rental + recruit_hiring fixtures that should be reclassified as service_institution."
+      "baseline_commit": "f4ed3da",
+      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (西医诊所) → service_institution_60, lifting composite +0.0165 from v3 0.9356."
     },
     {
       "name": "direction_arrow_60",
@@ -90,13 +90,13 @@
     },
     {
       "name": "service_institution_60",
-      "baseline": 0.9508,
+      "baseline": 0.9664,
       "gt": "profiling/ground_truth_service_institution_60.json",
-      "limit": 60,
+      "limit": 63,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "f646af8",
-      "note": "60-fixture Phase I suite — 13th intent, OBSERVE family, targets 514-imgs service_institution cluster. 5 categories (medical 21 / education 20 / government_admin 11 / financial 5 / government_law 3). 1 API error (image_6117 HTTP 500 sensitive-image); 59-fixture clean composite = 0.9608; full 60-fixture = 0.9508 (Δ -0.010). Threshold band [0.90, 1.00]."
+      "baseline_commit": "f4ed3da",
+      "note": "63-fixture Phase I suite — 13th intent, OBSERVE family. v2: 0.9664 (was 60-fixture 0.9508 in v1). +3 reclassified fixtures from phone_60/pii20_60 all scored 1.00. 7 categories (medical 21 / education 21 / government_admin 11 / financial 5 / government_law 3 / school_childcare 1 / clinic 1)."
     }
   ]
 }
