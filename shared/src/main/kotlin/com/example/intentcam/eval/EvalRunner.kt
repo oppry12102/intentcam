@@ -59,6 +59,9 @@ internal class EvalRunner(private val config: EvalConfig) {
         "save_posting",   // [2026-07-13] recruit_hiring → share (Phase B)
         "scan_to_pay",    // [2026-07-13] payment_qr → guidance Toast (Phase B)
         "redact_id",      // [2026-07-13] id_document → guidance Toast (Phase B)
+        "copy_warning",   // [2026-07-12] warning_safety → share (Phase G)
+        "copy_menu",      // [2026-07-12] menu_food → share (Phase G)
+        "copy_hours",     // [2026-07-12] hours_schedule → share (Phase G)
     )
     // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
     // when --debug-fixtures is set, otherwise stay silent like before.
@@ -512,7 +515,20 @@ internal class EvalRunner(private val config: EvalConfig) {
         // unchanged; adding a 4th ACT_ON intent in the future will
         // automatically pair it with "solve" at 1.0 without editing
         // this scorer.
-        val expectedType = scene.optString("expected_type", IntentRegistry.FALLBACK_ID)
+        //
+        // [2026-07-12] Schema dual-read: per-image GT authoring
+        //  migrated to `expected_top_intent_type` for the Phase B
+        //  fixtures (pii20 / phone_20 / location_20 / real) while
+        //  RCTW-171 keeps the old `expected_type` field.  Reading
+        //  both keeps backward-compat.  Fixes the systematic
+        //  r2_type=0.5 issue on every non-RCTW fixture (the LLM
+        //  emits the correct family but `expected_type` was missing,
+        //  so the eval fell through to FALLBACK_ID="info" forcing
+        //  cross-family partial credit).
+        val expectedType = scene.optString(
+            "expected_type",
+            scene.optString("expected_top_intent_type", IntentRegistry.FALLBACK_ID),
+        )
         val observeFamily = intentRegistry.idsInFamily(IntentFamily.OBSERVE)
         val actFamily = intentRegistry.idsInFamily(IntentFamily.ACT_ON)
         val registeredIds = observeFamily + actFamily
