@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "description": "real_estate_rental mini-suite — 12 fixtures curated from RCTW-171 by REAL_ESTATE regex match (compatible with IntentVerifier.kt:73). All fixtures have at least one REAL_ESTATE token (户型/平米/房源/急售/吉房/二手房) so Pass 7's !REAL_ESTATE guard does NOT misfire to phone.",
+  "description": "real_estate_rental mini-suite — 12 fixtures curated from RCTW-171 by REAL_ESTATE regex match (compatible with IntentVerifier.kt:73). All fixtures have at least one REAL_ESTATE token (户型/平米/房源/急售/吉房/二手房) so Pass 7's !REAL_ESTATE guard does NOT misfire to phone. (rebuilt with 'scenes' key per EvalRunner.kt:92 contract).",
   "rctw_root": "/home/oppry/RCTW-171",
   "auto_scaled_count": 12,
   "expected_actions": [
     "copy_listing"
   ],
   "expected_top_intent_type": "real_estate_rental",
-  "fixtures": [
+  "scenes": [
     {
       "id": "image_231",
       "file": "image_231.jpg",
