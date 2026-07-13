@@ -1,0 +1,1158 @@
+{
+  "ground_truth": "ground_truth_shopping_promo_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.9011250000000001,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "price_discount": 0.9666666666666667,
+    "sale_promotion": 0.9234375000000001,
+    "general_promo": 0.8958333333333334,
+    "coupon_voucher": 0.815,
+    "flash_sale": 0.89375
+  },
+  "fixtures": [
+    {
+      "raw_content": "老村长私募菜（LAOCUNZHANG）民族大道店门口宣传招牌。顶部招牌\"欢迎光临 民族大道店预订电话：8737 6717\"。主海报宣传：VIP会员储值卡开始办理（储值500元可入会立享VIP待遇）；\"即享 9折 优惠\"、\"即享 超值 特价菜\"；副标语\"实惠真真切切，看得见\"；底部\"生日当天到店 免费领取精美礼品一份，如进餐再送主食一道。\" 左侧小牌\"欢迎光临 营业时间 11:00-14:00 / 17:00-21:00 电话：027-87376717\"。右下角门牌\"一楼 二楼\"标牌。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "顶部欢迎语",
+          "value": "欢迎光临"
+        },
+        {
+          "kind": "text",
+          "label": "分店标识",
+          "value": "民族大道店预订电话："
+        },
+        {
+          "kind": "phone",
+          "label": "预订电话",
+          "value": "8737 6717"
+        },
+        {
+          "kind": "brand",
+          "label": "品牌名",
+          "value": "老村长 LAOCUNZHANG 私募菜"
+        },
+        {
+          "kind": "text",
+          "label": "会员活动",
+          "value": "会员储值卡开始办理啦！现只要现金储值达500元即可加入老村长私募菜会员大家庭，立享VIP待遇。"
+        },
+        {
+          "kind": "price",
+          "label": "促销1",
+          "value": "即享 9折 优惠"
+        },
+        {
+          "kind": "price",
+          "label": "促销2",
+          "value": "即享 超值 特价菜"
+        },
+        {
+          "kind": "hours",
+          "label": "营业时间",
+          "value": "营业时间 11:00-14:00 / 17:00-21:00"
+        },
+        {
+          "kind": "phone",
+          "label": "订座电话",
+          "value": "电话：027-87376717"
+        },
+        {
+          "kind": "text",
+          "label": "生日礼遇",
+          "value": "生日当天到店 免费领取精美礼品一份，如进餐再送主食一道。"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_promo",
+        "copy_hours"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_3968",
+      "category": "price_discount",
+      "content_len": 244,
+      "r1": 1
+    },
+    {
+      "raw_content": "街景照片：鲁巷广场（LUXIANG PLAZA SHOPPING）外立面，上方有蓝色大幅楼盘广告\u2014\u2014左侧 OCT华侨城 logo，副标题「华侨城墅区」，主广告语「东湖楼王 极目湖山小 最后一栋240m² 8月加[推]」（右侧被画面裁切）。建筑立面有「鲁巷广场」金字招牌和「工贸家电」竖排招牌。底商有 STARBUCKS COFFEE 星巴克咖啡门店。街上有绿色公交车、白色轿车和骑电瓶车的人，护栏上有「商铺招租 2680 2990 1980」等招租横幅。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "OCT华侨城"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "华侨城墅区"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "东湖楼王 极目湖山小 最后一栋240m² 8月加[推/...]（右侧被画面裁切）"
+        },
+        {
+          "kind": "text",
+          "label": "商场名",
+          "value": "鲁巷广场"
+        },
+        {
+          "kind": "text",
+          "label": "商场英文名",
+          "value": "LUXIANG PLAZA SH[OPPING]（右侧被裁切）"
+        },
+        {
+          "kind": "text",
+          "label": "竖排招牌",
+          "value": "工贸家电"
+        },
+        {
+          "kind": "logo",
+          "label": "门店品牌",
+          "value": "STARBUCKS COFFEE"
+        },
+        {
+          "kind": "text",
+          "label": "护栏横幅",
+          "value": "商铺招租 2680 2990 1980 等招租信息（数字部分文字较小，OCR未完整识别）"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_promo",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_4949",
+      "category": "flash_sale",
+      "content_len": 227,
+      "r1": 1
+    },
+    {
+      "raw_content": "北京易佳教育仙桃分校秋季招生海报。主题「秋季大酬宾 惊喜送不停」，三大优惠：①来访即送30天作业辅导班；②报单科享九折优惠再送两个月作业辅导班；③报两科送一科再送一学期作业辅导班。前五十名更有豪礼相送。特色：名师授课、精品小班、精准1对1、快速提高。地址：仙桃市仙桃大道上岛咖啡城市花园B栋301（教育局正对面）；分址复州花园北门斜对。电话 13872987797 / 13429993993，微信 jinkoucai201208，QQ 313733006，网址 www.topiq.com.cn。",
+      "r2_text": 1,
+      "details_count": 12,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "活动主题",
+          "value": "秋季大酬宾 惊喜送不停"
+        },
+        {
+          "kind": "text",
+          "label": "惊喜一",
+          "value": "来访即送30天作业辅导班"
+        },
+        {
+          "kind": "text",
+          "label": "惊喜二",
+          "value": "报单科享受九折优惠 再送两个月作业辅导班"
+        },
+        {
+          "kind": "text",
+          "label": "惊喜三",
+          "value": "报两科送一科 再送一学期作业辅导班"
+        },
+        {
+          "kind": "text",
+          "label": "特色",
+          "value": "名师授课 / 精品小班 / 精准1对1 / 快速提高"
+        },
+        {
+          "kind": "text",
+          "label": "附加优惠",
+          "value": "前五十名更有豪礼相送！"
+        },
+        {
+          "kind": "text",
+          "label": "机构名称",
+          "value": "北京易佳教育 仙桃分"
+        },
+        {
+          "kind": "text",
+          "label": "地址",
+          "value": "仙桃市仙桃大道上岛咖啡城市花园B栋301（教育局正对面）；分址：复州花园北门斜对"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "13872987797 / 13429993993"
+        },
+        {
+          "kind": "text",
+          "label": "微信",
+          "value": "jinkoucai201208"
+        },
+        {
+          "kind": "text",
+          "label": "QQ",
+          "value": "313733006"
+        },
+        {
+          "kind": "text",
+          "label": "网址",
+          "value": "www.topiq.com.cn"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_promo",
+        "view_details",
+        "open_in_maps",
+        "dial_number"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_5247",
+      "category": "sale_promotion",
+      "content_len": 249,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「Codow 可多」超市门店的临街外观。红色招牌印有 \"Codow 可多\" 大字 logo；下方绿色服务牌写着「可多超市」，左右两侧列出便民服务\u2014\u2014左侧「转账汇款 / 手机充值」，右侧「水电缴费 / 网络购物」，下方一行「火车票 飞机票 信用卡还款」；旁边蓝色广告牌是合作方「L 拉卡拉」- 互联网时代@社区店 -，黄色对话气泡里写「小店 L0805005」。店门为玻璃门，门内可见货架和商品，门口停着电动自行车和电瓶车。顶部LED 显示屏正在滚动字幕（仅读到片段：\"优惠，详情请进店售咨，订房\u2026\"，全句为滚动中的局部）。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "Codow 可多"
+        },
+        {
+          "kind": "text",
+          "label": "店铺名（绿色招牌）",
+          "value": "可多超市"
+        },
+        {
+          "kind": "text",
+          "label": "绿色服务项目（左上）",
+          "value": "转账汇款 / 手机充值"
+        },
+        {
+          "kind": "text",
+          "label": "绿色服务项目（右上）",
+          "value": "水电缴费 / 网络购物"
+        },
+        {
+          "kind": "text",
+          "label": "绿色招牌下方",
+          "value": "火车票 飞机票 信用卡还款"
+        },
+        {
+          "kind": "logo",
+          "label": "合作方（蓝色招牌）",
+          "value": "L 拉卡拉"
+        },
+        {
+          "kind": "text",
+          "label": "蓝色广告语",
+          "value": "- 互联网时代@社区店 -"
+        },
+        {
+          "kind": "text",
+          "label": "黄色对话框标识",
+          "value": "小店 L0805005"
+        },
+        {
+          "kind": "text",
+          "label": "顶部LED滚动字幕",
+          "value": "优惠，详情请进店售咨，订房\u2026（滚动中）"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_6882",
+      "category": "sale_promotion",
+      "content_len": 263,
+      "r1": 1
+    },
+    {
+      "raw_content": "VINCE 温馨雅园面包店门口，红色横幅写着「祝贺馨雅园连锁8000店开业」(顶部红色横幅)，店内陈列两张海报：\n\n**新品上市海报（中间）：**\n- 品牌：VINCE 温馨雅园\n- 标题：源自欧洲时(尚) 天然健康型面包\n- 标签：新品上市\n- 介绍：携手欧洲顶级烘焙大师开创、传承欧洲传统烘焙工艺，甄选全球优质食材原料，融合口味独创，为您打造健康、经典、美味的天然健康型面包以及特色烘焙产品。\n- 配图产品：巧克力软欧\n\n**猴年促销海报（右侧红色）：**\n- 主题：猴年 新福利 第一弹 恭喜发财\n- 活动规则：\n  1. 凡购买15元/20元/28元小西点任意一款，可抽红包一个\n  2. 充值100元送10元+抽红包一个\n  3. 充值200元送25元+抽红包一个\n- 配有小猴子卡通和红包图案\n\n橱窗上挂一排「猴年第一弹 恭喜发财」红色福袋装饰。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "品牌",
+          "value": "VINCE 温馨雅园"
+        },
+        {
+          "kind": "text",
+          "label": "新品标题",
+          "value": "源自欧洲时(尚) 天然健康型面包"
+        },
+        {
+          "kind": "text",
+          "label": "新品标签",
+          "value": "新品上市"
+        },
+        {
+          "kind": "text",
+          "label": "产品名",
+          "value": "巧克力软欧"
+        },
+        {
+          "kind": "promo",
+          "label": "促销标题",
+          "value": "猴年第一弹 新福利"
+        },
+        {
+          "kind": "promo",
+          "label": "活动主题",
+          "value": "猴年 新福利 第一弹 恭喜发财"
+        },
+        {
+          "kind": "rule",
+          "label": "活动1",
+          "value": "凡购买15元/20元/28元小西点任意一款，可抽红包一个"
+        },
+        {
+          "kind": "rule",
+          "label": "活动2",
+          "value": "充值100元送10元+抽红包一个"
+        },
+        {
+          "kind": "rule",
+          "label": "活动3",
+          "value": "充值200元送25元+抽红包一个"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_promo",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1323",
+      "category": "coupon_voucher",
+      "content_len": 379,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一个「碧水源」楼盘的户外广告牌，位于在建工地旁。红色背景大版面，醒目标注\"珍稀江景豪宅 最高优惠30000元\"，主推\"110-137平米零公摊超值户型，赠送面积高达约30平米\"，联系电话 02905888，开发商\"州飞天房地产开发有限公司\"。项目地址一行 OCR 模糊（[LOW]），写作\"州市盟前坪路（东南区东50果）\"；楼盘副标语\"一健康生活暑享之源\"；顶部一行小字广告语 OCR 也不太确定，写作\"城市中央，郴江同牌，框球绝新地网目服楼益\"。",
+      "r2_text": 0.75,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "顶部广告语 [LOW]",
+          "value": "城市中央，郴江同牌，框球绝新地网目服楼益"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "珍稀江景豪宅"
+        },
+        {
+          "kind": "text",
+          "label": "优惠额度",
+          "value": "最高优惠30000元"
+        },
+        {
+          "kind": "text",
+          "label": "户型说明",
+          "value": "110-137平米零公摊超值户型，赠送面积高达约30平米"
+        },
+        {
+          "kind": "text",
+          "label": "楼盘名",
+          "value": "碧水源"
+        },
+        {
+          "kind": "text",
+          "label": "楼盘副标语",
+          "value": "一健康生活暑享之源"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "02905888"
+        },
+        {
+          "kind": "text",
+          "label": "项目地址 [LOW]",
+          "value": "州市盟前坪路（东南区东50果）"
+        },
+        {
+          "kind": "text",
+          "label": "开发商 [LOW]",
+          "value": "开发商州飞天房地产开发有限公司"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "copy_listing",
+        "dial_number"
+      ],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_2562",
+      "category": "sale_promotion",
+      "content_len": 226,
+      "r1": 1
+    },
+    {
+      "raw_content": "夜间实拍一家中式药店外观。主体为灰色石砖两层老建筑，下方黑色招牌上有巨大黄色\"德仁堂\"三字；左上角小字标注品牌与公司全称\"湖北德仁堂医药连锁有限公司\"。店门玻璃上贴有红色门店牌\"湖北德仁堂医药连锁有限公司 / 民主路药店 / 医保定点药店\"，右侧蓝色门牌号\"90\"。门店灯光通明，可见店内陈列药品的货架。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌商号",
+          "value": "湖北德仁堂"
+        },
+        {
+          "kind": "text",
+          "label": "公司名",
+          "value": "医药连锁有限公司"
+        },
+        {
+          "kind": "text",
+          "label": "店铺主招牌",
+          "value": "德仁堂"
+        },
+        {
+          "kind": "text",
+          "label": "分店名",
+          "value": "民主路药店"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号",
+          "value": "90"
+        },
+        {
+          "kind": "text",
+          "label": "医保资质",
+          "value": "医保定点药店"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 电话（OCR 漏扫，缩略图疑似可读）",
+          "value": "电话 88873366?"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_2898",
+      "category": "price_discount",
+      "content_len": 152,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺：万达利眼镜 \u2014 鲁巷广场眼镜总店，位于一栋住宅楼下沿街商铺。\n\n招牌内容：\n- 主招牌（蓝色底白色立体字）：「万达利眼镜」\n- 招牌右侧小字：「鲁巷广场眼镜总店」\n- 招牌左侧 logo 区域：「ALY」（品牌 logo 的一部分，原图左侧被裁切）\n- 红色 LED 滚动屏：「等你拿！！万达利眼镜，期待你...」（LED 滚动字幕，左端和右端均有部分被画面边缘裁掉）\n- 招牌上方深色石材外墙上隐约可见已褪色的大字招牌残留（无法准确辨认，按墙面背景处理）\n\n门店内可见玻璃柜台与镜架展示，下方海报上有「万达利眼镜 / 开业...」字样（右下角小幅海报文字较小，仅可辨识品牌字样）。",
+      "r2_text": 1,
+      "details_count": 1,
+      "raw_details": [{
+        "kind": "logo",
+        "label": "品牌（招牌大字）",
+        "value": "万达利眼镜"
+      }],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_3533",
+      "category": "sale_promotion",
+      "content_len": 294,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片内容：一家位于街边的灯具店「亮美家灯饰城」，红色招牌上印有副标题「时尚家居照明 一站式购灯平台」，右侧写着「QTL千泰照明」。招牌下方白色小纸条上贴着「本店转让」（OCR模糊，字稍难辨）。店门口的蓝色卷帘门紧闭，门柱上有「千泰照明」品牌标识和品类「浴霸」等字样。店外左侧停放着一台区域可遮盖处未看清的电动车，以及一根橙色锥筒。\n\n可见文字：招牌「亮美家灯饰城」、副标「时尚家居照明 一站式购灯平台」、联系电话「13982956138」、品牌「QTL千泰照明」（多次出现）、门头品类「浴霸」、店家告示「本店转让」、左侧区域文字「WRLL·O」、右侧「泰」、品牌附近重复字「OTL」、「全业众租」（OCR较模糊，疑似「企业众租」）。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店铺招牌",
+          "value": "亮美家灯饰城"
+        },
+        {
+          "kind": "text",
+          "label": "副标题",
+          "value": "时尚家居照明 一站式购灯平台"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "13982956138"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌logo",
+          "value": "QTL千泰照明"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW]告示",
+          "value": "本店转让"
+        },
+        {
+          "kind": "text",
+          "label": "门头品类",
+          "value": "浴霸"
+        },
+        {
+          "kind": "brand",
+          "label": "左侧门柱品牌",
+          "value": "千泰照明"
+        },
+        {
+          "kind": "brand",
+          "label": "中间门柱品牌",
+          "value": "千泰照明"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "save_posting"
+      ],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_5271",
+      "category": "general_promo",
+      "content_len": 316,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店名",
+          "value": "新喜器后"
+        },
+        {
+          "kind": "text",
+          "label": "经营品类",
+          "value": "砂锅粥·小海鲜·家常享"
+        },
+        {
+          "kind": "text",
+          "label": "优惠标签",
+          "value": "特大优惠"
+        },
+        {
+          "kind": "price",
+          "label": "主活动",
+          "value": "吃100"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_promo",
+        "dial_number"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6149",
+      "category": "sale_promotion",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "街边一家中式快餐店，主招牌为「泰来牛肉面馆」（左侧带\"幸运\"印章，副标\"传统美食·中式快餐\"），右上角标有\"南望山店\"分店标识，红色横幅写着\"开张大吉\"。店铺玻璃门上有\"门面转让\"告示，门上还能看到竖排\"香米盖饭\"字样。店铺紧邻一家\"TIRES 轮胎\"店。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "招牌主名（从右至左读）",
+          "value": "泰来牛肉面馆"
+        },
+        {
+          "kind": "text",
+          "label": "招牌副标（从右至左读）",
+          "value": "传统美食·中式快餐"
+        },
+        {
+          "kind": "text",
+          "label": "邻铺招牌英文",
+          "value": "TIRES"
+        },
+        {
+          "kind": "text",
+          "label": "邻铺招牌中文",
+          "value": "轮胎"
+        },
+        {
+          "kind": "text",
+          "label": "分店标识",
+          "value": "南望山店"
+        },
+        {
+          "kind": "text",
+          "label": "开业横幅",
+          "value": "开张大吉"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门告示",
+          "value": "门面转让"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门竖排文字",
+          "value": "香米盖饭"
+        },
+        {
+          "kind": "text",
+          "label": "印章（招牌左侧）",
+          "value": "幸运"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_7814",
+      "category": "general_promo",
+      "content_len": 128,
+      "r1": 1
+    },
+    {
+      "raw_content": "小观园餐厅「打年货啦」红色海报：纯手工年货全新上市，活动时间 2016年1月25日至2月22日。满赠规则：每满500元赠50元代金券、每满1000元赠120元、每满2000元赠260元。年货价目：鱼元 20元/斤、酥炸鱼块 18元/斤、卤金钱肚 100元/斤、鱼糕 20元/斤；肉元 20元/斤、卤牛肉 100元/斤、炸藕夹 16元/斤、肉糕 20元/斤。口号「买的越多 送的越多 快来抢购吧！！！」，落款小观园餐厅。",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "打年货啦"
+        },
+        {
+          "kind": "text",
+          "label": "活动介绍",
+          "value": "小观园纯手工年货全新上市，快来抢购吧！！！"
+        },
+        {
+          "kind": "date",
+          "label": "活动时间",
+          "value": "2016年1月25日至2月22日"
+        },
+        {
+          "kind": "price",
+          "label": "满赠规则1",
+          "value": "购买年货每满500元赠送50元代金券；"
+        },
+        {
+          "kind": "price",
+          "label": "满赠规则2",
+          "value": "每满1000元赠送120元代金券；"
+        },
+        {
+          "kind": "price",
+          "label": "满赠规则3",
+          "value": "每满2000元赠送260元代金券；"
+        },
+        {
+          "kind": "price",
+          "label": "年货价目(左)",
+          "value": "鱼元 20元／斤；酥炸鱼块 18元／斤；卤金钱肚 100元／斤；鱼糕 20元／斤"
+        },
+        {
+          "kind": "price",
+          "label": "年货价目(右)",
+          "value": "肉元 20元／斤；卤牛肉 100元／斤；炸藕夹 16元／斤；肉糕 20元／斤"
+        },
+        {
+          "kind": "text",
+          "label": "促销口号",
+          "value": "买的越多 送的越多 快来抢购吧！！！"
+        },
+        {
+          "kind": "logo",
+          "label": "商家",
+          "value": "小观园餐厅"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_promo"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1322",
+      "category": "coupon_voucher",
+      "content_len": 209,
+      "r1": 1
+    },
+    {
+      "raw_content": "SIEMENS 西门子助听器门店招牌 \u2014\u2014「海之声听力连锁 武昌旗舰店」，联系电话 88185408；门店为绿色玻璃幕墙外立面，底部 LED 屏滚动显示「2018/02/18 客户配机专享优惠，同享」（开头日期戳 OCR 未识别，由我从图上自读）。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌英文",
+          "value": "SIEMENS"
+        },
+        {
+          "kind": "text",
+          "label": "店招主标题",
+          "value": "西门子助听器"
+        },
+        {
+          "kind": "text",
+          "label": "连锁品牌",
+          "value": "海之声听力连锁"
+        },
+        {
+          "kind": "text",
+          "label": "分店名",
+          "value": "武昌旗舰店"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "88185408"
+        },
+        {
+          "kind": "text",
+          "label": "LED 促销语",
+          "value": "\"客户配机专享优惠，同享"
+        },
+        {
+          "kind": "date",
+          "label": "LED 屏日期戳",
+          "value": "2018/02/18（从 LED 屏左上角自读，OCR 未识别）"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1458",
+      "category": "sale_promotion",
+      "content_len": 124,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店招",
+          "value": "精益"
+        },
+        {
+          "kind": "text",
+          "label": "店招",
+          "value": "视光中心"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "GUCCI"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "copy_promo"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_1642",
+      "category": "price_discount",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "图片是一块宣传栏/橱窗，上方红色横幅上写有「资阳市中（心血站）」字样（部分文字被横条遮挡），下方宣传板上用红色大字写有标题「无偿献血优惠政策」。图片为近距离仰拍，窗框金属条遮挡了部分内容，未能识别到优惠政策的具体条款文字。",
+      "r2_text": 1,
+      "details_count": 2,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "无偿献血优惠政策"
+        },
+        {
+          "kind": "text",
+          "label": "发布单位",
+          "value": "资阳市中(心血站等文字被遮挡)"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_warning",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_205",
+      "category": "sale_promotion",
+      "content_len": 111,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.5,
+      "details_count": 0,
+      "raw_details": [],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 0,
+      "emitted_action_ids": [],
+      "composite": 0.36,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(error)",
+      "id": "image_2192",
+      "category": "coupon_voucher",
+      "content_len": 0,
+      "r1": 0.3
+    },
+    {
+      "raw_content": "欧泉造型（OTHERS）美发美妆光谷店门口：欧式拱门黄黑门面，LED屏滚动「代金券300元，充800送原」。左侧立牌：火爆推出「韩式纳米特色 无痕接发 1280元起」（美丽热线 13871590580）。右侧立牌：OTHERS 欧泉造型「私人定制时尚沙站」（含多档价格 / 美丽定制预约电话 13871590580）。店右侧另有一张「门面出租」小广告。玻璃门上贴有「空调开放」标识。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "店招品牌",
+          "value": "OTHERS 欧泉造型"
+        },
+        {
+          "kind": "text",
+          "label": "分店名",
+          "value": "美发美妆光谷店"
+        },
+        {
+          "kind": "price",
+          "label": "LED促销",
+          "value": "代金券300元，充800送原"
+        },
+        {
+          "kind": "price",
+          "label": "左侧立牌无痕接发",
+          "value": "韩式纳米特色 无痕接发 1280元起"
+        },
+        {
+          "kind": "text",
+          "label": "右侧立牌",
+          "value": "OTHERS 欧泉造型 私人定制时尚沙站"
+        },
+        {
+          "kind": "phone",
+          "label": "美丽热线/美丽定制预约电话",
+          "value": "13871590580"
+        },
+        {
+          "kind": "text",
+          "label": "旁边小广告",
+          "value": "门面出租"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details",
+        "dial_number"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_2288",
+      "category": "coupon_voucher",
+      "content_len": 191,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺名为「一品豆花」（经济学院店），是一家全国连锁豆花店，目前卷帘门紧闭、暂停营业，门口贴有「门面转让」告示，联系电话 13995624391。招牌上还显示加盟热线 18607112716、QQ 858147863、网址 www.ypdhw.cn。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店名",
+          "value": "一品豆花"
+        },
+        {
+          "kind": "text",
+          "label": "分店",
+          "value": "经济学院店"
+        },
+        {
+          "kind": "text",
+          "label": "品牌定位",
+          "value": "全国连锁"
+        },
+        {
+          "kind": "phone",
+          "label": "加盟热线",
+          "value": "18607112716"
+        },
+        {
+          "kind": "text",
+          "label": "QQ",
+          "value": "QQ:858147863"
+        },
+        {
+          "kind": "text",
+          "label": "官网",
+          "value": "网址:www.ypdhw.cn"
+        },
+        {
+          "kind": "text",
+          "label": "转让告示",
+          "value": "门面转让"
+        },
+        {
+          "kind": "phone",
+          "label": "转让联系电话",
+          "value": "13995624391"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_promo",
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2385",
+      "category": "general_promo",
+      "content_len": 124,
+      "r1": 1
+    },
+    {
+      "raw_content": "水果店促销海报，标题「促销商品」，主推「年终水果预订」：\n\n水果价格表（手写黄底红字）：\n- 库尔勒香梨（7斤）35元/件\n- 库尔勒香梨（10斤）48元/件\n- 阿克苏冰糖心苹果 80元/件\n- 整件雪梨 85元/件\n- 正宗山东烟台富士（10斤）7元/斤（一件起卖）/ 480元/件\n- 备注：其它预订请进店咨询（以上均为整件预定价）\n\n底部 VIP 充值返现方案（持VIP卡购买水果可以享受）：\n（1）充200元返还20元，卡内金额为\u2026\n（2）充300元返还35元，卡内金额为\u2026\n（3）充500元返还60元，卡内金额为\u2026\n（4）充1000元返还150元，卡内金额为\u2026",
+      "r2_text": 1,
+      "details_count": 13,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "海报标题",
+          "value": "促销商品"
+        },
+        {
+          "kind": "text",
+          "label": "主题",
+          "value": "年终水果预订"
+        },
+        {
+          "kind": "price",
+          "label": "库尔勒香梨(7斤)",
+          "value": "35元/件"
+        },
+        {
+          "kind": "price",
+          "label": "库尔勒香梨(10斤)",
+          "value": "48元/件"
+        },
+        {
+          "kind": "price",
+          "label": "阿克苏冰糖心苹果",
+          "value": "80元/件"
+        },
+        {
+          "kind": "price",
+          "label": "整件雪梨",
+          "value": "85元/件"
+        },
+        {
+          "kind": "price",
+          "label": "正宗山东烟台富士(10斤)",
+          "value": "7元/斤（一件起卖）/ 480元/件"
+        },
+        {
+          "kind": "text",
+          "label": "备注",
+          "value": "其它预订请进店咨询（以上均为整件预定价）"
+        },
+        {
+          "kind": "price",
+          "label": "VIP充值档1",
+          "value": "（1）充200元返还20元"
+        },
+        {
+          "kind": "price",
+          "label": "VIP充值档2",
+          "value": "（2）充300元返还35元"
+        },
+        {
+          "kind": "price",
+          "label": "VIP充值档3",
+          "value": "（3）充500元返还60元"
+        },
+        {
+          "kind": "price",
+          "label": "VIP充值档4",
+          "value": "（4）充1000元返还150元"
+        },
+        {
+          "kind": "text",
+          "label": "使用说明",
+          "value": "持VIP卡购买水果可以享受（卡内金额为\u2026）"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_promo",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_2585",
+      "category": "sale_promotion",
+      "content_len": 286,
+      "r1": 1
+    },
+    {
+      "raw_content": "路边楼盘广告牌：项目名「御景天成」，指示\"接待中心由此进 →\"，起价\"2200元／平米起\"，抢购热线 \"027-87518566\"。广告牌下方有 6 张户型缩略图（标注模糊 OCR 无法读取）。广告牌前还有一个白色铁艺衣架、蓝色衣架和一块木板，靠着路边的石凳。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "楼盘名称",
+          "value": "御景天成"
+        },
+        {
+          "kind": "text",
+          "label": "指示",
+          "value": "接待中心由此进 →"
+        },
+        {
+          "kind": "price",
+          "label": "起价",
+          "value": "2200元／平米起"
+        },
+        {
+          "kind": "phone",
+          "label": "抢购热线",
+          "value": "027-87518566"
+        }
+      ],
+      "expected_actions": ["copy_promo"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "copy_listing",
+        "view_details"
+      ],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_3406",
+      "category": "flash_sale",
+      "content_len": 130,
+      "r1": 1
+    }
+  ]
+}
