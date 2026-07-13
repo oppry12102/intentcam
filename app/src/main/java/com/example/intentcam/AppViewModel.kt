@@ -25,8 +25,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** [2026-07-10] Intent registry — the system prompt's type list
      *  and the `emit_bubble` tool description both read from this.
-     *  Built first so the tool registry below can consult it. */
-    private val intentRegistry = IntentRegistry().also { registerDefaultIntents(it) }
+     *  Built first so the tool registry below can consult it.
+     *
+     *  [2026-07-13] Exposed as a public val so MainActivity can
+     *  resolve [Bubble.type] back into an [IntentDecl] for per-family
+     *  UI accent (location→green / phone+payment_qr→pink / OBSERVE
+     *  base→blue / ACT_ON base→orange). */
+    val intentRegistry = IntentRegistry().also { registerDefaultIntents(it) }
 
     /** [2026-07-10] Action registry — built alongside the intent
      *  registry.  Declares which chip actions show up on which

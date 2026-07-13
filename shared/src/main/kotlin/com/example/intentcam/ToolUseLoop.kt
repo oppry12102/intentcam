@@ -561,7 +561,6 @@ class ToolUseLoop(
                         imageBytes = thumbnail,
                         createdAtMs = System.currentTimeMillis(),
                         toolName = chosenToolName,
-                        intentFocus = null,  // emit_bubble body doesn't carry it yet
                         // emit_bubble body populates tb.details from
                         // the model's details[] JSON array.  Without
                         // this, every Bubble from runCycle has an

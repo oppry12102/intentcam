@@ -12,9 +12,9 @@ import org.json.JSONObject
  *                   detail on the next round.
  *
  *   2. emit_bubble — end the cycle with a structured final answer
- *                   (content + intent + intent_type + intent_focus
- *                   + confidence).  No chips / no follow-up actions
- *                   for now (deferred per the design call).
+ *                   (content + intent + type + confidence +
+ *                   details + action_ids).  No chips / no follow-up
+ *                   actions for now (deferred per the design call).
  *
  * The 10 specialized "interpret_image_<x>" tools from the previous
  * architecture are gone.  They were forcing the LLM to first
@@ -321,13 +321,11 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
     // End the cycle with a structured final answer.  Two stages:
     //   - content:        what you see in the image (after any zoom_ins)
     //   - intent:         what the user probably wants to do with it
-    //   - type:           coarse intent category — the list is driven
-    //                     by the IntentRegistry (currently info /
-    //                     location / solve; new intents get added by
-    //                     registering one IntentDecl, NOT by editing
-    //                     this tool description)
-    //   - intent_focus:   which area of the image informs the intent
-    //                     (optional; helps the detail view highlight it)
+    //   - type:           precise intent id — the enum is driven by the
+    //                     IntentRegistry (all 13 default intents; new
+    //                     intents get added by registering one
+    //                     IntentDecl, NOT by editing this tool
+    //                     description)
     //   - action_ids:     [2026-07-13] which [ActionDef]s should
     //                     light up as chips on this bubble.  Optional —
     //                     leaving it blank / empty means "fall through
@@ -346,7 +344,6 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                 "**content** 字段：详细描述你看到了什么（一两句话），并原样写出所有可见文字。" +
                 "**intent** 字段：用户想用这张图做什么（动宾短语，≤30字）。" +
                 "**type** 字段：${intents.renderTypeList()}" +
-                "**intent_focus** 字段：哪一块图像区域支持这个意图（可空）。" +
                 "**details** 字段（**重要**）：图里每一处独立的文字/数字/品牌/日期/价格都要有一行，" +
                 "value 写逐字原文（勿意译、勿概括）。图里有文字却 details 为空 = 没完成任务。" +
                 "**confidence** 字段：0.0~1.0 的置信度。" +
@@ -375,10 +372,6 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                             intents.allIds().forEach { put(it) }
                         })
                         put("description", "意图大类")
-                    })
-                    put("intent_focus", JSONObject().apply {
-                        put("type", "string")
-                        put("description", "支撑意图的图像区域（可空）")
                     })
                     put("details", JSONObject().apply {
                         put("type", "array")

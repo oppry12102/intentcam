@@ -28,10 +28,12 @@ data class Detail(
  * Two-stage recognition result:
  *  - [content]  : 1-2 sentence overall image description
  *  - [title]    : the user's inferred intent (动宾短语, ≤30 chars)
- *  - [type]     : info / location / solve
+ *  - [type]     : precise intent id from the registered IntentDecl set
+ *                 (e.g. "phone" / "payment_qr" / "warning_safety" /
+ *                 "route_to" / ...).  Used by the UI for accent color
+ *                 and by the resolver for action-chip suggestion.
  *  - [details]  : structured items for the detail-view table; can
  *                 be empty if the LLM chose not to extract any
- *  - [intentFocus] : which area of the image informs the intent
  *  - [confidence] : 0.0..1.0
  *  - [actions]    : ids of [com.example.intentcam.ActionDef]s that
  *                   should render as chips on this bubble.  Populated
@@ -66,7 +68,6 @@ data class Bubble(
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
-    val intentFocus: String? = null,
     val details: List<Detail> = emptyList(),
     // [2026-07-10] Action ids; empty until AppViewModel resolves
     //  them against ActionRegistry + SettingsStore preference.

@@ -2,7 +2,28 @@
 
 All notable changes to IntentCam will be documented in this file.
 
-## [unreleased] — 2026-07-12
+## [unreleased] — 2026-07-13
+
+### Refactored
+
+- **Drop dead `intentFocus` field** (`refactor commit`): the LLM-facing
+  `intent_focus` prompt field (a free-form image-region description,
+  never parsed by `emit_bubble`'s body) and the corresponding
+  `Bubble.intentFocus` are removed end-to-end — schema, prompt,
+  `Models.kt`, `ToolUseLoop.kt`, `MainActivity.kt`, `ARCHITECTURE.md`.
+  `Bubble.type` already carries the precise intent id from the
+  `IntentRegistry`; the second field was always null and never
+  consumed. IntentChip label is now `bubble.type` directly.
+- **Per-family UI accent** (`refactor commit`): bubble card + detail
+  screen + intent chip now color by `IntentFamily` with two
+  important-intent overrides. OBSERVE → blue, ACT_ON → orange,
+  `location` keeps its green anchor, `phone` / `payment_qr` get a pink
+  accent so high-priority tap actions are visually distinct.
+  Implementation: new `bubbleAccent(type, registry)` helper in
+  MainActivity; `AppViewModel.intentRegistry` exposed as `val` (was
+  private) so the feed can resolve family without owning a registry.
+  Unregistered / unknown types render gray — fail-loud instead of
+  silently pretending to be OBSERVE.
 
 ### Added (eval infrastructure)
 

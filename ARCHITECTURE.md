@@ -62,12 +62,12 @@ in one round-trip, with no need for a separate `read_text` call.
 emit_bubble(
   content,        // 一两句话整体描述 — must include all visible text
   intent,         // 用户想做什么（动宾短语，≤30字）
-  type,           // 11 intent ids — see §15 / CONFIG §H.1
+  type,           // 13 intent ids — see §15 / CONFIG §H.1
                   //   OBSERVE family: info | location | warning_safety
                   //                  | menu_food | hours_schedule
+                  //                  | route_to | service_institution
                   //   ACT_ON family:  solve | phone | real_estate_rental
                   //                  | recruit_hiring | payment_qr | id_document
-  intent_focus?,  // 可空
   confidence,     // 0.0~1.0
   action_ids?,    // 可空 — Intent↔Action framework (Phase A+, 2026-07-10)
                   //   list of canonical action ids the model recommends:
@@ -409,7 +409,7 @@ data class Detail(
 
 data class Bubble(
     val id: String,
-    val type: String,            // 11 intent ids — see §15 / CONFIG §H.1
+    val type: String,            // 13 intent ids — see §15 / CONFIG §H.1 (precise id from IntentDecl)
     val title: String,            // user-facing intent, ≤30 chars
     val detail: String,           // content description
     val confidence: Float,
@@ -417,7 +417,6 @@ data class Bubble(
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
-    val intentFocus: String? = null,
     val details: List<Detail> = emptyList(),  // details table rows
     val actionIds: List<String> = emptyList(),  // Phase A+, 2026-07-10
     val llmProposedActions: List<String>? = null,  // raw model emit (audit trail)

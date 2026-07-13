@@ -451,7 +451,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "**请先相信 crop OCR 的字符**：它是高保真重扫，比 round-1 OCR 更可靠。crop OCR 的字符**直接 verbatim 引用**到 emit_bubble（[LOW] 行也 verbatim 引用——[LOW] 只是 OCR 引擎 confidence 低，字符本身仍然是你能直接用的 verbatim 字符；标记 \"[LOW]\" 让用户在 UI 看到这一行 OCR 不太确定）。\n" +
                     "\n" +
                     "### Step 4: emit_bubble\n" +
-                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, intent_focus?, confidence, details?, action_ids?) 总结。\n" +
+                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, confidence, details?, action_ids?) 总结。\n" +
                     "__INTENT_BLOCK__\n" +
                     "__ACTIONS_BLOCK__\n" +
                     "\n" +
@@ -515,7 +515,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
         const val FINAL_ANSWER_SYSTEM =
             "你是 IntentCam 的视觉意图助手。系统已经替你跑过选定的工具，并返回了工具结果摘要。" +
                     "请用一段简短的中文 JSON 总结：scene（看到了什么，一句话）, intent（用户最可能的意图，动宾短语≤12字），" +
-                    "type（info|location|solve）, confidence（0-1）。不要 markdown 围栏，不要多余解释。"
+                    "type（注册过的 intent id 之一，由 __INTENT_BLOCK__ 动态注入；legacy 路径下退回到 info），confidence（0-1）。不要 markdown 围栏，不要多余解释。"
 
         /** Build the live tool-use system prompt by splicing the
          *  dynamic intent + action blocks into [TOOL_USE_SYSTEM] at

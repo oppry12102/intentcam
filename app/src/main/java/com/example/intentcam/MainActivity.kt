@@ -164,6 +164,7 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 actionDefs = state.selectedBubble!!.actions.mapNotNull {
                     viewModel.actionRegistry.get(it)
                 },
+                intentRegistry = viewModel.intentRegistry,
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -469,6 +470,7 @@ private fun IntentBubbles(
                 onPick = onPick,
                 actionDefs = actionDefs,
                 onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
+                accent = bubbleAccent(bubble.type, viewModel.intentRegistry),
             )
         }
     }
@@ -480,12 +482,8 @@ private fun BubbleCard(
     onPick: (Bubble) -> Unit,
     actionDefs: List<ActionDef> = emptyList(),
     onActionTap: (actionId: String) -> Unit = {},
+    accent: Color = bubbleAccent(bubble.type, null),
 ) {
-    val accent = when (bubble.type) {
-        "location" -> Color(0xFF37D399)
-        "solve" -> Color(0xFFFFAF54)
-        else -> Color(0xFF4F8CFF)
-    }
     val thumbnail = remember(bubble.imageBytes) {
         // Decode on a worker thread; the result bitmap is cached for the
         // composition's lifetime so re-emits are cheap.  Downscaled to a
@@ -531,11 +529,10 @@ private fun BubbleCard(
                             modifier = Modifier.weight(1f, fill = false),
                         )
                     }
-                    val chipLabel = bubble.intentFocus.takeUnless { it.isNullOrBlank() }
-                        ?: bubble.type
+                    val chipLabel = bubble.type
                     if (chipLabel.isNotBlank()) {
                         Spacer(Modifier.width(6.dp))
-                        IntentChip(label = chipLabel)
+                        IntentChip(label = chipLabel, accent = accent)
                     }
                 }
                 if (bubble.detail.isNotBlank()) {
@@ -617,20 +614,20 @@ private fun ActionChip(label: String, onClick: () -> Unit) {
     }
 }
 
-/** Small green pill naming the intent that produced this bubble
- *  (e.g. "phone", "payment_qr", "warning_safety").  Falls back to the
- *  high-level [Bubble.type] ("info" / "location" / "solve") when the
- *  LLM did not emit a precise intentFocus. */
+/** Small pill naming the intent id that produced this bubble
+ *  (e.g. "phone", "payment_qr", "warning_safety").  Accent color is
+ *  the per-family color computed by [bubbleAccent] in [BubbleCard],
+ *  so the chip visually matches the bubble's left accent dot. */
 @Composable
-private fun IntentChip(label: String) {
+private fun IntentChip(label: String, accent: Color = Color(0xFF37D399)) {
     Box(
         Modifier
-            .background(Color(0x3337D399), RoundedCornerShape(6.dp))
+            .background(accent.copy(alpha = 0.20f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
             label,
-            color = Color(0xFF37D399),
+            color = accent,
             style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -656,6 +653,38 @@ private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
     }.getOrNull()
 }
 
+/**
+ * Two-layer accent resolution for a bubble's `type`:
+ *
+ *   1. **Family base** — every registered intent belongs to either
+ *      [IntentFamily.OBSERVE] (blue) or [IntentFamily.ACT_ON] (orange).
+ *      Unregistered / unknown types get a neutral gray so they don't
+ *      masquerade as a real family.
+ *   2. **Important-intent override** — `location` keeps the green
+ *      anchor it always had (the "where do I go" cue), and the two
+ *      high-priority tap actions `phone` / `payment_qr` get a pink
+ *      accent so the user can spot them at a glance.
+ *
+ * The optional [registry] is passed by callers that have a live
+ * [AppViewModel] in scope (e.g. the main feed).  Defaulting to `null`
+ * yields gray for everything; that's a deliberate fail-loud signal
+ * that a caller forgot to wire the registry — better than silently
+ * pretending an unknown id is OBSERVE-blue.
+ */
+private fun bubbleAccent(type: String, registry: IntentRegistry?): Color {
+    val family = registry?.get(type)?.family
+    val base = when (family) {
+        IntentFamily.OBSERVE -> Color(0xFF4F8CFF)
+        IntentFamily.ACT_ON  -> Color(0xFFFFAF54)
+        null                 -> Color(0xFF888888)
+    }
+    return when (type) {
+        "location"            -> Color(0xFF37D399)
+        "phone", "payment_qr" -> Color(0xFFE64A8C)
+        else                  -> base
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DetailScreen(
@@ -663,7 +692,8 @@ private fun DetailScreen(
     onRestart: () -> Unit,
     onActionTap: (actionId: String) -> Unit,
     actionDefs: List<ActionDef>,
-    modifier: Modifier
+    modifier: Modifier,
+    intentRegistry: IntentRegistry? = null,
 ) {
     val fullImage = remember(bubble.imageBytes) {
         // The bubble carries the ~3200 px display thumbnail; decode it
@@ -671,11 +701,7 @@ private fun DetailScreen(
         // screen, and ~1/4 the ARGB footprint of a full decode.
         decodeScaled(bubble.imageBytes, targetMaxDim = 1600)
     }
-    val accent = when (bubble.type) {
-        "location" -> Color(0xFF37D399)
-        "solve" -> Color(0xFFFFAF54)
-        else -> Color(0xFF4F8CFF)
-    }
+    val accent = bubbleAccent(bubble.type, intentRegistry)
     // [2026-07-13] fullscreen redesign: the image fills the entire screen
     // (ContentScale.Fit, black letterbox) so the user can see it clearly
     // and cross-check it against the results.  The result panel and the
@@ -756,9 +782,12 @@ private fun DetailScreen(
                         .verticalScroll(textScroll)
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
-                    bubble.toolName?.let { name ->
-                        ToolChip(toolName = name)
-                        Spacer(Modifier.height(8.dp))
+                    bubble.toolName?.let { _ ->
+                        // [2026-07-13] Drop the legacy debug-style
+                        //  ToolChip here too — its "via <tool>" pill
+                        //  leaked tool routing into the UI.  The
+                        //  detail view's image + body panel already
+                        //  conveys the bubble's source.
                     }
                     if (bubble.detail.isNotBlank()) {
                         Text(
@@ -900,7 +929,7 @@ private fun DetailsTable(details: List<Detail>) {
     }
 }
 
-/** Pill-shaped action button.  Distinct from [ToolChip] (which is a
+/** Pill-shaped action button.  Distinct from [IntentChip] (which is a
  *  passive label) — this is a tappable button. */
 @OptIn(ExperimentalLayoutApi::class)
 // ActionChipButton removed — action_chips deferred.  Re-add when
@@ -992,8 +1021,6 @@ private fun UserInputDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("补充信息")
-                Spacer(Modifier.width(8.dp))
-                ToolChip(toolName = request.toolName)
             }
         },
         text = {
@@ -1050,8 +1077,6 @@ private fun ActionArgInputDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("动作需要补充信息")
-                Spacer(Modifier.width(8.dp))
-                ToolChip(toolName = pending.actionId)
             }
         },
         text = {
@@ -1150,8 +1175,6 @@ private fun ActionConfirmDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(pending.prompt)
-                Spacer(Modifier.width(8.dp))
-                ToolChip(toolName = pending.actionId)
             }
         },
         text = {
