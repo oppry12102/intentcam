@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "description": "real_estate_rental mini-suite — 12 fixtures curated from RCTW-171 by REAL_ESTATE regex match (compatible with IntentVerifier.kt:73). All fixtures have at least one REAL_ESTATE token (户型/平米/房源/急售/吉房/二手房) so Pass 7's !REAL_ESTATE guard does NOT misfire to phone. (rebuilt with 'scenes' key per EvalRunner.kt:92 contract).",
+  "description": "real_estate_rental mini-suite — 12 fixtures curated from RCTW-171 by REAL_ESTATE regex match (compatible with IntentVerifier.kt:73). All fixtures have at least one REAL_ESTATE token (户型/平米/房源/急售/吉房/二手房) so Pass 7's !REAL_ESTATE guard does NOT misfire to phone. (rebuilt with 'scenes' key per EvalRunner.kt:92 contract). [2026-07-14] image_572 removed: dominant signal is police-emergency, not real_estate. 11 fixtures remain, all matching REAL_ESTATE regex.",
   "rctw_root": "/home/oppry/RCTW-171",
-  "auto_scaled_count": 12,
+  "auto_scaled_count": 11,
   "expected_actions": [
     "copy_listing"
   ],
@@ -20,19 +20,6 @@
         "copy_listing"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Pure brokerage ad (爱屋吉屋 二手房). Has 400-700-6622 phone + 二手房 token. Should fire Pass 5 + Pass 7 guard blocks flip."
-    },
-    {
-      "id": "image_572",
-      "file": "image_572.jpg",
-      "src": "hand-curated 2026-07-14 (REAL_ESTATE regex match: 商业地产 投资广告 (世界城营销中心 70平米 收租150万). 平米 matches REAL_E)",
-      "category": "developer_promo",
-      "what_is_pictured": "世界城营销中心 70平米 每年收租150万 70m",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "real_estate_rental",
-      "expected_actions": [
-        "copy_listing"
-      ],
-      "curation_note": "Hand-curated for real_estate_rental mini-suite. 商业地产 投资广告 (世界城营销中心 70平米 收租150万). 平米 matches REAL_ESTATE regex."
     },
     {
       "id": "image_1090",

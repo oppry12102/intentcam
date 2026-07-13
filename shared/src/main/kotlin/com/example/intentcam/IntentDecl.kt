@@ -122,7 +122,7 @@ fun registerDefaultIntents(reg: IntentRegistry) {
     reg.register(IntentDecl(
         id = "real_estate_rental",
         label = "租房",
-        llmHint = "租房：出租 / 二手房 / 房源 / 中介",
+        llmHint = "房地产：出租 / 出售 / 二手房 / 楼盘 / 户型 / 平米 / 急售 / 吉房 / 中介 / 物业",
         family = IntentFamily.ACT_ON,
     ))
     reg.register(IntentDecl(
