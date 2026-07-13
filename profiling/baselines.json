@@ -51,7 +51,7 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "144ba61",
-      "note": "**SERVER-CPU reference (LOCAL_OCR_KIND=server, 450MB model, 27 s/img CPU) \u2014 2026-07-13**. Composite 0.940. mobile=0.929 (+0.011 lift), Huawei Cloud=0.9521 (-0.012 in noise). Not the default baseline (server is 11x slower for iter); tracked as best-effort reference. Use LOCAL_OCR_KIND=server gradle :shared:eval --args=... to reproduce. (Reference only; no mobile re-run at commit 144ba61 since CPU is 11x slower per iter.)"
+      "note": "**SERVER-CPU reference (LOCAL_OCR_KIND=server, 450MB model, 27 s/img CPU) \u2014 2026-07-13**. Composite 0.940. mobile=0.929 (+0.011 lift), Huawei Cloud=0.9521 (-0.012 in noise). Not the default baseline (server is 11x slower for iter); tracked as best-effort reference. Use LOCAL_OCR_KIND=server gradle :shared:eval --args=... to reproduce. (Reference only; no mobile re-run at commit 144ba61 since CPU is 11x slower per iter.)\n **[2026-07-14] post r3-fix (commit 355c001) pii20_60 server-CPU re-measure** (`summary_20260714_005010`): composite **0.9701, \u0394=+0.006 over mobile baseline 0.9639**. image_1391 lifted 0.8875\u21921.000 (r2_text 0.75\u21921.00, server finds the missing PII token that mobile misses). image_2494 unchanged at 0.788 \u2014 server-CPU fixes r2_text issues but image_2494's bottleneck is r2_type (LLM mis-classifies as info), not OCR."
     },
     {
       "name": "pii_20_huawei_cloud_ref",
@@ -121,7 +121,7 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "e85ec64",
-      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (\u897f\u533b\u8bca\u6240) \u2192 service_institution_60, lifting composite +0.0165 from v3 0.9356. **TRUE Phase I \u0394 = -0.0061 vs pre-Phase-I 0.9582 (within noise)**.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: composite 0.9639, \u0394=+0.012 from 0.9521 prior \u2014 small genuine lift. r3 (canonical actions like redact_id / copy_listing) up. 0 contamination. PASS."
+      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (\u897f\u533b\u8bca\u6240) \u2192 service_institution_60, lifting composite +0.0165 from v3 0.9356. **TRUE Phase I \u0394 = -0.0061 vs pre-Phase-I 0.9582 (within noise)**.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: composite 0.9639, \u0394=+0.012 from 0.9521 prior \u2014 small genuine lift. r3 (canonical actions like redact_id / copy_listing) up. 0 contamination. PASS.\n [2026-07-14] server-CPU cross-check (`summary_20260714_005010`): composite 0.9701, \u0394=+0.006 over mobile baseline 0.9639. image_1391 (\u6e58\u534e\u540d\u90b8 promo) lifted 0.8875\u21921.000 as r2_text recovered from 0.75 to 1.00. Reference-only via pii_20_server_cpu entry; default backend stays mobile."
     },
     {
       "name": "direction_arrow_60",
@@ -142,6 +142,16 @@
       "quality": 90,
       "baseline_commit": "e85ec64",
       "note": "67-fixture Phase I suite \u2014 13th intent, OBSERVE family. v3: 0.9701 (was 63-fixture 0.9664 in v2). +4 reclassified fixtures from phone_60 (image_1882/6636/7296/7376) all scored \u22650.89 in service_institution. 11 categories (medical 22 / education 22 / government_admin 12 / financial 5 / government_law 3 / school_childcare 1 / clinic 1 / training 1 / childcare 1 / gov_service 1).\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: composite 0.9765, \u0394=+0.006 from 0.9701 prior \u2014 within noise band. 1 transient (error) fixture (image_6134, 0.36); 66/67 within noise. 0 contamination otherwise. PASS."
+    },
+    {
+      "name": "real_estate_rental_12",
+      "baseline": 0.7,
+      "gt": "profiling/ground_truth_real_estate_rental_12.json",
+      "limit": 12,
+      "resize": 3200,
+      "quality": 90,
+      "baseline_commit": "e85ec64",
+      "note": "12-fixture real_estate_rental mini-suite (Phase K precursor). All 12 fixtures match the REAL_ESTATE regex (IntentVerifier.kt:73) so Pass 7's !REAL_ESTATE guard does not misfire to phone. Categories: developer_promo 8, residential_listing 1, brokerage 1, commercial_floor 1, minimal_signage 1. Canonical action: copy_listing.\nBaseline 0.7 placeholder until first measurement lands; will be revised after the inaugural run (`b247jbxkh` first attempt was logged with no GT wired into baselines.json at run time)."
     }
   ]
 }
