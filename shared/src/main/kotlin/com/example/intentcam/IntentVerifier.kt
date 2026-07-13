@@ -126,6 +126,13 @@ object IntentVerifier {
     //  mentions.  Mirror scan_intents.py cluster definitions.
     private val WARNING = Regex("""(?:请勿|禁止|警告|严禁|违禁|高危|危险|注意|小心|当心|触电|高压|易燃|易爆|剧毒|辐射|严禁烟火|当心触电|注意安全|禁止入内|禁止通行|高压危险|小心地滑)""")
     private val MENU = Regex("""(?:菜单|菜谱|菜品|招牌菜|主厨推荐|今日特价|主菜|配菜|汤品|甜品|主推|套餐价|今日菜单|厨师推荐)""")
+    // [2026-07-13] Phase J — PROMO.  Mirrors scan_intents.py:52
+    //  `shopping_promo` cluster (13 keywords, 351 imgs in corpus,
+    //  rank #7).  Keyword list is wide on purpose: a 促销 sign can
+    //  use any of 13 distinct token styles, and an incidental
+    //  hit on a single keyword (e.g. "送" in a delivery ad) is
+    //  bounded by the !REAL_ESTATE + !MENU post-guards in Pass 13.
+    private val PROMO = Regex("""(?:特价|促销|优惠|打折|满减|秒杀|亏本|清仓|甩卖|转让|红包|抵用券|代金券|限时|抢购|直降)""")
     /** Hours — matches both time-pattern style ("9:00-22:00", "09:00 至
      *  21:30") and chinese-keyword style ("营业时间", "营业中").  The
      *  HOUR_PATTERN half covers 24h clock (with optional minute) and
@@ -223,6 +230,14 @@ object IntentVerifier {
         //  the LLM can emit both actions on a single bubble if
         //  the sign carries hours; we only inject the primary.
         "service_institution" -> "open_in_maps"
+        // [2026-07-13] Phase J — shopping_promo maps to the new
+        //  `copy_promo` action (Phase G-style share-sheet copy).
+        //  Lockstep site #3 of 3 (mirrors ActionDecl +
+        //  EvalRunner.defaultActionIds).  Per Phase F invariant
+        //  the verifier injection is additive (never deletes
+        //  LLM-emitted actions), so a bubble with a promo AND
+        //  a phone can still carry both `copy_promo` + `dial_number`.
+        "shopping_promo"      -> "copy_promo"
         else                  -> null   // info / solve — no action
     }
 
@@ -378,6 +393,29 @@ object IntentVerifier {
             && SERVICE_INSTITUTION.containsMatchIn(corpus)
         ) {
             return "service_institution"
+        }
+        // [2026-07-13] Phase J — info | location | real_estate_rental
+        //  source + PROMO token → shopping_promo.  Catches deal /
+        //  discount / sales signs (特价/促销/满减/红包/限时抢购).
+        //  The !REAL_ESTATE guard mirrors Phase E3 (Pass 7): 转让 is
+        //  in both the PROMO and REAL_ESTATE-adjacent vocabulary, so
+        //  a "二手房急售 转让" sign whose GT is real_estate_rental
+        //  must NOT flip to shopping_promo.  The !MENU guard is a
+        //  belt-and-suspenders bound on 今日特价 (which is a MENU
+        //  keyword per Phase G regex) — without it, a 菜单 sign
+        //  mentioning 今日特价 would mis-fire to shopping_promo
+        //  even though its GT is menu_food.  Ordered AFTER Pass 12
+        //  (service_institution) since institution vs promo never
+        //  co-occur in the corpus, but priority is whichever regex
+        //  the verifier hits first; Pass 12 covers the narrower
+        //  institution signal so promo still fires on pure-deal
+        //  signs.
+        if ((currentType == "info" || currentType == "location" || currentType == "real_estate_rental")
+            && PROMO.containsMatchIn(corpus)
+            && !REAL_ESTATE.containsMatchIn(corpus)
+            && !MENU.containsMatchIn(corpus)
+        ) {
+            return "shopping_promo"
         }
         // Pass 7 (E3, 2026-07-11): real_estate_rental + mobile, but no
         //  real-estate signal → phone.  Catches image_1216 (电动车商铺

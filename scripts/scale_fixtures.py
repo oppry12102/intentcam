@@ -120,6 +120,29 @@ INTENTS: dict[str, dict] = {
         ],
         "fallback_cat": "general_institution",
     },
+    "shopping_promo_20": {
+        "seed_gt": "ground_truth_shopping_promo_20.json",
+        # PROMO regex from IntentVerifier.kt (Phase J).
+        # Mirrors scan_intents.py:52 cluster (13 keywords, 351 imgs).
+        # Note: 转让 is shared with real_estate_rental (Phase B);
+        # the !REAL_ESTATE guard in verifier Pass 13 prevents
+        # mis-fire on 二手房急售.  今日特价 is shared with menu_food
+        # (Phase G); !MENU guard prevents mis-fire on menu signs.
+        "regex": re.compile(
+            r"特价|促销|优惠|打折|满减|秒杀|亏本|清仓"
+            r"|甩卖|转让|红包|抵用券|代金券|限时|抢购|直降"
+        ),
+        "type": "shopping_promo",
+        "actions": ["copy_promo"],
+        "categories": [
+            (re.compile(r"特价|直降|降价"), "price_discount"),
+            (re.compile(r"促销|优惠|打折"), "sale_promotion"),
+            (re.compile(r"满减|抵用券|代金券|红包"), "coupon_voucher"),
+            (re.compile(r"秒杀|限时|抢购"), "flash_sale"),
+            (re.compile(r"亏本|清仓|甩卖"), "clearance"),
+        ],
+        "fallback_cat": "general_promo",
+    },
 }
 
 

@@ -1,0 +1,95 @@
+{
+  "ground_truth": "ground_truth_shopping_promo_20.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 1,
+  "overall_composite": 0.9,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 1,
+  "version": 1,
+  "quality": 90,
+  "per_category": {"price_discount": 0.9},
+  "fixtures": [{
+    "raw_content": "\"老村长 LAOCUNZHANG 私募菜\"（民族大道店）门店外景。门头欢迎牌：\"欢迎光临 民族大道店预订电话：8737 6717\"。门口灯箱广告：店招\"老村长 LAOCUNZHANG 私募菜\"，VIP 会员储值卡开始办理\u2014\u2014\"现只要现金储值达500元即可加入老村长私募菜会员大家庭，立享VIP待遇\"；\"即享 9折 优惠\"、\"即享 超值 特价菜\"、\"实惠真真切切，看得见\"；\"生日当天到店 免费领取精美礼品一份，如进餐再送主食一道\"。左下角营业时间牌：午市 11:00-14:00、晚市 17:00-21:00，预订电话 027-87376717。右下角蓝牌楼层指引\"一楼 二楼\"。",
+    "r2_text": 1,
+    "details_count": 12,
+    "raw_details": [
+      {
+        "kind": "logo",
+        "label": "店招",
+        "value": "老村长 LAOCUNZHANG 私募菜"
+      },
+      {
+        "kind": "text",
+        "label": "欢迎牌",
+        "value": "欢迎光临"
+      },
+      {
+        "kind": "text",
+        "label": "分店标识",
+        "value": "民族大道店"
+      },
+      {
+        "kind": "phone",
+        "label": "民族大道店预订电话",
+        "value": "8737 6717"
+      },
+      {
+        "kind": "text",
+        "label": "VIP 会员广告",
+        "value": "VIP 会员储值卡开始办理啦！现只要现金储值达500元即可加入老村长私募菜会员大家庭，立享VIP待遇。"
+      },
+      {
+        "kind": "price",
+        "label": "折扣",
+        "value": "即享 9折 优惠"
+      },
+      {
+        "kind": "price",
+        "label": "超值菜",
+        "value": "即享 超值 特价菜"
+      },
+      {
+        "kind": "text",
+        "label": "广告语",
+        "value": "实惠真真切切，看得见"
+      },
+      {
+        "kind": "text",
+        "label": "生日福利",
+        "value": "生日当天到店 免费领取精美礼品一份，如进餐再送主食一道。"
+      },
+      {
+        "kind": "hours",
+        "label": "营业时间",
+        "value": "午市 11:00-14:00；晚市 17:00-21:00"
+      },
+      {
+        "kind": "phone",
+        "label": "总店电话",
+        "value": "027-87376717"
+      },
+      {
+        "kind": "location",
+        "label": "楼层指引",
+        "value": "一楼 二楼"
+      }
+    ],
+    "expected_actions": ["copy_promo"],
+    "r2_type": 1,
+    "emitted_action_ids": [
+      "dial_number",
+      "copy_hours",
+      "view_details"
+    ],
+    "composite": 0.9,
+    "r2_text_fuzzy": 1,
+    "has_text": false,
+    "r3_actions": 0,
+    "picked_tool": "zoom_in",
+    "id": "image_3968",
+    "category": "price_discount",
+    "content_len": 290,
+    "r1": 1
+  }]
+}

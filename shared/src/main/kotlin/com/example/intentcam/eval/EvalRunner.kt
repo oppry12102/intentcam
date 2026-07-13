@@ -62,6 +62,7 @@ internal class EvalRunner(private val config: EvalConfig) {
         "copy_warning",   // [2026-07-12] warning_safety → share (Phase G)
         "copy_menu",      // [2026-07-12] menu_food → share (Phase G)
         "copy_hours",     // [2026-07-12] hours_schedule → share (Phase G)
+        "copy_promo",     // [2026-07-13] shopping_promo → share (Phase J)
     )
     // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
     // when --debug-fixtures is set, otherwise stay silent like before.

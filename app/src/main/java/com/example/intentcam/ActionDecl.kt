@@ -416,6 +416,29 @@ fun registerDefaultActions(reg: ActionRegistry) {
             ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享营业时间"))
         },
     ))
+    // [2026-07-13] Phase J — `copy_promo`: share-sheet copy of
+    //  a deals/discounts bubble.  Mirrors copy_menu plumbing
+    //  (cap at 600 chars, same intent.createChooser pattern).
+    //  Phase J target = 14th intent `shopping_promo`.
+    reg.register(ActionDef(
+        id = "copy_promo",
+        label = "复制促销",
+        iconKey = "local_offer",
+        applicableIntents = setOf("shopping_promo"),
+        body = { _, bubble, _ ->
+            val payload = buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: "促销信息")
+                append('\n')
+                append(bubble.detail)
+            }.trim().take(600)
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享促销"))
+        },
+    ))
 }
 
 /** Pull the first plausible phone number from a bubble's surface text.

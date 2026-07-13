@@ -214,6 +214,21 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "公共机构：医院 / 学校 / 政府机关 / 银行 / 邮局 / 法院 / 派出所 / 大使馆",
         family = IntentFamily.OBSERVE,
     ))
+    // [2026-07-13] Phase J — `shopping_promo`: deals / discounts / sales
+    //  sign.  Target cluster = 351 images / 4.4% of RCTW corpus
+    //  (rank #7 in `scan_intents.py` — highest un-shipped after
+    //  price/date_time).  Family OBSERVE — user wants the deal text
+    //  to share or remember, not a purchase flow.  Maps to a new
+    //  `copy_promo` action (share-sheet, same plumbing as Phase G's
+    //  copy_warning/copy_menu/copy_hours).  Real-estate 转让 is
+    //  excluded by verifier `!REAL_ESTATE` guard (mirrors Phase E3)
+    //  to avoid mis-fire on 二手房急售.
+    reg.register(IntentDecl(
+        id = "shopping_promo",
+        label = "促销",
+        llmHint = "促销：特价 / 打折 / 满减 / 秒杀 / 亏本 / 清仓 / 甩卖 / 红包 / 限时 / 抢购",
+        family = IntentFamily.OBSERVE,
+    ))
 }
 
 /**
