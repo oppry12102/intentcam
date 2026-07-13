@@ -4,6 +4,48 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14c] — recruit_hiring + real_estate_rental suite trim
+
+Eval-infrastructure release: clean up 5 mixed-content fixtures from
+2 suites after investigation loop. No on-device code change — these
+are GT-data corrections that close the verification loop on suites
+where the verifier can't reliably flip menu_food/location →
+recruit_hiring or info → real_estate_rental.
+
+### Trimmed — recruit_hiring suite 13 → 9 fixtures (`097899a`)
+
+Dropped image_5380/3553/4641/1440 (重庆渔翁鱼庄, 黄焖鸡米饭,
+吉祥馄饨, 微笑美甲). Each is a restaurant/beauty-saloon with a
+副招聘 notice — the LLM consistently classifies as the dominant
+intent (menu_food), not recruit_hiring. The verifier's Pass N
+correctly fires for `location/info → recruit_hiring` but has no
+path for `menu_food → recruit_hiring`; adding one would risk
+over-firing on every restaurant-with-minor-recruit callout.
+
+Suite renamed `recruit_hiring_13 → recruit_hiring_9` to match the
+new fixture count (post-rename `recruit_hiring_9`).
+Baseline 0.992 → **0.976**.
+
+### Trimmed — real_estate_rental suite 11 → 10 fixtures (`097899a`)
+
+Dropped image_231 (爱屋吉屋 broker 公交尾广告). Mixed broker +
+phone signals — LLM classifies inconsistently across runs.
+Reclass attempts to shopping_promo (Pass 14 needs PROMO tokens; 佣金
+≠ 特价/促销/打折) and phone (LLM still defaults to info in some
+runs) both failed. Drop cleaner than arbitrary reclass.
+
+Baseline 0.981 → **0.957**.
+
+### Out-of-scope
+
+- New verifier pass `menu_food → recruit_hiring` is the next feature
+  work, not a fix. Requires guard rails (e.g. 必须有 standalone
+  招聘海报 in detail value, not just 招聘 token in passing text)
+  before shipping — tracked separately.
+- Image-time fixture-only flips the verifier can chase are pure-noise
+  inputs; better to curate at the GT level (this commit) than
+  push LLMs to second-guess DOMINANT content for sub-signal.
+
 ## [2026-07-14b] — verifier canonical-action injection fix
 
 Single-line on-device bug fix that lifts the two suites that were
