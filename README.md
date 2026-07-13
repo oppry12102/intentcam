@@ -207,16 +207,70 @@ Filter includes `IntentCam:V`, `AndroidRuntime:E`, `System.err:W`, and
 
 ## Run the eval (no device needed)
 
+The eval runs on the JVM (`shared/eval/`) against RCTW-171 train
+images. It does **not** need an Android device — the production
+camera/ML Kit code paths are mocked; only the LLM call and the
+visual pipeline run for real.
+
+### 1. One-time setup — local PP-OCRv4 OCR backend
+
+Huawei Cloud OCR's per-call cost was unsustainable. The eval OCR
+backend is now a local on-prem engine — PP-OCRv4 mobile (PaddleOCR
+2.7.3, 12 MB model, ~2.4 s/img CPU). It lives in a sibling repo:
+
 ```bash
-# Standard 20-fixture iteration run (~2 min)
-JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval --args="--limit 20"
+# Clone the PP-OCRv4 mobile engine (sibling directory, NOT imported)
+git clone https://github.com/PaddlePaddle/PaddleOCR /home/oppry/work/pp_ocrv4_mobile_engine
+cd /home/oppry/work/pp_ocrv4_mobile_engine
+pip install paddleocr==2.7.3 opencv-python-headless pillow
+```
 
-# Conclusive 100-fixture run (~30 min)
-JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval --args="--limit 0 --json-out profiling/eval_run.json"
+The eval invokes it via the long-lived `profiling/pp_ocrv4_runner.py`
+JSON-RPC subprocess. **First run takes 5-30 s** for PaddleOCR to load
+weights; subsequent calls reuse the cached engine.
 
-# Set HUAWEICLOUD_SDK_{AK,SK,PROJECT_ID} before invoking for the
-# real OCR-hint baseline (otherwise runs blind — useful for ablation
-# but not the prod-mirror number)
+### 2. Run a single suite
+
+```bash
+# Standard 20-fixture iteration run (~2-3 min with local OCR)
+JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval \
+    --args="--limit 20 --gt profiling/ground_truth_phone_20.json \
+            --json-out profiling/eval_phone_20.json"
+
+# Conclusive 60-fixture run (~6-10 min)
+JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval \
+    --args="--limit 60 --gt profiling/ground_truth_phone_60.json"
+
+# Conclusive 100-fixture run (~25-35 min) on RCTW-100
+JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval \
+    --args="--limit 0 --gt profiling/ground_truth_100.json"
+```
+
+### 3. OCR backend cascade (3 tiers)
+
+| Tier | When | How to enable |
+|---|---|---|
+| **Local PP-OCRv4** (default, 2026-07-13+) | sibling repo at `/home/oppry/work/pp_ocrv4_mobile_engine` | auto-detected; first run loads model |
+| Huawei Cloud fallback | local install/init fails | set `HUAWEICLOUD_SDK_{AK,SK,PROJECT_ID}` env vars |
+| Blind (no OCR) | both fail | unset env vars + no sibling repo |
+
+Inspect with `--backend local|huawei|blind` to force a tier for ablation.
+
+### 4. Run the regression net (5+ suites, ~30 min)
+
+```bash
+./scripts/run_regression.sh          # all 9 suites, auto-compare
+./scripts/run_regression.sh --no-build phone_20 pii_20   # subset
+```
+
+Exits non-zero if any suite drops ≥ 0.05 absolute from its
+baseline in `profiling/baselines.json`. See `profiling/README_regression.md`.
+
+### 5. Sanity-check the cascade
+
+```bash
+python3 profiling/pp_ocrv4_runner.py ping
+# → pong
 ```
 
 JSON dumps in `profiling/eval_*.json` document the baseline chain.
