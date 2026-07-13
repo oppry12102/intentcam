@@ -4,6 +4,58 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-13b] — r3 verifier fix + shopping_promo GT curation
+
+This is a single-feature mini-release that ships a verifier correctness
+fix and one GT correctness fix surfaced by the post-r3 regression net.
+Eval infrastructure (regression scripts, baseline files, GT-data fixes
+already shipped in 6/13 of the commits) is **not** included in this
+release — only changes that affect the on-device APK.
+
+### Fixed — IntentVerifier canonical-action injection for missing-canonical case (`355c001`)
+
+Phase F (2026-07-11) had scoped the verifier's canonical-action
+injection to type-flip only: when the LLM picked a different type than
+the verifier's pick, the verifier would inject the canonical action;
+otherwise it left the LLM's proposal untouched. This protected r3 as a
+"real model-behavior signal" for the non-flip majority.
+
+But it broke for **new intents** where the LLM has no prior and emits
+its own heuristic — e.g. for Phase J's `shopping_promo`, the LLM emits
+`dial_number` (because the sign has a phone number) and ignores the
+type→canonical mapping. The new condition injects the canonical action
+whenever it isn't already in the LLM's proposal, covering both the
+type-flip case and the missing-canonical case.
+
+Validated by the 8-suite post-r3-fix regression net (`e85ec64`,
+`1cd318e`, `7489945`):
+
+| suite | pre-fix | post-fix | Δ |
+|---|---:|---:|---:|
+| shopping_promo_20 | 0.901 | **0.943** | +0.042 |
+| direction_arrow_20 | 0.974 | 0.995 | +0.021 |
+| direction_arrow_60 | 0.969 | 0.990 | +0.021 |
+| pii20_60 | 0.952 | 0.964 | +0.012 |
+| service_institution_60 | 0.970 | 0.977 | +0.006 |
+| phone_60 | 0.920 | 0.918 | -0.002 |
+| phaseG_15 | 0.973 | 0.959 | -0.014 (within noise) |
+
+### Fixed — shopping_promo GT false-positive `image_3533` (`99b5e90`)
+
+`image_3533` (万达利眼镜 店招 / 鲁巷广场) was auto-scaled into
+`shopping_promo_20` by `scale_fixtures.py` on a "大优惠" hit on the
+digital marquee scroll, but the dominant signal is address-level
+location. LLM has consistently classified it as `location` /
+`open_in_maps` in 3 prior runs at composite 0.90 (r1=1, r2_type=1,
+r3=0). Re-curated to `location` / `open_in_maps`. After the r3 fix
+shipped 4 of 5 false-positive GT entries in this file reached
+composite 1.00; `image_3533` stood out as the lone GT-side error and
+is now closed.
+
+Cross-references: `f017733` retyped the prior 2 GT false-positives
+(`image_2562` → `real_estate_rental`, `image_2898` →
+`service_institution`); `99b5e90` closes the loop on the third.
+
 ## [2026-07-13] — Type/intentFocus refactor + Phase I + Phase J + local OCR backend
 
 This release batch covers 5 feature threads plus eval infrastructure:
