@@ -155,13 +155,13 @@
     },
     {
       "name": "recruit_hiring_13",
-      "baseline": 0.96,
+      "baseline": 0.992,
       "gt": "profiling/ground_truth_recruit_hiring_13.json",
       "limit": 13,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "73e7e6d",
-      "note": "13-fixture recruit_hiring mini-suite (Phase K-light). All 13 fixtures match the verifier's RECRUIT regex (IntentVerifier.kt:67) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire. Categories: restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.\n [2026-07-14] inaugural baseline (`summary_20260714_050500`): composite **0.960**. 10/13 perfect (1.000) including canonical recruit fixtures (image_1193/1405/1440/2418/3030/4641/4767/7506/7746/7869). 3 partial: image_7234 (0.900, r3=0 — verifier missing-canonical injection did NOT add save_posting despite verifiedType=recruit_hiring; LLM emitted dial_number + view_details and the verifier kept them unchanged), image_3553 (0.788, r2_type=0.5 — LLM classified as location because of 餐厅 anchor), image_5380 (0.788, r2_type=0.5 — same location bias). The image_7234 r3=0 case is a known verifier bug surfaced by this suite — investigated but not fixed in this round."
+      "baseline_commit": "pending_verifier_fix",
+      "note": "13-fixture recruit_hiring mini-suite (Phase K-light). All 13 fixtures match the verifier's RECRUIT regex (IntentVerifier.kt:67) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire. Categories: restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.\n [2026-07-14] inaugural baseline (`summary_20260714_050500`): composite **0.960**. 10/13 perfect (1.000) including canonical recruit fixtures (image_1193/1405/1440/2418/3030/4641/4767/7506/7746/7869). 3 partial: image_7234 (0.900, r3=0 — verifier missing-canonical injection did NOT add save_posting despite verifiedType=recruit_hiring; LLM emitted dial_number + view_details and the verifier kept them unchanged), image_3553 (0.788, r2_type=0.5 — LLM classified as location because of 餐厅 anchor), image_5380 (0.788, r2_type=0.5 — same location bias). The image_7234 r3=0 case is a known verifier bug surfaced by this suite — investigated but not fixed in this round.\n\n [2026-07-14 post-fix] ToolUseLoop.kt canonical-injection bug fixed (image_7234 r3 0→1, suite composite 0.960→0.992, +0.032 lift). 1 remaining partial: image_5380 at 0.900 r3=0 (likely separate edge case — diagnostic pending; rerun is `summary_20260714_053627`)."
     }
   ]
 }

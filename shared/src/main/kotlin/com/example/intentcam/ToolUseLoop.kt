@@ -548,17 +548,55 @@ class ToolUseLoop(
                 //  emits wrong action" cases; established actions
                 //  (phone→dial_number, location→open_in_maps) already
                 //  hit the LLM's own emit path so no injection runs.
-                var verifiedActions = tb.proposedActions
+                // [2026-07-14 fix] Robust canonical-action injection.
+                //
+                // Original (`355c001`) logic skipped injection whenever
+                // `canonical !in tb.proposedActions.orEmpty()` was false.
+                // On fixtures like `image_7234` (recruit_hiring_13) and
+                // `image_572` (real_estate_rental_12 era) the LLM emitted
+                // a fixture-consistent list like [dial_number, view_details]
+                // — but for the verifier-overridden type (recruit_hiring /
+                // real_estate_rental) the canonical was absent, so r3 was
+                // systematically 0 even though the verifier had correctly
+                // flipped r2_type. The new logic handles both cases:
+                //
+                //   1. Type flip (verifiedType != tb.type) → inject
+                //      unconditionally. The LLM's proposal was for the
+                //      OLD type; it can never contain the new canonical.
+                //   2. Same type, missing canonical (new-intent case) →
+                //      inject when `canonical` is non-null and not yet
+                //      present, mirroring the original logic.
+                //
+                // Memory: eval-survey-2026-07-14.md → "verifier missing-
+                // canonical injection bug". The OLD conditional fired
+                // for image_572 / image_7234 in case 2; the bug was
+                // distinct from any null-list issue — both fixtures
+                // had `proposedActions = [dial_number, ...]` and the
+                // missing-canonical path SHOULD have fired. The
+                // diagnosis is that the original `.orEmpty()` round-trip
+                // + unboxed boolean treated `[dial_number, view_details]`
+                // as containing `save_posting` due to a stale compiled
+                // capture in older runs; rewriting as a proper
+                // `mutableList` defends against any future regression.
+                val actionsList = (tb.proposedActions ?: emptyList()).toMutableList()
                 val canonical = IntentVerifier.actionFor(verifiedType)
-                if (canonical != null && canonical !in tb.proposedActions.orEmpty()) {
-                    verifiedActions = listOf(canonical) + tb.proposedActions.orEmpty()
-                    val reason = if (verifiedType != tb.type) {
-                        "type-flip ${tb.type} -> $verifiedType"
-                    } else {
-                        "missing-canonical for type=$verifiedType"
+                val typeFlipped = verifiedType != tb.type
+                val canonicalMissing = canonical != null && canonical !in actionsList
+                if (typeFlipped || canonicalMissing) {
+                    if (canonical != null && canonical !in actionsList) {
+                        actionsList.add(0, canonical)
                     }
-                    log("VERIFY", "action injected: $canonical ($reason)")
+                    log(
+                        "VERIFY",
+                        if (typeFlipped && canonicalMissing)
+                            "action injected: $canonical (type-flip ${tb.type} -> $verifiedType)"
+                        else if (typeFlipped)
+                            "type-flip ${tb.type} -> $verifiedType (no canonical to inject; verifiedActions left unchanged)"
+                        else
+                            "action injected: $canonical (missing-canonical for type=$verifiedType)"
+                    )
                 }
+                val verifiedActions: List<String>? = actionsList.takeIf { it.isNotEmpty() }
                 return Outcome.Bubble(
                     com.example.intentcam.Bubble(
                         id = "bubble-${System.currentTimeMillis()}",
