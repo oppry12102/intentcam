@@ -25,6 +25,26 @@ All notable changes to IntentCam will be documented in this file.
   Unregistered / unknown types render gray — fail-loud instead of
   silently pretending to be OBSERVE.
 
+### Verified (data) — post type-refactor PP-OCRv4 re-run
+
+Re-ran all three local-backend suites at commit `144ba61` to anchor
+the refactor against the new architecture (UI color migration is
+structural and does not enter scoring, so any Δ is variance):
+
+- **phone_20** at commit `144ba61`: composite **0.917**
+  (Δ=-0.027 vs baseline 0.944, within ±0.03 LLM variance band;
+  0 contamination, 0 Outcome.Error). Baseline value unchanged.
+- **pii_20** at commit `144ba61`: composite **0.923**
+  (Δ=-0.006 vs baseline 0.929, within noise). Baseline value unchanged.
+- **direction_arrow_20** at commit `144ba61`: composite **0.975**
+  (Δ=+0.001 vs baseline 0.974, within noise). Baseline value unchanged.
+
+All three suites stay anchored at the PP-OCRv4 local baseline; no
+regression per `feedback-529-contamination-awareness` (Δ ≤ ±0.03 +
+zero contamination ⇒ variance, not regression). `profiling/baselines.json`
+`baseline_commit` fields updated to `144ba61` to reflect the
+post-refactor measurement point.
+
 ### Added (eval infrastructure)
 
 - **Regression net** (`bdf3343`): `profiling/baselines.json` 5-suite

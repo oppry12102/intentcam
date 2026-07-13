@@ -5,7 +5,7 @@
     "composite_formula": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12)",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-13",
-    "last_updated_commit": "PENDING_pp_ocrv4_local",
+    "last_updated_commit": "144ba61",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",
       "2026-07-13+": "Local PP-OCRv4 mobile (PaddleOCR 2.7.3, on-prem) — Huawei Cloud retained as fallback only. All prior suites' numbers are reference-only; new baselines below."
@@ -19,8 +19,8 @@
       "limit": 20,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "PENDING_pp_ocrv4_local",
-      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.944. Pre-PP-OCRv4 (Huawei Cloud) was 0.9575; Δ=-0.013 within noise. 0/20 empty, r2_text fuzzy=1.000. See memory eval-pp-ocrv4-phone20-baseline-2026-07-13."
+      "baseline_commit": "144ba61",
+      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.944. Pre-PP-OCRv4 (Huawei Cloud) was 0.9575; Δ=-0.013 within noise. 0/20 empty, r2_text fuzzy=1.000. **Re-run after type-refactor (commit 144ba61) measured 0.917, Δ=-0.027 within ±0.03 LLM variance band, 0 contamination** — baseline value unchanged. See memory eval-pp-ocrv4-phone20-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13."
     },
     {
       "name": "phone_20_huawei_cloud_ref",
@@ -39,8 +39,8 @@
       "limit": 18,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "PENDING_pp_ocrv4_local",
-      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.929. Pre-PP-OCRv4 (Huawei Cloud) was 0.9521; Δ=-0.023 within noise but closer to threshold — pii suite is more sensitive to OCR text quality. 0/18 empty, r2_text fuzzy=1.000. **Server (450MB, CPU) at 0.940 = +0.011 over mobile** — server didn't unstick image_1391/2494 (both stuck at 0.79 in mobile AND server), so remaining -0.012 vs Huawei is type-routing, not OCR quality. See memory eval-pp-ocrv4-pii20-baseline-2026-07-13."
+      "baseline_commit": "144ba61",
+      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.929. Pre-PP-OCRv4 (Huawei Cloud) was 0.9521; Δ=-0.023 within noise but closer to threshold — pii suite is more sensitive to OCR text quality. 0/18 empty, r2_text fuzzy=1.000. **Server (450MB, CPU) at 0.940 = +0.011 over mobile** — server didn't unstick image_1391/2494 (both stuck at 0.79 in mobile AND server), so remaining -0.012 vs Huawei is type-routing, not OCR quality. **Re-run after type-refactor (commit 144ba61) measured 0.923, Δ=-0.006 within noise** — baseline value unchanged. See memory eval-pp-ocrv4-pii20-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13."
     },
     {
       "name": "pii_20_server_cpu",
@@ -49,8 +49,8 @@
       "limit": 18,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "PENDING_pp_ocrv4_local",
-      "note": "**SERVER-CPU reference (LOCAL_OCR_KIND=server, 450MB model, 27 s/img CPU) — 2026-07-13**. Composite 0.940. mobile=0.929 (+0.011 lift), Huawei Cloud=0.9521 (-0.012 in noise). Not the default baseline (server is 11x slower for iter); tracked as best-effort reference. Use LOCAL_OCR_KIND=server gradle :shared:eval --args=... to reproduce."
+      "baseline_commit": "144ba61",
+      "note": "**SERVER-CPU reference (LOCAL_OCR_KIND=server, 450MB model, 27 s/img CPU) — 2026-07-13**. Composite 0.940. mobile=0.929 (+0.011 lift), Huawei Cloud=0.9521 (-0.012 in noise). Not the default baseline (server is 11x slower for iter); tracked as best-effort reference. Use LOCAL_OCR_KIND=server gradle :shared:eval --args=... to reproduce. (Reference only; no mobile re-run at commit 144ba61 since CPU is 11x slower per iter.)"
     },
     {
       "name": "pii_20_huawei_cloud_ref",
@@ -69,8 +69,8 @@
       "limit": 20,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "PENDING_pp_ocrv4_local",
-      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.974. Pre-PP-OCRv4 (Huawei Cloud) was 0.9694; Δ=+0.005 (basically identical). 0/20 empty, r2_text fuzzy=1.000. See memory eval-pp-ocrv4-direction-arrow-baseline-2026-07-13."
+      "baseline_commit": "144ba61",
+      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.974. Pre-PP-OCRv4 (Huawei Cloud) was 0.9694; Δ=+0.005 (basically identical). 0/20 empty, r2_text fuzzy=1.000. **Re-run after type-refactor (commit 144ba61) measured 0.975, Δ=+0.001 within noise** — baseline value unchanged. See memory eval-pp-ocrv4-direction-arrow-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13."
     },
     {
       "name": "direction_arrow_20_huawei_cloud_ref",
