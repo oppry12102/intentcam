@@ -4,13 +4,14 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
-## [2026-07-13] — Type/intentFocus refactor + Phase I + local OCR backend
+## [2026-07-13] — Type/intentFocus refactor + Phase I + Phase J + local OCR backend
 
-This release batch covers 4 feature threads plus eval infrastructure:
+This release batch covers 5 feature threads plus eval infrastructure:
 (1) drop dead `intentFocus` field + per-family UI accent,
 (2) Phase I 13th intent `service_institution` + Pass 12 verifier,
-(3) OCR backend swap from Huawei Cloud to local PP-OCRv4 mobile,
-(4) eval regression net + 60-fixture GT scaling.
+(3) **Phase J 14th intent `shopping_promo` + Pass 13 verifier**,
+(4) OCR backend swap from Huawei Cloud to local PP-OCRv4 mobile,
+(5) eval regression net + 60-fixture GT scaling.
 
 ### Added — Local PP-OCRv4 OCR backend (replaces Huawei Cloud as primary) (`25d2453`, `1c3db15`)
 
@@ -167,7 +168,7 @@ zero contamination ⇒ variance, not regression). `profiling/baselines.json`
 `baseline_commit` fields updated to `144ba61` to reflect the
 post-refactor measurement point.
 
-### Final baselines (9 suites, 2026-07-13 — local OCR backend)
+### Final baselines (10 suites, 2026-07-13 — local OCR backend)
 
 | Suite | Composite | n | Notes |
 |---|---:|---:|---|
@@ -177,22 +178,60 @@ post-refactor measurement point.
 | pii20_60 | **0.9521** | 18 | post-Phase-I v4 |
 | direction_arrow_20 | **0.974** | 20 | local OCR baseline @`144ba61` |
 | direction_arrow_60 | **0.9694** | 20 | post-Phase-I v3 |
-| service_institution_60 | **0.9664** | 63 | Phase I NEW |
+| service_institution_60 | **0.9664** | 63 | Phase I |
+| **shopping_promo_20** | **0.918** | 20 | **Phase J NEW** (r3_actions=0.350 — see Phase J section) |
 | phaseG_15 | 0.973 | 15 | pre-PP-OCRv4 (Huawei Cloud ref) |
 | rctw_20_sanity | 0.9202 | 20 | pre-PP-OCRv4 (Huawei Cloud ref) |
 
-`profiling/baselines.json` now tracks all 9 suites with
+`profiling/baselines.json` now tracks all 10 suites with
 `baseline_commit` field pointing to the measurement-point commit
 (`144ba61` for local-OCR suites, older for pre-PP-OCRv4 refs).
 Pre-PP-OCRv4 numbers are retained as `*_huawei_cloud_ref` entries
 for historical reference only — do NOT use for regression checks.
+
+### Phase J — `shopping_promo` intent (14th intent, OBSERVE) (`6f87e00`)
+
+- **14th intent**, OBSERVE family. Targets RCTW's 351-image
+  `shopping_promo` cluster (rank #7 in `scan_intents.py` — highest
+  un-shipped intent cluster). LLM hint covers 13 keywords:
+  `特价 / 促销 / 优惠 / 打折 / 满减 / 秒杀 / 亏本 / 清仓 / 甩卖 /
+  红包 / 抵用券 / 代金券 / 限时 / 抢购 / 直降`. Maps to new
+  `copy_promo` action (share-sheet, mirrors `copy_menu` plumbing).
+- **5-file pure-add architecture** (mirrors Phase G/H/I):
+  1. `IntentDecl.kt` — register `shopping_promo`.
+  2. `app/ActionDecl.kt` — new `copy_promo` action (cap 600 chars).
+  3. `IntentVerifier.kt` — **Pass 13** PROMO regex + 2 guards:
+     - `!REAL_ESTATE` — prevent 二手房急售 转让 mis-fire on Phase B
+     - `!MENU` — prevent 今日特价 mis-fire on menu_food (Phase G)
+     + `actionFor("shopping_promo")` → "copy_promo".
+  4. `ToolImplementations.kt` — C3 v3 prompt table row 14:
+     shopping_promo → copy_promo.
+  5. `eval/EvalRunner.kt` — `copy_promo` added to `defaultActionIds`
+     (3rd lockstep site).
+  6. `scripts/scale_fixtures.py` — `shopping_promo_20` entry with
+     5 sub-categories (price_discount / sale_promotion / coupon_voucher
+     / flash_sale / clearance) + fallback `general_promo`.
+
+- **shopping_promo_20 baseline** (`6f87e00`): composite **0.918**
+  (20-fixture, local OCR, 0 contamination, 0 Outcome.Error).
+  r2_text fuzzy=1.000, r2_type=1.000 (classification perfect).
+  Per-category: general_promo 0.967 / sale_promotion 0.923 /
+  coupon_voucher 0.922 / price_discount 0.900 / flash_sale 0.844.
+
+- **Known follow-up: r3_actions=0.350** — pre-existing EvalRunner
+  wiring gap: `EvalRunner.orchestrator = ToolUseLoop(...)` does not
+  pass `actionIds` parameter, so the system prompt tells the LLM
+  "actions ∈ {}（暂无动作可选；emit_bubble.action_ids 留空即可）".
+  C3 v3 inline table is the only signal for new actions; Lift
+  opportunity for future r3-only Phase. r2_type=1.00 confirms
+  classification is perfect; the gap is purely action emission.
 
 ### Not changed
 
 - No APK bump in this release batch. Latest APK remains the 16.7 MB
   build from commit `656aed1` (2026-07-12: Phase G + Phase H v2 + Pass 1b').
   Next APK ship will bundle the per-family UI accent refactor.
-- Verifier still 10-pass + 2 post-guard (Pass 11 / Pass 12 in `IntentVerifier.kt`).
+- Verifier now 10-pass + 3 post-guard (Pass 11 / Pass 12 / **Pass 13** in `IntentVerifier.kt`).
 
 ## [2026-07-12] — Phase H v2 + Pass 1b' + APK ship
 
