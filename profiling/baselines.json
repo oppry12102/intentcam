@@ -145,13 +145,13 @@
     },
     {
       "name": "real_estate_rental_12",
-      "baseline": 0.7,
+      "baseline": 0.938,
       "gt": "profiling/ground_truth_real_estate_rental_12.json",
       "limit": 12,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "e85ec64",
-      "note": "12-fixture real_estate_rental mini-suite (Phase K precursor). All 12 fixtures match the REAL_ESTATE regex (IntentVerifier.kt:73) so Pass 7's !REAL_ESTATE guard does not misfire to phone. Categories: developer_promo 8, residential_listing 1, brokerage 1, commercial_floor 1, minimal_signage 1. Canonical action: copy_listing.\nBaseline 0.7 placeholder until first measurement lands; will be revised after the inaugural run (`b247jbxkh` first attempt was logged with no GT wired into baselines.json at run time)."
+      "note": "12-fixture real_estate_rental mini-suite (Phase K precursor). All 12 fixtures match the REAL_ESTATE regex (IntentVerifier.kt:73) so Pass 7's !REAL_ESTATE guard does not misfire to phone. Categories: developer_promo 8, residential_listing 1, brokerage 1, commercial_floor 1, minimal_signage 1. Canonical action: copy_listing.\n [2026-07-14] inaugural baseline (`summary_20260714_005349`): composite 0.938. 8/12 perfect (1.000) — image_1090/1956/2562/3034/3285/3406/5674/6214. 4 partial at composite 0.788: image_231 (brokerage, r2_type=0.5), image_572 (世界城营销中心, r2_type=0.5), image_5024 (minimal 急售, r2_type=0.5), image_6915 (r2_type=0.5). All r3 = 1.00 on 8 fixtures with strong REAL_ESTATE tokens; the 4 partial fixtures have r2_type=0.5 (LLM types them as info despite the 平米/急售 tokens). Headroom: lift r2_type on the 4 mixed-content cases — likely needs llmHint nudge to make `real_estate_rental` a stronger first-pass pick."
     }
   ]
 }
