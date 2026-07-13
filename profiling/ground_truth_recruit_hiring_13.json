@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "description": "recruit_hiring mini-suite (Phase K-light) — 13 hand-curated fixtures matching the verifier's RECRUIT regex (IntentVerifier.kt:67). All fixtures have at least one RECRUIT token (招聘/招工/急招/诚招/诚聘/...) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire correctly. Categories span 6 — restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.",
+  "rctw_root": "/home/oppry/RCTW-171",
+  "auto_scaled_count": 13,
+  "expected_actions": [
+    "save_posting"
+  ],
+  "expected_top_intent_type": "recruit_hiring",
+  "scenes": [
+    {
+      "id": "image_1193",
+      "file": "image_1193.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Apparel store hiring sign. 招聘 + 月薪 details....)",
+      "category": "shop_recruit",
+      "what_is_pictured": "招聘喽 班纳通话 店员18-38岁 有工作经验者优先 薪资待遇2500-4500元月 加入我们你有可能晋升店长甚至股东 张经理13995607433",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Apparel store hiring sign. 招聘 + 月薪 details."
+    },
+    {
+      "id": "image_1405",
+      "file": "image_1405.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant recruiting cook. Single 招聘 keyword + phone....)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "招聘厨师 13678242843",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Restaurant recruiting cook. Single 招聘 keyword + phone."
+    },
+    {
+      "id": "image_1440",
+      "file": "image_1440.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Beauty school student recruitment. 招学徒 + 招聘....)",
+      "category": "school_recruit",
+      "what_is_pictured": "招学徒 长期招收化妆 美甲学员 微笑美甲 寇丹甲 招聘",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Beauty school student recruitment. 招学徒 + 招聘."
+    },
+    {
+      "id": "image_2418",
+      "file": "image_2418.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Gym trainer recruitment. 诚聘 + 月薪过万....)",
+      "category": "gym_recruit",
+      "what_is_pictured": "美国帕维尔健身中心 私人教练 钢管舞 动感单车 肚皮舞 热瑜伽 USA POWER GYM CLUB 诚聘 月薪过万",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Gym trainer recruitment. 诚聘 + 月薪过万."
+    },
+    {
+      "id": "image_3030",
+      "file": "image_3030.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant roles. 诚聘. Has 严禁入内 but Pass 4 (recruit) fires be...)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "食艺餐厅 因公司发展需要，现诚聘以下工作人员 联系方式：027-87658220",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Restaurant roles. 诚聘. Has 严禁入内 but Pass 4 (recruit) fires before Pass 8 (warning)."
+    },
+    {
+      "id": "image_3553",
+      "file": "image_3553.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Chain restaurant recruitment. 诚聘....)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "黄焖鸡米饭 江西瓦罐汤 诚聘 全国连锁光谷店 储备店",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Chain restaurant recruitment. 诚聘."
+    },
+    {
+      "id": "image_4641",
+      "file": "image_4641.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant + part-time roles. 招聘 + 具体薪资....)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "时尚向前 活力无限 吉祥馄饨 新鲜 招聘 真材实料的你 服务员3000-4000元/月 钟点工10-15/小时",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Restaurant + part-time roles. 招聘 + 具体薪资."
+    },
+    {
+      "id": "image_4767",
+      "file": "image_4767.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Service provider recruitment. 招聘启事 formal sign....)",
+      "category": "service_recruit",
+      "what_is_pictured": "招聘启事 因发展需要，本店招聘小区业务一名 薪酬面议 有小区业务经验者优先 陈先生 18228427530",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Service provider recruitment. 招聘启事 formal sign."
+    },
+    {
+      "id": "image_5380",
+      "file": "image_5380.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant staff recruitment. 招聘 + 厨房勤杂工/服务员 details....)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "汉口宵夜 重庆渔翁鱼庄 梭边鱼 招聘 厨房勤杂工 服务员 男女不限",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Restaurant staff recruitment. 招聘 + 厨房勤杂工/服务员 details."
+    },
+    {
+      "id": "image_7234",
+      "file": "image_7234.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Apparel brand hiring partner. 招聘 + 岗位 detail....)",
+      "category": "shop_recruit",
+      "what_is_pictured": "花花公子 寻求合作伙伴 招聘 展宇服饰有限公司 岗位要求：女性，年龄18-40岁 沟通能力强",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Apparel brand hiring partner. 招聘 + 岗位 detail."
+    },
+    {
+      "id": "image_7506",
+      "file": "image_7506.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Major corp sales recruitment. 诚聘 (x2) + 待遇 detail. Canonical...)",
+      "category": "company_recruit",
+      "what_is_pictured": "诚聘 安徽华佗国药股份有限公司 诚聘四川省各市、县销售经理 待遇5000元以上 要求能独立完成客户开发",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Major corp sales recruitment. 诚聘 (x2) + 待遇 detail. Canonical recruiter sign."
+    },
+    {
+      "id": "image_7746",
+      "file": "image_7746.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Gym pre-opening recruitment. 诚聘 + 月薪过万 + role detail....)",
+      "category": "gym_recruit",
+      "what_is_pictured": "美国帕维尔健身中心 USA POWER GYM CLUB 动感单车 有氧操 热瑜伽 即将开业 高薪 诚聘 月薪过万 健身顾问",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Gym pre-opening recruitment. 诚聘 + 月薪过万 + role detail."
+    },
+    {
+      "id": "image_7869",
+      "file": "image_7869.jpg",
+      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant chain recruitment. 招聘 + multiple branch info....)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "湖北再香餐饮公司 招聘 在仙桃有直营店四家 分别有李二鲜鱼村 再香杜家鸡",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "Hand-curated for recruit_hiring. Restaurant chain recruitment. 招聘 + multiple branch info."
+    }
+  ]
+}
