@@ -79,7 +79,17 @@ print(f">> {len(suites)} suite(s) selected; threshold |Δ| ≥ {threshold}")
 
 # We invoke gradle from project root so :shared:eval resolves.
 # Gradle picks up the latest evalJar already built.
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#
+# [2026-07-13] fix project_root calc: when this Python runs via
+#  heredoc (`python3 - <<'PY' ... PY`), __file__ is "<stdin>" and
+#  os.path.abspath(__file__) returns the CWD, so the old
+#  `os.path.dirname(os.path.dirname(...))` calc walked up TWO
+#  levels from the project root and gradle ran in the wrong
+#  directory (e.g. /home/oppry or /). Symptom: every suite
+#  failed in 2.9s with "Run gradle init to create a new
+#  Gradle build in this directory." Use os.getcwd() directly —
+#  the parent bash script's CWD is the project root.
+project_root = os.getcwd()
 
 results = []
 for cfg in suites:
