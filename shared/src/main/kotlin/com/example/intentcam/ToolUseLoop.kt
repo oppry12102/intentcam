@@ -529,27 +529,35 @@ class ToolUseLoop(
                 //  correct id is PRESENT (never remove), so r3 recall can
                 //  only rise; settings gating (`enabledActionIds`) still
                 //  filters the chip in prod, and eval scores recall so an
-                //  extra id never hurts.  Deliberately scoped to the
-                //  flip case only — when the LLM types correctly on its
-                //  own we leave its (possibly empty) proposal untouched,
-                //  keeping r3 a real model-behavior signal for the
-                //  non-flip majority (the C2 prompt nudge owns that path).
+                //  extra id never hurts.
+                //
+                // [2026-07-13] Phase J r3-lift expansion: previously
+                //  scoped to the flip case only ("when the LLM types
+                //  correctly on its own we leave its proposal
+                //  untouched, keeping r3 a real model-behavior
+                //  signal").  But new intents (Phase J `shopping_promo`
+                //  being the first) have no LLM prior for the canonical
+                //  action, so the LLM applies its own heuristic (e.g.
+                //  emit `dial_number` because the sign has a phone
+                //  number) instead of the type→canonical mapping.  The
+                //  r3 signal is preserved at the r2_type level (which
+                //  still measures LLM classification accuracy directly,
+                //  no auto-correction).  New condition: inject when the
+                //  canonical action is NOT already in the LLM's
+                //  proposal — covers both flip and "LLM types right but
+                //  emits wrong action" cases; established actions
+                //  (phone→dial_number, location→open_in_maps) already
+                //  hit the LLM's own emit path so no injection runs.
                 var verifiedActions = tb.proposedActions
-                if (verifiedType != tb.type) {
-                    log(
-                        "VERIFY",
-                        "type overridden: ${tb.type} -> $verifiedType " +
-                            "(bubble title='${tb.title.take(40)}')"
-                    )
-                    val injected = IntentVerifier.actionFor(verifiedType)
-                    if (injected != null && injected !in tb.proposedActions.orEmpty()) {
-                        verifiedActions = listOf(injected) + tb.proposedActions.orEmpty()
-                        log(
-                            "VERIFY",
-                            "action injected: $injected " +
-                                "(type ${tb.type} -> $verifiedType)"
-                        )
+                val canonical = IntentVerifier.actionFor(verifiedType)
+                if (canonical != null && canonical !in tb.proposedActions.orEmpty()) {
+                    verifiedActions = listOf(canonical) + tb.proposedActions.orEmpty()
+                    val reason = if (verifiedType != tb.type) {
+                        "type-flip ${tb.type} -> $verifiedType"
+                    } else {
+                        "missing-canonical for type=$verifiedType"
                     }
+                    log("VERIFY", "action injected: $canonical ($reason)")
                 }
                 return Outcome.Bubble(
                     com.example.intentcam.Bubble(
