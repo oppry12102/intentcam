@@ -1,0 +1,914 @@
+{
+  "ground_truth": "ground_truth_direction_arrow_60.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 20,
+  "overall_composite": 0.974375,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 20,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "phase_h_dw_dist": 0.9572916666666668,
+    "phase_h_dist_only": 1,
+    "phase_h_dw_only": 1
+  },
+  "fixtures": [
+    {
+      "raw_content": "这是一个红色立式广告灯箱（落地招牌），位于户外路边（地面有落叶和水泥台阶，背景有树和建筑物）。灯箱正面是藏诺集团旗下品牌\"藏诺养正堂\"（藏药养生机构），侧面竖排文字为\"现代藏方养生\"，底部带黄色箭头标注方向\"向前20米\"。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "藏诺集团"
+        },
+        {
+          "kind": "text",
+          "label": "店招主名",
+          "value": "藏诺养正堂"
+        },
+        {
+          "kind": "text",
+          "label": "侧面竖排",
+          "value": "现代藏方养生"
+        },
+        {
+          "kind": "text",
+          "label": "方向指引",
+          "value": "向前20米"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_4310",
+      "category": "phase_h_dw_dist",
+      "content_len": 111,
+      "r1": 1
+    },
+    {
+      "raw_content": "机场/车站通道内的灯箱广告，左侧黑色背景显示白色左箭头和\"前行\"二字指示方向，右侧红色背景上是李小龙穿黄色紧身衣的代言形象，下方为\"真功夫\"品牌标识。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名",
+          "value": "真功夫"
+        },
+        {
+          "kind": "text",
+          "label": "方向指示",
+          "value": "前行"
+        },
+        {
+          "kind": "object",
+          "label": "方向符号",
+          "value": "← (白色左向箭头)"
+        },
+        {
+          "kind": "object",
+          "label": "品牌代言形象",
+          "value": "李小龙 (黄色紧身衣造型)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6521",
+      "category": "phase_h_dw_only",
+      "content_len": 75,
+      "r1": 1
+    },
+    {
+      "raw_content": "街景照片：主体是商场临街店铺\"turnleft 左转\"（服装店，橱窗有人形模特穿红色印花服装与格纹上衣）。店铺上方楼栋玻璃幕墙上有红色横幅广告：\"做光谷天（阶） 合的天地在坐标城\"，并标\"130㎡ 冬暖夏凉 现（坐）招（租）\"等餐饮招商信息；左侧还有一块店招\"坐标 / dmlokaab（OCR 不确定）\"。右侧远处通道内可见绿色广告柱（\"雪碧\" 风格）和数字 \"88\"。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店招英文",
+          "value": "turnleft"
+        },
+        {
+          "kind": "brand",
+          "label": "店招中文",
+          "value": "左转"
+        },
+        {
+          "kind": "text",
+          "label": "楼上广告（高保真）",
+          "value": "做光谷天"
+        },
+        {
+          "kind": "text",
+          "label": "楼上广告高保真补全",
+          "value": "合的天地在坐标城"
+        },
+        {
+          "kind": "text",
+          "label": "餐饮招商信息",
+          "value": "130㎡冬暖夏凉现（坐）招（租）"
+        },
+        {
+          "kind": "text",
+          "label": "标识（高保真）",
+          "value": "坐标"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 左店招英文",
+          "value": "dmlokaab (OCR不识，疑似店招英文)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_949",
+      "category": "phase_h_dw_only",
+      "content_len": 186,
+      "r1": 1
+    },
+    {
+      "raw_content": "红色停车场指示牌，白色大写 P 标识 + 中文「地下停车场」「向前135米」，左下角有倒贴的「世界城广场」标志贴纸。牌装在黄黑相间的路缘石上方墙面上。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "停车标识",
+          "value": "P"
+        },
+        {
+          "kind": "text",
+          "label": "设施类型",
+          "value": "地下停车场"
+        },
+        {
+          "kind": "text",
+          "label": "距离方向",
+          "value": "向前135米"
+        },
+        {
+          "kind": "text",
+          "label": "所属场所",
+          "value": "世界城广场"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_4116",
+      "category": "phase_h_dw_dist",
+      "content_len": 75,
+      "r1": 1
+    },
+    {
+      "raw_content": "手写指示牌,顶部韩文 '짱짱치킨',中文 '韩国炸鸡' 店名,标注 '照常营业',下方箭头配文字 '前行10米左拐' 指引顾客前往店铺。牌旁有陶土花盆和绿植,放置在餐厅入口地板上。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店家名",
+          "value": "韩国炸鸡"
+        },
+        {
+          "kind": "text",
+          "label": "营业状态",
+          "value": "照常"
+        },
+        {
+          "kind": "text",
+          "label": "营业状态",
+          "value": "营业"
+        },
+        {
+          "kind": "text",
+          "label": "路线指引",
+          "value": "前行10米左拐"
+        },
+        {
+          "kind": "text",
+          "label": "韩文店名(顶部)",
+          "value": "짱짱치킨"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_hours"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_7162",
+      "category": "phase_h_dw_dist",
+      "content_len": 90,
+      "r1": 1
+    },
+    {
+      "raw_content": "车站内蓝色指示牌：'办理互联网取票的旅客 / 请至自助售票处 / 候车室'，左箭头方向'向前20米'。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "指示牌第一行",
+          "value": "办理互联网取票的旅客"
+        },
+        {
+          "kind": "text",
+          "label": "指示牌第二行",
+          "value": "请至自助售票处"
+        },
+        {
+          "kind": "text",
+          "label": "指示牌第三行",
+          "value": "候车室"
+        },
+        {
+          "kind": "text",
+          "label": "距离",
+          "value": "向前20米"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_5641",
+      "category": "phase_h_dw_dist",
+      "content_len": 51,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一个商场的方向指示牌，蓝色箭头指向左侧。牌子上写着\"直行 右转\"，指向商家\"米乐星世界 STARKTV\"（MILO 品牌 LOGO，KTV 娱乐场所）。下方红色小牌标注\"安全通道07\"。牌子安装在一面米黄色瓷砖墙面上，下方是玻璃门入口。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "直行",
+          "value": "直行"
+        },
+        {
+          "kind": "text",
+          "label": "右转",
+          "value": "右转"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌LOGO",
+          "value": "MILO"
+        },
+        {
+          "kind": "text",
+          "label": "商家名",
+          "value": "米乐星世界"
+        },
+        {
+          "kind": "text",
+          "label": "英文名",
+          "value": "STARKTV"
+        },
+        {
+          "kind": "text",
+          "label": "安全通道编号",
+          "value": "安全通道07"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_4770",
+      "category": "phase_h_dw_only",
+      "content_len": 120,
+      "r1": 1
+    },
+    {
+      "raw_content": "地面贴纸（箭头形粉色/紫色标签），品牌：\"星娱电玩\"；指示语：\"由此前行\"；地址：\"光谷世界城德国风情街三楼\"；具体位置：\"F东区6号楼星娱电玩城\"。是商场内引导顾客前往电玩城的地面标识。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌名",
+          "value": "星娱电玩"
+        },
+        {
+          "kind": "text",
+          "label": "指示语",
+          "value": "由此前行"
+        },
+        {
+          "kind": "address",
+          "label": "地址-街道",
+          "value": "光谷世界城德国风情街三楼"
+        },
+        {
+          "kind": "address",
+          "label": "地址-楼栋",
+          "value": "F东区6号楼星娱电玩城"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "compare_text",
+      "id": "image_4932",
+      "category": "phase_h_dw_only",
+      "content_len": 94,
+      "r1": 1
+    },
+    {
+      "raw_content": "一家名为「鱼糕」的小吃店「民主路店」，夜拍关门状态（卷帘门拉着），黄褐色外墙、左侧红色招牌配两个金色大字「鱼糕」，招牌右下角标 \"民主路店\"。店门右侧贴有「开心日租 88 / 同行30米」等小广告和一张营业执照；门牌看不清（OCR 出 236 但置信较低）。右上角还有一块刻字匾额，夜景下字迹辨认不清。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店招",
+          "value": "鱼糕"
+        },
+        {
+          "kind": "text",
+          "label": "分店名称",
+          "value": "民主路店"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 门牌号",
+          "value": "236"
+        },
+        {
+          "kind": "object",
+          "label": "其他文字",
+          "value": "右侧墙角广告 / 题字匾 / 门外贴士等文字夜间看不清"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "redact_id",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_6027",
+      "category": "phase_h_dw_dist",
+      "content_len": 151,
+      "r1": 1
+    },
+    {
+      "raw_content": "街道场景，画面中悬挂在电线杆上的红色指示牌写着\"单间淋浴\"，下方副标为\"直走30米\"，左侧并排有一块深底白字小牌同样写着\"单间淋浴\"。左下角白色墙体上有店招\"原浆酒坊\"及其副文字\"小麦苞谷\"。左侧可见一座金属电塔，背景为低矮瓦顶民房和多层楼房，天空灰白阴沉。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "深底白字小牌",
+          "value": "单间淋浴"
+        },
+        {
+          "kind": "text",
+          "label": "红底白字大招牌",
+          "value": "单间淋浴"
+        },
+        {
+          "kind": "text",
+          "label": "红招牌副标",
+          "value": "直走30米"
+        },
+        {
+          "kind": "text",
+          "label": "底层店招",
+          "value": "原浆酒坊"
+        },
+        {
+          "kind": "text",
+          "label": "底层店招副标",
+          "value": "小麦苞谷"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_1429",
+      "category": "phase_h_dw_dist",
+      "content_len": 129,
+      "r1": 1
+    },
+    {
+      "raw_content": "商场内的多向楼层指引牌，金属灯杆上挂着 5 块彩色箭头指示牌，分别指往不同楼层/区域：'←CGV电影院3F'（左指，蓝色）、'佰乐星4F→'（右指，绿色）、'9号食堂3F→'（右指，深蓝色）、'跨界集2F→'（右指，粉红色）、'洗手间(左转)'（左指，橙色）。每块牌上都有方向箭头。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "佰乐星4F (向右)",
+          "value": "佰乐星4F→"
+        },
+        {
+          "kind": "text",
+          "label": "CGV电影院3F (向左)",
+          "value": "←CGV电影院3F"
+        },
+        {
+          "kind": "text",
+          "label": "9号食堂3F (向右)",
+          "value": "9号食堂3F→"
+        },
+        {
+          "kind": "text",
+          "label": "跨界集2F (向右)",
+          "value": "跨界集2F→"
+        },
+        {
+          "kind": "text",
+          "label": "洗手间 (向左转)",
+          "value": "洗手间(左转)"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6259",
+      "category": "phase_h_dw_only",
+      "content_len": 141,
+      "r1": 1
+    },
+    {
+      "raw_content": "商场内立式指示牌，上半部分是 Nike 风格的运动广告（穿橙色短裤、荧光绿袜、红色跑鞋的跑者剪影，上覆白色条纹大字，OCR 识别为 \"COMERIN\" / \"M HLIM\"，因跑者身体遮挡中间字母，疑原文为 \"COME RUN WITH US\"）。下半部分红色中文提示文字：**\"耐克专柜请往前面走30米\"**、**\"欢迎选购试穿\"**。背景可见扶梯和店铺橱窗。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "指示牌主文",
+          "value": "耐克专柜请往前面走30米"
+        },
+        {
+          "kind": "text",
+          "label": "指示牌副文",
+          "value": "欢迎选购试穿"
+        },
+        {
+          "kind": "text",
+          "label": "广告banner第一行（OCR）",
+          "value": "COMERIN（OCR 字样，跑者身体遮挡中间字母，疑为 \"COME RUN WITH US\"）"
+        },
+        {
+          "kind": "text",
+          "label": "广告banner第二行（OCR）",
+          "value": "M HLIM（OCR 字样，疑为 \"WITH US\"）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1302",
+      "category": "phase_h_dw_dist",
+      "content_len": 181,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是贴在玻璃门上的红色搬迁告示，黄字内容为：「金凤国旅已搬迁至规划局门面第一家（中百仓储对面）前行300米右转即到」，下方配有白色向左箭头指引方向。原店面已不再营业，新地址位于规划局门面第一家（中百仓储对面），从当前位置前行300米右转即可到达。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "搬迁公告主标题",
+          "value": "金凤国旅已搬迁至规划局"
+        },
+        {
+          "kind": "text",
+          "label": "新址位置说明",
+          "value": "门面第一家（中百仓储对面）"
+        },
+        {
+          "kind": "text",
+          "label": "路线指引",
+          "value": "前行300米右转即到"
+        },
+        {
+          "kind": "shape",
+          "label": "方向箭头",
+          "value": "白色向左箭头"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "view_details",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_5092",
+      "category": "phase_h_dw_dist",
+      "content_len": 123,
+      "r1": 1
+    },
+    {
+      "raw_content": "墙面上挂着一块蓝色左指箭头形指示牌，左侧文字写着「直行 / 右转」，右侧是「MILO 米乐星世界 STARKTV」品牌 logo（带红色五角星）。指示牌下方贴有红色「安全通道07」标识。指示牌正下方是一扇敞开的玻璃门通道入口，通向内部走廊，墙面嵌有消火栓箱（隐约可见「消火栓」字样）。指示方向：箭头指向左，即左转方向前往米乐星世界。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "方向指示",
+          "value": "直行"
+        },
+        {
+          "kind": "text",
+          "label": "方向指示",
+          "value": "右转"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "MILO"
+        },
+        {
+          "kind": "brand",
+          "label": "商家名",
+          "value": "米乐星世界"
+        },
+        {
+          "kind": "brand",
+          "label": "英文名",
+          "value": "STARKTV"
+        },
+        {
+          "kind": "text",
+          "label": "安全通道编号",
+          "value": "安全通道07"
+        },
+        {
+          "kind": "shape",
+          "label": "指示牌样式",
+          "value": "蓝色左指箭头形指示牌（墙面贴装），箭头指向左侧，下方为玻璃门通道入口，通道内墙面嵌有消火栓箱"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_7143",
+      "category": "phase_h_dw_only",
+      "content_len": 166,
+      "r1": 1
+    },
+    {
+      "raw_content": "商场导视标识牌：左上 logo \"光谷天地 THE PALACE\"，主标语 \"商户专用货梯\"，副标语 \"向前50米\"，右侧红色右箭头指向方向，右下角落款 \"湖北光谷天地商业投资运营有限公司\"。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "商场logo",
+          "value": "光谷天地 THE PALACE"
+        },
+        {
+          "kind": "text",
+          "label": "主标文字",
+          "value": "商户专用货梯"
+        },
+        {
+          "kind": "text",
+          "label": "距离指示",
+          "value": "向前50米"
+        },
+        {
+          "kind": "text",
+          "label": "[LOW] 落款",
+          "value": "湖北光谷天地商业投资运营有限公司"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_5087",
+      "category": "phase_h_dw_dist",
+      "content_len": 96,
+      "r1": 1
+    },
+    {
+      "raw_content": "白色墙面上有两块指示牌：上方红色牌为世界遗产标识（WORLD HERITAGE PATRIMOINE MONDIAL）\u2014\u2014\"世界文化遗产 退思园\"，箭头向左，\"向前50米\"；下方黑色牌为\"消费争议和解示范街\"，落款\"吴江市消费者权益保护委员会\"。附近建筑为江南传统粉墙黛瓦风格。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "指示文字",
+          "value": "向前50米"
+        },
+        {
+          "kind": "logo",
+          "label": "UNESCO 标识",
+          "value": "世界遗产 WORLD HERITAGE PATRIMOINE MONDIAL"
+        },
+        {
+          "kind": "text",
+          "label": "遗产类别",
+          "value": "世界文化遗产"
+        },
+        {
+          "kind": "text",
+          "label": "景点名称",
+          "value": "退思园"
+        },
+        {
+          "kind": "text",
+          "label": "示范街标题",
+          "value": "消费争议和解示范街"
+        },
+        {
+          "kind": "text",
+          "label": "颁发机构",
+          "value": "吴江市消费者权益保护委员会"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6374",
+      "category": "phase_h_dw_dist",
+      "content_len": 139,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张从车内透过玻璃拍摄的照片。画面上方有一块橙色牌匾，匾上有白色大字\"国家特许经营中国公民\"（原文如此），右下方有一处引导文字\"前行300米右转即到\"配一个白色左指箭头。牌匾顶部原本应有更多字，但被画面上沿裁掉、且被一位男士的背影和橙色长方形挡住，仅能看见几个残缺字符（OCR 未识别，我无法保证准）。画面底部有一行橙色小字：\"保障您的合法权益及人身安全，请选择有合法出\u2026\"（最末\"出\"字后再续可能有\"入境/出境/出入证件\"之类，已被画面右缘截掉）。背景是停车场的几辆轿车（一辆白色 SUV、几辆深色轿车）和地面。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "橙色大字",
+          "value": "国家特许经营中国公民"
+        },
+        {
+          "kind": "text",
+          "label": "引导文案",
+          "value": "前行300米右转即到"
+        },
+        {
+          "kind": "text",
+          "label": "底部小字",
+          "value": "保障您的合法权益及人身安全，请选择有合法出\u2026"
+        },
+        {
+          "kind": "text",
+          "label": "牌匾顶端被截断（OCR 未识别）",
+          "value": "门洞布 ?? 个自陷牌片?（恕我无法辨认原文）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1330",
+      "category": "phase_h_dw_dist",
+      "content_len": 259,
+      "r1": 1
+    },
+    {
+      "raw_content": "地面蓝色箭头形地贴，标注「佰乐星KTV」（章鱼logo + 「佰乐星师K」小字）。指引文字：「请直走」「坐电梯至四楼」。联系电话：400-880-3093。地址：德国风情街9栋4楼。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "品牌logo",
+          "value": "章鱼图案 + 佰乐星师K"
+        },
+        {
+          "kind": "text",
+          "label": "店名",
+          "value": "佰乐星KTV"
+        },
+        {
+          "kind": "text",
+          "label": "指引",
+          "value": "请直走"
+        },
+        {
+          "kind": "text",
+          "label": "指引",
+          "value": "坐电梯至四楼"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "400-880-3093"
+        },
+        {
+          "kind": "address",
+          "label": "地址",
+          "value": "德国风情街9栋4楼"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_6423",
+      "category": "phase_h_dw_only",
+      "content_len": 91,
+      "r1": 1
+    },
+    {
+      "raw_content": "商场内一根 Nike（耐克）广告立柱，顶层是三位跑者的宣传图，中部红色横条写着\"耐克专柜请往前面走30米 欢迎选购试穿\"，下半部分印有红色 Nike Free 5.0 跑鞋大图和黑色面板，黑色面板上白色字\"唤醒双脚的潜能\"以及英文\"THE NIKE FREE 5.0\"（OCR 扫到 \"FREES.O\"，疑为 \"5.0\" 误读）、Nike Swoosh logo 和网址\"NIKE.COM/FREE\"。背景是商场通道：左侧可见手扶梯，右侧是 VANS 门店（招牌被裁切），右前方为白色收银台。",
+      "r2_text": 1,
+      "details_count": 7,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "导引文字",
+          "value": "耐克专柜请往前面走30米"
+        },
+        {
+          "kind": "text",
+          "label": "导引文字",
+          "value": "欢迎选购试穿"
+        },
+        {
+          "kind": "text",
+          "label": "广告标语",
+          "value": "唤醒双脚的潜能"
+        },
+        {
+          "kind": "text",
+          "label": "产品系列",
+          "value": "THE NIKE FREES.O"
+        },
+        {
+          "kind": "logo",
+          "label": "品牌",
+          "value": "Nike（耐克）/ Nike Swoosh 标志出现在广告位和右侧 Nike 专柜招牌上（部分被裁）"
+        },
+        {
+          "kind": "text",
+          "label": "网址",
+          "value": "NIKE.COM/FREE（黑色面板底部）"
+        },
+        {
+          "kind": "text",
+          "label": "周边店铺",
+          "value": "右侧可见 VANS 门店（部分被裁）"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_3907",
+      "category": "phase_h_dw_dist",
+      "content_len": 246,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 1,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "客栈名",
+          "value": "森之旅"
+        },
+        {
+          "kind": "text",
+          "label": "特色服务",
+          "value": "读书 喝茶 绿植 住宿"
+        },
+        {
+          "kind": "text",
+          "label": "类型",
+          "value": "设计师客栈"
+        }
+      ],
+      "expected_actions": ["open_in_maps"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_3796",
+      "category": "phase_h_dist_only",
+      "content_len": 0,
+      "r1": 1
+    }
+  ]
+}

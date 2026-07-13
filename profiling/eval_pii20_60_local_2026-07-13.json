@@ -1,0 +1,976 @@
+{
+  "ground_truth": "ground_truth_pii20_60.json",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "limit": 18,
+  "overall_composite": 0.9291666666666666,
+  "description": "Kotlin eval results \u2014 calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)",
+  "resize": 3200,
+  "fixture_count": 18,
+  "version": 1,
+  "quality": 90,
+  "per_category": {
+    "restaurant_recruit_led": 0.8875000000000001,
+    "clinic_registration_sign": 0.7875000000000001,
+    "business_license_signage": 0.7875000000000001,
+    "community_recruit_bulletin": 1,
+    "music_school_follow": 1,
+    "mall_signage_follow": 1,
+    "brand_follow_qr": 1,
+    "commercial_leasing_banner": 1,
+    "real_estate_residential": 0.7875000000000001,
+    "national_id_card": 1,
+    "residential_development_billboard": 0.9,
+    "residential_listing": 1,
+    "brand_wechat_follow": 0.8875000000000001,
+    "alipay_transfer_screenshot": 1,
+    "recruit_ad_with_phone": 0.7875000000000001,
+    "building_rental_banner": 1,
+    "company_recruit_poster": 1,
+    "street_recruit_flyer": 0.9
+  },
+  "fixtures": [
+    {
+      "raw_content": "路边围墙上一红一白两条横幅广告。左侧红底白字横幅写「湘华名邸｜风水宝地·纯住宅小区·稀缺楼梯房」，下方被公告栏遮挡处隐约可见「进名校先\u2026走近之校」字样（OCR [LOW]，字不清晰）；右侧白底红字横幅写「创建文明城市｜建和谐社全」（OCR 把\"社会\"读成了\"社全\"，按图面疑似应为\"社会\"）。围墙外侧右上角有一块红色\"华生制药\"小招牌（自读，OCR 未识别）。左下有一顶红色灯笼帐棚下的绿色公告栏，栏上文字太小 OCR 无法识别。背景是山坡上一片老旧砖瓦平房，晾着衣服；围墙前是一片渣土/碎石空地，地面有积水和泥浆，右侧露出一辆白色轿车的车头。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "小区名（左红横幅）",
+          "value": "湘华名邸"
+        },
+        {
+          "kind": "text",
+          "label": "广告语",
+          "value": "风水宝地·纯住宅小区·稀缺楼梯房"
+        },
+        {
+          "kind": "text",
+          "label": "红横幅下半部 [LOW]",
+          "value": "进名校先尊走近之校"
+        },
+        {
+          "kind": "text",
+          "label": "右白横幅上排",
+          "value": "创建文明城市"
+        },
+        {
+          "kind": "text",
+          "label": "右白横幅下排",
+          "value": "建和谐社全"
+        },
+        {
+          "kind": "logo",
+          "label": "右侧建筑招牌",
+          "value": "华生制药（自读）"
+        },
+        {
+          "kind": "object",
+          "label": "左侧绿色公告栏",
+          "value": "绿色公告栏（内容过小/模糊，未识别到字符）"
+        },
+        {
+          "kind": "object",
+          "label": "场景",
+          "value": "山坡老砖房、红色横幅广告、白底红字公益横幅、左侧绿公告栏+红灯笼帐棚、地面碎石/渣土/积水泥地、右侧停有汽车（部分入画）"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 0.5,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1391",
+      "category": "real_estate_residential",
+      "content_len": 272,
+      "r1": 1
+    },
+    {
+      "raw_content": "楼盘外墙粉红色竖幅广告。左侧竖条写「91m² / 110m² 创发莲湖户型奇迹」（中间以\"川\"形色块分隔上下两组面积）；右侧竖条为倒排字「2886789」配一个圆圈箭头图标，指代售楼垂询热线。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "左侧标语（上）",
+          "value": "91m²"
+        },
+        {
+          "kind": "text",
+          "label": "左侧标语（下）",
+          "value": "110m²"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "创发莲湖户型奇迹"
+        },
+        {
+          "kind": "phone",
+          "label": "咨询电话（右侧竖排）",
+          "value": "2886789"
+        },
+        {
+          "kind": "shape",
+          "label": "右侧图标",
+          "value": "圆圈+向上箭头（呼应垂询热线）"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1090",
+      "category": "residential_development_billboard",
+      "content_len": 96,
+      "r1": 1
+    },
+    {
+      "raw_content": "一栋多层建筑（粉白相间外墙，可见多台空调外机）顶部的红色横幅广告，内容为房屋出租信息：「本楼底层房屋出租 面积600平米 联系人：王女士 联系：138625...62528959」。左侧电话前几位被裁切未完全显示，右侧数字为 62528959。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "广告类型",
+          "value": "本楼底层房屋出租"
+        },
+        {
+          "kind": "text",
+          "label": "面积",
+          "value": "面积600平米"
+        },
+        {
+          "kind": "text",
+          "label": "联系人",
+          "value": "王女士"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话（横幅左段，部分被裁）",
+          "value": "138625..."
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话（横幅右段）",
+          "value": "62528959"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_listing",
+        "dial_number"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_3034",
+      "category": "building_rental_banner",
+      "content_len": 122,
+      "r1": 1
+    },
+    {
+      "raw_content": "商铺门口场景:玻璃门边贴着一副红色春联(金色竖排\"源兴顺旺九洲\",底部\"福\"字),门上方挂着红色招租横幅写着\"整体招商 / 二楼2000平米商铺\",玻璃门红条上印有商家标识\"盛世腾\",门顶红色横条写着\"售楼热线:3...\"(电话号码被画面右侧裁掉,只能看到一个\"3\"字)。门口停着一辆黑色轿车的尾部,旁边还有一个红色消防栓。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "左侧春联(金色字,竖排)",
+          "value": "源兴顺旺九洲"
+        },
+        {
+          "kind": "text",
+          "label": "春联底部",
+          "value": "福"
+        },
+        {
+          "kind": "text",
+          "label": "招租横幅左侧竖排",
+          "value": "二楼2000平米商铺"
+        },
+        {
+          "kind": "text",
+          "label": "招租横幅大字",
+          "value": "整体招商"
+        },
+        {
+          "kind": "logo",
+          "label": "商家标识(玻璃门红条)",
+          "value": "盛世腾"
+        },
+        {
+          "kind": "text",
+          "label": "顶部红色横条",
+          "value": "售楼热线:3???? (电话被右侧裁切,仅看到一个\"3\")"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 1,
+      "emitted_action_ids": ["copy_listing"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_5429",
+      "category": "commercial_leasing_banner",
+      "content_len": 162,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 1,
+      "details_count": 10,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "吉房急售"
+        },
+        {
+          "kind": "text",
+          "label": "小区",
+          "value": "复州花园黄金楼层低价急"
+        },
+        {
+          "kind": "text",
+          "label": "户型面积",
+          "value": "售，3室2厅1厨1卫126"
+        },
+        {
+          "kind": "text",
+          "label": "房屋描述",
+          "value": "平，南北通透，家电齐全，"
+        },
+        {
+          "kind": "text",
+          "label": "卖点",
+          "value": "了就想买的靠谱房，是您居"
+        },
+        {
+          "kind": "text",
+          "label": "卖点续",
+          "value": "家养育后代之绝选！"
+        },
+        {
+          "kind": "phone",
+          "label": "电话",
+          "value": "电话：15607225103"
+        },
+        {
+          "kind": "text",
+          "label": "QQ",
+          "value": "QQ："
+        },
+        {
+          "kind": "number",
+          "label": "QQ号",
+          "value": "313521397"
+        },
+        {
+          "kind": "text",
+          "label": "备注",
+          "value": "欢迎随时来电咨询看房"
+        }
+      ],
+      "expected_actions": ["copy_listing"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing",
+        "save_posting"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_3285",
+      "category": "residential_listing",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "",
+      "r2_text": 0.75,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "logo",
+          "label": "主招牌",
+          "value": "立东广告"
+        },
+        {
+          "kind": "logo",
+          "label": "右侧招牌",
+          "value": "网吧胖子"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目1",
+          "value": "店面装修 工程图复印"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目2",
+          "value": "喷绘写真 展柜制作"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目3",
+          "value": "彩色印刷 广告招牌"
+        },
+        {
+          "kind": "text",
+          "label": "服务项目4",
+          "value": "丝印 有机加工"
+        }
+      ],
+      "expected_actions": ["save_posting"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_1434",
+      "category": "recruit_ad_with_phone",
+      "content_len": 0,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「好百年饭店」(Best Centennial Hotel) 的临街外景\u2014\u2014一栋 5 层的旧式洋楼，正面有 4 根罗马柱与多排拱形窗，门口挂着 4 盏红灯笼。顶部有蓝色圆形徽标（抽象海浪/飞鸟图案，无文字）。门口上方招牌金色字写着「好百年饭店」及其英文 \"Best Centennial Hotel\"。招牌下方红色 LED 屏滚动显示招聘启事：「急招：餐厅服务员」。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "主招牌 (中)",
+          "value": "好百年饭店"
+        },
+        {
+          "kind": "text",
+          "label": "主招牌 (英)",
+          "value": "Best Centennial Hotel"
+        },
+        {
+          "kind": "text",
+          "label": "LED 招工屏",
+          "value": "急招：餐厅服务员"
+        },
+        {
+          "kind": "logo",
+          "label": "企业徽标",
+          "value": "蓝色圆形海浪/飞鸟图案 (无文字)"
+        }
+      ],
+      "expected_actions": ["save_posting"],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "open_in_maps",
+        "save_posting",
+        "view_details"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_2042",
+      "category": "restaurant_recruit_led",
+      "content_len": 185,
+      "r1": 1
+    },
+    {
+      "raw_content": "店铺「出口服装工厂打折店」门口张贴着一张红色招聘广告：标题\"招聘\"，内容为\"哪位朋友家里有亲戚或是朋友在家待业或是退休，帮忙介绍到本店来上班 限女性、年龄40-50左右，本地户口有服装销售经验的最好。\"联系电话：68777163，联系人：肖总。门牌信息：广八路98号，店内可见\"Loft\"标识，旁边是\"鞋店\"，墙上还贴有\"24小时视频监控区域\"和\"门前三包承范点\"提示牌。",
+      "r2_text": 1,
+      "details_count": 11,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "店铺招牌",
+          "value": "出口服装工厂打折店"
+        },
+        {
+          "kind": "object",
+          "label": "相邻店铺",
+          "value": "鞋店"
+        },
+        {
+          "kind": "text",
+          "label": "门牌路名",
+          "value": "广八路"
+        },
+        {
+          "kind": "number",
+          "label": "门牌号",
+          "value": "98"
+        },
+        {
+          "kind": "text",
+          "label": "招聘标题",
+          "value": "招聘"
+        },
+        {
+          "kind": "text",
+          "label": "招聘内容",
+          "value": "哪位朋友家里有亲戚或是朋友在家待业或是退休，帮忙介绍到本店来上班 限女性、年龄40-50左右，本地户口有服装销售经验的最好。"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "68777163"
+        },
+        {
+          "kind": "text",
+          "label": "联系人",
+          "value": "肖总"
+        },
+        {
+          "kind": "text",
+          "label": "营业时间牌",
+          "value": "24小时（视频监控区域）"
+        },
+        {
+          "kind": "text",
+          "label": "门前三包承范点 [LOW]",
+          "value": "门前三包承范点"
+        },
+        {
+          "kind": "text",
+          "label": "店内标识",
+          "value": "Loft"
+        }
+      ],
+      "expected_actions": ["save_posting"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "open_in_maps",
+        "view_details"
+      ],
+      "composite": 0.9,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "extract_text",
+      "id": "image_7144",
+      "category": "street_recruit_flyer",
+      "content_len": 186,
+      "r1": 1
+    },
+    {
+      "raw_content": "一张贴在墙上的招聘启事（标题\"诚聘\"），内容如下：\n\n安徽华佗国药股份有限公司：\n诚聘四川省各市、县销售经理，待遇5000元以上。要求：能独立完成客户开发，有一定客户资源，熟悉区域内客户情况，勤奋好学、不怕吃苦、团队意识强、服从公司管理。如果你认为自己够勤奋、不怕吃苦、能独立完成工作、想有个很大的发挥舞台，请联系：18608028516 吴先生",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "标题",
+          "value": "诚聘"
+        },
+        {
+          "kind": "text",
+          "label": "招聘单位",
+          "value": "安徽华佗国药股份有限公司："
+        },
+        {
+          "kind": "text",
+          "label": "招聘岗位及待遇",
+          "value": "诚聘四川省各市、县销售经理，待遇5000元以上。要求："
+        },
+        {
+          "kind": "text",
+          "label": "岗位要求",
+          "value": "能独立完成客户开发，有一定客户资源，熟悉区域内客户情况，勤奋好学、不怕吃苦、团队意识强、服从公司管理。"
+        },
+        {
+          "kind": "text",
+          "label": "招聘说明",
+          "value": "如果你认为自己够勤奋、不怕吃苦、能独立完成工作、想"
+        },
+        {
+          "kind": "phone",
+          "label": "联系电话",
+          "value": "18608028516 吴先生"
+        }
+      ],
+      "expected_actions": ["save_posting"],
+      "r2_type": 1,
+      "emitted_action_ids": ["save_posting"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_7506",
+      "category": "company_recruit_poster",
+      "content_len": 173,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是武汉市洪山区关山街龙安社区服务站门口，门口悬挂绿色招聘牌：\"招聘 服务员若干名 详情请进店咨询\"。门头横幅显示\"限贡仕公司职工服务中心\"（红色金属立体字），机构英文名 \"HongshanDistrit Guan an-longan community service station\"。玻璃门上贴有\"公开公示栏\"。旁边是带遮阳伞的露天茶座/餐位区。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "门口横幅",
+          "value": "限贡仕公司职工服务中心"
+        },
+        {
+          "kind": "text",
+          "label": "门头机构名",
+          "value": "洪山区关山街龙安社区服务站"
+        },
+        {
+          "kind": "text",
+          "label": "英文译名",
+          "value": "HongshanDistrit Guan an-longan community service station"
+        },
+        {
+          "kind": "text",
+          "label": "招聘岗位",
+          "value": "服务员若干名"
+        },
+        {
+          "kind": "text",
+          "label": "招聘说明",
+          "value": "详情请进店咨询"
+        },
+        {
+          "kind": "text",
+          "label": "玻璃门文字",
+          "value": "公开公示栏"
+        }
+      ],
+      "expected_actions": ["save_posting"],
+      "r2_type": 1,
+      "emitted_action_ids": ["save_posting"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_7854",
+      "category": "community_recruit_bulletin",
+      "content_len": 176,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一个设在人行道旁的灯箱广告牌（公交站/报刊亭款式），主打房地产项目「北辰优+」，宣传标语为「光谷新青年 · 住优十特区」及「INTERNATIONAL YOUTH INTERACTION COMMUNITY 国际青年互动特区」。卖点横幅为「VIP VIP 80-140m²全通透户型，优客家族身份卡火爆申领中！」。底部六大卖点：优品牌、优地段、优园林、优配套、优客厅、优户型。联系方式：电话/027-87118888；外展点/关山大道中建康城27-28号商铺；右下角带二维码（扫码可关注 / 申领身份卡）。底部细字注明投资者与开发商信息（文字小、肉眼难辨，OCR 模糊处用 '?' 占位）。",
+      "r2_text": 0.75,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "项目品牌",
+          "value": "北辰优+"
+        },
+        {
+          "kind": "text",
+          "label": "主标题",
+          "value": "光谷新青年 住优十特区"
+        },
+        {
+          "kind": "text",
+          "label": "英文副标题",
+          "value": "INTERNATIONAL YOUTH INTERACTION COMMUNITY"
+        },
+        {
+          "kind": "text",
+          "label": "子标题",
+          "value": "国际青年互动特区"
+        },
+        {
+          "kind": "text",
+          "label": "户型卖点",
+          "value": "80-140m²全通透户型，优客家族身份卡火爆申领中！"
+        },
+        {
+          "kind": "text",
+          "label": "六大卖点",
+          "value": "优品牌 / 优地段 / 优园林 / 优配套 / 优客厅 / 优户型"
+        },
+        {
+          "kind": "phone",
+          "label": "销售电话",
+          "value": "027-87118888"
+        },
+        {
+          "kind": "address",
+          "label": "外展点地址",
+          "value": "关山大道中建康城27-28号商铺"
+        }
+      ],
+      "expected_actions": [],
+      "r2_type": 0.5,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing",
+        "open_in_maps"
+      ],
+      "composite": 0.8875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_6978",
+      "category": "brand_wechat_follow",
+      "content_len": 297,
+      "r1": 1
+    },
+    {
+      "raw_content": "从公交车/车窗视角拍到的街景：前方人行天桥/楼梯口标有红色\"街道口\"字样，应为武汉地铁2号线街道口站附近的天桥入口；背景可见\"新世界\"百货标识、\"光谷南1\"路牌广告、粉色\"下午??\"广告牌；左下方有一辆红色面包车，乘客（黑色长发女子背影）在车内座椅上。",
+      "r2_text": 1,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "地铁站名",
+          "value": "街道口"
+        },
+        {
+          "kind": "brand",
+          "label": "广告位",
+          "value": "光谷南1"
+        },
+        {
+          "kind": "brand",
+          "label": "建筑标识",
+          "value": "新世界"
+        },
+        {
+          "kind": "text",
+          "label": "店铺名",
+          "value": "根南莫(疑似'银座'，OCR模糊)"
+        }
+      ],
+      "expected_actions": [],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_1108",
+      "category": "mall_signage_follow",
+      "content_len": 126,
+      "r1": 1
+    },
+    {
+      "raw_content": "公交车车身侧面特写：车身中部蓝色大字广告\"世界500强成员企业上市公司（000786.SZ）\"，股票代码 000786.SZ 对应\"北新建材\"。右侧车门附近有\"下车门 DOWN\"中英标识（贴有乘客下车提示图标）。车尾侧裙位置贴有 QR 码和\"北新建材\"字样。车窗顶部有红色 LED 屏，OCR 识别为镜像反转字符\"5自优员人#快#\"（左）和\"#学念红明夏志\"右（OCR 模糊），实际为车内 LED 显示屏透过玻璃的反射。背景右侧有蓝色建材店招牌\"汉保销建材家 / 汉西建林大世\"（[LOW]）。画面中央是公交车大轮胎+轮毂，地面是柏油路+斑马线白色斜纹。右侧能看到巴士开门扶手+上下车踏板结构。",
+      "r2_text": 1,
+      "details_count": 8,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "车身广告主标语",
+          "value": "世界500强成员企业上市公司（000786.SZ）"
+        },
+        {
+          "kind": "brand",
+          "label": "广告主（股票代码 000786.SZ）",
+          "value": "北新建材"
+        },
+        {
+          "kind": "text",
+          "label": "车门标识（中文）",
+          "value": "下车门"
+        },
+        {
+          "kind": "text",
+          "label": "车门标识（英文）",
+          "value": "DOWN"
+        },
+        {
+          "kind": "text",
+          "label": "背景蓝色招牌（顶部行）[LOW]",
+          "value": "汉保销建材家"
+        },
+        {
+          "kind": "text",
+          "label": "背景蓝色招牌（底部行）[LOW]",
+          "value": "汉西建林大世"
+        },
+        {
+          "kind": "text",
+          "label": "车窗 LED（左侧，镜像）[LOW]",
+          "value": "5自优员人#快#"
+        },
+        {
+          "kind": "text",
+          "label": "车窗 LED（右侧，镜像）[LOW]",
+          "value": "#学念红明夏志"
+        }
+      ],
+      "expected_actions": [],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "copy_hours",
+        "view_details"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "zoom_in",
+      "id": "image_5235",
+      "category": "brand_follow_qr",
+      "content_len": 297,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是「M&G晨光文具 大风车店」（NO 05449），主营文具、礼品、饰品、玩具批发，红色门头写着「大风车文具玩具批发」。店门口两侧各有一块乐器培训广告牌\u2014\u2014左侧「天音葫芦丝」（开设葫芦丝、竹笛、陶笛、洞箫培训；公众号 tyhis564），右侧也是「天音」乐器培训项目（葫芦丝、巴乌，含电话 139979919?? [OCR模糊]）。门口外摆着大量玩具、文具、礼品包装盒，整店位于居民楼一层临街商铺。",
+      "r2_text": 1,
+      "details_count": 9,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "主店招（品牌）",
+          "value": "M&G晨光文具"
+        },
+        {
+          "kind": "text",
+          "label": "主店招副标",
+          "value": "时尚文具 礼品 饰品 大风车店 NO 05449"
+        },
+        {
+          "kind": "text",
+          "label": "红色门头大字",
+          "value": "大风车文具玩具批发"
+        },
+        {
+          "kind": "text",
+          "label": "左侧广告牌乐器培训",
+          "value": "天音葫芦丝"
+        },
+        {
+          "kind": "text",
+          "label": "左侧广告牌乐器",
+          "value": "竹笛陶笛"
+        },
+        {
+          "kind": "text",
+          "label": "左侧广告牌乐器",
+          "value": "洞箫"
+        },
+        {
+          "kind": "text",
+          "label": "左侧广告牌公众号",
+          "value": "公众微信号：tyhis564"
+        },
+        {
+          "kind": "text",
+          "label": "右侧广告牌培训项目",
+          "value": "培训项目·葫芦丝 巴乌"
+        },
+        {
+          "kind": "phone",
+          "label": "右侧广告牌电话 [LOW]",
+          "value": "139979919?? [LOW]"
+        }
+      ],
+      "expected_actions": [],
+      "r2_type": 1,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "extract_text",
+      "id": "image_5627",
+      "category": "music_school_follow",
+      "content_len": 200,
+      "r1": 1
+    },
+    {
+      "raw_content": "魅族 Flyme 联系人详情页：联系人\"创新无限网卡许贺建\"，手机 13303835656（归属地：河南郑州电信），页面提供「支付宝转账」入口，群组分类为 Flyme。状态栏显示时间 21:34、电量 24%。",
+      "r2_text": 1,
+      "details_count": 6,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "联系人姓名",
+          "value": "创新无限网卡许贺建"
+        },
+        {
+          "kind": "phone",
+          "label": "手机号",
+          "value": "13303835656"
+        },
+        {
+          "kind": "text",
+          "label": "归属地 / 运营商",
+          "value": "手机 河南郑州电信"
+        },
+        {
+          "kind": "action",
+          "label": "可用操作",
+          "value": "支付宝转账"
+        },
+        {
+          "kind": "text",
+          "label": "群组分类",
+          "value": "群组"
+        },
+        {
+          "kind": "text",
+          "label": "群组名称",
+          "value": "Flyme"
+        }
+      ],
+      "expected_actions": ["dial_number"],
+      "r2_type": 1,
+      "emitted_action_ids": [
+        "dial_number",
+        "copy_listing"
+      ],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_3453",
+      "category": "alipay_transfer_screenshot",
+      "content_len": 105,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张医疗机构招牌照：位于武昌区的「武昌 天康中西医」诊所，招牌右下角标有「登记号：」（冒号后的登记编号在图片可视范围外，未拍到）。背景可见居民楼。",
+      "r2_text": 0.75,
+      "details_count": 3,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "行政区",
+          "value": "武昌"
+        },
+        {
+          "kind": "text",
+          "label": "机构名称",
+          "value": "天康中西医"
+        },
+        {
+          "kind": "text",
+          "label": "标签",
+          "value": "登记号:"
+        }
+      ],
+      "expected_actions": ["redact_id"],
+      "r2_type": 0.5,
+      "emitted_action_ids": ["open_in_maps"],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "zoom_in",
+      "id": "image_334",
+      "category": "clinic_registration_sign",
+      "content_len": 75,
+      "r1": 1
+    },
+    {
+      "raw_content": "这是一张中华人民共和国居民身份证的局部特写（证件中部区域），可见标题\"中华人民共和国 居民身份证\"，底部显示签发机关\"太湖县公安局\"，有效期限\"2006.07.07-2026.07.07\"。证件背面有长城图案水印，左侧边缘可见国徽图案部分。注意：此为个人证件，建议使用打码功能保护隐私。",
+      "r2_text": 1,
+      "details_count": 5,
+      "raw_details": [
+        {
+          "kind": "text",
+          "label": "国家名称",
+          "value": "中华人民共和国"
+        },
+        {
+          "kind": "text",
+          "label": "证件名称",
+          "value": "居民身份证"
+        },
+        {
+          "kind": "text",
+          "label": "签发机关",
+          "value": "太湖县公安局"
+        },
+        {
+          "kind": "text",
+          "label": "字段名",
+          "value": "有效期限"
+        },
+        {
+          "kind": "date",
+          "label": "有效期限",
+          "value": "2006.07.07-2026.07.07"
+        }
+      ],
+      "expected_actions": ["redact_id"],
+      "r2_type": 1,
+      "emitted_action_ids": ["redact_id"],
+      "composite": 1,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 1,
+      "picked_tool": "(none)",
+      "id": "image_170",
+      "category": "national_id_card",
+      "content_len": 143,
+      "r1": 1
+    },
+    {
+      "raw_content": "中部国旅(WCG)旅行社门面，蓝色招牌，白色立体字\"中部国旅 WCG\"。店内玻璃门上印有\"中部国际旅行社\"圆形logo，下方蓝色海报写有\"越国旅 国内游 中部国旅入境游\"等业务介绍。招牌左侧有半圆形logo（带\"国旅\"字样），右侧是和路雪冰淇淋广告（红底白心+冰淇淋图）。玻璃门下方可见\"租13送1 租5送\u2026\"等促销字样。门内可见办公桌、电脑、椅子等。",
+      "r2_text": 0.75,
+      "details_count": 4,
+      "raw_details": [
+        {
+          "kind": "brand",
+          "label": "店招",
+          "value": "中部国旅 WCG"
+        },
+        {
+          "kind": "service",
+          "label": "业务范围",
+          "value": "越国旅 国内游 中部国旅入境游"
+        },
+        {
+          "kind": "brand",
+          "label": "邻店品牌",
+          "value": "和路雪"
+        },
+        {
+          "kind": "text",
+          "label": "促销",
+          "value": "租13送1 租5送(OCR 截断)"
+        }
+      ],
+      "expected_actions": ["redact_id"],
+      "r2_type": 0.5,
+      "emitted_action_ids": ["view_details"],
+      "composite": 0.7875000000000001,
+      "r2_text_fuzzy": 1,
+      "has_text": false,
+      "r3_actions": 0,
+      "picked_tool": "(none)",
+      "id": "image_2494",
+      "category": "business_license_signage",
+      "content_len": 176,
+      "r1": 1
+    }
+  ]
+}
