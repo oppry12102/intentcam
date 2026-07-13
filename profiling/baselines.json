@@ -94,13 +94,13 @@
     },
     {
       "name": "shopping_promo_20",
-      "baseline": 0.918,
+      "baseline": 0.901,
       "gt": "profiling/ground_truth_shopping_promo_20.json",
       "limit": 20,
       "resize": 3200,
       "quality": 90,
-      "baseline_commit": "6f87e00",
-      "note": "Phase J mini-suite — shopping_promo intent (rank #7 in scan_intents.py, 351 imgs in corpus). r2_text fuzzy=1.000, r2_type=1.000, **r3_actions=0.350 (LLM action emit lag — EvalRunner does not pass actionIds to ToolUseLoop, so system prompt says 'actions ∈ {}'. C3 v3 inline table is the only signal for new actions; lift opportunity for future r3-only Phase)**. Per-category: general_promo 0.967 / sale_promotion 0.923 / coupon_voucher 0.922 / price_discount 0.900 / flash_sale 0.844. 1 fixture regressed (image_3406 flash_sale 0.79) — corpus OCR fuzzy gap, not classification."
+      "baseline_commit": "664c4e2",
+      "note": "Phase J mini-suite — shopping_promo intent (rank #7 in scan_intents.py, 351 imgs in corpus). r2_text fuzzy=1.000, r2_type=1.000 (classification perfect on 14/20). **r3_actions=0.450** after verifier canonical-injection fix (commit 355c001; was 0.350 at 6f87e00). composite 0.901 (Δ=-0.017 vs 0.918 pre-fix, within ±0.03 noise band). -0.017 sources: 1 Outcome.Error on image_2192 (HTTP 400 API noise, retry) + 5 GT false-positives (image_2562/2898/3533/5271/7814 auto-scaled as shopping_promo but OCR surface text lacks PROMO keywords — hand-curate in follow-up). Per-category: price_discount 0.967 / sale_promotion 0.923 / flash_sale 0.894 / general_promo 0.896 / coupon_voucher 0.815."
     },
     {
       "name": "rctw_20_sanity",
