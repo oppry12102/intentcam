@@ -622,7 +622,11 @@ class ToolUseLoop(
         id = "bubble-${System.currentTimeMillis()}",
         type = IntentRegistry.FALLBACK_ID,
         title = "需要补充信息",
-        detail = detail.ifBlank { "via $toolName" },
+        // [2026-07-13] Drop the "via $toolName" fallback — that string
+        //  was a debug breadcrumb leaking the model's tool-routing
+        //  onto the user-facing bubble.  Title alone (above) already
+        //  communicates the placeholder state.
+        detail = detail,
         confidence = 0.5f,
         imageBytes = jpeg,
         createdAtMs = System.currentTimeMillis(),

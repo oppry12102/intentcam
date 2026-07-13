@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
@@ -427,9 +428,19 @@ private fun IntentBubbles(
     onPick: (Bubble) -> Unit,
     viewModel: AppViewModel,
 ) {
+    // [2026-07-13] Cap the bubble list at 50% of the screen height and
+    //  scroll any overflow.  Previously the list was a plain Column
+    //  with `forEach`, so a long bubble.detail would push later
+    //  bubbles off the top of the screen and the user lost history.
+    //  Capped height keeps the shutter button visible; the scroll
+    //  gives back access to older bubbles.
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val maxBubbleHeight = (screenHeightDp * 0.5f).dp
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(max = maxBubbleHeight)
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -520,10 +531,11 @@ private fun BubbleCard(
                             modifier = Modifier.weight(1f, fill = false),
                         )
                     }
-                    val toolName = bubble.toolName
-                    if (toolName != null) {
+                    val chipLabel = bubble.intentFocus.takeUnless { it.isNullOrBlank() }
+                        ?: bubble.type
+                    if (chipLabel.isNotBlank()) {
                         Spacer(Modifier.width(6.dp))
-                        ToolChip(toolName = toolName)
+                        IntentChip(label = chipLabel)
                     }
                 }
                 if (bubble.detail.isNotBlank()) {
@@ -536,7 +548,8 @@ private fun BubbleCard(
                         style = if (bubble.title.isBlank())
                                     MaterialTheme.typography.bodyMedium
                                  else MaterialTheme.typography.bodySmall,
-                        maxLines = if (bubble.title.isBlank()) 4 else 2
+                        maxLines = if (bubble.title.isBlank()) 2 else 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (bubble.needsUserInput) {
@@ -604,20 +617,23 @@ private fun ActionChip(label: String, onClick: () -> Unit) {
     }
 }
 
-/** Small green pill naming the tool that produced this bubble
- *  (e.g. "via identify_product").  Helps the user tell which path
- *  the model took. */
+/** Small green pill naming the intent that produced this bubble
+ *  (e.g. "phone", "payment_qr", "warning_safety").  Falls back to the
+ *  high-level [Bubble.type] ("info" / "location" / "solve") when the
+ *  LLM did not emit a precise intentFocus. */
 @Composable
-private fun ToolChip(toolName: String) {
+private fun IntentChip(label: String) {
     Box(
         Modifier
             .background(Color(0x3337D399), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
-            "via $toolName",
+            label,
             color = Color(0xFF37D399),
             style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
