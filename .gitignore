@@ -34,6 +34,12 @@ Thumbs.db
 # the project.  Recreated automatically per session.
 .claude/
 
+# --- Eval archive ---
+# Local-only eval data (smoke tests, superseded iterations) preserved on disk
+# but not in version control. Leading-underscore convention matches the
+# `profiling/_*_<tag>.log` pattern in [[feedback-529-contamination-awareness]].
+profiling/_archive/
+
 # --- Auth tokens (per user request) ---
 # Models.kt has the LLM API token baked in so the debug APK runs out of
 # the box.  The file is gitignored so the token never lands in the public

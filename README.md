@@ -29,26 +29,35 @@ for the knob-level config.
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design and
 **[CONFIG.md](CONFIG.md)** for every tunable constant.
 
-## Headline (Kotlin eval, prod-mirror)
+## Headline (Kotlin eval, prod-mirror, local PP-OCRv4)
 
 | metric | value |
 |---|---|
-| **composite `pii_20` @ 20 fixtures (with OCR + Intent↔Action framework)** | **0.9631** — Phase F + C3 v3 + GT schema dual-read |
-| composite `phone_20` @ 20 fixtures | **0.9394** (history-high) |
-| composite Phase G 15-fixture mini-suite | **0.973** (warning + menu + hours) |
+| **composite `pii_20` @ 18 fixtures (with OCR + Intent↔Action framework)** | **0.929** — local OCR baseline @`144ba61` |
+| composite `phone_20` @ 20 fixtures | **0.944** — local OCR baseline @`144ba61` |
+| composite `direction_arrow_20` @ 20 fixtures | **0.974** — local OCR baseline @`144ba61` |
+| composite `service_institution_60` @ 63 fixtures | **0.9664** — Phase I NEW (post-GT-reclass v2) |
+| composite Phase G 15-fixture mini-suite | **0.973** (warning + menu + hours; pre-PP-OCRv4 ref) |
 | composite `RCTW-100` (with OCR) | **0.903** (Phase 2: 3200+4096 + union r2_text) |
 | composite @ 20 fixtures (generic) | 0.883 mean (v1.1: 3 runs 0.880/0.862/0.908) |
 | baseline chain (RCTW) | 0.652 → 0.819 → 0.835 → 0.853 → 0.868 → 0.887 → 0.903 |
 
-`phone_20` / `pii_20` / Phase G are the **true validation suites**
-for the Intent↔Action framework (RCTW's `expected_type="info"`
-doesn't exercise intent diversity — see CONFIG §L).  Their
-headline numbers reflect four stacked layers:
+OCR backend swapped 2026-07-13 from Huawei Cloud to local PP-OCRv4 mobile
+(see [CHANGELOG](CHANGELOG.md#2026-07-13--typeintentfocus-refactor--phase-i--local-ocr-backend));
+Huawei Cloud numbers retained as historical reference only. The 5-suite
+regression net (`profiling/baselines.json` + `scripts/run_regression.sh`)
+auto-checks Δ ≥ 0.05 against current baselines.
+
+`phone_20` / `pii_20` / `direction_arrow_20` / `service_institution_60` are the
+**true validation suites** for the Intent↔Action framework (RCTW's
+`expected_type="info"` doesn't exercise intent diversity — see CONFIG §L).
+Their headline numbers reflect four stacked layers:
 
 1. **end-cloud collaboration** (3200 thumb + 4096 fullRes + auto-OCR)
-2. **Intent↔Action framework** (Phase A: 11-id IntentDecl; Phase B:
-   5 PII actions; Phase G: 3 OBSERVE intents — warning / menu / hours)
-3. **IntentVerifier** (10-pass regex-based flip + post-guard
+2. **Intent↔Action framework** (Phase A→I: 13-id IntentDecl; Phase B:
+   5 PII actions; Phase G: 3 OBSERVE intents — warning / menu / hours;
+   Phase H: route_to / direction_arrow; Phase I: service_institution)
+3. **IntentVerifier** (12-pass regex-based flip + post-guard
    for missed phone signals)
 4. **C3 v3 prompt** (type → canonical-action table so the model
    emits the right `action_ids` from round 1)
@@ -56,19 +65,19 @@ headline numbers reflect four stacked layers:
 See `profiling/eval_v12c_20_ocr.json` (RCTW) and the
 phone_20 / pii_20 / phaseG_15 eval dumps for the per-suite trail.
 
-## Intent↔Action framework (2026-07-10 → 2026-07-12)
+## Intent↔Action framework (2026-07-10 → 2026-07-13)
 
 A classification+action layer on top of the visual pipeline.
 Each `emit_bubble` now carries:
 
-- **`type`** — one of 11 intent ids (replaces the old 3-id
+- **`type`** — one of 13 intent ids (replaces the old 3-id
   `info | location | solve` triplet; the original 3 are kept
   for backward compat and scored 1.0 against each other).
 - **`action_ids`** — list of user-facing action ids the model
   recommends (`dial_number` for phone bubbles, `copy_menu` for
   menu bubbles, `copy_warning` for warning bubbles, etc.).
 
-The framework ships in five shipped phases:
+The framework ships in nine shipped phases:
 
 | Phase | Date | What | Lift |
 |---|---|---|---|
@@ -80,6 +89,8 @@ The framework ships in five shipped phases:
 | **F — type→action lockstep** | 2026-07-11 | Verifier `actionFor()` + `ToolUseLoop` additive inject (never delete LLM `proposedActions`) | r3 recall monotonic |
 | **C3 v3 — prompt table** | 2026-07-11 | Replaced soft "默认应填" with explicit type→canonical-action table | pii_20 +0.015 (3 fixtures, no r2 regression) |
 | **G — 3 OBSERVE intents** | 2026-07-12 | `warning_safety` / `menu_food` / `hours_schedule` intents + 3 share-sheet copy actions (copy_warning/copy_menu/copy_hours). Verifier Pass 8/9/10, C3 v3 table 6→9 entries. | Phase G 15-fixture **0.973** |
+| **H — `route_to` intent** | 2026-07-12 | 12th intent (direction arrows / 方位词 / 距离短语 / 出口入口 markers). Verifier Pass 11 (info + DIRECTION_ARROW → route_to). | direction_arrow_20 v2 = **0.9850** |
+| **I — `service_institution` intent** | 2026-07-12 | 13th intent OBSERVE (医院 / 学校 / 政府机关 / 银行 / 法院 / 派出所 / 大使馆). 32-keyword regex v2 (dropped 邮政/工商局/税务局). Verifier Pass 12. C3 v3 row 13. | service_institution_60 **0.9664** (post GT-reclass v2) |
 | **GT schema dual-read** | 2026-07-12 | EvalRunner reads `expected_top_intent_type` first, falls back to `expected_type` | pii_20 +0.0837 cumulative (image_3285 alone = +0.225) |
 
 Adding a new intent = register in **3 lockstep sites** (see
