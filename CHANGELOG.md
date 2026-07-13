@@ -4,6 +4,70 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14b] — verifier canonical-action injection fix
+
+Single-line on-device bug fix that lifts the two suites that were
+stuck at the canonical-injection edge case.
+
+### Fixed — verifier canonical-action injection robustness (`6456839`)
+
+The post-emit_bubble verifier's canonical-action injection
+(`ToolUseLoop.kt:551-561`, originally shipped at `355c001`) was
+gated on `canonical !in tb.proposedActions.orEmpty()`. This worked
+when the LLM's emit was empty (the missing-canonical case for
+new intents) but **failed for type-flip cases** where the LLM had
+emitted a coherent action list for the OLD type. The verifier
+correctly flipped `r2_type`, but the canonical for the new type
+was never injected, so `r3` was systematically 0.
+
+The new logic handles both cases:
+
+```kotlin
+val actionsList = (tb.proposedActions ?: emptyList()).toMutableList()
+val canonical = IntentVerifier.actionFor(verifiedType)
+val typeFlipped = verifiedType != tb.type
+val canonicalMissing = canonical != null && canonical !in actionsList
+if (typeFlipped || canonicalMissing) {
+    if (canonical != null && canonical !in actionsList) {
+        actionsList.add(0, canonical)
+    }
+    // ...
+}
+```
+
+Type flip injects unconditionally. Same-type missing canonical
+mirrors the original logic.
+
+**Effect on production suites:**
+
+| suite | pre-fix | post-fix | Δ |
+|---|---:|---:|---:|
+| recruit_hiring_13 | 0.960 | **0.992** | +0.032 |
+| real_estate_rental_11 | 0.923 | **0.981** | +0.058 |
+
+(image_7234 in recruit_hiring_13 was the canonical 0.9-r3=0 example;
+image_572 in real_estate_rental_12 era was the first sighting of
+this pattern, which got retyped to phone in the previous round.)
+
+### Removed — partial coverage that is now exhausted
+
+- The image_5380 partial (recruit_hiring_13 → 0.900 r3=0) and
+  image_231 partial (real_estate_rental_11 → 0.788 r2_type=0.5)
+  represent the next-tier edge cases:
+  - image_5380: `r3=0` despite canonical present, possible
+    different verifier-code bug worth investigating as a small
+    follow-up.
+  - image_231: LLM classifies 二手房 brokerage ad as `info`;
+    Pass 5 (`info + 房源/户型 → real_estate_rental`) doesn't fire
+    on `二手房` alone. Headroom requires llmHint or prompt nudge.
+
+### APK artifacts
+
+| Variant | Path | Size | mtime |
+|---|---|---|---|
+| Debug | `/home/oppry/work/app3/intentcam.apk` | 25.4 MB | 2026-07-14 (rebuild post-`6456839`) |
+| Release | `/home/oppry/work/app3/intentcam-release.apk` | 16.7 MB | 2026-07-14 (rebuild post-`6456839`) |
+
 ## [2026-07-14a] — real_estate_rental llmHint broadening + diagnostic tooling
 
 Single-feature release shipping a real_estate_rental recognition
