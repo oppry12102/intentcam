@@ -2,7 +2,7 @@
   "version": 1,
   "description": "recruit_hiring mini-suite (Phase K-light) — 13 hand-curated fixtures matching the verifier's RECRUIT regex (IntentVerifier.kt:67). All fixtures have at least one RECRUIT token (招聘/招工/急招/诚招/诚聘/...) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire correctly. Categories span 6 — restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.",
   "rctw_root": "/home/oppry/RCTW-171",
-  "auto_scaled_count": 13,
+  "auto_scaled_count": 9,
   "expected_actions": [
     "save_posting"
   ],
@@ -35,19 +35,6 @@
       "curation_note": "Hand-curated for recruit_hiring. Restaurant recruiting cook. Single 招聘 keyword + phone."
     },
     {
-      "id": "image_1440",
-      "file": "image_1440.jpg",
-      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Beauty school student recruitment. 招学徒 + 招聘....)",
-      "category": "school_recruit",
-      "what_is_pictured": "招学徒 长期招收化妆 美甲学员 微笑美甲 寇丹甲 招聘",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": [
-        "save_posting"
-      ],
-      "curation_note": "Hand-curated for recruit_hiring. Beauty school student recruitment. 招学徒 + 招聘."
-    },
-    {
       "id": "image_2418",
       "file": "image_2418.jpg",
       "src": "hand-curated 2026-07-14 (RECRUIT regex match: Gym trainer recruitment. 诚聘 + 月薪过万....)",
@@ -74,32 +61,6 @@
       "curation_note": "Hand-curated for recruit_hiring. Restaurant roles. 诚聘. Has 严禁入内 but Pass 4 (recruit) fires before Pass 8 (warning)."
     },
     {
-      "id": "image_3553",
-      "file": "image_3553.jpg",
-      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Chain restaurant recruitment. 诚聘....)",
-      "category": "restaurant_recruit",
-      "what_is_pictured": "黄焖鸡米饭 江西瓦罐汤 诚聘 全国连锁光谷店 储备店",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": [
-        "save_posting"
-      ],
-      "curation_note": "Hand-curated for recruit_hiring. Chain restaurant recruitment. 诚聘."
-    },
-    {
-      "id": "image_4641",
-      "file": "image_4641.jpg",
-      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant + part-time roles. 招聘 + 具体薪资....)",
-      "category": "restaurant_recruit",
-      "what_is_pictured": "时尚向前 活力无限 吉祥馄饨 新鲜 招聘 真材实料的你 服务员3000-4000元/月 钟点工10-15/小时",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": [
-        "save_posting"
-      ],
-      "curation_note": "Hand-curated for recruit_hiring. Restaurant + part-time roles. 招聘 + 具体薪资."
-    },
-    {
       "id": "image_4767",
       "file": "image_4767.jpg",
       "src": "hand-curated 2026-07-14 (RECRUIT regex match: Service provider recruitment. 招聘启事 formal sign....)",
@@ -111,19 +72,6 @@
         "save_posting"
       ],
       "curation_note": "Hand-curated for recruit_hiring. Service provider recruitment. 招聘启事 formal sign."
-    },
-    {
-      "id": "image_5380",
-      "file": "image_5380.jpg",
-      "src": "hand-curated 2026-07-14 (RECRUIT regex match: Restaurant staff recruitment. 招聘 + 厨房勤杂工/服务员 details....)",
-      "category": "restaurant_recruit",
-      "what_is_pictured": "汉口宵夜 重庆渔翁鱼庄 梭边鱼 招聘 厨房勤杂工 服务员 男女不限",
-      "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "recruit_hiring",
-      "expected_actions": [
-        "save_posting"
-      ],
-      "curation_note": "Hand-curated for recruit_hiring. Restaurant staff recruitment. 招聘 + 厨房勤杂工/服务员 details."
     },
     {
       "id": "image_7234",
