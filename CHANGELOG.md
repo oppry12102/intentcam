@@ -4,6 +4,65 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14a] — real_estate_rental llmHint broadening + diagnostic tooling
+
+Single-feature release shipping a real_estate_rental recognition
+improvement plus a server-CPU diagnostic script. Eval infrastructure
+changes are also bundled here for chronological clarity.
+
+### Improved — real_estate_rental llmHint broaden (`1a2d393`)
+
+The llmHint for the 13th intent (real_estate_rental) was too
+narrow:
+
+```
+before:  租房：出租 / 二手房 / 房源 / 中介
+after :  房地产：出租 / 出售 / 二手房 / 楼盘 / 户型 / 平米 / 急售
+              / 吉房 / 中介 / 物业
+```
+
+The new list is intentionally bounded to the verifier's REAL_ESTATE
+regex tokens (`IntentVerifier.kt:73`) — expansion stays
+"consume-the-corpus" rather than "loosen-the-guard". That keeps
+Pass 7's `real_estate_rental + MOBILE + !REAL_ESTATE → phone`
+guard from misfiring on tokens that are NOT in the verifier's
+canonical real-estate vocabulary.
+
+**Effect on `real_estate_rental_11`**: composite **0.938 → 0.923** as
+the new post-hint baseline (Δ=-0.015 within noise — first
+12-fixture hint-test hit 0.992, but that included the now-removed
+`image_572` fixture + a lucky `image_1956` LLM first-pass; current
+0.923 is the honest post-hint 11-fixture measurement). 8/11 perfect,
+3/11 partial at r2_type=0.5 (LLM variance).
+
+### Fixed — `image_572` GT retype OUT of real_estate_rental (`1a2d393`)
+
+`image_572` (世界城营销中心 + 70平米 + 收租150万) was originally in
+the suite, but its dominant image content is a 公安治安监控
+(public-security surveillance sign) with police emergency phones
+(110 + 027-85393898). Real-estate ad is a background billboard.
+Re-typed to `phone` / `dial_number`. Suite renamed `_12 → _11`,
+limit 12 → 11.
+
+### Added — server-CPU diagnostic script (`80d3453`)
+
+`scripts/diagnose_pii_ocr.sh <suite>` runs the same suite under
+both PP-OCRv4 backends (mobile + server-CPU) and prints per-fixture
+composite deltas. Classifies each fixture as "OCR-bound"
+(server recovers ≥ 0.05) vs "LLM-bound" (server doesn't help).
+Writes `profiling/regression/pii_ocr_diff_<ts>.json`. Wall-time
+~12 min serial; intended for triage when a fixture is stuck below
+the regression threshold.
+
+### APK artifacts
+
+| Variant | Path | Size | mtime |
+|---|---|---|---|
+| Debug | `/home/oppry/work/app3/intentcam.apk` | 25.4 MB | 2026-07-14 05:02 |
+| Release | `/home/oppry/work/app3/intentcam-release.apk` | 16.7 MB | 2026-07-14 05:02 |
+
+Both built post-commit `97eea08` so the broadened llmHint ships.
+
 ## [2026-07-13b] — r3 verifier fix + shopping_promo GT curation
 
 This is a single-feature mini-release that ships a verifier correctness
