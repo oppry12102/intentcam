@@ -66,25 +66,27 @@
       "id": "image_2562",
       "file": "image_2562.jpg",
       "src": "scale_fixtures.py auto-scale conf=0.800",
-      "category": "sale_promotion",
+      "category": "building_rental_banner",
       "what_is_pictured": "珍稀江景豪宅 最高优惠 3000元 110-137平米零公摊超值户型，赠送面积高达约30平米 碧水源 ### 2905888 城市中央",
       "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "shopping_promo",
+      "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_promo"
-      ]
+        "copy_listing"
+      ],
+      "curation_note": "[2026-07-13] hand-curated from shopping_promo — 碧水源 楼盘广告 (户型+联系电话+开发商) is real_estate_rental, not a shopping promo. The 优惠 30000元 is a price reduction on the property, not a transient deal. Moved by hand to match OCR surface text."
     },
     {
       "id": "image_2898",
       "file": "image_2898.jpg",
       "src": "scale_fixtures.py auto-scale conf=0.800",
-      "category": "price_discount",
+      "category": "medical_institution",
       "what_is_pictured": "德仁堂 湖北德仁堂 医药连锁有限公司 民主路药店 医保定点药店 电话：88873365 24小时视频监控 ### 民主路 免费 周乐平 特价 湖北德仁堂医药连锁有限公司 # 价给你 90",
       "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "shopping_promo",
+      "expected_top_intent_type": "service_institution",
       "expected_actions": [
-        "copy_promo"
-      ]
+        "open_in_maps"
+      ],
+      "curation_note": "[2026-07-13] hand-curated from shopping_promo — 德仁堂 药店 (医保定点 + 连锁公司 + 门牌号 90) is service_institution (medical), not a shopping promo. The trailing 特价 was incidental in the original sign, the dominant signal is the institution identity. Moved by hand."
     },
     {
       "id": "image_3533",
@@ -250,6 +252,14 @@
     "auto_scaled_count": 20,
     "regex": "特价|促销|优惠|打折|满减|秒杀|亏本|清仓|甩卖|转让|红包|抵用券|代金券|限时|抢购|直降",
     "fallback_category": "general_promo",
-    "note": "Auto-scaled from 0 → 20 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand."
+    "note": "Auto-scaled from 0 → 20 fixtures. New entries have placeholder categories and empty must_have_in_scene_or_observation — refine by hand.",
+    "hand_curated_2026_07_13": {
+      "fixtures_removed_from_shopping_promo": [
+        "image_2562",
+        "image_2898"
+      ],
+      "reason": "auto-scaled by scale_fixtures.py as shopping_promo but OCR surface text is dominantly real_estate_rental / service_institution. LLM correctly classifies (r2_type=1.0), but GT expected copy_promo which would always miss. Hand-moved to correct intent for accurate future re-runs.",
+      "image_3533_5271_7814_kept": "verified shopping_promo GTs correct; LLM/OCR misses are separate signal-recall issue (Pass 13 should fire if PROMO keywords reach the corpus, but OCR fuzzy gap on those 3 fixtures leaves corpus without PROMO tokens)."
+    }
   }
 }
