@@ -95,8 +95,15 @@ for cfg in suites:
     )
     print(f"\n>> [{name}] starting (limit={cfg['limit']})")
     t0 = time.time()
+    # [2026-07-13] fix `--args` quoting: gradle's `--args` flag
+    #  requires the `=` form (--args=VALUE) — the space form
+    #  (--args VALUE) is silently treated as a bare flag with no
+    #  value, causing "No argument was provided for command-line
+    #  option '--args'" exit-1.  The previous shell-invocation
+    #  worked because the shell collapses `--args="..."` into one
+    #  argv slot; subprocess.run does not.
     proc = subprocess.run(
-        ["gradle", ":shared:eval", "--args", args, "--console=plain", "--no-daemon"],
+        ["gradle", ":shared:eval", f"--args={args}", "--console=plain", "--no-daemon"],
         cwd=project_root,
         capture_output=True, text=True,
     )
