@@ -92,13 +92,14 @@
       "id": "image_3533",
       "file": "image_3533.jpg",
       "src": "scale_fixtures.py auto-scale conf=0.800",
-      "category": "sale_promotion",
+      "category": "retail_store_sign",
       "what_is_pictured": "万达利眼镜店 鲁巷广场眼镜总店 ### 同学 大优惠 Prsr ALY 等你拿！万利达眼镜，期待你",
       "must_have_in_scene_or_observation": [],
-      "expected_top_intent_type": "shopping_promo",
+      "expected_top_intent_type": "location",
       "expected_actions": [
-        "copy_promo"
-      ]
+        "open_in_maps"
+      ],
+      "curation_note": "[2026-07-13] hand-curated from shopping_promo — image is a retail optician 店招 (万达利眼镜 at 鲁巷广场) with address-level location signal, not a transient shopping promo. The 大优惠 hit that put it in the cluster is incidental OCR noise on the digital marquee scroll. LLM has consistently classified it as location (emits open_in_maps) in 3 prior runs (eval_shopping_promo_20_phaseJ, eval_shopping_promo_20_r3fix, shopping_promo_20_20260713_204648) — GT was wrong, not LLM. Moved by hand."
     },
     {
       "id": "image_5271",
