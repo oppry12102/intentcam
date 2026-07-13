@@ -66,6 +66,47 @@ empty-bubble fix) → 0.902 (@20, 3200+4096 strict Step 2) →
 | `language` | "zh" | `profiling/ocr_huaweicloud_runner.py` (calls into ocr_huaweicloud.py) | Cloud OCR language | Mirrors HMS; matches test set |
 | Per-call subprocess | ~2-3s | runtime | OCR latency on JVM eval | SDK init + HTTPS roundtrip; 20 fixtures × 3s ≈ 60s overhead |
 
+### B.1 Local OCR backend (PP-OCRv4) — primary eval backend (2026-07-13)
+
+Huawei Cloud OCR was deemed too expensive at scale.  Switched the eval
+pipeline to a local PP-OCRv4 (PaddleOCR 2.7.3) wrapper at
+`/home/oppry/work/pp_ocrv4_mobile_engine/` (referenced, not imported —
+per user instruction).  **Eval baselines are invalidated** as a result;
+all 9 prior suites re-baselined under the new backend (2026-07-13+).
+Pre-PP-OCRv4 numbers stay in memory as historical reference.
+
+**Cascade in `EvalMain.kt:38-55`** (priority order):
+1. `JvmLocalOcrEngine.installIfConfigured()` — primary
+2. `JvmHuaweiCloudOcrEngine.installIfConfigured()` — fallback (kept for emergency)
+3. `OcrEngine.impl == null` — blind eval (matches pre-OCR baseline)
+
+**Env vars** (all optional, defaults shown):
+
+| Env var | Default | Notes |
+|---|---|---|
+| `OCR_PYTHON` | `python3` | Python interpreter for `pp_ocrv4_runner.py` |
+| `OCR_PYTHONPATH` | `/home/oppry/work` | Augmented onto PYTHONPATH so `pp_ocrv4_mobile_engine` is importable. Set to empty string to skip augmentation. |
+| `LOCAL_OCR_KIND` | `mobile` | `mobile` (12 MB, 2.4 s/img CPU) or `server` (450 MB, 27 s/img CPU, +10% F1) |
+| `LOCAL_OCR_MAX_LONG` | `4096` | matches `MAX_FULL_DIM` in `FrameAnalyzer.kt:176` |
+| `LOCAL_OCR_JPG_QUALITY` | `90` | JPEG recompress quality inside the runner. Engine validates 50..100; 90 is the F1 sweet spot (95 hurts F1 per `pp_ocrv4_mobile_engine` docstring). |
+| `LOCAL_OCR_USE_GPU` | `0` | `1` to enable PaddleOCR GPU path (untested on this ROCm box per the engine's README) |
+
+**Architecture**:
+- Long-lived Python subprocess (`profiling/pp_ocrv4_runner.py`) keeps the
+  PaddleOCR model resident for the entire eval run; per-call cost is the
+  PaddleOCR recognition pass itself, not Python startup.
+- Line-delimited JSON-RPC over stdin/stdout: requests
+  `{"id": N, "method": "recognize", "params": {"image_b64": "..."}}`,
+  responses `{"id": N, "result": {"blocks": [...], "full_text": "..."}}`.
+- Output `blocks` schema matches `JvmHuaweiCloudOcrEngine`'s so the
+  same `OcrBlock` shape feeds the eval scorer — `corners: [[x, y], ...]`
+  4 corners TL→TR→BR→BL normalized to [0, 1] in the preprocessed-image
+  coordinate system (equivalent to source-image coords because the
+  engine's `preprocess_image` preserves aspect ratio).
+- **Per-call timeout**: 30 s mobile / 120 s server. On timeout or
+  subprocess crash: restart + retry once; on second failure return
+  `OcrResult.EMPTY` (eval keeps running).
+
 ## C. LLM pipeline
 
 | Constant | Value | File:line | What it controls | Why this value |

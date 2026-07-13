@@ -35,19 +35,23 @@ import kotlin.system.exitProcess
  */
 fun main(args: Array<String>) {
     installJvmImageOps()
-    // OCR backend.  Tries Huawei Cloud first (env vars must all be set);
-    // silently falls back to no-backend when the env is missing.  With
-    // the cloud backend installed the round-1 pre-pass AND each
-    // zoom_in crop auto-OCR get the same OCR hint the Android app
-    // ships via HMS ML Kit — keeping eval and prod truly aligned, so
-    // thumbnail / crop experiments aren't biased by the "blind LLM"
-    // baseline.
-    val ocrInstalled = JvmHuaweiCloudOcrEngine.installIfConfigured()
-    System.err.println(
-        if (ocrInstalled) "[OCR] Huawei Cloud backend installed (env vars OK)"
-        else "[OCR] Huawei Cloud env vars missing — running without OCR hint " +
-            "(set HUAWEICLOUD_SDK_AK/SK/PROJECT_ID for prod-mirror mode)"
-    )
+    // OCR backend.  Cascade: local PP-OCRv4 first (default per
+    // 2026-07-13 cost decision; Huawei Cloud was deemed too expensive
+    // at scale), then Huawei Cloud as fallback (kept for emergency use
+    // when paddleocr is unavailable or pp_ocrv4_mobile_engine init
+    // fails), then no-backend (blind eval, matches pre-OCR baseline).
+    // See JvmLocalOcrEngine for the local-backend contract and
+    // JvmHuaweiCloudOcrEngine for the cloud one.  Both wire into the
+    // same `OcrEngine.Impl` slot so the rest of the pipeline is
+    // identical regardless of which backend is active.
+    val localOk = JvmLocalOcrEngine.installIfConfigured()
+    val huaweiOk = !localOk && JvmHuaweiCloudOcrEngine.installIfConfigured()
+    val backendLabel = when {
+        localOk -> "local PP-OCRv4"
+        huaweiOk -> "Huawei Cloud (fallback)"
+        else -> "none"
+    }
+    System.err.println("[OCR] active backend: $backendLabel")
 
     val opts = parseArgs(args)
     val config = EvalConfig(
