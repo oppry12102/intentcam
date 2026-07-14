@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 4,
   "description": "Phase H direction_arrow_20 mini-suite (2026-07-12). 20 fixtures from RCTW-171 train_images corpus, all with verbatim DIRECTION_ARROW regex matches in their OCR-matched text. Goal: validate Phase H `route_to` intent + Verifier Pass 11 (info|location + DIRECTION_ARROW → route_to) + open_in_maps action injection. Categories: 方位词 (左转/右转/直走/前行), 距离 (步行/走 N 米/公里/分钟), 出口/入口 (rare in RCTW), 箭头字符 (rare, 0 candidates with raw arrow unicode).",
   "img_dir": "/home/oppry/RCTW-171/train_images",
   "scenes": [
@@ -8,180 +8,418 @@
       "file": "image_4310.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "藏诺集团 向前20米 藏方养生馆",
-      "must_have_in_scene_or_observation": ["向前", "20米"],
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "20米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_6521",
       "file": "image_6521.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "前行 真功夫 餐厅",
-      "must_have_in_scene_or_observation": ["前行"],
+      "must_have_in_scene_or_observation": [
+        "前行"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_949",
       "file": "image_949.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "turnleft 左转",
-      "must_have_in_scene_or_observation": ["左转"],
+      "must_have_in_scene_or_observation": [
+        "左转"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_4116",
       "file": "image_4116.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "地下停车场 向前135米",
-      "must_have_in_scene_or_observation": ["向前", "135米"],
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "135米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_7162",
       "file": "image_7162.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "韩国炸鸡 营业 前行10米左拐",
-      "must_have_in_scene_or_observation": ["前行", "10米", "左拐"],
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "10米",
+        "左拐"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_5641",
       "file": "image_5641.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "办理取票 候车室 向前20米",
-      "must_have_in_scene_or_observation": ["向前", "20米"],
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "20米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_4770",
       "file": "image_4770.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "直行 右转 米乐星世界 STARKTV",
-      "must_have_in_scene_or_observation": ["直行", "右转"],
+      "must_have_in_scene_or_observation": [
+        "直行",
+        "右转"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_4932",
       "file": "image_4932.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "星娱电玩 由此前行 光谷世界城",
-      "must_have_in_scene_or_observation": ["前行"],
+      "must_have_in_scene_or_observation": [
+        "前行"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_6027",
       "file": "image_6027.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "民主路236 前行30米",
-      "must_have_in_scene_or_observation": ["前行", "30米"],
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "30米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_1429",
       "file": "image_1429.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "单间淋浴 直走30米 酒坊",
-      "must_have_in_scene_or_observation": ["直走", "30米"],
+      "must_have_in_scene_or_observation": [
+        "直走",
+        "30米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_6259",
       "file": "image_6259.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "CGV电影院 洗手间（左转）佰乐星4F",
-      "must_have_in_scene_or_observation": ["左转"],
+      "must_have_in_scene_or_observation": [
+        "左转"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_1302",
       "file": "image_1302.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "耐克专柜请往前面走30米",
-      "must_have_in_scene_or_observation": ["往前面", "走30米"],
+      "must_have_in_scene_or_observation": [
+        "往前面",
+        "走30米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_5092",
       "file": "image_5092.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "金凤国旅 前行300米右转即到",
-      "must_have_in_scene_or_observation": ["前行", "300米", "右转"],
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "300米",
+        "右转"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_7143",
       "file": "image_7143.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "直行 右转 米乐星世界 MILO",
-      "must_have_in_scene_or_observation": ["直行", "右转"],
+      "must_have_in_scene_or_observation": [
+        "直行",
+        "右转"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_5087",
       "file": "image_5087.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "商户专用货梯 向前50米 光谷天地",
-      "must_have_in_scene_or_observation": ["向前", "50米"],
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "50米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_6374",
       "file": "image_6374.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "世界文化遗产 退思园 向前50米",
-      "must_have_in_scene_or_observation": ["向前", "50米"],
+      "must_have_in_scene_or_observation": [
+        "向前",
+        "50米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_1330",
       "file": "image_1330.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "前行300米右转即到 国家特许经营",
-      "must_have_in_scene_or_observation": ["前行", "300米", "右转"],
+      "must_have_in_scene_or_observation": [
+        "前行",
+        "300米",
+        "右转"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_6423",
       "file": "image_6423.jpg",
       "category": "phase_h_dw_only",
       "what_is_pictured": "佰乐星KTV 请直走 坐电梯至四楼",
-      "must_have_in_scene_or_observation": ["直走"],
+      "must_have_in_scene_or_observation": [
+        "直走"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_3907",
       "file": "image_3907.jpg",
       "category": "phase_h_dw_dist",
       "what_is_pictured": "耐克专柜请往前面走30米 NIKE FREE",
-      "must_have_in_scene_or_observation": ["往前面", "走30米"],
+      "must_have_in_scene_or_observation": [
+        "往前面",
+        "走30米"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     },
     {
       "id": "image_3796",
       "file": "image_3796.jpg",
       "category": "phase_h_dist_only",
       "what_is_pictured": "森之旅 巷内行走三十步 设计师客栈",
-      "must_have_in_scene_or_observation": ["行走", "三十步"],
+      "must_have_in_scene_or_observation": [
+        "行走",
+        "三十步"
+      ],
       "expected_top_intent_type": "route_to",
-      "expected_actions": ["open_in_maps"]
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ]
     }
   ]
 }

@@ -9,6 +9,7 @@ build/
 .externalNativeBuild
 .cxx
 local.properties
+secrets.properties
 app/build/
 
 # --- Build artifacts kept on disk but not in version control ---

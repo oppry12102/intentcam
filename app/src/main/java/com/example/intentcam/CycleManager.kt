@@ -137,6 +137,29 @@ class CycleManager(
                     userText = "",
                     actionIds = actionRegistry.allIds(),
                     cycleId = job.id,
+                    // [2026-07-15] Wire the orchestrator's per-emit
+                    //  gate.  After every successful `emit_bubble`
+                    //  parse inside ToolUseLoop, this closure fires
+                    //  with the post-resolve bubble (LLM proposal ∩
+                    //  applicability ∩ enabled set).  When the
+                    //  orchestrator returns CONTINUE, ToolUseLoop
+                    //  injects a missing-input nudge and re-loops
+                    //  (capped at 3 retries); when it returns
+                    //  FINALIZE, the cycle ends with the current
+                    //  bubble.  maxRounds=4 matches the orchestrator
+                    //  default — 1 round for emit + 2-3 rounds for
+                    //  the LLM to fill missing inputs.
+                    onEmit = { bubble, round ->
+                        orchestrator.shouldFinalize(bubble, round, maxRounds = 4)
+                    },
+                    // [2026-07-15] Stamp validation state onto the
+                    //  final bubble before the cycle returns.  This
+                    //  populates `bubble.validatedInputs` and
+                    //  `bubble.pendingInputs` (the data-class fields,
+                    //  separate from CycleJob's reactive flows which
+                    //  are kept in sync by [CycleJob.refreshValidation]
+                    //  + this callback's pre-return projection).
+                    markValidated = { bubble -> orchestrator.markValidatedInputs(bubble) },
                     onProgress = { progress ->
                         job.applyProgress(progress)
                         // Resolve actions on every partial emit so
@@ -152,6 +175,22 @@ class CycleManager(
                         }
                         job.bubble.value = withActions
                         job.refreshValidation(orchestrator)
+                        // [2026-07-15] Soft intent-alignment check.
+                        //  Logs a breadcrumb when bubble.intent doesn't
+                        //  mention any primary noun from the bubble's
+                        //  chosen action set — useful when investigating
+                        //  "model picked right action, wrote wrong intent"
+                        //  regressions.  Warn-only; doesn't fail the
+                        //  cycle (intent is display-only per Decision C).
+                        when (val a = validateIntentAlignment(withActions)) {
+                            is IntentAlignmentCheck.Mismatch -> log(
+                                "INTENT_WARN",
+                                "cycle ${job.id} round=${progress.round} " +
+                                    "intent='${withActions.intent.take(40)}' " +
+                                    "missing=${a.missingNouns.take(5)}"
+                            )
+                            IntentAlignmentCheck.Aligned -> { /* no-op */ }
+                        }
                         log(
                             "CYCLE",
                             "progress ${job.id} round=${progress.round} " +

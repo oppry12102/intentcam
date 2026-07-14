@@ -242,22 +242,17 @@ v1.3 A2 fix promoted `info↔location` 0.5→1.0; Phase G extends
 OBSERVE with warning/menu/hours so they interchange with `info`
 1.0.
 
-### H.2 Action registry — 10 defs
+### H.2 Action registry — 5 defs
 
 `app/.../ActionDecl.kt:158-415` `registerDefaultActions()`.
 
 | Action id | Applicable to | Consent | userPrefKey | Default | Body |
 |---|---|---|---|---|---|
-| `view_details` | info / location / solve | no | — | ON | no-op (card tap opens detail) |
-| `open_in_maps` | location | no | — | ON | `geo:0,0?q={title}` → maps |
+| `open_in_maps` | location / route_to / service_institution | no | — | ON | `geo:0,0?q={title}` → maps |
 | `dial_number` | phone | yes | `action_dial_number_enabled` | **OFF** | `ACTION_DIAL` via `PhoneExtractor.firstMatch` |
-| `copy_listing` | real_estate_rental | yes | `action_copy_listing_enabled` | **OFF** | `ACTION_SEND text/plain` share-sheet |
-| `save_posting` | recruit_hiring | yes | `action_save_posting_enabled` | **OFF** | `ACTION_SEND` share-sheet |
 | `scan_to_pay` | payment_qr | yes | `action_scan_to_pay_enabled` | **OFF** | **Toast only — never auto-launch payment** |
 | `redact_id` | id_document | yes | `action_redact_id_enabled` | **OFF** | Toast only — chip = audit-trail marker |
-| `copy_warning` | warning_safety | no | — | ON | `ACTION_SEND` share-sheet |
-| `copy_menu` | menu_food | no | — | ON | `ACTION_SEND` (capped 600 chars) |
-| `copy_hours` | hours_schedule | no | — | ON | `ACTION_SEND` share-sheet |
+| `share` | real_estate_rental / recruit_hiring / warning_safety / menu_food / hours_schedule / service_institution / shopping_promo | no | — | ON | `ACTION_SEND text/plain` share-sheet (capped 600 chars) — unified across 7 OBSERVE/ACT_ON intents; chooser title + fallback vary by `bubble.type` |
 
 **`scan_to_pay` is intentionally Toast-only** — the QR could be
 in a screenshot/phishing context; even with consent we route the
@@ -272,9 +267,9 @@ digit 身份证) is Phase C.
 `applicableFamilies: Set<IntentFamily>` are OR-semantics; a
 bubble matches when `intent ∈ applicableIntents || intent.family
 ∈ applicableFamilies`.  Both empty = applies to nothing
-(misconfiguration guard).  All 10 actions use
+(misconfiguration guard).  All 5 actions use
 `applicableIntents` only; no action uses `applicableFamilies`
-yet — reserved for future universal actions (e.g. `share`).
+yet — reserved for future genuinely family-universal actions.
 
 ### H.4 LLM proposedActions override (2026-07-13)
 
@@ -285,15 +280,13 @@ filter.  Empty / null = fall back to applicability.  Acts as a
 feature flag: when the prompt isn't updated to ask for
 `action_ids`, behavior is unchanged.
 
-### H.5 SettingsStore 5 consent toggles
+### H.5 SettingsStore 3 consent toggles
 
-`app/.../SettingsStore.kt` backs 5 PII consent gates; default
-OFF (user must opt-in once in Settings screen).  Phase G's 3
-actions have no `userPrefKey` → default ON (share-sheet is its
-own consent step).  The 5 userPrefKeys:
+`app/.../SettingsStore.kt` backs 3 PII consent gates; default
+OFF (user must opt-in once in Settings screen).  `share` and
+`open_in_maps` have no `userPrefKey` → default ON (share-sheet
+/ map picker is its own consent step).  The 3 userPrefKeys:
 `action_dial_number_enabled`,
-`action_copy_listing_enabled`,
-`action_save_posting_enabled`,
 `action_scan_to_pay_enabled`,
 `action_redact_id_enabled`.
 
@@ -359,15 +352,17 @@ by `ToolUseLoop` to inject a missing action post-verifier-flip
 ```kotlin
 fun actionFor(type: String): String? = when (type) {
     "phone"               -> "dial_number"
-    "real_estate_rental"  -> "copy_listing"
-    "recruit_hiring"      -> "save_posting"
+    "real_estate_rental"  -> "share"
+    "recruit_hiring"      -> "share"
     "id_document"         -> "redact_id"
     "payment_qr"          -> "scan_to_pay"
     "location"            -> "open_in_maps"
-    "warning_safety"      -> "copy_warning"
-    "menu_food"           -> "copy_menu"
-    "hours_schedule"      -> "copy_hours"
-    "route_to"            -> "open_in_maps"   // [Phase H] reuses existing action
+    "warning_safety"      -> "share"
+    "menu_food"           -> "share"
+    "hours_schedule"      -> "share"
+    "service_institution" -> "share"
+    "shopping_promo"      -> "share"
+    "route_to"            -> "open_in_maps"
     else                  -> null   // "info", "solve" — no canonical action
 }
 ```

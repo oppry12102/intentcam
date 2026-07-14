@@ -121,8 +121,8 @@ fun SettingsScreen(
 
             // [2026-07-13] Phase B: PII action opt-in section.
             //  Mirrors the `requiresConfirmation=true` chips surfaced
-            //  on `dial_number` / `copy_listing` / `save_posting` /
-            //  `scan_to_pay` / `redact_id` bubbles.  Default OFF — the
+            //  on `dial_number` / `scan_to_pay` / `redact_id` bubbles.
+            //  Default OFF — the
             //  Settings screen is the only entry point for opting in
             //  (a single tap on a chip grants it once via
             //  AppViewModel.confirmAction; this section is for

@@ -90,6 +90,86 @@ data class PendingConfirmation(
     val detail: String,
 )
 
+/** Output of [com.example.intentcam.ActionOrchestrator.validateInputs].
+ *  Sealed so callers (live UI, ScorerV2, prompt framing) handle both
+ *  shapes exhaustively.  Lives in `:shared/` because
+ *  [com.example.intentcam.ToolUseLoop.runCycle]'s `onEmit` callback
+ *  surfaces the gate's verdict through [FinalizeDecision]; the
+ *  sealed class has no Android types so it crosses the module
+ *  boundary without dragging Context/Intent along. */
+sealed class InputsValidation {
+    /** Every chosen action's required inputs are satisfied by the
+     *  bubble's text surface.  Chip state = solid, ready to fire. */
+    object Complete : InputsValidation()
+
+    /** At least one action is missing ≥1 required input.  Per-action
+     *  breakdown lets the UI render ghost chips with per-chip
+     *  tooltips ("dial_number: 需要 手机号") rather than a single
+     *  global "missing X" banner.  Keys in [perAction] are action
+     *  ids (matching `Bubble.actions`); values are the missing
+     *  input keys (`ActionInputSpec.key`) for that action. */
+    data class Missing(
+        val perAction: Map<String, List<String>>,
+    ) : InputsValidation()
+}
+
+/** Output of [com.example.intentcam.ActionOrchestrator.shouldFinalize].
+ *  Drives the cycle's loop control — `FINALIZE` ends the cycle and
+ *  ships the bubble, `CONTINUE` triggers another round of LLM
+ *  exploration with the missing-input hint injected into the user
+ *  message.  Cross-platform type for the same reason as
+ *  [InputsValidation]: [ToolUseLoop] needs to consume it without an
+ *  Android dep. */
+sealed class FinalizeDecision {
+    /** Stop here; ship the bubble as-is.  [reason] is for logging
+     *  and the per-cycle audit trail ("complete" / "max_rounds"). */
+    data class FINALIZE(val reason: String) : FinalizeDecision()
+
+    /** Keep going — feed [missing] into the next round's user
+     *  message as a "you still need to extract these" hint.  LLM
+     *  is free to call any tool (not just the suggested one). */
+    data class CONTINUE(val missing: List<String>) : FinalizeDecision()
+}
+
+/** [2026-07-15] Pure projection: stamp input-validation state onto a
+ *  bubble's data-class fields without touching Android types.  Mirrors
+ *  [com.example.intentcam.ActionOrchestrator.markValidatedInputs] but
+ *  takes the parser-registry as a parameter rather than closing over
+ *  an Android-coupled [com.example.intentcam.ActionRegistry].  Eval
+ *  side uses this with regex parsers; prod side uses the orchestrator
+ *  helper directly.
+ *
+ *  @param bubble the bubble whose `actions` list drives which
+ *    inputs to check.  Empty `actions` → empty outputs (legacy
+ *    emit_bubble without `action_ids`).
+ *  @param requiredInputs registry of input specs, keyed by action id.
+ *    Missing action ids are silently skipped.
+ *  @return Pair(validatedInputs map, pendingInputs list) suitable
+ *    for spreading into `bubble.copy(...)`. */
+fun projectInputsValidation(
+    bubble: Bubble,
+    requiredInputs: Map<String, List<ActionInputSpec>>,
+): Pair<Map<String, Boolean>, List<String>> {
+    if (bubble.actions.isEmpty()) return emptyMap<String, Boolean>() to emptyList()
+    val validated = LinkedHashMap<String, Boolean>()
+    val pending = LinkedHashMap<String, String>()
+    bubble.actions.forEach { actionId ->
+        val specs = requiredInputs[actionId].orEmpty()
+        if (specs.isEmpty()) {
+            validated[actionId] = true
+            return@forEach
+        }
+        val missing = specs.filter { it.parser(bubble) == null }
+        if (missing.isEmpty()) {
+            validated[actionId] = true
+        } else {
+            validated[actionId] = false
+            missing.forEach { pending.putIfAbsent(it.key, it.key) }
+        }
+    }
+    return validated to pending.values.toList()
+}
+
 /** [2026-07-14 Phase A — inversion v3.0] One declared input that an
  *  [ActionDef] requires before it can fire.  Distinct from
  *  [ActionArgSpec] (which is the form rendered at runtime when the

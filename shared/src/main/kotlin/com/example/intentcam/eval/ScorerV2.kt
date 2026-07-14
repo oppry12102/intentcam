@@ -6,108 +6,72 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * [2026-07-14 Phase D — inversion v3.0] New composite scorer built
- * around the "actions are primary, intents are secondary" thesis
- * from the inversion plan.  Runs side-by-side with the legacy
- * scorer (composite formula `0.45·r1 + 0.45·r2 + 0.10·r3`) for
- * 1-2 cycles of fixtures, so we can compare without hard-cutting
- * the regression net.
+ * [2026-07-15 scoring redesign] Intent-first composite scorer.  This
+ * is now the SOLE score — the legacy `0.45·r1 + 0.45·r2 + 0.10·r3`
+ * composite has been retired (see EvalRunner).
  *
  * ## Formula
  * ```
- * composite_v2 = 0.40·r_actions_recall
- *             + 0.30·r_inputs_complete
- *             + 0.15·r_rounds_efficiency
- *             + 0.10·r_intent_derived
- *             + 0.05·r_text
+ * composite_v2 = 0.35·r_type
+ *             + 0.25·r_text
+ *             + 0.20·r_actions
+ *             + 0.20·r_inputs
  * ```
  *
- * ## Why this formula (vs the legacy one)
+ * ## Why this formula
  *
- * - **r_actions_recall (0.40)** is the new dominant signal.  In
- *   the inversion era, "did the model pick the right action set?"
- *   is the real correctness question — the user value is the chip
- *   they can tap, not the intent id that classifies it.  Legacy
- *   r2_type (intent family match) is replaced by
- *   r_intent_derived (a 0/1 signal derived from action overlap)
- *   and dropped to 0.10 weight.
- * - **r_inputs_complete (0.30)** measures the orchestrator's
- *   ability to gather the data each action needs.  This is the
- *   inversion's central novel signal — the legacy formula has no
- *   analog because pre-inversion the verifier just patched the
- *   intent, it didn't check input satisfiability.
- * - **r_rounds_efficiency (0.15)** rewards the LLM for
- *   converging in 1 round (no follow-up tool calls needed).
- *   Calibrated against the empirical 2-3 round median from the
- *   8-suite regression net.  ≥5 rounds scores 0.2 floor.
- * - **r_intent_derived (0.10)** is a 0/1 signal: 1.0 if
- *   `expected_actions ∩ actual ≠ ∅`, else 0.0.  We don't read
- *   `bubble.intent` text — embedding similarity is brittle on
- *   Chinese paraphrase and the action set is a stronger proxy
- *   for intent correctness anyway.
- * - **r_text (0.05)** reuses the legacy textScore (verbatim OCR
- *   fidelity).  Kept as a diagnostic at low weight so the new
- *   composite doesn't fully decouple from text quality.
+ * The 2026-07-15 action merge collapsed six per-intent share-text
+ * actions into one intent-agnostic `share` (7 intents → 1 id).  That
+ * gutted the old `r_actions_recall`-dominant formula: emitting
+ * `share` scored 1.0 regardless of whether the model understood the
+ * scene, and `r_intent_derived` (derived from action overlap) +
+ * `r_rounds_efficiency` (a hardcoded 1.0 floor) carried no real
+ * signal.  This redesign restores intent-classification as the
+ * dominant measured dimension and drops the dead ones.
  *
- * ## Phase D caveats
- *
- * - **r_inputs_complete** is a 1.0 floor in this commit — the GT
- *   files don't yet carry `expected_inputs` (that's Phase D's
- *   `migrate_gt_v2_to_v3.py` script).  Once we run the migration,
- *   the floor becomes the real per-fixture calculation.  The
- *   component is computed here for forward compatibility: when
- *   `expected_inputs` is present in the scene, we walk the
- *   GT's expected actions + verify each required input is
- *   satisfiable from the bubble's surface text using the same
- *   regex patterns as the in-app [com.example.intentcam.PhoneExtractor].
- * - **r_rounds_efficiency** is a 1.0 floor in this commit — the
- *   eval doesn't currently track n_rounds from
- *   [com.example.intentcam.ToolUseLoop].  Phase E will wire a
- *   `nRounds` field through to the per-fixture JSON.
+ * - **r_type (0.35)** — graded intent-type correctness against
+ *   `bubble.type`: exact 1.0 / same registered family 0.7 / both
+ *   registered but wrong family 0.3 / empty·unknown 0.0.  Computed
+ *   in [EvalRunner] (which owns the populated `IntentRegistry`) and
+ *   passed in as `typeScore`, mirroring how `textScore` is passed.
+ *   This is the discrimination the `share` merge erased.
+ * - **r_text (0.25)** — verbatim OCR fidelity: hit-rate against GT
+ *   `expected_description_keywords` + `expected_details`.  Computed
+ *   by [EvalRunner.scoreRound2Text] and passed as `textScore`.  The
+ *   most objective signal, promoted from its old 0.05.
+ * - **r_actions (0.20)** — Jaccard `|∩|/|∪|` of expected vs actual
+ *   action ids (not pure recall), so spurious / wrong chips are
+ *   penalized.  Empty expected → 1.0 (un-annotated fixtures).
+ * - **r_inputs (0.20)** — fraction of `expected_inputs` satisfiable
+ *   from the bubble's text surface (phone regex / query / text).
  *
  * ## Component calculation in detail
  *
- * `r_actions_recall(bubble, scene)`:
- *   - `expected` = `scene.expected_actions` (JSONArray of strings)
+ * `r_actions(bubble, scene)`:
+ *   - `expected` = `scene.expected_actions` (deduped to a set)
  *   - `actual`   = `bubble.llmProposedActions` (LLM-emitted
- *     `action_ids` list; null when absent — fall back to
- *     `bubble.actions` (resolver-filtered))
- *   - If `expected.isEmpty()` → 1.0 (no penalty for un-annotated).
- *   - Else → `|expected ∩ actual| / |expected|`
+ *     `action_ids`; fall back to `bubble.actions` when absent),
+ *     deduped to a set
+ *   - `expected.isEmpty()` → 1.0; null bubble + nonempty → 0.0
+ *   - else → `|expected ∩ actual| / |expected ∪ actual|`
  *
- * `r_intent_derived(bubble, scene)`:
- *   - 1.0 if `r_actions_recall > 0.0` (any expected action
- *     matched), else 0.0.  Phrased as "did the LLM pick any of
- *     the right actions?" — that's our intent-correctness
- *     signal without reading Chinese text.
- *
- * `r_text(bubble, scene)`:
- *   - Reuse [EvalRunner.scoreRound2] textScore (legacy r2 text
- *     hit-rate against GT keywords + detail values).
- *
- * `r_inputs_complete(bubble, scene)`:
- *   - Phase D: 1.0 floor (no penalty).  See caveat above.
- *
- * `r_rounds_efficiency(bubble, scene)`:
- *   - Phase D: 1.0 floor (no penalty).  See caveat above.
+ * `r_inputs(bubble, scene)`:
+ *   - fraction of `expected_inputs` entries satisfiable via
+ *     [inputSatisfied]; empty → 1.0; null bubble + nonempty → 0.0.
  *
  * ## Reuse vs duplication
  *
  * The orchestrator's [com.example.intentcam.ActionOrchestrator.validateInputs]
  * lives in `app/` (Android-coupled because ActionRegistry holds
- * ActionDef.body lambdas).  Eval can't import it directly.  The
- * pragmatic choice: duplicate the ~15 lines of validation logic
- * here, gated by the same regex set as
- * [com.example.intentcam.PhoneExtractor].  When Phase E splits
- * ActionRegistry into a shared metadata view + Android-only
- * body wrapper, we can collapse the duplication.
+ * ActionDef.body lambdas).  Eval can't import it directly, so the
+ * ~15 lines of input-validation logic are duplicated here, gated by
+ * the same regex set as [com.example.intentcam.PhoneExtractor].
  */
 data class ScorerV2Result(
-    val actionsRecall: Double,
-    val inputsComplete: Double,
-    val intentDerived: Double,
-    val roundsEfficiency: Double,
+    val type: Double,
     val text: Double,
+    val actions: Double,
+    val inputs: Double,
     val composite: Double,
 ) {
     companion object {
@@ -120,32 +84,48 @@ data class ScorerV2Result(
         private val SERVICE_REGEX = Regex("""(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}""")
         private val LANDLINE_REGEX = Regex("""\b0?\d{3,4}[\s-]?\d{7,8}\b""")
 
-        fun compute(bubble: Bubble?, scene: JSONObject, textScore: Double): ScorerV2Result {
-            val actionsRecall = computeActionsRecall(bubble, scene)
-            val intentDerived = if (actionsRecall > 0.0) 1.0 else 0.0
+        /**
+         * @param textScore r_text — verbatim OCR fidelity, computed by
+         *   [EvalRunner.scoreRound2Text].
+         * @param typeScore r_type — graded intent-type correctness,
+         *   computed by [EvalRunner.scoreRound2Type] (which owns the
+         *   populated IntentRegistry).
+         */
+        fun compute(
+            bubble: Bubble?,
+            scene: JSONObject,
+            textScore: Double,
+            typeScore: Double,
+        ): ScorerV2Result {
+            val type = typeScore.coerceIn(0.0, 1.0)
             val text = textScore.coerceIn(0.0, 1.0)
-            // Phase D floors: real wiring lands in Phase E.
-            val inputsComplete = 1.0
-            val roundsEfficiency = 1.0
+            val actions = computeActions(bubble, scene)
+            // r_inputs: walk scene.expected_inputs (populated by
+            //  scripts/migrate_gt_v2_to_v3.py) and run the matching
+            //  eval-side parser against the bubble's text surface.
+            //  Empty expected_inputs → 1.0 floor (un-annotated).
+            val inputs = computeInputsComplete(bubble, scene)
 
-            val composite = 0.40 * actionsRecall +
-                0.30 * inputsComplete +
-                0.15 * roundsEfficiency +
-                0.10 * intentDerived +
-                0.05 * text
+            val composite = 0.35 * type +
+                0.25 * text +
+                0.20 * actions +
+                0.20 * inputs
             return ScorerV2Result(
-                actionsRecall = actionsRecall,
-                inputsComplete = inputsComplete,
-                intentDerived = intentDerived,
-                roundsEfficiency = roundsEfficiency,
+                type = type,
                 text = text,
+                actions = actions,
+                inputs = inputs,
                 composite = composite.coerceIn(0.0, 1.0),
             )
         }
 
-        /** Set intersection of expected vs actual action ids.  Empty
-         *  expected → 1.0 (no penalty for un-annotated fixtures). */
-        private fun computeActionsRecall(bubble: Bubble?, scene: JSONObject): Double {
+        /** Jaccard overlap of expected vs actual action ids:
+         *  `|expected ∩ actual| / |expected ∪ actual|`.  Penalizes
+         *  both misses and spurious/wrong chips (symmetric), unlike
+         *  pure recall.  Empty expected → 1.0 (no penalty for
+         *  un-annotated fixtures); null bubble + nonempty expected
+         *  → 0.0. */
+        private fun computeActions(bubble: Bubble?, scene: JSONObject): Double {
             val expectedArr = scene.optJSONArray("expected_actions") ?: return 1.0
             val expected = mutableSetOf<String>()
             for (i in 0 until expectedArr.length()) {
@@ -153,16 +133,18 @@ data class ScorerV2Result(
             }
             if (expected.isEmpty()) return 1.0
             val bubble0 = bubble ?: return 0.0
-            // Prefer the raw LLM-emitted list (intent of the eval —
-            // did the LLM get it right?).  Fall back to the
-            // resolver-filtered list when LLM didn't emit action_ids.
+            // Prefer the raw LLM-emitted list (did the LLM get it
+            // right?).  Fall back to the resolver-filtered list when
+            // the LLM didn't emit action_ids.
             val actual: Set<String> = when {
                 !bubble0.llmProposedActions.isNullOrEmpty() ->
                     bubble0.llmProposedActions.toSet()
                 else -> bubble0.actions.toSet()
             }
-            val hit = expected.count { it in actual }
-            return hit.toDouble() / expected.size
+            val intersection = expected.intersect(actual).size
+            val union = expected.union(actual).size
+            if (union == 0) return 1.0
+            return intersection.toDouble() / union
         }
 
         /** Convenience: did this bubble carry a phone number?  Used
@@ -186,6 +168,60 @@ data class ScorerV2Result(
         internal fun bubbleHasTextContent(bubble: Bubble): Boolean =
             bubble.title.isNotBlank() || bubble.detail.isNotBlank() ||
                 bubble.details.any { it.value.isNotBlank() }
+
+        /** [2026-07-15] Per-input satisfaction check used by
+         *  [computeInputsComplete].  Mirrors the production
+         *  [com.example.intentcam.InputParsers] regex set so
+         *  eval and prod agree on "is this input present in
+         *  the bubble's text surface?".  Returns true when the
+         *  parser would have returned non-null for the bubble.
+         *
+         *  Mapping mirrors `ACTION_REQUIRED_INPUTS` in
+         *  `scripts/migrate_gt_v2_to_v3.py`; the two must stay
+         *  in sync.  When they drift, `r_inputs_complete`
+         *  becomes a soft signal (false 0s); the canonical fix
+         *  is to update this dispatch. */
+        private fun inputSatisfied(
+            bubble: Bubble,
+            @Suppress("UNUSED_PARAMETER") actionId: String,
+            key: String,
+        ): Boolean = when {
+            // phoneNumber → regex chain (mobile → service → landline)
+            key == "phone_number" -> bubbleHasPhoneNumber(bubble)
+            // textContent + locationQuery both reduce to "is
+            // there ANY non-blank surface text on the bubble".
+            // Distinguishing them would require duplicating the
+            // parser's exact priority order (title → 40-char
+            // detail → first details[].value); for the v3.0
+            // r_inputs_complete floor they're equivalent.
+            key == "text" || key == "query" -> bubbleHasTextContent(bubble)
+            // Unknown key (future action): default to false so
+            // the signal reflects "we don't know how to
+            // validate this" rather than a false positive.
+            // Drift fix lives in the ACTION_REQUIRED_INPUTS table.
+            else -> false
+        }
+
+        /** [2026-07-15] Walk scene.expected_inputs, check each
+         *  entry against the bubble's text surface via
+         *  [inputSatisfied].  Returns the fraction satisfied
+         *  (0.0..1.0).  Empty expected_inputs → 1.0 (no
+         *  penalty for un-annotated fixtures).  Null bubble +
+         *  non-empty expected_inputs → 0.0 (no bubble to
+         *  validate against). */
+        private fun computeInputsComplete(bubble: Bubble?, scene: JSONObject): Double {
+            val arr = scene.optJSONArray("expected_inputs") ?: return 1.0
+            if (arr.length() == 0) return 1.0
+            val b = bubble ?: return 0.0
+            var satisfied = 0
+            for (i in 0 until arr.length()) {
+                val entry = arr.optJSONObject(i) ?: continue
+                val actionId = entry.optString("action")
+                val key = entry.optString("key")
+                if (inputSatisfied(b, actionId, key)) satisfied++
+            }
+            return satisfied.toDouble() / arr.length()
+        }
     }
 }
 
@@ -198,12 +234,11 @@ internal fun Bubble.corpus(): String = buildString {
     details.forEach { d -> append(d.value).append('\n') }
 }
 
-/** Helper: format the per-fixture ScorerV2 numbers into the same
- *  human-readable string style as the legacy scorer line.  Used
- *  by [EvalRunner] to print a side-by-side `composite (old) |
- *  composite_v2 (new)` summary per fixture. */
+/** Helper: format the per-fixture ScorerV2 numbers into a
+ *  human-readable per-fixture line for [EvalRunner]'s console output. */
 internal fun ScorerV2Result.format(): String =
-    "actions_recall=${"%.2f".format(actionsRecall)} " +
-    "intent_derived=${"%.2f".format(intentDerived)} " +
+    "type=${"%.2f".format(type)} " +
     "text=${"%.2f".format(text)} " +
+    "actions=${"%.2f".format(actions)} " +
+    "inputs=${"%.2f".format(inputs)} " +
     "composite_v2=${"%.2f".format(composite)}"

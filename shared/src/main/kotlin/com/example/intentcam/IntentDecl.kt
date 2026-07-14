@@ -22,9 +22,9 @@ data class IntentDecl(
 )
 
 /**
- * Equivalence group used by the eval scorer.  Two intents in the same
- * family score 1.0 against each other (interchangeable), cross-family
- * score 0.5, empty/unknown score 0.
+ * Equivalence group used by the eval scorer (graded partial-credit,
+ *  2026-07-15 redesign — see [com.example.intentcam.eval.ScorerV2]):
+ *  same family 0.7, cross-family 0.3, empty·unknown 0.0, exact 1.0.
  *
  * `OBSERVE` = the user just wants the picture read (info, location).
  * `ACT_ON`  = the user wants something done (solve, shopping, ...).
@@ -204,9 +204,9 @@ fun registerDefaultIntents(reg: IntentRegistry) {
     //  (rank #5 in `scan_intents.py`).  Family OBSERVE — user wants
     //  to identify / locate the institution, not dial or purchase.
     //  Maps to the existing `open_in_maps` action (geo: URI is the
-    //  same surface as `location`/`route_to`); `copy_hours` widens
-    //  too so institution signs carrying 营业时间 still get the
-    //  share-sheet chip.  Single canonical action = `open_in_maps`
+    //  same surface as `location`/`route_to`); the unified `share`
+    //  action widens too so institution signs carrying 营业时间 still
+    //  get the share-sheet chip.  Single canonical action = `open_in_maps`
     //  (primary need); verifier injects if LLM missed it.
     reg.register(IntentDecl(
         id = "service_institution",
@@ -218,9 +218,8 @@ fun registerDefaultIntents(reg: IntentRegistry) {
     //  sign.  Target cluster = 351 images / 4.4% of RCTW corpus
     //  (rank #7 in `scan_intents.py` — highest un-shipped after
     //  price/date_time).  Family OBSERVE — user wants the deal text
-    //  to share or remember, not a purchase flow.  Maps to a new
-    //  `copy_promo` action (share-sheet, same plumbing as Phase G's
-    //  copy_warning/copy_menu/copy_hours).  Real-estate 转让 is
+    //  to share or remember, not a purchase flow.  Maps to the
+    //  unified `share` action (share-sheet text export).  Real-estate 转让 is
     //  excluded by verifier `!REAL_ESTATE` guard (mirrors Phase E3)
     //  to avoid mis-fire on 二手房急售.
     reg.register(IntentDecl(

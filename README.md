@@ -14,15 +14,13 @@ the screen at full aspect ratio) and a `details` table of every
 visible text / number / brand / date / price the model read.
 
 On top of the visual pipeline, an **Actions framework** resolves a
-per-bubble set of 11 user-facing actions (`dial_number`,
-`copy_listing`, `copy_menu`, `copy_hours`, `copy_promo`,
-`save_posting`, `redact_id`, `scan_to_pay`, `copy_warning`,
-`open_in_maps`, plus `view_details` as a reserved no-op).
-The LLM picks the action set + a free-form Chinese `intent`
-summary (≤30 chars); an `ActionOrchestrator` validates each
-chosen action's `requiredInputs` (e.g. `dial_number` needs a
-phone number to extract). The legacy 14-bucket intent enum +
-13-pass regex verifier era is over (commit `59c1128`); see
+per-bubble set of 5 user-facing actions (`open_in_maps`,
+`dial_number`, `scan_to_pay`, `redact_id`, `share`). The LLM
+picks the action set + a free-form Chinese `intent` summary (≤30
+chars); an `ActionOrchestrator` validates each chosen action's
+`requiredInputs` (e.g. `dial_number` needs a phone number to
+extract). The legacy 14-bucket intent enum + 13-pass regex
+verifier era is over (commit `59c1128`); see
 [CHANGELOG §[2026-07-14f]](CHANGELOG.md#2026-07-14f--version-30-architectural-refactor)
 for the full ship notes and
 **[ARCHITECTURE.md §15](ARCHITECTURE.md#15-intentaction-framework-2026-07-10--2026-07-12)**
@@ -99,8 +97,9 @@ Each `emit_bubble` now carries:
   `info | location | solve` triplet; the original 3 are kept
   for backward compat and scored 1.0 against each other).
 - **`action_ids`** — list of user-facing action ids the model
-  recommends (`dial_number` for phone bubbles, `copy_menu` for
-  menu bubbles, `copy_warning` for warning bubbles, etc.).
+  recommends (`dial_number` for phone bubbles, `share` for
+  share-text intents like menu/warning/hours, `open_in_maps`
+  for navigation, etc.).
 
 The framework ships in ten shipped phases:
 
@@ -333,10 +332,10 @@ shared/src/main/kotlin/com/example/intentcam/  — :shared module
     JvmHuaweiCloudOcrEngine.kt  Cloud OCR backend for the eval
 
 app/src/main/java/com/example/intentcam/   — additional modules
-  ActionDecl.kt            10-action registry + applicability filter
-                            + 5-action SettingsStore consent toggle
-  SettingsStore.kt         backs 5 PII consent gates (OFF by default;
-                            Phase G copy_* actions have no gate)
+  ActionDecl.kt            5-action registry + applicability filter
+                            + 3-action SettingsStore consent toggle
+  SettingsStore.kt         backs 3 PII consent gates (OFF by default;
+                            `share` + `open_in_maps` have no gate)
 
 profiling/
   ground_truth_rctw.json   100 real-photo fixtures (RCTW-17)

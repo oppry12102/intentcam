@@ -1,6 +1,35 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+// ── Baked-in default Anthropic token ──
+// Read at compile time from (1) the gitignored `secrets.properties` at the
+// repo root if present, else (2) the ANTHROPIC_AUTH_TOKEN env var. Empty
+// when neither is present (e.g. a clean CI checkout) — the app then falls
+// back to LlmConfig.DEFAULT_TOKEN's placeholder. This value becomes
+// BuildConfig.DEFAULT_AUTH_TOKEN, which the app uses as the default token
+// whenever the Settings token field is left blank.
+//
+// secrets.properties wins over the env var on purpose: it's the explicit
+// "bake this key into every APK" default, so a stray ANTHROPIC_AUTH_TOKEN
+// in the build shell (e.g. one exported for an eval run) can't silently
+// leak a different token into the APK.
+//
+// SECURITY: the repo is public, so the real key MUST NOT be committed —
+// it lives only in secrets.properties (gitignored). A token baked into an
+// APK is still extractable by decompiling; treat it as a rotatable key.
+val bakedAuthToken: String = run {
+    val secretsFile = rootProject.file("secrets.properties")
+    if (secretsFile.exists()) {
+        val props = Properties()
+        secretsFile.inputStream().use { props.load(it) }
+        val fromFile = props.getProperty("ANTHROPIC_AUTH_TOKEN", "").trim()
+        if (fromFile.isNotBlank()) return@run fromFile
+    }
+    System.getenv("ANTHROPIC_AUTH_TOKEN")?.trim().orEmpty()
 }
 
 // Huawei AGC plugin — applied via legacy syntax because it's loaded
@@ -47,6 +76,11 @@ android {
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
+
+        // Baked-in default Anthropic token (see `bakedAuthToken` above).
+        // Escaped as a Kotlin string literal for BuildConfig codegen.
+        val escapedToken = bakedAuthToken.replace("\\", "\\\\").replace("\"", "\\\"")
+        buildConfigField("String", "DEFAULT_AUTH_TOKEN", "\"$escapedToken\"")
     }
 
     buildTypes {
@@ -70,6 +104,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"

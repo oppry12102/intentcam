@@ -53,7 +53,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *      corresponding boolean in SharedPreferences is true —
      *      PII actions (`dial_number`, future `read_id_card`,
      *      `pay_*`, etc.) ship OFF by default and require an
-     *      explicit opt-in.  Universal actions (`view_details`,
+     *      explicit opt-in.  Universal actions (`share`,
      *      `open_in_maps`) have `userPrefKey=null` and pass
      *      through unchanged.  The settings UI to flip these
      *      toggles arrives with Phase B (PII framework); for now
@@ -168,6 +168,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             bubble = job.bubble,
                             nRounds = job.nRounds,
                             capturedAtMs = job.createdAtMs,
+                            // [2026-07-15] Surface pending inputs
+                            //  on the snapshot so consumers reading
+                            //  UiState.cycles (debug overlay, future
+                            //  REST API) see the same flow the live
+                            //  UI reads via CycleJob directly.
+                            pendingInputs = job.pendingInputs,
                         )
                     }
                 )
@@ -675,7 +681,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             logDebug("ACTION", "request confirm via=${def.id} prompt=${pending.detail}")
             return
         }
-        executeAndDispatch(def, bubble, emptyMap(), bubbleId)
+        executeAndDispatch(def, bubble, parsedArgsFor(bubble), bubbleId)
     }
 
     /** User tapped the action's "Confirm" button on the consent
@@ -698,7 +704,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // phone bubbles don't re-prompt.  Phase B's settings UI
         // will let the user revoke this.
         def.userPrefKey?.let { settings.saveActionPermission(it, true) }
-        executeAndDispatch(def, bubble, emptyMap(), pending.bubbleId)
+        executeAndDispatch(def, bubble, parsedArgsFor(bubble), pending.bubbleId)
+    }
+
+    /** [2026-07-15] Pre-compute the args map the body wants.
+     *
+     *  Walks every chip action on [bubble], runs each registered
+     *  [ActionInputSpec.parser] against the bubble's text surface,
+     *  and assembles a flat `Map<key, value>` for the body to read.
+     *
+     *  Why pre-compute (not lazy): the body needs all values up-front
+     *  because the dispatch is synchronous; running parsers on every
+     *  chip once at dispatch time keeps the per-tap cost bounded
+     *  (3-4 regex passes against a ≤3 KB text surface).
+     *
+     *  Duplicate keys (rare — happens when two actions on the same
+     *  bubble declare the same `key`) keep the first parser's value,
+     *  matching the orchestrator's per-action precedence. */
+    private fun parsedArgsFor(bubble: Bubble): Map<String, String> {
+        val out = LinkedHashMap<String, String>()
+        bubble.actions.forEach { actionId ->
+            val def = actionRegistry.get(actionId) ?: return@forEach
+            def.requiredInputs.forEach { spec ->
+                if (spec.key !in out) {
+                    spec.parser(bubble)?.let { out[spec.key] = it }
+                }
+            }
+        }
+        return out
     }
 
     /** User dismissed the consent dialog (Cancel / back-press).
@@ -861,7 +894,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun saveConfig(newConfig: LlmConfig) {
         val cfg = newConfig.copy(
             baseUrl = newConfig.baseUrl.ifBlank { LlmConfig.DEFAULT_BASE_URL },
-            authToken = newConfig.authToken.ifBlank { LlmConfig.DEFAULT_TOKEN },
+            authToken = newConfig.authToken.ifBlank { bakedDefaultToken },
             model = newConfig.model.ifBlank { LlmConfig.DEFAULT_MODEL }
         )
         settings.save(cfg)

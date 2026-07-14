@@ -15,7 +15,7 @@
       ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ]
     },
     {
@@ -30,7 +30,7 @@
       ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ]
     },
     {
@@ -45,7 +45,7 @@
       ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ]
     },
     {
@@ -60,7 +60,7 @@
       ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ]
     },
     {
@@ -75,7 +75,7 @@
       ],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ]
     },
     {
@@ -89,7 +89,7 @@
       ],
       "expected_top_intent_type": "recruit_hiring",
       "expected_actions": [
-        "save_posting"
+        "share"
       ]
     },
     {
@@ -104,7 +104,7 @@
       ],
       "expected_top_intent_type": "recruit_hiring",
       "expected_actions": [
-        "save_posting"
+        "share"
       ]
     },
     {
@@ -118,7 +118,7 @@
       ],
       "expected_top_intent_type": "recruit_hiring",
       "expected_actions": [
-        "save_posting"
+        "share"
       ]
     },
     {
@@ -132,7 +132,7 @@
       ],
       "expected_top_intent_type": "recruit_hiring",
       "expected_actions": [
-        "save_posting"
+        "share"
       ]
     },
     {
@@ -146,7 +146,7 @@
       ],
       "expected_top_intent_type": "recruit_hiring",
       "expected_actions": [
-        "save_posting"
+        "share"
       ]
     },
     {

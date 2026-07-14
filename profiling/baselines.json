@@ -2,11 +2,10 @@
   "_meta": {
     "threshold": 0.05,
     "threshold_rationale": "±0.03 typical 20-fixture LLM variance; 0.05 catches true regressions without false-positive noise. See [[feedback-529-contamination-awareness]] for variance bands.",
-    "composite_formula": "[2026-07-14 v3.0] composite_v2 = 0.40*r_actions_recall + 0.30*r_inputs_complete + 0.15*r_rounds_efficiency + 0.10*r_intent_derived + 0.05*r_text. r_inputs_complete and r_rounds_efficiency are 1.0 floors pending Phase E wiring (GT migration + n_rounds propagation through ToolUseLoop).",
-    "composite_formula_legacy": "0.45*r1 + 0.45*r2 + 0.10*r3 (r3 added 2026-07-12). Pre-v3.0 baseline reference; still written to per-fixture JSON as 'composite' alongside 'composite_v2'.",
+    "composite_formula": "[2026-07-15 redesign] composite_v2 = 0.35*r_type + 0.25*r_text + 0.20*r_actions + 0.20*r_inputs. r_type is the new dominant signal (graded 1.0/0.7/0.3/0.0) — restored because the action merge (six share-text actions → one `share` for 7 intents) gutted the old actions_recall / intent_derived signals. r_actions switched from pure recall to Jaccard so over-proposals are penalized. r_rounds_efficiency + the legacy composite (0.45·r1+0.45·r2+0.10·r3) are RETIRED.",
     "image_dir": "/home/oppry/RCTW-171/train_images",
-    "last_updated": "2026-07-14",
-    "last_updated_commit": "b7098fc",
+    "last_updated": "2026-07-15",
+    "last_updated_commit": "PENDING (post-scoring-redesign re-baseline)",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",
       "2026-07-13+": "Local PP-OCRv4 mobile (PaddleOCR 2.7.3, on-prem) — Huawei Cloud retained as fallback only. All prior suites' numbers are reference-only; new baselines below."
@@ -17,36 +16,46 @@
   "suites": [
     {
       "name": "phone_20",
-      "baseline": 0.9112,
+      "baseline": 0.6033,
       "baseline_legacy": 0.907,
       "gt": "profiling/ground_truth_phone_20.json",
       "limit": 20,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.944 (legacy). Pre-PP-OCRv4 (Huawei Cloud) was 0.9575; Δ=-0.013 within noise. 0/20 empty, r2_text fuzzy=1.000. **Re-run after type-refactor (commit 144ba61) measured 0.917, Δ=-0.027 within ±0.03 LLM variance band, 0 contamination** — baseline value unchanged. See memory eval-pp-ocrv4-phone20-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13.\n [2026-07-13] re-measured post r3-fix (commit 355c001): legacy composite 0.907, Δ=-0.037 from 0.944 baseline (just over ±0.03 noise band; r2_type=0.70 dropped from ~0.90 typical, r3=0.750 lifted from 0.50 typical). Investigated: r2 drop is LLM variance, not a regression — pii_20 (other prod suite) lifted +0.018. KEEP fix per investigate-before-revert.\n\n **[2026-07-14 v3.0 — inversion flipped canonical baseline]** composite_v2 = **0.9112** (+0.066 vs legacy 0.907 → +0.004 net). The inversion's thesis validates on phone: LLM picks dial_number without verifier rescue better than the regex crutch did. 85% actions_recall + r_inputs_complete=1.0 (all fixtures have a phone number, parser succeeds). v2 vs legacy: +0.066 because r_actions_recall weight (0.40) > legacy r2_type weight (0.45) once both are perfect-ish."
+      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.944 (legacy). Pre-PP-OCRv4 (Huawei Cloud) was 0.9575; Δ=-0.013 within noise. 0/20 empty, r2_text fuzzy=1.000. **Re-run after type-refactor (commit 144ba61) measured 0.917, Δ=-0.027 within ±0.03 LLM variance band, 0 contamination** — baseline value unchanged. See memory eval-pp-ocrv4-phone20-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13.\n [2026-07-13] re-measured post r3-fix (commit 355c001): legacy composite 0.907, Δ=-0.037 from 0.944 baseline (just over ±0.03 noise band; r2_type=0.70 dropped from ~0.90 typical, r3=0.750 lifted from 0.50 typical). Investigated: r2 drop is LLM variance, not a regression — pii_20 (other prod suite) lifted +0.018. KEEP fix per investigate-before-revert.\n\n **[2026-07-14 v3.0 — inversion flipped canonical baseline]** composite_v2 = **0.9112** (+0.066 vs legacy 0.907 → +0.004 net). The inversion's thesis validates on phone: LLM picks dial_number without verifier rescue better than the regex crutch did. 85% actions_recall + r_inputs_complete=1.0 (all fixtures have a phone number, parser succeeds). v2 vs legacy: +0.066 because r_actions_recall weight (0.40) > legacy r2_type weight (0.45) once both are perfect-ish.",
+      "v3_inputs": 0.85,
+      "v3_actions": 0.3917,
+      "v3_type": 0.3,
+      "v3_text": 1.0
     },
     {
       "name": "phone_20_huawei_cloud_ref",
-      "baseline": 0.8100,
+      "baseline": 0.81,
       "baseline_legacy": 0.9575,
       "gt": "profiling/ground_truth_phone_20.json",
       "limit": 20,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "PRE-PP-OCRv4 reference only (Huawei Cloud). Superseded by phone_20 LOCAL baseline 0.944 on 2026-07-13. Do NOT use for regression checks. [2026-07-14 v3.0] Reference composite_v2 = 0.8100 (legacy 0.9575 retained for historical diff)."
+      "note": "PRE-PP-OCRv4 reference only (Huawei Cloud). Superseded by phone_20 LOCAL baseline 0.944 on 2026-07-13. Do NOT use for regression checks. [2026-07-14 v3.0] Reference composite_v2 = 0.8100 (legacy 0.9575 retained for historical diff).",
+      "v3_type": null,
+      "v3_text": null
     },
     {
       "name": "pii_20",
-      "baseline": 0.7382,
+      "baseline": 0.7281,
       "baseline_legacy": 0.947,
       "gt": "profiling/ground_truth_pii20_60.json",
       "limit": 18,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.929 (legacy). Pre-PP-OCRv4 (Huawei Cloud) was 0.9521; Δ=-0.023 within noise but closer to threshold — pii suite is more sensitive to OCR text quality. 0/18 empty, r2_text fuzzy=1.000. **Server (450MB, CPU) at 0.940 = +0.011 over mobile** — server didn't unstick image_1391/2494 (both stuck at 0.79 in mobile AND server), so remaining -0.012 vs Huawei is type-routing, not OCR quality. **Re-run after type-refactor (commit 144ba61) measured 0.923, Δ=-0.006 within noise** — baseline value unchanged. See memory eval-pp-ocrv4-pii20-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13.\n [2026-07-13] re-measured post r3-fix (commit 355c001): legacy composite 0.947, Δ=+0.018 from 0.929 baseline — improvement! r3=0.778 lifted (verifier canonical injection working for established actions like real_estate_rental → copy_listing). r2_type=0.861 stable. KEEP fix.\n\n **[2026-07-14 v3.0 — inversion flipped canonical baseline]** composite_v2 = **0.7382** (-0.209 vs legacy 0.947 → big regression). actions_recall = 0.50 (LLM picks dial_number only 50% of the time without the verifier rescue). Inversion cost: PII clusters (real_estate / recruit / payment_qr) need the type→canonical mapping. 18 fixtures across real_estate / recruit / id_document / phone; half the time LLM omits the right action."
+      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.929 (legacy). Pre-PP-OCRv4 (Huawei Cloud) was 0.9521; Δ=-0.023 within noise but closer to threshold — pii suite is more sensitive to OCR text quality. 0/18 empty, r2_text fuzzy=1.000. **Server (450MB, CPU) at 0.940 = +0.011 over mobile** — server didn't unstick image_1391/2494 (both stuck at 0.79 in mobile AND server), so remaining -0.012 vs Huawei is type-routing, not OCR quality. **Re-run after type-refactor (commit 144ba61) measured 0.923, Δ=-0.006 within noise** — baseline value unchanged. See memory eval-pp-ocrv4-pii20-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13.\n [2026-07-13] re-measured post r3-fix (commit 355c001): legacy composite 0.947, Δ=+0.018 from 0.929 baseline — improvement! r3=0.778 lifted (verifier canonical injection working for established actions like real_estate_rental → copy_listing). r2_type=0.861 stable. KEEP fix.\n\n **[2026-07-14 v3.0 — inversion flipped canonical baseline]** composite_v2 = **0.7382** (-0.209 vs legacy 0.947 → big regression). actions_recall = 0.50 (LLM picks dial_number only 50% of the time without the verifier rescue). Inversion cost: PII clusters (real_estate / recruit / payment_qr) need the type→canonical mapping. 18 fixtures across real_estate / recruit / id_document / phone; half the time LLM omits the right action.",
+      "v3_inputs": 1.0,
+      "v3_actions": 0.5833,
+      "v3_type": 0.4611,
+      "v3_text": 1.0
     },
     {
       "name": "pii_20_server_cpu",
@@ -57,7 +66,9 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "**SERVER-CPU reference (LOCAL_OCR_KIND=server, 450MB model, 27 s/img CPU) — 2026-07-13**. Composite 0.940 (legacy). mobile=0.929 (+0.011 lift), Huawei Cloud=0.9521 (-0.012 in noise). Not the default baseline (server is 11x slower for iter); tracked as best-effort reference. Use LOCAL_OCR_KIND=server gradle :shared:eval --args=... to reproduce. (Reference only; no mobile re-run at commit 144ba61 since CPU is 11x slower per iter.)\n **[2026-07-14] post r3-fix (commit 355c001) pii20_60 server-CPU re-measure** (`summary_20260714_005010`): legacy composite **0.9701, Δ=+0.006 over mobile baseline 0.9639**. image_1391 lifted 0.8875→1.000 (r2_text 0.75→1.00, server finds the missing PII token that mobile misses). image_2494 unchanged at 0.788 — server-CPU fixes r2_text issues but image_2494's bottleneck is r2_type (LLM mis-classifies as info), not OCR.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8493** (-0.091 vs legacy 0.94). Same inversion cost as pii_20 (server OCR doesn't rescue the missing verifier)."
+      "note": "**SERVER-CPU reference (LOCAL_OCR_KIND=server, 450MB model, 27 s/img CPU) — 2026-07-13**. Composite 0.940 (legacy). mobile=0.929 (+0.011 lift), Huawei Cloud=0.9521 (-0.012 in noise). Not the default baseline (server is 11x slower for iter); tracked as best-effort reference. Use LOCAL_OCR_KIND=server gradle :shared:eval --args=... to reproduce. (Reference only; no mobile re-run at commit 144ba61 since CPU is 11x slower per iter.)\n **[2026-07-14] post r3-fix (commit 355c001) pii20_60 server-CPU re-measure** (`summary_20260714_005010`): legacy composite **0.9701, Δ=+0.006 over mobile baseline 0.9639**. image_1391 lifted 0.8875→1.000 (r2_text 0.75→1.00, server finds the missing PII token that mobile misses). image_2494 unchanged at 0.788 — server-CPU fixes r2_text issues but image_2494's bottleneck is r2_type (LLM mis-classifies as info), not OCR.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8493** (-0.091 vs legacy 0.94). Same inversion cost as pii_20 (server OCR doesn't rescue the missing verifier).",
+      "v3_type": null,
+      "v3_text": null
     },
     {
       "name": "pii_20_huawei_cloud_ref",
@@ -68,18 +79,24 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "PRE-PP-OCRv4 reference only (Huawei Cloud). Superseded by pii_20 LOCAL baseline 0.929 on 2026-07-13. Do NOT use for regression checks. [2026-07-14 v3.0] Reference composite_v2 = 0.8181 (legacy 0.9521 retained for historical diff)."
+      "note": "PRE-PP-OCRv4 reference only (Huawei Cloud). Superseded by pii_20 LOCAL baseline 0.929 on 2026-07-13. Do NOT use for regression checks. [2026-07-14 v3.0] Reference composite_v2 = 0.8181 (legacy 0.9521 retained for historical diff).",
+      "v3_type": null,
+      "v3_text": null
     },
     {
       "name": "direction_arrow_20",
-      "baseline": 0.8462,
+      "baseline": 0.7767,
       "baseline_legacy": 0.995,
       "gt": "profiling/ground_truth_direction_arrow_60.json",
       "limit": 20,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.974 (legacy). Pre-PP-OCRv4 (Huawei Cloud) was 0.9694; Δ=+0.005 (basically identical). 0/20 empty, r2_text fuzzy=1.000. **Re-run after type-refactor (commit 144ba61) measured 0.975, Δ=+0.001 within noise** — baseline value unchanged. See memory eval-pp-ocrv4-direction-arrow-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13.\n [2026-07-13] re-measured post r3-fix (commit 355c001) in 8-suite regression net: legacy composite 0.995, Δ=+0.021 from 0.974 prior — genuine lift. r3=0.95+ (route_to action canonical injection working on direction-arrow fixtures). 0 contamination. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8462** (-0.149 vs legacy 0.995). actions_recall = 0.70. LLM picks open_in_maps 70% of the time but omits in 30% (the verifier's Pass 11 was carrying that 30%). route_to itself still works, but the action recall is the limiting factor."
+      "note": "**LOCAL OCR BASELINE (PP-OCRv4 mobile, 2026-07-13)** — composite 0.974 (legacy). Pre-PP-OCRv4 (Huawei Cloud) was 0.9694; Δ=+0.005 (basically identical). 0/20 empty, r2_text fuzzy=1.000. **Re-run after type-refactor (commit 144ba61) measured 0.975, Δ=+0.001 within noise** — baseline value unchanged. See memory eval-pp-ocrv4-direction-arrow-baseline-2026-07-13 + type-intentfocus-unify-2026-07-13.\n [2026-07-13] re-measured post r3-fix (commit 355c001) in 8-suite regression net: legacy composite 0.995, Δ=+0.021 from 0.974 prior — genuine lift. r3=0.95+ (route_to action canonical injection working on direction-arrow fixtures). 0 contamination. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8462** (-0.149 vs legacy 0.995). actions_recall = 0.70. LLM picks open_in_maps 70% of the time but omits in 30% (the verifier's Pass 11 was carrying that 30%). route_to itself still works, but the action recall is the limiting factor.",
+      "v3_inputs": 1.0,
+      "v3_actions": 0.4083,
+      "v3_type": 0.7,
+      "v3_text": 1.0
     },
     {
       "name": "direction_arrow_20_huawei_cloud_ref",
@@ -90,95 +107,129 @@
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "PRE-PP-OCRv4 reference only (Huawei Cloud). Superseded by direction_arrow_20 LOCAL baseline 0.974 on 2026-07-13. Do NOT use for regression checks. [2026-07-14 v3.0] Reference composite_v2 = 0.8212 (legacy 0.9694 retained)."
+      "note": "PRE-PP-OCRv4 reference only (Huawei Cloud). Superseded by direction_arrow_20 LOCAL baseline 0.974 on 2026-07-13. Do NOT use for regression checks. [2026-07-14 v3.0] Reference composite_v2 = 0.8212 (legacy 0.9694 retained).",
+      "v3_type": null,
+      "v3_text": null
     },
     {
       "name": "phaseG_15",
-      "baseline": 0.7992,
+      "baseline": 0.8192,
       "baseline_legacy": 0.959,
       "gt": "profiling/ground_truth_phaseG_15.json",
       "limit": 15,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "Phase G mini-suite — warning/menu/hours intents. [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.909 (FAIL -0.064) → image_1097 transient (error) (composite=1.0 in 2 prior runs). Retry at 221637 composite=0.959 (PASS -0.014 within ±0.03 noise band). image_1097 recovered to composite=1.0 picked_tool=zoom_in. 0 errors / 15 in retry. Confirmed the original FAIL was transient API noise on a single fixture, NOT a r3-fix regression. New baseline 0.959 = retry value; baseline kept originally at 0.973 was on a non-contaminated run. KEEP r3 fix.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.7992** (-0.160 vs legacy 0.959). actions_recall = 0.60. **Biggest OBSERVE-family drop**. The verifier Pass 8/9/10 (info + warning/menu/hours → flip + canonical action injection) was carrying 60% of these fixtures. Without it, LLM picks copy_warning/menu/hours only 60% of the time. Future re-introduction of the verifier as a 'soft hint' in system prompt should recover most of this."
+      "note": "Phase G mini-suite — warning/menu/hours intents. [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.909 (FAIL -0.064) → image_1097 transient (error) (composite=1.0 in 2 prior runs). Retry at 221637 composite=0.959 (PASS -0.014 within ±0.03 noise band). image_1097 recovered to composite=1.0 picked_tool=zoom_in. 0 errors / 15 in retry. Confirmed the original FAIL was transient API noise on a single fixture, NOT a r3-fix regression. New baseline 0.959 = retry value; baseline kept originally at 0.973 was on a non-contaminated run. KEEP r3 fix.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.7992** (-0.160 vs legacy 0.959). actions_recall = 0.60. **Biggest OBSERVE-family drop**. The verifier Pass 8/9/10 (info + warning/menu/hours → flip + canonical action injection) was carrying 60% of these fixtures. Without it, LLM picks copy_warning/menu/hours only 60% of the time. Future re-introduction of the verifier as a 'soft hint' in system prompt should recover most of this.",
+      "v3_inputs": 0.9333,
+      "v3_actions": 0.7111,
+      "v3_type": 0.6867,
+      "v3_text": 1.0
     },
     {
       "name": "shopping_promo_20",
-      "baseline": 0.7712,
+      "baseline": 0.7949,
       "baseline_legacy": 0.9431,
       "gt": "profiling/ground_truth_shopping_promo_20.json",
       "limit": 20,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "Phase J mini-suite — shopping_promo intent (rank #7 in scan_intents.py, 351 imgs in corpus). r2_text fuzzy=1.000, r2_type=1.000 (classification perfect on 14/20). **r3_actions=0.450** after verifier canonical-injection fix (commit 355c001; was 0.350 at 6f87e00). composite 0.901 (Δ=-0.017 vs 0.918 pre-fix, within ±0.03 noise band). -0.017 sources: 1 Outcome.Error on image_2192 (HTTP 400 API noise, retry) + 5 GT false-positives (image_2562/2898/3533/5271/7814 auto-scaled as shopping_promo but OCR surface text lacks PROMO keywords — hand-curate in follow-up). Per-category: price_discount 0.967 / sale_promotion 0.923 / flash_sale 0.894 / general_promo 0.896 / coupon_voucher 0.815.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.943, Δ=+0.042 from 0.901 prior — genuine lift. r3 actions up (canonical-injection working on copy_promo + others). 0 contamination. PASS. Per-baseline lift factor: ~1/3 of fixtures previously missing canonical now hit; remaining 5 GT false-positives still 0; their gap capped at ≈ 0.05 → headroom for further gain by GT hand-curation.\n [2026-07-13] image_3533 curated (commit 99b5e90) → retyped from shopping_promo to location/open_in_maps (eyeglass 店招 at 鲁巷广场, dominant signal is location). Post-curation re-measure composite=0.942 (Δ=-0.001 within noise): image_3533 fixture-level lifted 0.9→1.0 as expected, but offset by LLM variance drift on 3 sibling fixtures (image_5271 -0.21, image_7814 -0.10, image_3968 -0.10). f017733 had correctly kept image_5271/7814 as shopping_promo (those PROMO tokens are real) — those GTs are right; the drift is on the LLM side, not GT. Baseline kept at 0.943.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.7712** (-0.172 vs legacy 0.943). actions_recall = 0.55. verifier Pass 13 (info + PROMO + !REAL_ESTATE + !MENU → shopping_promo + canonical copy_promo) was carrying ~45% of these fixtures."
+      "note": "Phase J mini-suite — shopping_promo intent (rank #7 in scan_intents.py, 351 imgs in corpus). r2_text fuzzy=1.000, r2_type=1.000 (classification perfect on 14/20). **r3_actions=0.450** after verifier canonical-injection fix (commit 355c001; was 0.350 at 6f87e00). composite 0.901 (Δ=-0.017 vs 0.918 pre-fix, within ±0.03 noise band). -0.017 sources: 1 Outcome.Error on image_2192 (HTTP 400 API noise, retry) + 5 GT false-positives (image_2562/2898/3533/5271/7814 auto-scaled as shopping_promo but OCR surface text lacks PROMO keywords — hand-curate in follow-up). Per-category: price_discount 0.967 / sale_promotion 0.923 / flash_sale 0.894 / general_promo 0.896 / coupon_voucher 0.815.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.943, Δ=+0.042 from 0.901 prior — genuine lift. r3 actions up (canonical-injection working on copy_promo + others). 0 contamination. PASS. Per-baseline lift factor: ~1/3 of fixtures previously missing canonical now hit; remaining 5 GT false-positives still 0; their gap capped at ≈ 0.05 → headroom for further gain by GT hand-curation.\n [2026-07-13] image_3533 curated (commit 99b5e90) → retyped from shopping_promo to location/open_in_maps (eyeglass 店招 at 鲁巷广场, dominant signal is location). Post-curation re-measure composite=0.942 (Δ=-0.001 within noise): image_3533 fixture-level lifted 0.9→1.0 as expected, but offset by LLM variance drift on 3 sibling fixtures (image_5271 -0.21, image_7814 -0.10, image_3968 -0.10). f017733 had correctly kept image_5271/7814 as shopping_promo (those PROMO tokens are real) — those GTs are right; the drift is on the LLM side, not GT. Baseline kept at 0.943.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.7712** (-0.172 vs legacy 0.943). actions_recall = 0.55. verifier Pass 13 (info + PROMO + !REAL_ESTATE + !MENU → shopping_promo + canonical copy_promo) was carrying ~45% of these fixtures.",
+      "v3_inputs": 1.0,
+      "v3_actions": 0.5083,
+      "v3_type": 0.695,
+      "v3_text": 1.0
     },
     {
       "name": "phone_60",
-      "baseline": 0.8966,
+      "baseline": 0.6235,
       "baseline_legacy": 0.9184,
       "gt": "profiling/ground_truth_phone_60.json",
       "limit": 55,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "55-fixture scaled suite (post-Phase-I + GT reclass v2). v5: 0.9200 (single run, LLM variance). v4 was 0.9307 (1 fewer reclass pass). v5 < v4 because LLM variance hits remaining fixtures; 4 newly moved fixtures (image_1882/6636/7296/7376) all score higher in service_institution_60 (composite 1.00/0.89/1.00/0.90). TRUE Phase I Δ ≈ -0.04 (avg of v4+v5 vs PRE 0.9617); within Phase I framework extension cost.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.9184, Δ=-0.002 from 0.9200 prior — within noise. 0 contamination. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8966** (-0.022 vs legacy 0.9184). actions_recall = 0.82. Phone is the inversion's biggest win — verified at scale (55 fixtures). LLM picks dial_number 82% of the time without the verifier rescue, beating the 13-bucket legacy r2_type=0.50 by ~0.05 in the weighted average."
+      "note": "55-fixture scaled suite (post-Phase-I + GT reclass v2). v5: 0.9200 (single run, LLM variance). v4 was 0.9307 (1 fewer reclass pass). v5 < v4 because LLM variance hits remaining fixtures; 4 newly moved fixtures (image_1882/6636/7296/7376) all score higher in service_institution_60 (composite 1.00/0.89/1.00/0.90). TRUE Phase I Δ ≈ -0.04 (avg of v4+v5 vs PRE 0.9617); within Phase I framework extension cost.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.9184, Δ=-0.002 from 0.9200 prior — within noise. 0 contamination. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8966** (-0.022 vs legacy 0.9184). actions_recall = 0.82. Phone is the inversion's biggest win — verified at scale (55 fixtures). LLM picks dial_number 82% of the time without the verifier rescue, beating the 13-bucket legacy r2_type=0.50 by ~0.05 in the weighted average.",
+      "v3_type": 0.3,
+      "v3_text": 1.0,
+      "v3_actions": 0.3424,
+      "v3_inputs": 1.0
     },
     {
       "name": "pii20_60",
-      "baseline": 0.8236,
+      "baseline": 0.7106,
       "baseline_legacy": 0.9639,
       "gt": "profiling/ground_truth_pii20_60.json",
       "limit": 18,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (西医诊所) → service_institution_60, lifting composite +0.0165 from v3 0.9356. **TRUE Phase I Δ = -0.0061 vs pre-Phase-I 0.9582 (within noise)**.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.9639, Δ=+0.012 from 0.9521 prior — small genuine lift. r3 (canonical actions like redact_id / copy_listing) up. 0 contamination. PASS.\n [2026-07-14] server-CPU cross-check (`summary_20260714_005010`): legacy composite 0.9701, Δ=+0.006 over mobile baseline 0.9639. image_1391 (湘华名邸 promo) lifted 0.8875→1.000 as r2_text recovered from 0.75 to 1.00. Reference-only via pii_20_server_cpu entry; default backend stays mobile.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8236** (-0.140 vs legacy 0.9639). Same PII cost as pii_20; LLM without verifier omits copy_listing / redact_id on ~33% of fixtures."
+      "note": "18-fixture suite (post-Phase-I + GT reclass). v4: 0.9521. Reclassified image_2372/2540 (西医诊所) → service_institution_60, lifting composite +0.0165 from v3 0.9356. **TRUE Phase I Δ = -0.0061 vs pre-Phase-I 0.9582 (within noise)**.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.9639, Δ=+0.012 from 0.9521 prior — small genuine lift. r3 (canonical actions like redact_id / copy_listing) up. 0 contamination. PASS.\n [2026-07-14] server-CPU cross-check (`summary_20260714_005010`): legacy composite 0.9701, Δ=+0.006 over mobile baseline 0.9639. image_1391 (湘华名邸 promo) lifted 0.8875→1.000 as r2_text recovered from 0.75 to 1.00. Reference-only via pii_20_server_cpu entry; default backend stays mobile.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8236** (-0.140 vs legacy 0.9639). Same PII cost as pii_20; LLM without verifier omits copy_listing / redact_id on ~33% of fixtures.",
+      "v3_type": 0.4111,
+      "v3_text": 1.0,
+      "v3_actions": 0.5833,
+      "v3_inputs": 1.0
     },
     {
       "name": "direction_arrow_60",
-      "baseline": 0.8500,
+      "baseline": 0.7883,
       "baseline_legacy": 0.99,
       "gt": "profiling/ground_truth_direction_arrow_60.json",
       "limit": 20,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "20-fixture suite (corpus-limited — clean GT; previous v1 baseline 0.9337 was on 54-fixture file with 34 duplicates). **TRUE Phase I Δ = +0.0206 vs pre-Phase-I 0.9488 (improvement; Pass 12 doesn't fire on direction_arrow, but llmHint may slightly help)**.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.990, Δ=+0.021 from 0.9694 prior — genuine lift. r3 (route_to canonical action) up. 0 contamination. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8500** (-0.140 vs legacy 0.99). Same direction-arrow cost as _20 variant; LLM picks open_in_maps (location family) more often than route_to, costing actions_recall."
+      "note": "20-fixture suite (corpus-limited — clean GT; previous v1 baseline 0.9337 was on 54-fixture file with 34 duplicates). **TRUE Phase I Δ = +0.0206 vs pre-Phase-I 0.9488 (improvement; Pass 12 doesn't fire on direction_arrow, but llmHint may slightly help)**.\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.990, Δ=+0.021 from 0.9694 prior — genuine lift. r3 (route_to canonical action) up. 0 contamination. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8500** (-0.140 vs legacy 0.99). Same direction-arrow cost as _20 variant; LLM picks open_in_maps (location family) more often than route_to, costing actions_recall.",
+      "v3_type": 0.7,
+      "v3_text": 1.0,
+      "v3_actions": 0.4667,
+      "v3_inputs": 1.0
     },
     {
       "name": "service_institution_60",
-      "baseline": 0.8646,
+      "baseline": 0.7759,
       "baseline_legacy": 0.9765,
       "gt": "profiling/ground_truth_service_institution_60.json",
       "limit": 67,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "67-fixture Phase I suite — 13th intent, OBSERVE family. v3: 0.9701 (was 63-fixture 0.9664 in v2). +4 reclassified fixtures from phone_60 (image_1882/6636/7296/7376) all scored ≥0.89 in service_institution. 11 categories (medical 22 / education 22 / government_admin 12 / financial 5 / government_law 3 / school_childcare 1 / clinic 1 / training 1 / childcare 1 / gov_service 1).\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.9765, Δ=+0.006 from 0.9701 prior — within noise band. 1 transient (error) fixture (image_6134, 0.36); 66/67 within noise. 0 contamination otherwise. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8646** (-0.112 vs legacy 0.9765). actions_recall = 0.73. verifier Pass 12 was carrying ~27% of these fixtures (LLM defaults to location/info for institution signs without the type→canonical hint)."
+      "note": "67-fixture Phase I suite — 13th intent, OBSERVE family. v3: 0.9701 (was 63-fixture 0.9664 in v2). +4 reclassified fixtures from phone_60 (image_1882/6636/7296/7376) all scored ≥0.89 in service_institution. 11 categories (medical 22 / education 22 / government_admin 12 / financial 5 / government_law 3 / school_childcare 1 / clinic 1 / training 1 / childcare 1 / gov_service 1).\n [2026-07-13] re-measured post r3-fix in 8-suite regression net: legacy composite 0.9765, Δ=+0.006 from 0.9701 prior — within noise band. 1 transient (error) fixture (image_6134, 0.36); 66/67 within noise. 0 contamination otherwise. PASS.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8646** (-0.112 vs legacy 0.9765). actions_recall = 0.73. verifier Pass 12 was carrying ~27% of these fixtures (LLM defaults to location/info for institution signs without the type→canonical hint).",
+      "v3_inputs": 0.9851,
+      "v3_actions": 0.4378,
+      "v3_type": 0.6896,
+      "v3_text": 1.0
     },
     {
       "name": "real_estate_rental_11",
-      "baseline": 0.5875,
+      "baseline": 0.6583,
       "baseline_legacy": 0.957,
       "gt": "profiling/ground_truth_real_estate_rental_11.json",
       "limit": 10,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "11-fixture real_estate_rental mini-suite (Phase K precursor). All 11 fixtures match the REAL_ESTATE regex (IntentVerifier.kt:73) so Pass 7's !REAL_ESTATE guard does not misfire to phone. Categories: developer_promo 6, residential_listing 1, brokerage 1, commercial_floor 1, minimal_signage 1. Canonical action: copy_listing.\n [2026-07-14] inaugural 12-fixture baseline 0.938 was on the un-hinted hint (`summary_20260714_005349`); 4 partials at r2_type=0.5 (LLM classified as info).\n [2026-07-14] `feat(framework)` llmHint broader + image_572 retyped OUT to phone (commit 1a2d393). llmHint changed to `房地产：出租 / 出售 / 二手房 / 楼盘 / 户型 / 平米 / 急售 / 吉房 / 中介 / 物业`. Suite renamed _12 → _11, limit 12 → 11.\n [2026-07-14] post-hint 11-fixture (`summary_20260714_045556`): legacy composite **0.923**. 8/11 perfect (image_1090/2562/3034/3285/3406/5024/6214/_one_more). 3/11 partial at 0.788 (image_231/1956/5674/6915, r2_type=0.5 — LLM defaults to info despite the hint). Δ vs 0.938 = -0.015 within noise. PASS.\n\n [2026-07-14 post-verifier-fix] ToolUseLoop.kt canonical-injection robustified (commit 6456839). Suite legacy composite 0.923→0.981 (+0.058 lift). 10/11 perfect. 1 remaining partial: image_231 at 0.788 r2_type=0.5 (LLM defaults broker ad to info; not a verifier bug). baseline_commit updated.\n\n [2026-07-14 image_231 dropped] Real_estate_rental suite trimmed from 11 → 10 fixtures after multiple reclass attempts failed (broker + phone mixed-content ad). See commit-message for the 4-attempt history. cleaner to drop than to misrepresent a mixed-content broker ad as one specific intent.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.5875** (-0.370 vs legacy 0.957). **Biggest regression in v3.0**. actions_recall = 0.20. The verifier Pass 1c/5 + canonical copy_listing injection was carrying 80% of these fixtures. LLM without rescue picks copy_listing only 20% (defaults to save_posting / dial_number on real_estate signs). Inversion cost on small (10-fixture) suites is amplified."
+      "note": "11-fixture real_estate_rental mini-suite (Phase K precursor). All 11 fixtures match the REAL_ESTATE regex (IntentVerifier.kt:73) so Pass 7's !REAL_ESTATE guard does not misfire to phone. Categories: developer_promo 6, residential_listing 1, brokerage 1, commercial_floor 1, minimal_signage 1. Canonical action: copy_listing.\n [2026-07-14] inaugural 12-fixture baseline 0.938 was on the un-hinted hint (`summary_20260714_005349`); 4 partials at r2_type=0.5 (LLM classified as info).\n [2026-07-14] `feat(framework)` llmHint broader + image_572 retyped OUT to phone (commit 1a2d393). llmHint changed to `房地产：出租 / 出售 / 二手房 / 楼盘 / 户型 / 平米 / 急售 / 吉房 / 中介 / 物业`. Suite renamed _12 → _11, limit 12 → 11.\n [2026-07-14] post-hint 11-fixture (`summary_20260714_045556`): legacy composite **0.923**. 8/11 perfect (image_1090/2562/3034/3285/3406/5024/6214/_one_more). 3/11 partial at 0.788 (image_231/1956/5674/6915, r2_type=0.5 — LLM defaults to info despite the hint). Δ vs 0.938 = -0.015 within noise. PASS.\n\n [2026-07-14 post-verifier-fix] ToolUseLoop.kt canonical-injection robustified (commit 6456839). Suite legacy composite 0.923→0.981 (+0.058 lift). 10/11 perfect. 1 remaining partial: image_231 at 0.788 r2_type=0.5 (LLM defaults broker ad to info; not a verifier bug). baseline_commit updated.\n\n [2026-07-14 image_231 dropped] Real_estate_rental suite trimmed from 11 → 10 fixtures after multiple reclass attempts failed (broker + phone mixed-content ad). See commit-message for the 4-attempt history. cleaner to drop than to misrepresent a mixed-content broker ad as one specific intent.\n\n **[2026-07-14 v3.0]** composite_v2 = **0.5875** (-0.370 vs legacy 0.957). **Biggest regression in v3.0**. actions_recall = 0.20. The verifier Pass 1c/5 + canonical copy_listing injection was carrying 80% of these fixtures. LLM without rescue picks copy_listing only 20% (defaults to save_posting / dial_number on real_estate signs). Inversion cost on small (10-fixture) suites is amplified.",
+      "v3_type": 0.3,
+      "v3_text": 1.0,
+      "v3_actions": 0.5167,
+      "v3_inputs": 1.0
     },
     {
       "name": "recruit_hiring_11",
-      "baseline": 0.8477,
+      "baseline": 0.6398,
       "baseline_legacy": 0.97,
       "gt": "profiling/ground_truth_recruit_hiring_13.json",
       "limit": 11,
       "resize": 3200,
       "quality": 90,
       "baseline_commit": "b7098fc",
-      "note": "13-fixture recruit_hiring mini-suite (Phase K-light). All 13 fixtures match the verifier's RECRUIT regex (IntentVerifier.kt:67) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire. Categories: restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.\n [2026-07-14] inaugural baseline (`summary_20260714_050500`): legacy composite **0.960**. 10/13 perfect (1.000) including canonical recruit fixtures (image_1193/1405/1440/2418/3030/4641/4767/7506/7746/7869). 3 partial: image_7234 (0.900, r3=0 — verifier missing-canonical injection did NOT add save_posting despite verifiedType=recruit_hiring; LLM emitted dial_number + view_details and the verifier kept them unchanged), image_3553 (0.788, r2_type=0.5 — LLM classified as location because of 餐厅 anchor), image_5380 (0.788, r2_type=0.5 — same location bias). The image_7234 r3=0 case is a known verifier bug surfaced by this suite — investigated but not fixed in this round.\n\n [2026-07-14 post-fix] ToolUseLoop.kt canonical-injection bug fixed (image_7234 r3 0→1, suite legacy composite 0.960→0.992, +0.032 lift). 1 remaining partial: image_5380 at 0.900 r3=0 (likely separate edge case — diagnostic pending; rerun is `summary_20260714_053627`).\n\n [2026-07-14 trimmed to 9 fixtures] Dropped image_5380/3553/4641/1440 — verifier can't reliably flip menu_food/location → recruit_hiring when 招聘 token is present alongside dominant menu/service content. See GT note for each. Suite renamed _13 → _9 to reflect new fixture count.\n\n [2026-07-14c re-add] Image_5380 + image_4641 re-added with verifier Pass 4b (menu_food + 招聘 + job-title word → recruit_hiring). Suite renamed _9 → _11.\n\n [2026-07-14 Phase L] Verifier Pass 4b (menu_food + recruit POSTER → recruit_hiring) lifts r2_type for image_5380 (重庆渔翁鱼庄) and image_4641 (吉祥馄饨) both 1.0 → 1.0. Suite expanded 9 → 11 fixtures; new baseline 0.970 (Δ=-0.006 vs prior 0.976, within ±0.03 noise band — confirms re-adds via Pass 4b are sound, remaining partials are LLM variance on image_3030/7869).\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8477** (-0.122 vs legacy 0.970). actions_recall = 0.73. Pass 4 + Pass 4b were carrying 27% of these fixtures."
+      "note": "13-fixture recruit_hiring mini-suite (Phase K-light). All 13 fixtures match the verifier's RECRUIT regex (IntentVerifier.kt:67) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire. Categories: restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.\n [2026-07-14] inaugural baseline (`summary_20260714_050500`): legacy composite **0.960**. 10/13 perfect (1.000) including canonical recruit fixtures (image_1193/1405/1440/2418/3030/4641/4767/7506/7746/7869). 3 partial: image_7234 (0.900, r3=0 — verifier missing-canonical injection did NOT add save_posting despite verifiedType=recruit_hiring; LLM emitted dial_number + view_details and the verifier kept them unchanged), image_3553 (0.788, r2_type=0.5 — LLM classified as location because of 餐厅 anchor), image_5380 (0.788, r2_type=0.5 — same location bias). The image_7234 r3=0 case is a known verifier bug surfaced by this suite — investigated but not fixed in this round.\n\n [2026-07-14 post-fix] ToolUseLoop.kt canonical-injection bug fixed (image_7234 r3 0→1, suite legacy composite 0.960→0.992, +0.032 lift). 1 remaining partial: image_5380 at 0.900 r3=0 (likely separate edge case — diagnostic pending; rerun is `summary_20260714_053627`).\n\n [2026-07-14 trimmed to 9 fixtures] Dropped image_5380/3553/4641/1440 — verifier can't reliably flip menu_food/location → recruit_hiring when 招聘 token is present alongside dominant menu/service content. See GT note for each. Suite renamed _13 → _9 to reflect new fixture count.\n\n [2026-07-14c re-add] Image_5380 + image_4641 re-added with verifier Pass 4b (menu_food + 招聘 + job-title word → recruit_hiring). Suite renamed _9 → _11.\n\n [2026-07-14 Phase L] Verifier Pass 4b (menu_food + recruit POSTER → recruit_hiring) lifts r2_type for image_5380 (重庆渔翁鱼庄) and image_4641 (吉祥馄饨) both 1.0 → 1.0. Suite expanded 9 → 11 fixtures; new baseline 0.970 (Δ=-0.006 vs prior 0.976, within ±0.03 noise band — confirms re-adds via Pass 4b are sound, remaining partials are LLM variance on image_3030/7869).\n\n **[2026-07-14 v3.0]** composite_v2 = **0.8477** (-0.122 vs legacy 0.970). actions_recall = 0.73. Pass 4 + Pass 4b were carrying 27% of these fixtures.",
+      "v3_type": 0.3,
+      "v3_text": 1.0,
+      "v3_actions": 0.4242,
+      "v3_inputs": 1.0
     }
   ]
 }

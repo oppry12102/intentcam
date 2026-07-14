@@ -11,9 +11,9 @@ import android.content.Context
  *                              maps / browser / share / etc.)
  *   - [ShowUiFeedback]       — Toast or in-app banner with [message]
  *   - [None]                 — no-op; reserved for actions whose
- *                              effect is purely UI-side (e.g.
- *                              "view_details" jumps to a detail
- *                              screen — but that's now handled by
+ *                              effect is purely UI-side (e.g. a
+ *                              chip whose effect is jumping to a
+ *                              detail screen — currently handled by
  *                              tapping the bubble card itself).
  *   - [RequestArgs]          — the action needs user-supplied
  *                              arguments before it can fire.  AppViewModel
@@ -109,8 +109,8 @@ data class ActionDef(
      *  orchestrator (`ActionOrchestrator.validateInputs`) drives
      *  the live-UI ghost-chip state and the LLM's targeted
      *  exploration framing from this list.  Empty = action is
-     *  always fireable as soon as the user taps it (e.g. copy
-     *  actions, view_details). */
+     *  always fireable as soon as the user taps it (e.g. the
+     *  Toast-only stubs `scan_to_pay` / `redact_id`). */
     val requiredInputs: List<ActionInputSpec> = emptyList(),
     /** [2026-07-14 Phase A] Display priority when multiple chips
      *  show on the same bubble.  Higher = more prominent.
@@ -151,14 +151,6 @@ class ActionRegistry {
     fun get(id: String): ActionDef? = byId[id]
     fun list(): List<ActionDef> = byId.values.toList()
     fun allIds(): List<String> = byId.keys.toList()
-
-    companion object {
-        /** Reserved id for actions that just bring the user to the
-         *  detail screen.  Not currently wired in step 3 (the bubble
-         *  card itself opens detail), but kept as a reference for
-         *  future "chip = same as tap card" semantics. */
-        const val DEFAULT_ID = "view_details"
-    }
 }
 
 /** Register IntentCam's default actions.  Adding a new action = add
@@ -172,15 +164,6 @@ class ActionRegistry {
  *  will opt into families — e.g. `share` over ACT_ON, `set reminder`
  *  universal. */
 fun registerDefaultActions(reg: ActionRegistry) {
-    reg.register(ActionDef(
-        id = ActionRegistry.DEFAULT_ID,
-        label = "查看详情",
-        iconKey = "expand",
-        applicableIntents = setOf("info", "location", "solve"),
-        // The bubble card itself opens detail on tap; this action
-        // is registered for completeness but its body is no-op.
-        body = { _, _, _ -> ActionOutcome.None },
-    ))
     // First real outbound action: open a location bubble in maps.
     // Android Intent geo:0,0?q=… opens the user's default maps app
     // (百度/高德/Google Maps) with a query string.  No confirmation —
@@ -195,16 +178,18 @@ fun registerDefaultActions(reg: ActionRegistry) {
             label = "地点或地址",
             parser = InputParsers.locationQuery,
         )),
-        body = { _, bubble, _ ->
-            // Query = the user's intent (动宾短语) if present, else
-            // the scene description.  Maps app will resolve however
-            // it's configured (geocode search vs literal match).
-            // [2026-07-12 Phase H] Also serves `route_to` bubbles —
-            // the same geo: URI maps-app-launch covers both "find
-            // this place" and "navigate to this place"; differs in
-            // intent classification only.  See IntentVerifier Pass 11.
-            val query = bubble.title.takeIf { it.isNotBlank() }
-                ?: bubble.detail.take(40).ifBlank { "附近" }
+        body = { _, bubble, args ->
+            // [2026-07-15] Prefer the orchestrator-parsed `query`
+            //  from `args` when present (orchestrator-driven path:
+            //  parser already validated the value against bubble's
+            //  text surface).  Fall back to inline extraction when
+            //  args is empty (legacy path: user tapped a chip
+            //  before the orchestrator's gate ran, or the parser
+            //  couldn't extract).  "附近" is the last-resort
+            //  default when the bubble is text-empty.
+            val query = args["query"]
+                ?: bubble.title.takeIf { it.isNotBlank() }
+                    ?: bubble.detail.take(40).ifBlank { "附近" }
             val intent = android.content.Intent(
                 android.content.Intent.ACTION_VIEW,
                 android.net.Uri.parse(
@@ -241,7 +226,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         )),
         requiresConfirmation = true,
         userPrefKey = "action_dial_number_enabled",
-        body = { _, bubble, _ ->
+        body = { _, bubble, args ->
             // Phone extractor: pull the first plausible phone number
             // from title / detail / details[].value.  Order priority:
             //   1. mobile (1xxxxxxxxxx) — most likely intended target
@@ -251,84 +236,31 @@ fun registerDefaultActions(reg: ActionRegistry) {
             //  prefixes; strip those.  Returns null on no match —
             //  the action then surfaces a Toast instead of firing
             //  a bogus Intent.
+            // [2026-07-15] Prefer the orchestrator-parsed
+            //  `phone_number` from `args` (validated path); fall
+            //  back to inline PhoneExtractor (user-form path or
+            //  legacy chip-tap before orchestrator gate).
+            val number = args["phone_number"] ?: PhoneExtractor.firstMatch(bubble)
             val outcome: ActionOutcome =
-                PhoneExtractor.firstMatch(bubble)?.let { number ->
+                number?.let {
                     ActionOutcome.LaunchAndroidIntent(
                         android.content.Intent(
                             android.content.Intent.ACTION_DIAL,
-                            android.net.Uri.fromParts("tel", number, null),
+                            android.net.Uri.fromParts("tel", it, null),
                         ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                 } ?: ActionOutcome.ShowUiFeedback("未发现可拨打的号码")
             outcome
         },
     ))
-    // [2026-07-13] Phase B: PII-sensitive actions.  All four share
-    //  the same consent + default-off gating as `dial_number`:
+    // [2026-07-13] Phase B: PII-sensitive stub actions (scan_to_pay
+    //  / redact_id).  Both share the same consent + default-off
+    //  gating as `dial_number`:
     //   - requiresConfirmation=true (chip-tap parks AlertDialog)
     //   - userPrefKey="action_<id>_enabled" (SettingsStore backs the
-    //     toggle; Settings screen in Phase B3 surfaces 4 switches)
-    //  Bodies are minimal text → clipboard / warn / info-only — the
-    //  heavy lifting is the consent gate, not the side effect.
-    reg.register(ActionDef(
-        id = "copy_listing",
-        label = "复制房源",
-        iconKey = "clipboard",
-        applicableIntents = setOf("real_estate_rental"),
-        requiredInputs = listOf(ActionInputSpec(
-            key = "text",
-            label = "房源正文",
-            parser = InputParsers.textContent,
-        )),
-        requiresConfirmation = true,
-        userPrefKey = "action_copy_listing_enabled",
-        body = { _, bubble, _ ->
-            // ACTION_SEND with text/plain — the user gets the system
-            // share sheet pre-loaded with the listing text, which is
-            // more honest than silently dropping it on the
-            // clipboard (less surprising if it doesn't paste right).
-            val payload = buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
-                append('\n')
-                append(bubble.detail)
-            }.trim()
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, payload)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享房源"))
-        },
-    ))
-    reg.register(ActionDef(
-        id = "save_posting",
-        label = "保存招聘",
-        iconKey = "clipboard",
-        applicableIntents = setOf("recruit_hiring"),
-        requiredInputs = listOf(ActionInputSpec(
-            key = "text",
-            label = "招聘正文",
-            parser = InputParsers.textContent,
-        )),
-        requiresConfirmation = true,
-        userPrefKey = "action_save_posting_enabled",
-        body = { _, bubble, _ ->
-            // Same share-sheet path as copy_listing — keeps the
-            // surface small and consistent.  Real save-to-Notes /
-            // save-to-RecyclerView is Phase C.
-            val payload = buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
-                append('\n')
-                append(bubble.detail)
-            }.trim()
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, payload)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "保存招聘"))
-        },
-    ))
+    //     toggle; the Settings screen surfaces the switches)
+    //  Bodies are Toast-only guidance — the heavy lifting is the
+    //  consent gate, not the side effect.
     reg.register(ActionDef(
         id = "scan_to_pay",
         label = "扫码支付",
@@ -388,121 +320,67 @@ fun registerDefaultActions(reg: ActionRegistry) {
             )
         },
     ))
-    // [2026-07-12] Phase G — three high-value observe-and-share
-    //  actions.  All three follow the same share-sheet pattern as
-    //  `copy_listing` / `save_posting` (Phase B), to keep the
-    //  consumption path uniform: the user gets an Android share
-    //  intent so they can route the text to Notes / WeChat / etc.
+    // [2026-07-15] Unified `share` action — collapses the six former
+    //  per-intent share-text actions (copy_listing / save_posting /
+    //  copy_warning / copy_menu / copy_hours / copy_promo) into one.
+    //  Every one did the same thing: fire an ACTION_SEND text/plain
+    //  chooser pre-loaded with the bubble's title + detail.  They
+    //  differed only by chip label, chooser title, and a text-empty
+    //  fallback string — all now derived from `bubble.type` in the
+    //  body's `when`.
     //
-    //  These actions do NOT require consent gating (no PII leak,
-    //  no outbound call) — `requiresConfirmation` stays false so
-    //  the chip is a one-tap UX.  The user's only point of
-    //  friction is the share-sheet target picker (which is itself
-    //  a confirmation step).
-    //
-    //  defaults enabled = true in SettingsStore (omitted userPrefKey
-    //  → SettingsStore defaults to true; see SettingsStore.kt).
+    //  No consent gate (requiresConfirmation=false, no userPrefKey):
+    //  the OS share-sheet target picker is itself the user-mediated
+    //  confirmation, and the payload is text already visible on
+    //  screen.  Enabled by default.  (This drops the former per-PII
+    //  toggles action_copy_listing_enabled / action_save_posting_enabled
+    //  — the share sheet is the gate.)
     reg.register(ActionDef(
-        id = "copy_warning",
-        label = "复制警示",
-        iconKey = "warning",
-        applicableIntents = setOf("warning_safety"),
+        id = "share",
+        label = "分享文本",
+        iconKey = "clipboard",
+        applicableIntents = setOf(
+            "real_estate_rental",
+            "recruit_hiring",
+            "warning_safety",
+            "menu_food",
+            "hours_schedule",
+            "service_institution",
+            "shopping_promo",
+        ),
         requiredInputs = listOf(ActionInputSpec(
             key = "text",
-            label = "警示正文",
+            label = "正文",
             parser = InputParsers.textContent,
         )),
-        body = { _, bubble, _ ->
-            val payload = buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: "警示标识")
+        body = { _, bubble, args ->
+            // Chooser title + text-empty fallback vary by intent; the
+            //  payload build + 600-char cap are uniform (the cap was
+            //  already applied to menu/promo; harmless for the rest,
+            //  600 chars is ample for a share-sheet payload).
+            val (chooserTitle, fallbackTitle) = when (bubble.type) {
+                "real_estate_rental" -> "分享房源" to (bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
+                "recruit_hiring" -> "保存招聘" to (bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
+                "warning_safety" -> "分享警示" to "警示标识"
+                "menu_food" -> "分享菜单" to "菜单"
+                "hours_schedule", "service_institution" -> "分享营业时间" to "营业时间"
+                "shopping_promo" -> "分享促销" to "促销信息"
+                else -> "分享" to "内容"
+            }
+            // [2026-07-15] Prefer the orchestrator-parsed `text` from
+            //  `args` (validated path); fall back to inline build for
+            //  a legacy chip-tap before the orchestrator gate ran.
+            val payload = (args["text"] ?: buildString {
+                append(bubble.title.takeIf { it.isNotBlank() } ?: fallbackTitle)
                 append('\n')
                 append(bubble.detail)
-            }.trim()
+            }.trim()).take(600)
             val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(android.content.Intent.EXTRA_TEXT, payload)
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享警示"))
-        },
-    ))
-    reg.register(ActionDef(
-        id = "copy_menu",
-        label = "复制菜单",
-        iconKey = "restaurant",
-        applicableIntents = setOf("menu_food"),
-        requiredInputs = listOf(ActionInputSpec(
-            key = "text",
-            label = "菜单正文",
-            parser = InputParsers.textContent,
-        )),
-        body = { _, bubble, _ ->
-            // Menu bubble is detail-heavy (long item list).  Cap the
-            //  payload at 600 chars so a share-sheet target doesn't
-            //  truncate weirdly.
-            val payload = buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: "菜单")
-                append('\n')
-                append(bubble.detail)
-            }.trim().take(600)
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, payload)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享菜单"))
-        },
-    ))
-    reg.register(ActionDef(
-        id = "copy_hours",
-        label = "复制营业时间",
-        iconKey = "schedule",
-        applicableIntents = setOf("hours_schedule", "service_institution"),
-        requiredInputs = listOf(ActionInputSpec(
-            key = "text",
-            label = "营业时间正文",
-            parser = InputParsers.textContent,
-        )),
-        body = { _, bubble, _ ->
-            val payload = buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: "营业时间")
-                append('\n')
-                append(bubble.detail)
-            }.trim()
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, payload)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享营业时间"))
-        },
-    ))
-    // [2026-07-13] Phase J — `copy_promo`: share-sheet copy of
-    //  a deals/discounts bubble.  Mirrors copy_menu plumbing
-    //  (cap at 600 chars, same intent.createChooser pattern).
-    //  Phase J target = 14th intent `shopping_promo`.
-    reg.register(ActionDef(
-        id = "copy_promo",
-        label = "复制促销",
-        iconKey = "local_offer",
-        applicableIntents = setOf("shopping_promo"),
-        requiredInputs = listOf(ActionInputSpec(
-            key = "text",
-            label = "促销正文",
-            parser = InputParsers.textContent,
-        )),
-        body = { _, bubble, _ ->
-            val payload = buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: "促销信息")
-                append('\n')
-                append(bubble.detail)
-            }.trim().take(600)
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, payload)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享促销"))
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, chooserTitle))
         },
     ))
 }

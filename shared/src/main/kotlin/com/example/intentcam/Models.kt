@@ -215,6 +215,12 @@ data class CycleSnapshot(
     val bubble: kotlinx.coroutines.flow.StateFlow<Bubble?>,
     val nRounds: kotlinx.coroutines.flow.StateFlow<Int>,
     val capturedAtMs: Long,
+    // [2026-07-15] Cross-action missing-input list, mirrored from
+    //  CycleJob.pendingInputs so downstream consumers (debug overlay,
+    //  snapshot persistence, future API surface) read it from the
+    //  snapshot instead of reaching back into the Android-only
+    //  CycleJob.  Empty when validation is Complete.
+    val pendingInputs: kotlinx.coroutines.flow.StateFlow<List<String>>,
 )
 
 /** [2026-07-14 Phase B] One cycle job's lifecycle status.  See
@@ -291,10 +297,15 @@ data class LlmConfig(
     val model: String,
 ) {
     companion object {
-        // Defaults baked into the debug APK so the app starts working out
-        // of the box.  The token is a placeholder — replace at runtime via
-        // the Settings screen or pass via env (ANTHROPIC_AUTH_TOKEN) when
-        // building a release.
+        // Defaults baked into the APK so the app starts working out of
+        // the box.  DEFAULT_TOKEN here is only a placeholder: the app
+        // module overrides it with BuildConfig.DEFAULT_AUTH_TOKEN
+        // (resolved at build time from secrets.properties / the
+        // ANTHROPIC_AUTH_TOKEN env var — see app/build.gradle.kts and
+        // `bakedDefaultToken` in SettingsStore.kt).  The Settings screen
+        // can still override at runtime.  This placeholder is used only
+        // when no build secret is present (e.g. shared-module / eval use,
+        // where EvalMain reads ANTHROPIC_AUTH_TOKEN from the env directly).
         const val DEFAULT_BASE_URL = "https://api.minimaxi.com/anthropic"
         const val DEFAULT_TOKEN = "REPLACE_AT_RUNTIME"
         const val DEFAULT_MODEL = "MiniMax-M3"

@@ -358,7 +358,7 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                 "**action_ids** 字段：**默认应填**。把你认为对当前 bubble 有用的 chip id 列出来" +
                 "（系统提示里 actions ∈ {...} 的子集）。常见映射参考：识别到电话号码 → **dial_number**；" +
                 "识别到位置 / 地址 / 机构名 → **open_in_maps**；识别到招聘 / 房源 / 警示 / 菜单 / 营业时间 / 促销文本 → " +
-                "**save_posting** / **copy_listing** / **copy_warning** / **copy_menu** / **copy_hours** / **copy_promo**；" +
+                "**share**（统一的分享文本动作）；" +
                 "识别到证件 / 支付码 → **redact_id** / **scan_to_pay**。" +
                 "只有当你判断「这个 bubble 完全不需要任何 chip」→ 留空 `[]`；" +
                 "其余 case 都应填至少 1 个。" +

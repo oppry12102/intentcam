@@ -4,7 +4,7 @@
   "rctw_root": "/home/oppry/RCTW-171",
   "auto_scaled_count": 10,
   "expected_actions": [
-    "copy_listing"
+    "share"
   ],
   "expected_top_intent_type": "real_estate_rental",
   "scenes": [
@@ -17,7 +17,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Developer promo 创爱莲湖. 户型 token. Phone 2886789."
     },
@@ -30,7 +30,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Developer promo 金地天悦. 户型 token + 87674888 phone."
     },
@@ -43,7 +43,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Already curated by f017733 — original 户型+平米+phone 2905888. Canonical residential real_estate."
     },
@@ -56,7 +56,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Commercial ground-floor rental. 平米 token + phone."
     },
@@ -69,7 +69,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Canonical real_estate (cited in verifier comments as GT=real_estate_rental). 吉房急售 token."
     },
@@ -82,7 +82,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Developer promo 御景天成. 平米 token + 027 phone."
     },
@@ -95,7 +95,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Minimal two-character 急售 sign. Useful for measuring Pass 5 recall on minimal real_estate cues."
     },
@@ -108,7 +108,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Developer promo 北辰. 户型 token. No phone — expect clean Pass 5 hit."
     },
@@ -121,7 +121,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Developer promo. 平米 token. Shopping-Promo adjacent — verifier Pass 13's PROMO+REAL_ESTATE guard keeps type=real_estate_rental."
     },
@@ -134,7 +134,7 @@
       "must_have_in_scene_or_observation": [],
       "expected_top_intent_type": "real_estate_rental",
       "expected_actions": [
-        "copy_listing"
+        "share"
       ],
       "curation_note": "Hand-curated for real_estate_rental mini-suite. Developer promo. 户型 token. No phone — clean Pass 5 hit."
     }

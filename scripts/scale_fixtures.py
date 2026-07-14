@@ -66,7 +66,7 @@ INTENTS: dict[str, dict] = {
             r"|吉房|精装[房套]|户型|平米|押一付三"
         ),
         "type": "real_estate_rental",
-        "actions": ["copy_listing"],
+        "actions": ["share"],
         "categories": [
             (re.compile(r"楼盘|花园|小区|苑|府"), "residential_development_billboard"),
             (re.compile(r"急售|吉房|急卖"), "building_rental_banner"),
@@ -133,7 +133,7 @@ INTENTS: dict[str, dict] = {
             r"|甩卖|转让|红包|抵用券|代金券|限时|抢购|直降"
         ),
         "type": "shopping_promo",
-        "actions": ["copy_promo"],
+        "actions": ["share"],
         "categories": [
             (re.compile(r"特价|直降|降价"), "price_discount"),
             (re.compile(r"促销|优惠|打折"), "sale_promotion"),

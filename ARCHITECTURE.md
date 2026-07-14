@@ -72,9 +72,8 @@ emit_bubble(
   confidence,     // 0.0~1.0
   action_ids?,    // 可空 — Intent↔Action framework (Phase A+, 2026-07-10)
                   //   list of canonical action ids the model recommends:
-                  //   dial_number / copy_listing / save_posting /
-                  //   scan_to_pay / redact_id / open_in_maps /
-                  //   copy_warning / copy_menu / copy_hours / copy_promo
+                  //   dial_number / scan_to_pay / redact_id /
+                  //   open_in_maps / share
   details: [      // 详情页表格行
     {kind, label, value, bbox?}, ...
   ]
@@ -487,9 +486,9 @@ screen header — see §15 for the full design.
 | `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
 | `extract_text` (v1.1) | text-only OCR | `ToolImplementations.kt:210-330` | v1.1: new tool. Same crop path as `zoom_in` follow-up but no `followUpJpeg` — returns only OCR text. Model picks it for 25-30% of fixtures when the region is already visible in the round-1 thumbnail. |
 | `IntentDecl.registerDefaultIntents()` | **14 ids** | `shared/.../IntentDecl.kt:82-232` | Phase J — what the user wants (intent classification). The 3 v1.0 ids (`info`/`location`/`solve`) + `phone` (Phase A) + 4 PII Phase B (real_estate/recruit/payment_qr/id_document) + 3 OBSERVE Phase G (warning/menu/hours) + `route_to` Phase H + `service_institution` Phase I + `shopping_promo` Phase J. |
-| `ActionDecl.registerDefaultActions()` | **11 defs** | `app/.../ActionDecl.kt:158-442` | what the app can do per-intent. 5 carry `userPrefKey` (SettingsStore consent toggle, OFF default). `scan_to_pay` and `redact_id` are Toast-only by design. `view_details` is a reserved no-op (completeness anchor only). |
+| `ActionDecl.registerDefaultActions()` | **5 defs** | `app/.../ActionDecl.kt:158-442` | what the app can do per-intent. 3 carry `userPrefKey` (SettingsStore consent toggle, OFF default): `dial_number`, `scan_to_pay`, `redact_id`. `scan_to_pay` and `redact_id` are Toast-only by design. `share` is the unified share-text action across 7 OBSERVE/ACT_ON intents (`real_estate_rental`, `recruit_hiring`, `warning_safety`, `menu_food`, `hours_schedule`, `service_institution`, `shopping_promo`) — no `userPrefKey`, default ON, body fires `ACTION_SEND text/plain` share-sheet (capped 600 chars). `open_in_maps` applies to `location` / `route_to` / `service_institution`. |
 | `IntentVerifier` | **10 passes + post-guard** | `shared/.../IntentVerifier.kt` | post-emit_bubble regex flip — `info`/`location` → `phone`/`payment_qr`/`recruit`/`real_estate`/`id_document`/`warning`/`menu`/`hours` based on corpus signal. Phase F invariant: modifies `bubble.type` only, never `bubble.actionIds`. |
-| `actionFor(type)` | **14 type → 10 canonical action maps** | `IntentVerifier.kt:226-259` | Phase F — ToolUseLoop additive inject. **3-register lockstep** when adding a new intent: ActionDecl + EvalRunner.defaultActionIds + actionFor(). Drift = silent r3 regression. `info` and `solve` carry no canonical action (return null). |
+| `actionFor(type)` | **14 type → 5 canonical action maps** | `IntentVerifier.kt:226-259` | Phase F — ToolUseLoop additive inject. **3-register lockstep** when adding a new intent: ActionDecl + EvalRunner.defaultActionIds + actionFor(). Drift = silent r3 regression. `info` and `solve` carry no canonical action (return null). |
 | **3-register lockstep** | invariant | Phase F (2026-07-11) | Adding a new intent requires lockstep edits in 3 files (or 4 if you also add a C3 v3 prompt row). See §15.5 / CONFIG §J.1. |
 
 ## 10. Debug overlay
@@ -711,7 +710,7 @@ type→canonical mapping as a soft system-prompt hint.
                                      ▼
                     ┌─────────────────────────────────────────┐
                     │ ActionDecl.kt (app)                      │
-                    │   registerDefaultActions() — 10 defs    │
+                    │   registerDefaultActions() — 5 defs     │
                     │   applicableIntents / applicableFamilies │
                     │   userPrefKey (consent toggle, OFF def.) │
                     │   Toast-only for scan_to_pay, redact_id │
@@ -752,7 +751,7 @@ OBSERVE family with 3 more ids (`warning_safety` / `menu_food`
 / `hours_schedule`) so they interchange with `info` for full
 credit too.
 
-### 15.3 ActionDecl — 11 defs, 5 user-consented, 2 Toast-only
+### 15.3 ActionDecl — 5 defs, 3 user-consented, 2 Toast-only
 
 ```kotlin
 data class ActionDef(
@@ -769,16 +768,11 @@ data class ActionDef(
 
 | Action id | Applicable to | Consent | Default | Notes |
 |---|---|---|---|---|
-| `view_details` | info / location / solve | no | ON | no-op (card tap opens detail) |
-| `open_in_maps` | location | no | ON | `geo:0,0?q={title}` |
+| `open_in_maps` | location / route_to / service_institution | no | ON | `geo:0,0?q={title}` |
 | `dial_number` | phone | yes | **OFF** | `ACTION_DIAL` via `PhoneExtractor.firstMatch` |
-| `copy_listing` | real_estate_rental | yes | **OFF** | share-sheet |
-| `save_posting` | recruit_hiring | yes | **OFF** | share-sheet |
 | `scan_to_pay` | payment_qr | yes | **OFF** | **Toast only — never auto-launch payment** |
 | `redact_id` | id_document | yes | **OFF** | **Toast only — real redaction is Phase C** |
-| `copy_warning` | warning_safety | no | ON | share-sheet |
-| `copy_menu` | menu_food | no | ON | share-sheet (capped 600 chars) |
-| `copy_hours` | hours_schedule | no | ON | share-sheet |
+| `share` | real_estate_rental / recruit_hiring / warning_safety / menu_food / hours_schedule / service_institution / shopping_promo | no | ON | `ACTION_SEND text/plain` share-sheet (capped 600 chars) — unified across 7 OBSERVE/ACT_ON intents; chooser title + fallback vary by `bubble.type` |
 
 **Safety contract**: `scan_to_pay` is deliberately Toast-only
 even with consent — the QR could be in a screenshot / phishing
@@ -842,17 +836,19 @@ canonical type → action id mapping the verifier + ToolUseLoop
 use for additive injection:
 
 ```kotlin
-"phone"              -> "dial_number"
-"real_estate_rental" -> "copy_listing"
-"recruit_hiring"     -> "save_posting"
-"id_document"        -> "redact_id"
-"payment_qr"         -> "scan_to_pay"
-"location"           -> "open_in_maps"
-"warning_safety"     -> "copy_warning"
-"menu_food"          -> "copy_menu"
-"hours_schedule"     -> "copy_hours"
-"route_to"           -> "open_in_maps"   // [Phase H] reuses existing action
-// "info", "solve" -> null (no canonical action; view_details is implicit)
+"phone"               -> "dial_number"
+"real_estate_rental"  -> "share"
+"recruit_hiring"      -> "share"
+"id_document"         -> "redact_id"
+"payment_qr"          -> "scan_to_pay"
+"location"            -> "open_in_maps"
+"warning_safety"      -> "share"
+"menu_food"           -> "share"
+"hours_schedule"      -> "share"
+"service_institution" -> "share"
+"shopping_promo"      -> "share"
+"route_to"            -> "open_in_maps"
+// "info", "solve" -> null (no canonical action)
 ```
 
 ### 15.5 ⚠️ 2-register lockstep (was 3-register pre-v3.0; verifier retired)
@@ -905,14 +901,13 @@ construction, the prompt table and the verifier injection
 3+ fixtures real-lift, no r2_type regression.  See
 `eval-c3-v3-ship-2026-07-11.md`.
 
-### 15.7 SettingsStore — 5 consent toggles
+### 15.7 SettingsStore — 3 consent toggles
 
-`app/.../SettingsStore.kt` backs 5 PII consent gates; default
-OFF (user must opt-in once in Settings screen).  Phase G's 3
-`copy_*` actions have no `userPrefKey` → default ON (the
-share-sheet is its own consent step).  Keys:
-`action_dial_number_enabled`, `action_copy_listing_enabled`,
-`action_save_posting_enabled`, `action_scan_to_pay_enabled`,
+`app/.../SettingsStore.kt` backs 3 PII consent gates; default
+OFF (user must opt-in once in Settings screen). `share` and
+`open_in_maps` have no `userPrefKey` → default ON (the
+share-sheet / map picker is its own consent step).  Keys:
+`action_dial_number_enabled`, `action_scan_to_pay_enabled`,
 `action_redact_id_enabled`.
 
 ### 15.8 Eval-side wiring
@@ -929,7 +924,7 @@ side doesn't:
    0.45 + `action_ids` (r3) 0.10; production doesn't need the
    r3 component (the chip UI runs the actions).
 3. **Action applicability filter bypass** —
-   `EvalRunner.defaultActionIds` returns ALL 10 ids; the prod
+   `EvalRunner.defaultActionIds` returns ALL 5 ids; the prod
    `ActionResolver.suggestIds(bubble)` filters by
    applicableIntents.
 

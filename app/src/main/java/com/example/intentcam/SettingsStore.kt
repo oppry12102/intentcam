@@ -2,6 +2,15 @@ package com.example.intentcam
 
 import android.content.Context
 
+/** Baked-in default Anthropic token, resolved at build time from
+ *  `secrets.properties` / the `ANTHROPIC_AUTH_TOKEN` env var (see
+ *  `app/build.gradle.kts` → `BuildConfig.DEFAULT_AUTH_TOKEN`). Empty in a
+ *  no-secret build (clean CI checkout) → falls back to the shared
+ *  placeholder `LlmConfig.DEFAULT_TOKEN`. Used wherever a blank Settings
+ *  token field must resolve to the app's default token. */
+internal val bakedDefaultToken: String
+    get() = BuildConfig.DEFAULT_AUTH_TOKEN.ifBlank { LlmConfig.DEFAULT_TOKEN }
+
 /** Persists the (editable) model configuration in SharedPreferences. */
 class SettingsStore(context: Context) {
 
@@ -9,7 +18,7 @@ class SettingsStore(context: Context) {
 
     fun load(): LlmConfig = LlmConfig(
         baseUrl = prefs.getString(KEY_BASE_URL, null) ?: LlmConfig.DEFAULT_BASE_URL,
-        authToken = prefs.getString(KEY_TOKEN, null) ?: LlmConfig.DEFAULT_TOKEN,
+        authToken = prefs.getString(KEY_TOKEN, null) ?: bakedDefaultToken,
         model = prefs.getString(KEY_MODEL, null) ?: LlmConfig.DEFAULT_MODEL,
     )
 
@@ -67,7 +76,7 @@ class SettingsStore(context: Context) {
      *
      * Mirrors the call-site semantics in AppViewModel's
      * `enabledIds()`: an action with `userPrefKey=null` (universal
-     * actions like `view_details` and `open_in_maps`) is always
+     * actions like `share` and `open_in_maps`) is always
      * considered enabled, regardless of this map.  An action with
      * `userPrefKey=...` is enabled iff this returns true.
      */

@@ -4,6 +4,73 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Changed — scoring redesign (intent-first composite_v2, 2026-07-15)
+
+Replaced the 5-dimension composite_v2 (gutted by the action merge —
+`r_actions_recall` was trivialized by the intent-agnostic `share` action,
+`r_intent_derived` was a tautology, `r_rounds_efficiency` was a hardcoded
+1.0 floor) with a 4-dimension intent-first composite and retired the
+legacy `0.45·r1+0.45·r2+0.10·r3` composite entirely.
+
+New formula:
+```
+composite_v2 = 0.35·r_type + 0.25·r_text + 0.20·r_actions + 0.20·r_inputs
+```
+
+- **r_type (0.35, NEW core discriminator):** graded `bubble.type` match
+  against `expected_top_intent_type` (→`expected_type` fallback) —
+  exact 1.0 / same registered family 0.7 / both registered but wrong
+  family 0.3 / empty·unknown 0.0. Computed in EvalRunner (which owns
+  the populated IntentRegistry); passed into ScorerV2 as `typeScore`.
+  Replaces the tautological `r_intent_derived`.
+- **r_text (0.25, ↑ from 0.05):** verbatim OCR fidelity — extracted
+  from the former `scoreRound2` text half.
+- **r_actions (0.20):** switched from pure recall `|∩|/|expected|` to
+  Jaccard `|∩|/|∪|` so over-proposals are penalized. Restores
+  discrimination the `share` merge erased.
+- **r_inputs (0.20):** unchanged.
+- **Dropped:** `r_intent_derived`, `r_rounds_efficiency`, and the
+  legacy composite (r1 / r2 / r3) — schema break, per-fixture +
+  overall JSON now emit only composite_v2 + the 4 component scores.
+- EvalRunner output `version` bumped 1 → 2.
+
+Mirrors updated: `ActionOrchestrator.primaryNounsFor`,
+`ToolImplementations` emit_bubble prompt prose, `EvalRunner`
+`defaultActionIds` + `defaultRequiredInputs`,
+`scripts/migrate_gt_v2_to_v3.py` `ACTION_REQUIRED_INPUTS`, and
+`scripts/scale_fixtures.py` templates.
+
+### Changed — action registry pruned (2026-07-15)
+
+Collapsed the action surface from 11 defs to 5. No behavior change
+for the user beyond a unified share chip label and the loss of two
+per-PII share toggles (the OS share sheet is itself the consent gate).
+
+- **Removed `view_details`** — a no-op reserved chip (`ActionOutcome.None`);
+  the bubble card already opens detail on tap. Also removed the unused
+  `ActionRegistry.DEFAULT_ID` constant. It was never in any GT's
+  `expected_actions`, so eval is unaffected.
+- **Merged six share-text actions into one `share`** — `copy_listing`,
+  `save_posting`, `copy_warning`, `copy_menu`, `copy_hours`, `copy_promo`
+  were near-identical `ACTION_SEND text/plain` chooser bodies. The single
+  `share` action (label "分享文本") applies to all seven of their intents
+  (`real_estate_rental` / `recruit_hiring` / `warning_safety` /
+  `menu_food` / `hours_schedule` / `service_institution` /
+  `shopping_promo`); chooser title + fallback dispatch on `bubble.type`,
+  payload capped at 600 chars. `requiresConfirmation=false`, no
+  `userPrefKey` (enabled by default) — this drops the former
+  `action_copy_listing_enabled` / `action_save_posting_enabled` toggles.
+- **Synced mirrors**: `ActionOrchestrator.primaryNounsFor`,
+  `ToolImplementations` emit_bubble prompt prose, `EvalRunner`
+  `defaultActionIds` + `defaultRequiredInputs`,
+  `scripts/migrate_gt_v2_to_v3.py` `ACTION_REQUIRED_INPUTS`, and
+  `scripts/scale_fixtures.py` templates.
+- **Ground truth**: 6 suites (`pii20`, `pii20_60`, `phaseG_15`,
+  `shopping_promo_20`, `recruit_hiring_13`, `real_estate_rental_11`)
+  had their `expected_actions` / `expected_inputs` remapped old-id →
+  `share` via `scripts/rename_share_action.py`. Pure rename → scoring
+  is recall-neutral; baselines to be re-measured.
+
 ## [2026-07-14g] — v3.0 baseline flip (composite_v2 = canonical)
 
 The 14-suite regression net at v3.0 (`summary_20260714_153204`,

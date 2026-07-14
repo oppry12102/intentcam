@@ -1,5 +1,7 @@
 package com.example.intentcam.eval
 
+import com.example.intentcam.ActionInputSpec
+import com.example.intentcam.Bubble
 import com.example.intentcam.CapturedFrame
 import com.example.intentcam.ImagePipeline
 import com.example.intentcam.IntentFamily
@@ -10,6 +12,7 @@ import com.example.intentcam.ToolUseLoop
 import com.example.intentcam.encodeThumbnail
 import com.example.intentcam.registerDefaultIntents
 import com.example.intentcam.registerDefaultTools
+import com.example.intentcam.projectInputsValidation
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import java.util.concurrent.atomic.AtomicReference
@@ -50,21 +53,76 @@ internal class EvalRunner(private val config: EvalConfig) {
     //  (`llmProposedActions`) directly against the ground truth, not
     //  the resolver-filtered `actions` list, so a disabled / future
     //  action change doesn't silently move the recall number.
-    //  Keep in lockstep with `registerDefaultActions` in `app/`
-    //  (`ActionRegistry.DEFAULT_ID = "view_details"`).
+    //  Keep in lockstep with `registerDefaultActions` in `app/`.
     private val defaultActionIds = listOf(
-        "view_details",   // no-op chip (DEFAULT_ID in app/)
         "open_in_maps",   // location → maps
         "dial_number",    // [2026-07-13] phone → system dialer (Phase A)
-        "copy_listing",   // [2026-07-13] real_estate_rental → share (Phase B)
-        "save_posting",   // [2026-07-13] recruit_hiring → share (Phase B)
         "scan_to_pay",    // [2026-07-13] payment_qr → guidance Toast (Phase B)
         "redact_id",      // [2026-07-13] id_document → guidance Toast (Phase B)
-        "copy_warning",   // [2026-07-12] warning_safety → share (Phase G)
-        "copy_menu",      // [2026-07-12] menu_food → share (Phase G)
-        "copy_hours",     // [2026-07-12] hours_schedule → share (Phase G)
-        "copy_promo",     // [2026-07-13] shopping_promo → share (Phase J)
+        "share",          // [2026-07-15] unified share-text action (was
+                          //   copy_listing/save_posting/copy_warning/
+                          //   copy_menu/copy_hours/copy_promo)
     )
+
+    /** [2026-07-15] Eval-side parser-mirror registry.  Used by the
+     *  [markValidated] callback passed to ToolUseLoop.runCycle so
+     *  eval-side ScorerV2 sees populated `validatedInputs` /
+     *  `pendingInputs` fields (parity with prod's
+     *  `ActionOrchestrator.markValidatedInputs`).
+     *
+     *  Mirrors the production `InputParsers` regex set
+     *  (`app/.../ActionDecl.kt`) so a bubble that's "Complete" in
+     *  prod is also Complete in eval.  See ScorerV2's inputSatisfied
+     *  for the same set — both stay in lockstep with the canonical
+     *  `ACTION_REQUIRED_INPUTS` table in
+     *  `scripts/migrate_gt_v2_to_v3.py`.
+     *
+     *  Returned as `Map<actionId, List<ActionInputSpec>>` so it
+     *  feeds directly into [projectInputsValidation]. */
+    private fun defaultRequiredInputs(): Map<String, List<ActionInputSpec>> {
+        val textParser: (Bubble) -> String? = { b ->
+            if (b.title.isNotBlank() || b.detail.isNotBlank()) "present" else null
+        }
+        val locationParser: (Bubble) -> String? = { b ->
+            if (b.title.isNotBlank() || b.detail.isNotBlank() ||
+                b.details.any { it.value.isNotBlank() }
+            ) "present" else null
+        }
+        val phoneParser: (Bubble) -> String? = { b ->
+            val corpus = buildString {
+                append(b.title).append('\n')
+                append(b.detail).append('\n')
+                b.details.forEach { d -> append(d.value).append('\n') }
+            }
+            // Match the prod regex chain: mobile → service → landline.
+            if (MOBILE_REGEX.containsMatchIn(corpus)) "present"
+            else if (SERVICE_REGEX.containsMatchIn(corpus)) "present"
+            else if (LANDLINE_REGEX.containsMatchIn(corpus)) "present"
+            else null
+        }
+        return mapOf(
+            "dial_number"   to listOf(ActionInputSpec("phone_number", "手机号", phoneParser)),
+            "open_in_maps"  to listOf(ActionInputSpec("query",        "地点或地址", locationParser)),
+            "share"         to listOf(ActionInputSpec("text",         "正文", textParser)),
+            // scan_to_pay / redact_id have no requiredInputs.
+        )
+    }
+
+    private companion object {
+        // Eval-side phone regex mirrors — kept here (not in ScorerV2)
+        //  because ToolUseLoop's markValidated callback runs before
+        //  ScorerV2.compute is called and needs the same set.  Same
+        //  regex strings as ScorerV2.kt:119-121; sync by hand.
+        private val MOBILE_REGEX = Regex("""1[3-9]\d{9}""")
+        private val SERVICE_REGEX = Regex("""(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}""")
+        private val LANDLINE_REGEX = Regex("""\b0?\d{3,4}[\s-]?\d{7,8}\b""")
+
+        /** Char-overlap threshold for [hybridMatch]'s secondary
+         *  fallback.  Matches Python aligned4's `_hybrid_match` ≥0.67
+         *  ratio.  Below this threshold we declare no hit (avoid
+         *  over-credit on trivial 1-2 char matches). */
+        const val CHAR_OVERLAP_THRESHOLD = 0.67
+    }
     // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
     // when --debug-fixtures is set, otherwise stay silent like before.
     // The orchestrator's log callback runs in a hot loop so we don't
@@ -187,50 +245,47 @@ internal class EvalRunner(private val config: EvalConfig) {
                     //  list = no LLM-proposal branch (legacy
                     //  applicability filter).
                     actionIds = defaultActionIds,
+                    // [2026-07-15] Stamp validation state on the
+                    //  bubble using shared-side parser mirrors.
+                    //  Prod uses ActionOrchestrator.markValidatedInputs
+                    //  (which closes over the Android-only
+                    //  ActionRegistry); eval can't reach that
+                    //  registry, so it walks the same parser
+                    //  definitions via [InputsValidator].  Kept
+                    //  lightweight — the regex chain runs once
+                    //  per cycle on the bubble's already-parsed
+                    //  text surface.
+                    markValidated = { bubble ->
+                        val specs = defaultRequiredInputs()
+                        val (validated, pending) = projectInputsValidation(bubble, specs)
+                        bubble.copy(validatedInputs = validated, pendingInputs = pending)
+                    },
                 )
             }
             if (outcome is ToolUseLoop.Outcome.Error) {
                 System.err.println("  [DBG $sceneId] Outcome.Error: ${outcome.message.take(120)}")
             }
 
-            val r1 = scoreRound1(outcome, scene)
-            val r2 = scoreRound2(outcome, scene)
-            val r3 = scoreRound3(outcome, scene)
-            // [2026-07-13] Composite gains a third dimension for
-            //  action_recall.  Weights chosen so r1+r2 stays dominant
-            //  (0.90) and r3 is a soft 0.10 nudge.  With only 20/100
-            //  location-class fixtures having ground-truth
-            //  expected_actions, r3 is mostly a 1.0 floor right now
-            //  — the real signal will appear once we annotate more
-            //  fixtures (or pay attention to over-proposals as a
-            //  separate negative signal).
-            val composite = 0.45 * r1.first + 0.45 * r2.first + 0.10 * r3.first
-            // Diagnostic side-metrics (do NOT feed composite — kept
-            // comparable to the pre-instrumentation baseline).  These
-            // separate "model genuinely misread the text" from
-            // "strict substring scorer zeroed a near-correct answer",
-            // and expose whether the model actually populated details.
             val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
                 ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-            val detailsCount = bubble?.details?.size ?: 0
-            val contentLen = bubble?.detail?.length ?: 0
-            val r2TextFuzzy = scoreRound2TextFuzzy(outcome, scene)
-            // [2026-07-14 Phase D — inversion v3.0] Run ScorerV2 in
-            //  parallel with the legacy scorer.  Both composites
-            //  land in the per-fixture JSON output + summary line.
-            //  Phase D caveat: r_inputs_complete and
-            //  r_rounds_efficiency are 1.0 floors in this commit
-            //  pending Phase E wiring (GT migration + n_rounds
-            //  propagation through ToolUseLoop).
+            // [2026-07-15 scoring redesign] composite_v2 is the sole
+            //  score (legacy 0.45·r1+0.45·r2+0.10·r3 retired).  r_text +
+            //  r_type are computed here (the latter needs the populated
+            //  intentRegistry); r_actions (Jaccard) + r_inputs inside
+            //  ScorerV2.
+            val textScore = scoreRound2Text(outcome, scene)
+            val typeScore = scoreRound2Type(outcome, scene)
             val scorerV2 = com.example.intentcam.eval.ScorerV2Result.compute(
                 bubble = bubble,
                 scene = scene,
-                textScore = r2.first,
+                textScore = textScore,
+                typeScore = typeScore,
             )
-            // Stash raw content + details rows so future scorer
-            // experiments can be dry-run re-scored against saved
-            // outputs (no LLM re-run).  Keeps the per-fixture JSON
-            // ~5-10× bigger but still well under 1 MB for 100 fixtures.
+            // Diagnostic side-metrics (do NOT feed composite) — stashed
+            //  so post-hoc analysis can re-inspect text/action gaps
+            //  without re-running the LLM.
+            val detailsCount = bubble?.details?.size ?: 0
+            val contentLen = bubble?.detail?.length ?: 0
             val rawContent = bubble?.detail.orEmpty()
             val rawDetails = JSONArray()
             bubble?.details?.forEach { d ->
@@ -239,38 +294,32 @@ internal class EvalRunner(private val config: EvalConfig) {
                     .put("label", d.label)
                     .put("value", d.value))
             }
+            val emittedActions = JSONArray()
+            bubble?.llmProposedActions?.forEach { emittedActions.put(it) }
+            val expectedActions = scene.optJSONArray("expected_actions") ?: JSONArray()
             results.add(mapOf(
                 "id" to sceneId,
                 "category" to category,
-                "composite" to composite,
                 "composite_v2" to scorerV2.composite,
-                "r1" to r1.first,
-                "r2_text" to r2.first,
-                "r2_type" to r2.second,
-                "r2_text_fuzzy" to r2TextFuzzy,
-                "r3_actions" to r3.first,
-                "v2_actions_recall" to scorerV2.actionsRecall,
-                "v2_inputs_complete" to scorerV2.inputsComplete,
-                "v2_intent_derived" to scorerV2.intentDerived,
-                "v2_rounds_efficiency" to scorerV2.roundsEfficiency,
+                "v2_type" to scorerV2.type,
                 "v2_text" to scorerV2.text,
+                "v2_actions" to scorerV2.actions,
+                "v2_inputs" to scorerV2.inputs,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
                 "raw_details" to rawDetails,
-                "r1_details" to r1.third,
-                "emitted_action_ids" to r3.second.optJSONArray("emitted_action_ids"),
-                "expected_actions" to r3.second.optJSONArray("expected_actions"),
+                "emitted_action_ids" to emittedActions,
+                "expected_actions" to expectedActions,
             ))
-            perCategory.getOrPut(category) { mutableListOf() }.add(composite)
+            perCategory.getOrPut(category) { mutableListOf() }.add(scorerV2.composite)
 
-            val picked = r1.third.optString("picked_tool", "?")
             if (i < 5 || i == useScenes.size - 1 || (i + 1) % 10 == 0) {
                 println(
                     "  [${i + 1}/${useScenes.size}] ${sceneId.padEnd(30)} " +
-                        "cat=${category.padEnd(15)} picked=$picked " +
-                        "r1=${"%.2f".format(r1.first)} r2_text=${"%.2f".format(r2.first)} " +
-                        "r2_type=${"%.2f".format(r2.second)} composite=${"%.2f".format(composite)} " +
+                        "cat=${category.padEnd(15)} " +
+                        "type=${"%.2f".format(scorerV2.type)} text=${"%.2f".format(scorerV2.text)} " +
+                        "actions=${"%.2f".format(scorerV2.actions)} inputs=${"%.2f".format(scorerV2.inputs)} " +
                         "composite_v2=${"%.2f".format(scorerV2.composite)}"
                 )
             }
@@ -280,51 +329,23 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("=".repeat(60))
         println("fixtures: ${results.size}")
         if (results.isNotEmpty()) {
-            val overall = results.map { it["composite"] as Double }.average()
-            println("average composite (old): ${"%.3f".format(overall)}")
-            // [2026-07-14 Phase D — inversion v3.0] ScorerV2
-            //  side-by-side.  Both composites printed so we can
-            //  compare without hard-cutting the regression net.
-            //  Phase E will eventually drop the old one.
             val overallV2 = results.map { it["composite_v2"] as Double }.average()
-            println("average composite_v2:     ${"%.3f".format(overallV2)}")
+            println("average composite_v2: ${"%.3f".format(overallV2)}")
+            val avgType = results.map { it["v2_type"] as Double }.average()
+            val avgText = results.map { it["v2_text"] as Double }.average()
+            val avgActions = results.map { it["v2_actions"] as Double }.average()
+            val avgInputs = results.map { it["v2_inputs"] as Double }.average()
+            println(
+                "components: type=${"%.3f".format(avgType)} text=${"%.3f".format(avgText)} " +
+                    "actions=${"%.3f".format(avgActions)} inputs=${"%.3f".format(avgInputs)}"
+            )
             // Diagnostic aggregates — not part of composite.
-            val r2Strict = results.map { it["r2_text"] as Double }.average()
-            val r2Fuzzy = results.map { it["r2_text_fuzzy"] as Double }.average()
             val avgDetails = results.map { (it["details_count"] as Int).toDouble() }.average()
             val emptyDetails = results.count { (it["details_count"] as Int) == 0 }
             val avgContentLen = results.map { (it["content_len"] as Int).toDouble() }.average()
-            // [2026-07-13] r3_actions aggregate.  The 1.0 floor for
-            //  un-annotated fixtures makes this metric look
-            //  optimistic when only a few fixtures carry
-            //  expected_actions; pass --fixtures to a location-only
-            //  subset for a real action-recall number.
-            val r3Avg = results.map { it["r3_actions"] as Double }.average()
-            // Recall broken down on the subset that has ground-truth
-            // actions: gives a cleaner signal of the model's
-            //  hit-rate when there's something to hit.
-            val actionableFixtures = results.count {
-                val ea = it["expected_actions"] as JSONArray
-                ea.length() > 0
-            }
-            val r3OnAnnotated = if (actionableFixtures > 0) {
-                results.filter {
-                    val ea = it["expected_actions"] as JSONArray
-                    ea.length() > 0
-                }.map { it["r3_actions"] as Double }.average()
-            } else 0.0
-            println(
-                "r2_text strict=${"%.3f".format(r2Strict)} " +
-                    "fuzzy=${"%.3f".format(r2Fuzzy)} (gap=${"%.3f".format(r2Fuzzy - r2Strict)} = scorer strictness)"
-            )
             println(
                 "details: avg ${"%.1f".format(avgDetails)} rows/fixture, " +
                     "$emptyDetails/${results.size} empty | content avg ${"%.0f".format(avgContentLen)} chars"
-            )
-            println(
-                "r3_actions=${"%.3f".format(r3Avg)} " +
-                    "($actionableFixtures annotated fixtures, " +
-                    "on-annotated avg ${"%.3f".format(r3OnAnnotated)})"
             )
         }
         println()
@@ -346,27 +367,38 @@ internal class EvalRunner(private val config: EvalConfig) {
         categoryAvgs: Map<String, Double>,
     ) {
         val root = JSONObject()
-        root.put("version", 1)
+        // version 2 = post-2026-07-15 scoring redesign (composite_v2
+        //  sole score; legacy composite / r1 / r2_type / r3 removed).
+        root.put("version", 2)
         root.put("description", "Kotlin eval results — calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)")
         root.put("ground_truth", config.groundTruth.name)
         root.put("img_dir", config.imgDir.path)
         root.put("limit", config.limit)
         root.put("resize", config.resize)
         root.put("quality", config.quality)
-        val overall = if (results.isNotEmpty()) {
-            results.map { it["composite"] as Double }.average()
-        } else 0.0
-        root.put("overall_composite", overall)
-        // [2026-07-14 Phase H — inversion v3.0 baseline flip] The
-        //  legacy composite (0.45·r1 + 0.45·r2 + 0.10·r3) is still
-        //  written for reference, but composite_v2 is the canonical
-        //  baseline for v3.0+.  run_regression.sh / check_regression.py
-        //  compare against overall_composite_v2; the legacy field
-        //  is for historical comparison only.
+        // composite_v2 is the canonical score.  run_regression.sh /
+        //  check_regression.py compare against overall_composite_v2.
         val overallV2 = if (results.isNotEmpty()) {
             results.map { it["composite_v2"] as Double }.average()
         } else 0.0
         root.put("overall_composite_v2", overallV2)
+        // Per-component averages (top-level keys for the baseline
+        //  checkers' per-component threshold checks).
+        if (results.isNotEmpty()) {
+            root.put("overall_v2_type",
+                results.map { it["v2_type"] as Double }.average())
+            root.put("overall_v2_text",
+                results.map { it["v2_text"] as Double }.average())
+            root.put("overall_v2_actions",
+                results.map { it["v2_actions"] as Double }.average())
+            root.put("overall_v2_inputs",
+                results.map { it["v2_inputs"] as Double }.average())
+        } else {
+            root.put("overall_v2_type", 0.0)
+            root.put("overall_v2_text", 0.0)
+            root.put("overall_v2_actions", 0.0)
+            root.put("overall_v2_inputs", 0.0)
+        }
         root.put("fixture_count", results.size)
         val perCategory = JSONObject()
         for ((cat, avg) in categoryAvgs) {
@@ -378,35 +410,20 @@ internal class EvalRunner(private val config: EvalConfig) {
             val o = JSONObject()
             o.put("id", r["id"])
             o.put("category", r["category"])
-            o.put("composite", r["composite"] as Double)
-            // [2026-07-14 Phase D — inversion v3.0] ScorerV2
-            //  composite + component breakdown.  Written alongside
-            //  the legacy composite so post-hoc analysis can
-            //  re-cut the score without re-running the LLM.
             o.put("composite_v2", r["composite_v2"] as Double)
-            o.put("v2_actions_recall", r["v2_actions_recall"] as Double)
-            o.put("v2_inputs_complete", r["v2_inputs_complete"] as Double)
-            o.put("v2_intent_derived", r["v2_intent_derived"] as Double)
-            o.put("v2_rounds_efficiency", r["v2_rounds_efficiency"] as Double)
+            o.put("v2_type", r["v2_type"] as Double)
             o.put("v2_text", r["v2_text"] as Double)
-            o.put("r1", r["r1"] as Double)
-            o.put("r2_text", r["r2_text"] as Double)
-            o.put("r2_type", r["r2_type"] as Double)
-            o.put("r2_text_fuzzy", r["r2_text_fuzzy"] as Double)
-            // [2026-07-13] r3 (action_recall) + raw LLM proposal +
-            //  ground-truth expected actions so post-hoc scorer
-            //  experiments can re-cut the score without re-running
-            //  the LLM.
-            o.put("r3_actions", r["r3_actions"] as Double)
+            o.put("v2_actions", r["v2_actions"] as Double)
+            o.put("v2_inputs", r["v2_inputs"] as Double)
+            // Raw LLM proposal + GT expected actions + raw content /
+            //  details, kept so post-hoc scorer experiments can re-cut
+            //  the score without re-running the LLM.
             o.put("emitted_action_ids", r["emitted_action_ids"] as JSONArray)
             o.put("expected_actions", r["expected_actions"] as JSONArray)
             o.put("details_count", r["details_count"] as Int)
             o.put("content_len", r["content_len"] as Int)
             o.put("raw_content", r["raw_content"] as String)
             o.put("raw_details", r["raw_details"] as JSONArray)
-            val details = r["r1_details"] as JSONObject
-            o.put("picked_tool", details.optString("picked_tool", "?"))
-            o.put("has_text", details.optBoolean("has_text", false))
             fixtures.put(o)
         }
         root.put("fixtures", fixtures)
@@ -414,86 +431,19 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("wrote ${results.size} fixture results to ${file.path}")
     }
 
-    private companion object {
-        /** Char-overlap threshold for [hybridMatch]'s secondary
-         *  fallback.  Mirrors Kotlin's own `scoreRound2TextFuzzy`
-         *  ≥0.67 ratio and Python aligned4's `_hybrid_match`.  Below
-         *  this threshold we declare no hit (avoid over-credit on
-         *  trivial 1-2 char matches). */
-        const val CHAR_OVERLAP_THRESHOLD = 0.67
-    }
-
-    private fun scoreRound1(
+    /** r_text — verbatim OCR fidelity.  Hit-rate against GT
+     *  `expected_description_keywords` + `expected_details` values,
+     *  matched via [hybridMatch] against the union haystack (content
+     *  + details[].value).  Both annotations absent → 1.0 (no
+     *  penalty for un-annotated fixtures).  Extracted from the former
+     *  `scoreRound2` text half when the legacy composite was retired
+     *  (2026-07-15). */
+    private fun scoreRound2Text(
         outcome: ToolUseLoop.Outcome,
         scene: JSONObject,
-    ): Triple<Double, JSONObject, JSONObject> {
-        val empty = JSONObject()
-        val r1Details = JSONObject()
-        // ToolUseLoop.Outcome exposes firstToolName — the first
-        // non-final tool the model invoked (zoom_in / compare_text
-        // if it did reconnaissance, emit_bubble if it
-        // went straight to the final summary, null if the model just
-        // emitted text without any tool call).  Score the choice
-        // directly so the metric reflects "did the model think
-        // before answering?" instead of collapsing to "did the
-        // cycle end with a bubble?".
-        //
-        // The penalty for skipping reconnaissance depends on whether
-        // the fixture has text content: for text-heavy fixtures
-        // (ground truth lists expected_description_keywords /
-        // expected_details) the model really should zoom_in to
-        // verify text; for non-text fixtures the 5
-        // round-1 images already let the model answer correctly.
-        //
-        // End-cloud (2026-07-07+): the round-1 OCR hint is the
-        // verbatim character source — a model that trusts OCR enough
-        // to skip zoom_in and still nails the text is doing the
-        // right thing, not lazy.  Bumped skipReconScore from 0.5 to
-        // 0.85 to reflect this; we keep a small penalty so a model
-        // that skips recon AND drops text still loses points (r2
-        // covers the "did you actually get the text right" half).
-        val firstTool = outcome.firstToolName
-        val hasText = scene.optJSONArray("expected_description_keywords")?.length()?.let { it > 0 } == true ||
-            scene.optJSONArray("expected_details")?.length()?.let { it > 0 } == true
-        val skipReconScore = if (hasText) 0.85 else 1.0
-        val pickScore: Double
-        val pickedLabel: String
-        when {
-            outcome is ToolUseLoop.Outcome.Error -> {
-                pickScore = 0.0
-                pickedLabel = "(error)"
-            }
-            firstTool == null -> {
-                pickScore = skipReconScore
-                pickedLabel = "(none)"
-            }
-            firstTool == "emit_bubble" -> {
-                pickScore = skipReconScore
-                pickedLabel = "emit_bubble"
-            }
-            firstTool == "zoom_in" || firstTool == "compare_text" || firstTool == "extract_text" -> {
-                pickScore = 1.0
-                pickedLabel = firstTool
-            }
-            else -> {
-                pickScore = 0.7
-                pickedLabel = firstTool
-            }
-        }
-        r1Details.put("picked_tool", pickedLabel)
-        r1Details.put("has_text", hasText)
-        val inputOk = 1.0
-        val composite = 0.70 * pickScore + 0.30 * inputOk
-        return Triple(composite, empty, r1Details)
-    }
-
-    private fun scoreRound2(
-        outcome: ToolUseLoop.Outcome,
-        scene: JSONObject,
-    ): Pair<Double, Double> {
+    ): Double {
         val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
             ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-        val type = bubble?.type
         val content = bubble?.detail.orEmpty()
         val details = bubble?.details.orEmpty()
 
@@ -501,24 +451,15 @@ internal class EvalRunner(private val config: EvalConfig) {
         val expectedDetails = scene.optJSONArray("expected_details")
 
         // Union haystack: model can put verbatim text in `content` OR in
-        // any `details[].value` row — both count.  This fixes the failure
-        // pattern where the model fills 10+ details rows with verbatim
-        // text but skips the content field (the 3200+4096 strict-architecture
-        // "details-full content-empty" mode, see eval-option-c-ship
-        // memory).  The 50/50 average of textScore/detailScore below
-        // pools both, so a hit anywhere in the model's output registers
-        // equally.  Net effect on @100: composite 0.881 → 0.900
-        // (+0.019, 16W/2L/82T, no LLM variance).
+        // any `details[].value` row — both count.  The 50/50 average of
+        // textScore/detailScore below pools both, so a hit anywhere in
+        // the model's output registers equally.
         val haystack = normalize(
             content + " " + details.joinToString(" ") { it.value }
         )
 
-        // Text keyword hit rate.  Uses [hybridMatch] (fuzzyMatch +
-        // ≥0.67 char-overlap fallback) so that near-correct transcriptions
-        // like "建国路 100 号" matching GT "建国路100号" count as hits —
-        // mirrors Python aligned4's `_hybrid_match`.  See hybridMatch's
-        // docstring for the rationale.  Matches against the union
-        // haystack (content + details values).
+        // Text keyword hit rate via [hybridMatch] (fuzzyMatch + ≥0.67
+        // char-overlap fallback) so near-correct transcriptions count.
         var textScore = 0.0
         var denom = 0
         if (expectedKeywords != null && expectedKeywords.length() > 0) {
@@ -530,15 +471,8 @@ internal class EvalRunner(private val config: EvalConfig) {
             textScore = hits.toDouble() / expectedKeywords.length()
             denom++
         }
-        // Detail hit rate.  We deliberately match on VALUE only, not on
-        // label/kind.  The GT uses positional labels ("区域1", "招牌",
-        // ...) or generic types while the model writes semantic ones
-        // ("品牌", "价格", "营业时间") — matching on either would zero
-        // hits that are textually correct.  Value is the OCR signal; if
-        // the model emitted the same text the GT expects (post
-        // normalize), that's a hit regardless of how it labelled the row.
-        // Also matches against the union haystack, so GT detail values
-        // present in `content` (not just in `details`) count.
+        // Detail hit rate — match on VALUE only (GT uses positional
+        // labels, model uses semantic ones; value is the OCR signal).
         if (expectedDetails != null && expectedDetails.length() > 0) {
             var hits = 0
             for (i in 0 until expectedDetails.length()) {
@@ -552,48 +486,27 @@ internal class EvalRunner(private val config: EvalConfig) {
             denom++
         }
         if (denom == 0) textScore = 1.0
+        return textScore
+    }
 
-        // Type match — three-way partial credit instead of binary:
-        //   - right bucket                          → 1.0
-        //   - same family, different id             → 1.0  (v1.3, 2026-07-10;
-        //                                              generalizes to all
-        //                                              IntentFamilies, not
-        //                                              just OBSERVE)
-        //   - any registered type, wrong family     → 0.5
-        //   - empty / unknown                       → 0.0
-        //
-        // Why info ↔ location is full credit: signs / storefronts / 商户
-        // 招牌 (e.g. "大懒人冒菜", "FJ儿童业态") are BOTH "read the
-        // sign" (info) AND "find this place" (location).  Previously the
-        // partial-credit floor held 6/20 fixtures at composite 0.82 in
-        // v12c even with 100% keyword match (composite capped because
-        // r2_type = 0.5 floored r2 = 0.625, then 0.5 × r1 + 0.5 × 0.625
-        // ≈ 0.82).  Promoting to 1.0 unblocks those; solve stays
-        // partial because "solve this problem" is a different intent
-        // class from "read what's here".
-        //
-        // 9/100 fixtures in 2026-07-07 1-only @100 v2 regressed solely
-        // because the model picked a non-info type for fixtures the GT
-        // locks at "info", dropping composite by 0.25 each.  The
-        // partial credit (now full for same-family pair) restores that
-        // without inflating true matches.
-        //
-        // [2026-07-10] Family lookup now consults the registered
-        // IntentRegistry instead of the previous `setOf("info",
-        // "location")` literal.  Behavior on the 3 default intents is
-        // unchanged; adding a 4th ACT_ON intent in the future will
-        // automatically pair it with "solve" at 1.0 without editing
-        // this scorer.
-        //
-        // [2026-07-12] Schema dual-read: per-image GT authoring
-        //  migrated to `expected_top_intent_type` for the Phase B
-        //  fixtures (pii20 / phone_20 / location_20 / real) while
-        //  RCTW-171 keeps the old `expected_type` field.  Reading
-        //  both keeps backward-compat.  Fixes the systematic
-        //  r2_type=0.5 issue on every non-RCTW fixture (the LLM
-        //  emits the correct family but `expected_type` was missing,
-        //  so the eval fell through to FALLBACK_ID="info" forcing
-        //  cross-family partial credit).
+    /** r_type — graded intent-type correctness against `bubble.type`:
+     *  exact registered match 1.0 / same registered family 0.7 /
+     *  both registered but wrong family 0.3 / empty·unknown 0.0.
+     *  Dual-reads expected `expected_type` → `expected_top_intent_type`;
+     *  family lookup via the populated [intentRegistry].  Extracted +
+     *  regraded from the former `scoreRound2` type half when the
+     *  legacy composite was retired (2026-07-15); replaces the old
+     *  tautological `r_intent_derived`. */
+    private fun scoreRound2Type(
+        outcome: ToolUseLoop.Outcome,
+        scene: JSONObject,
+    ): Double {
+        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
+            ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
+        val type = bubble?.type
+        // Schema dual-read: v3 suites author `expected_top_intent_type`;
+        //  RCTW keeps the old `expected_type`.  Reading both keeps
+        //  backward-compat.  Missing both → FALLBACK_ID ("info").
         val expectedType = scene.optString(
             "expected_type",
             scene.optString("expected_top_intent_type", IntentRegistry.FALLBACK_ID),
@@ -601,127 +514,27 @@ internal class EvalRunner(private val config: EvalConfig) {
         val observeFamily = intentRegistry.idsInFamily(IntentFamily.OBSERVE)
         val actFamily = intentRegistry.idsInFamily(IntentFamily.ACT_ON)
         val registeredIds = observeFamily + actFamily
-        // `type` is `String?` from JSON lookups.  Treat null and "" the
-        // same as "no intent was emitted" — both score 0.0.
+        // `type` is `String?`.  Treat null and "" alike as "no intent
+        //  emitted" → 0.0.
         val nonBlankType = type?.takeIf { it.isNotBlank() } ?: ""
-        // Look up the family of an id (null if not registered or empty).
         fun familyOf(id: String): IntentFamily? = when {
             id.isBlank() -> null
             id in observeFamily -> IntentFamily.OBSERVE
             id in actFamily -> IntentFamily.ACT_ON
             else -> null
         }
-        val typeScore = when {
+        // Strict unknown handling: exact-match credit only when the
+        //  emitted type is actually registered — guards against an
+        //  unregistered string accidentally matching an unregistered
+        //  expected value.
+        return when {
             nonBlankType.isEmpty() -> 0.0
-            nonBlankType == expectedType -> 1.0
-            familyOf(nonBlankType) != null && familyOf(nonBlankType) == familyOf(expectedType) -> 1.0
-            nonBlankType in registeredIds -> 0.5
+            nonBlankType == expectedType && nonBlankType in registeredIds -> 1.0
+            familyOf(nonBlankType) != null &&
+                familyOf(nonBlankType) == familyOf(expectedType) -> 0.7
+            nonBlankType in registeredIds -> 0.3
             else -> 0.0
         }
-
-        val r2 = 0.50 * textScore + 0.50 * typeScore
-        return Pair(r2, typeScore)
-    }
-
-    /**
-     * [2026-07-13] Round 3 — action_recall.  Score the model's
-     * ability to *propose* the right `action_ids` against the
-     * ground truth's `expected_actions` list.
-     *
-     * Scoring rule (intentionally simple for v1):
-     *   - expected_actions absent / empty list  → 1.0 (no signal;
-     *     we don't penalize fixtures that don't exercise this
-     *     dimension — the surface area is small right now)
-     *   - otherwise                             → |predicted ∩ expected|
-     *                                             / |expected|
-     *     ("recall" — every expected id showed up at least once in
-     *     the proposal).  Precision is not penalized: over-proposing
-     *     `[open_in_maps, view_details]` on a fixture that expects
-     *     only `[open_in_maps]` still scores 1.0.  When the surface
-     *     grows beyond 2 actions and we have more ground truth,
-     *     add a precision term to break ties.
-     *
-     * Reads `bubble.llmProposedActions` (the raw list the model
-     * emitted in `emit_bubble.action_ids`) rather than the
-     * resolver-filtered `bubble.actions`.  Decouples the metric
-     * from SettingsStore-enabled changes so the score stays
-     * stable across user-toggle experiments.
-     *
-     * Returns: Pair(recallScore, detail).  The detail is a
-     * JSONObject carrying `emitted_action_ids` + `expected_actions`
-     * arrays so the JSON report can dump them per-fixture.
-     */
-    private fun scoreRound3(
-        outcome: ToolUseLoop.Outcome,
-        scene: JSONObject,
-    ): Pair<Double, JSONObject> {
-        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
-            ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-        val proposed: List<String> = bubble?.llmProposedActions.orEmpty()
-        val expectedArr = scene.optJSONArray("expected_actions")
-        val expected: List<String> = when {
-            expectedArr == null -> emptyList()
-            else -> (0 until expectedArr.length()).map { expectedArr.getString(it) }
-        }
-        val detail = JSONObject()
-            .put("emitted_action_ids", JSONArray(proposed))
-            .put("expected_actions", JSONArray(expected))
-        if (expected.isEmpty()) {
-            // No ground truth for this fixture — score as full
-            // credit so it doesn't drag composite down.  Inverted
-            // from "absent = 0"; the alternative would penalize
-            // every non-annotated fixture into the floor on a
-            // partial-annotation rollout.
-            return Pair(1.0, detail)
-        }
-        if (proposed.isEmpty()) {
-            // Expected something, got nothing — wrong.  Returning
-            // 0.0 lets r3's 0.10 weight pull composite 0.10 lower
-            // for these fixtures, which is the actionable signal.
-            return Pair(0.0, detail)
-        }
-        val proposedSet = proposed.toSet()
-        val hits = expected.count { it in proposedSet }
-        return Pair(hits.toDouble() / expected.size, detail)
-    }
-
-    /**
-     * Diagnostic-only variant of the r2 *text* score that counts an
-     * expected keyword as a hit when a high fraction of its characters
-     * appear in the model's answer, not only on exact substring
-     * containment.  Compared against the strict [scoreRound2] text
-     * score, the gap tells us how much of the r2_text plateau is the
-     * scorer being brittle (near-correct Chinese transcriptions zeroed)
-     * versus the model genuinely misreading the scene.  NOT part of the
-     * composite — purely a measurement aid.
-     */
-    private fun scoreRound2TextFuzzy(
-        outcome: ToolUseLoop.Outcome,
-        scene: JSONObject,
-    ): Double {
-        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
-            ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-        // Pool everything the model produced: content + every details value.
-        val hay = buildString {
-            append(bubble?.detail.orEmpty())
-            bubble?.details.orEmpty().forEach { append(' ').append(it.value) }
-        }
-        val hayNorm = normalize(hay)
-        val expectedKeywords = scene.optJSONArray("expected_description_keywords")
-            ?: return 1.0
-        if (expectedKeywords.length() == 0) return 1.0
-        var hits = 0.0
-        for (i in 0 until expectedKeywords.length()) {
-            val kw = expectedKeywords.getString(i)
-            if (kw.isEmpty()) continue
-            val kwNorm = normalize(kw)
-            if (kwNorm in hayNorm) { hits += 1.0; continue }
-            // Fraction of the keyword's characters present in the answer.
-            val present = kwNorm.toSet().count { it in hayNorm }
-            val ratio = present.toDouble() / kwNorm.toSet().size
-            if (ratio >= 0.67) hits += ratio
-        }
-        return hits / expectedKeywords.length()
     }
 
     /**

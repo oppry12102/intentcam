@@ -83,8 +83,10 @@ s = {f['id']: f for f in server.get('fixtures', [])}
 rows = []
 for fid in sorted(set(m) | set(s)):
     mf, sf = m.get(fid, {}), s.get(fid, {})
-    m_cmp = mf.get('composite', 0.0)
-    s_cmp = sf.get('composite', 0.0)
+    # [2026-07-15 redesign] composite_v2 is the canonical score;
+    #  r2_text → v2_text, r2_type → v2_type.
+    m_cmp = mf.get('composite_v2', 0.0)
+    s_cmp = sf.get('composite_v2', 0.0)
     delta = s_cmp - m_cmp
     if delta > 0.05 and m_cmp > 0:
         bottleneck = 'OCR-bound (server recovers)'
@@ -94,20 +96,20 @@ for fid in sorted(set(m) | set(s)):
         bottleneck = 'mixed'
     rows.append({
         'id': fid,
-        'mobile_composite': round(m_cmp, 4),
-        'server_composite': round(s_cmp, 4),
+        'mobile_composite_v2': round(m_cmp, 4),
+        'server_composite_v2': round(s_cmp, 4),
         'delta': round(delta, 4),
-        'mobile_r2_text': mf.get('r2_text'),
-        'server_r2_text': sf.get('r2_text'),
-        'mobile_r2_type': mf.get('r2_type'),
-        'server_r2_type': sf.get('r2_type'),
+        'mobile_v2_text': mf.get('v2_text'),
+        'server_v2_text': sf.get('v2_text'),
+        'mobile_v2_type': mf.get('v2_type'),
+        'server_v2_type': sf.get('v2_type'),
         'bottleneck': bottleneck,
     })
 
 print()
 print(f"{'id':12s} {'mobile':>8s} {'server':>8s} {'Δ':>7s}  bottleneck")
 for r in rows:
-    print(f"{r['id']:12s} {r['mobile_composite']:>8.3f} {r['server_composite']:>8.3f} "
+    print(f"{r['id']:12s} {r['mobile_composite_v2']:>8.3f} {r['server_composite_v2']:>8.3f} "
           f"{r['delta']:>+7.3f}  {r['bottleneck']}")
 
 print()
@@ -119,8 +121,8 @@ print(f"LLM-bound (server no help):     {len(llm_only)}")
 with open(diff_out, 'w') as f:
     json.dump({
         'suite': suite,
-        'mobile_composite': mobile.get('overall_composite'),
-        'server_composite': server.get('overall_composite'),
+        'mobile_composite_v2': mobile.get('overall_composite_v2'),
+        'server_composite_v2': server.get('overall_composite_v2'),
         'mobile_json': mobile_path,
         'server_json': server_path,
         'ocr_bound': [r['id'] for r in ocr_lifts],

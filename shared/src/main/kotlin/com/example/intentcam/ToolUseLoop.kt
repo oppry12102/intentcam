@@ -112,6 +112,30 @@ class ToolUseLoop(
          *  suspend boundary lets us call without a separate
          *  launch-per-emit. */
         onProgress: suspend (CycleProgress) -> Unit = {},
+        /** [2026-07-15] Optional gate called after each successful
+         *  `emit_bubble` parse, BEFORE the cycle returns.  When the
+         *  callback returns [FinalizeDecision.CONTINUE], the loop
+         *  injects a missing-input nudge into the next user message
+         *  and runs another round (capped at
+         *  [INPUT_MISSING_MAX_RETRIES]); when it returns
+         *  [FinalizeDecision.FINALIZE] (or the callback is null), the
+         *  cycle ends with the current bubble as the Outcome.
+         *
+         *  Designed so [ToolUseLoop] stays decoupled from
+         *  [com.example.intentcam.ActionOrchestrator] — the caller
+         *  ([com.example.intentcam.CycleManager]) wires the gate by
+         *  closing over the orchestrator.  Default null preserves
+         *  the legacy single-shot emit behavior for eval + tests. */
+        onEmit: ((bubble: com.example.intentcam.Bubble, round: Int) -> FinalizeDecision)? = null,
+        /** [2026-07-15] Optional projection called once on the final
+         *  bubble before it returns in [Outcome.Bubble].  Lets the
+         *  caller stamp `validatedInputs` / `pendingInputs` onto
+         *  the bubble's data-class fields using whatever
+         *  parser-registry is at hand.  Prod wires
+         *  [com.example.intentcam.ActionOrchestrator.markValidatedInputs];
+         *  eval wires a pure-shared helper (no Android dep).  Default
+         *  null leaves the fields empty (legacy behavior). */
+        markValidated: ((bubble: com.example.intentcam.Bubble) -> com.example.intentcam.Bubble)? = null,
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
@@ -202,6 +226,16 @@ class ToolUseLoop(
         // bound wall-time; if the retry also truncates we fall through
         // to the empty-bubble path and the caller scores it as-is.
         var maxTokensRetries = 0
+        // [2026-07-15] Input-missing nudge loop.  After each
+        //  emit_bubble parse, [onEmit] (the orchestrator's gate) is
+        //  consulted: CONTINUE → inject missing-input hint + re-loop.
+        //  Capped at [INPUT_MISSING_MAX_RETRIES] (3) per fixture to
+        //  bound wall-time.  Mirrors the max_tokens retry pattern
+        //  (ToolUseLoop.kt:411-444) but is distinct: this gate fires
+        //  when the bubble parses cleanly but is missing required
+        //  action inputs (LLM didn't extract them in round 1); the
+        //  max_tokens gate fires when the bubble itself is malformed.
+        var inputMissingRetries = 0
 
         // Multi-round drill-down chain: persists across rounds so
         // round-N's `zoom_in(source="last")` crops round-N-1's
@@ -640,7 +674,41 @@ class ToolUseLoop(
                     bubble = finalBubble,
                     isTerminal = true,
                 ))
-                return Outcome.Bubble(finalBubble, firstToolName = chosenToolName)
+                // [2026-07-15] Input-missing gate.  When the caller
+                //  wires [onEmit] (typically
+                //  [com.example.intentcam.ActionOrchestrator.shouldFinalize]
+                //  via [com.example.intentcam.CycleManager]), this
+                //  fires AFTER the bubble is finalized.  CONTINUE →
+                //  inject a missing-input nudge + re-enter the for-
+                //  round loop (capped at [INPUT_MISSING_MAX_RETRIES]).
+                //  The bubble isn't returned to the caller yet — the
+                //  next round's emit_bubble will overwrite it.  When
+                //  onEmit is null (legacy / eval), this branch is
+                //  skipped and the cycle ends here.
+                val gate = onEmit?.invoke(finalBubble, round)
+                if (gate is FinalizeDecision.CONTINUE &&
+                    inputMissingRetries < INPUT_MISSING_MAX_RETRIES
+                ) {
+                    inputMissingRetries++
+                    log(
+                        "TOOL_NUDGE",
+                        "round $round missing=${gate.missing}; " +
+                            "retry $inputMissingRetries/$INPUT_MISSING_MAX_RETRIES"
+                    )
+                    val nudgeContent = buildMissingInputNudge(gate.missing)
+                    messages.put(JSONObject().put("role", "user").put("content", nudgeContent))
+                    continue
+                }
+                if (gate is FinalizeDecision.FINALIZE) {
+                    log("TOOL_FINALIZE", "round $round reason=${gate.reason}")
+                }
+                // [2026-07-15] Stamp validation state onto the bubble
+                //  before returning.  Wraps the bubble in a copy()
+                //  so the data-class fields reflect the orchestrator's
+                //  (or eval-side helper's) view.  Null = no-op
+                //  (legacy callers keep empty fields).
+                val stamped = markValidated?.invoke(finalBubble) ?: finalBubble
+                return Outcome.Bubble(stamped, firstToolName = chosenToolName)
             }
             if (anyNeedsInput && pendingUserInput != null) {
                 val pui = pendingUserInput
@@ -657,19 +725,21 @@ class ToolUseLoop(
         // synthesize a default emit_bubble from it.  Better than
         // failing the whole cycle.
         val finalText = lastRound?.text.orEmpty()
-        return Outcome.Bubble(
-            com.example.intentcam.Bubble(
-                id = "bubble-${System.currentTimeMillis()}",
-                type = IntentRegistry.FALLBACK_ID,
-                title = finalText.take(40).ifBlank { "未识别" },
-                detail = finalText.take(200).ifBlank { "（模型未给出内容描述）" },
-                confidence = 0.5f,
-                imageBytes = thumbnail,
-                createdAtMs = System.currentTimeMillis(),
-                toolName = chosenToolName,
-            ),
-            firstToolName = chosenToolName,
+        val fallbackBubble = com.example.intentcam.Bubble(
+            id = "bubble-${System.currentTimeMillis()}",
+            type = IntentRegistry.FALLBACK_ID,
+            title = finalText.take(40).ifBlank { "未识别" },
+            detail = finalText.take(200).ifBlank { "（模型未给出内容描述）" },
+            confidence = 0.5f,
+            imageBytes = thumbnail,
+            createdAtMs = System.currentTimeMillis(),
+            toolName = chosenToolName,
         )
+        // [2026-07-15] Apply markValidated to the 兜底 bubble too so
+        //  eval/prod see consistent validation state regardless of
+        //  whether the cycle hit the round cap or emitted normally.
+        val stampedFallback = markValidated?.invoke(fallbackBubble) ?: fallbackBubble
+        return Outcome.Bubble(stampedFallback, firstToolName = chosenToolName)
     }
 
     private fun buildPlaceholder(
@@ -691,6 +761,44 @@ class ToolUseLoop(
         toolName = toolName,
         needsUserInput = true,
     )
+
+    /**
+     * Build the user-role nudge message that steers the LLM toward
+     * extracting the missing required inputs.  Mirrors the shape of
+     * the max_tokens retry nudge (ToolUseLoop.kt:411-444) — a single
+     * text block appended to the messages array so the next round's
+     * `streamToolUse` call quotes it as the user's voice.
+     *
+     * The wording tells the LLM three things:
+     *   1. Which input keys are still missing (deduplicated, in
+     *      first-appearance order).
+     *   2. The two exploration tools at its disposal
+     *      (`extract_text` for already-visible regions, `zoom_in` for
+     *      corners the thumbnail didn't show).
+     *   3. **Verbatim back into details[]**: the parsers read from
+     *      `bubble.details[].value`, so any text the LLM extracts
+     *      must land there, not just in `detail` prose.
+     *
+     * Capped at [INPUT_MISSING_MAX_RETRIES] (3) — beyond that, the
+     * bubble ships as-is with `pendingInputs` populated for the UI's
+     * ghost-chip state.  The cap is enforced at the call site
+     * (ToolUseLoop.kt:643 onward), not here.
+     */
+    private fun buildMissingInputNudge(missing: List<String>): JSONArray {
+        val text = buildString {
+            append("你刚才的 emit_bubble 还差 ${missing.size} 个 input: ")
+            append(missing.joinToString("、"))
+            append("。")
+            append("\n请按以下步骤补齐:")
+            append("\n  - **已经在缩略图里看到 + OCR 不确定** → 调 `extract_text(bbox)` 拿 verbatim 字符（不付 image token）")
+            append("\n  - **缩略图里完全看不到那块**（角落字 / 裁切掉的部分）→ 调 `zoom_in(bbox, source='original')` 拉新像素")
+            append("\n  - **缺地址 / 店名** → 一般在 title / detail / details[].value 任意一个非空字段里，extract_text 抓回来 verbatim 写到 details[]")
+            append("\n\n**关键**：input 是从 bubble.details[].value 抽取的，所以 OCR / 自己读到的字符必须 verbatim 写进 details[].value（label 用 “手机号” / “地点” 等），parser 才能在下一轮 validate 时拿到。")
+            append("\n不要意译、不要概括、不要只写到 detail prose 里——写不到 details[] = parser 抽不到 = 还是缺 input。")
+        }
+        return JSONArray()
+            .put(JSONObject().put("type", "text").put("text", text))
+    }
 
     /**
      * Reconstruct the assistant message exactly as the model emitted
@@ -742,6 +850,15 @@ class ToolUseLoop(
          *  fired with empty content → r2_text_fuzzy 0.0, composite
          *  -0.257.  Tighter cap = not safe.  Reverted. */
         const val MAX_ROUNDS = 30
+
+        /** [2026-07-15] Cap on input-missing nudge rounds per cycle.
+         *  After this many retries the bubble ships as-is with
+         *  `pendingInputs` populated (ghost chips render in UI).
+         *  3 chosen to match the empirical "1 round emit + 1-2
+         *  rounds explore" median for phone_20 fixtures; bumping
+         *  to 5 adds wall-time without measurable input-fill gain
+         *  in the smoke test. */
+        const val INPUT_MISSING_MAX_RETRIES = 3
 
         /** The tool name the model uses to emit the final Bubble.
          *  Tracked separately so we don't overwrite the interpreting
