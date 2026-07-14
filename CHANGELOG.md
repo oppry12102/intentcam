@@ -4,6 +4,63 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14d] — verifier Pass 4b (menu_food→recruit_hiring)
+
+User-facing feature release: new verifier pass that catches the
+"restaurant-with-side-hiring-poster" mixed-content case.
+
+### Added — verifier Pass 4b (`9b68dca`)
+
+LLM previously defaulted restaurant posters that ALSO have a 招聘
+sub-notice to `menu_food` (driven by the dominant menu content). The
+verifier couldn't flip to `recruit_hiring` because no pass targeted
+`menu_food | location` source for the recruit case.
+
+The new pass fires when:
+
+  - LLM's emit_bubble `type ∈ {menu_food, location}`
+  - corpus has `招聘|招工|...` (RECRUIT regex)
+  - corpus has ≥1 of `服务员|营业员|工作人员|勤杂工|厨师|店员|前台|后厨|迎宾|配菜|收银|服务员厨工`
+
+That third gate is critical — it differentiates a real recruitment
+poster from an incidental "招聘服务员 3500" mention in a menu
+description. Phase G fixture image_4109 (湘辣王 "招聘 + 菜品") does
+NOT have a job-title word in its corpus, so the new pass correctly
+does NOT fire for it — phaseG_15 re-measured at 0.945 (Δ=−0.014
+within noise vs prior 0.959).
+
+**Effect on `recruit_hiring_11`:**
+
+| fixture | pre-pass | post-pass | Δ |
+|---|---:|---:|---:|
+| image_5380 (重庆渔翁鱼庄) | 0.900 | 1.000 | +0.100 |
+| image_4641 (吉祥馄饨) | 0.788 | 1.000 | +0.212 |
+
+Both re-curated as `recruit_hiring` from `dropped` (from the prior
+cycle `097899a`); suite expanded 9 → 11. New baseline 0.970.
+
+### Re-add — image_5380 + image_4641 to recruit_hiring (`9b68dca`)
+
+Originally dropped at `097899a` (real_estate_rental_12-era GT fidelity)
+because Pass N couldn't flip `menu_food → recruit_hiring`. Pass 4b
+fixes the gap. `image_3553` + `image_1440` NOT re-added — their
+corpora don't have job-title words.
+
+### APK artifacts
+
+| Variant | Path | Size | mtime |
+|---|---|---|---|
+| Debug | `/home/oppry/work/app3/intentcam.apk` | 25.4 MB | 2026-07-14 (rebuild post-`9b68dca`) |
+| Release | `/home/oppry/work/app3/intentcam-release.apk` | 16.7 MB | 2026-07-14 (rebuild post-`9b68dca`) |
+
+The release APK ships **two on-device verifier changes**:
+- `6456839` canonical-action injection robustness
+- `9b68dca` Pass 4b menu_food/location → recruit_hiring flip
+
+For a real-world scan of a 重庆渔翁鱼庄 / 吉祥馄饨 storefront,
+users now see the recruiting chips (and `save_posting` action) in
+the bubble rather than just menu-flavoured `copy_menu`.
+
 ## [2026-07-14c] — recruit_hiring + real_estate_rental suite trim
 
 Eval-infrastructure release: clean up 5 mixed-content fixtures from
