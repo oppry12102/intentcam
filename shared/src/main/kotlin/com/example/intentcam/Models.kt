@@ -132,6 +132,12 @@ data class UiState(
     /** Newest-last ring of [DebugLogEntry] entries.  Capped at [DEBUG_LOG_MAX];
      *  older entries are dropped when new ones arrive. */
     val debugLogs: List<DebugLogEntry> = emptyList(),
+    /** Persistent buffer of `FrameAnalyzer` errors (OOM, decode failure,
+     *  etc.) — INDEPENDENT of [debugEnabled] so a user with the panel
+     *  off can still surface analyzer faults.  Capped at [DEBUG_LOG_MAX].
+     *  2026-07-14 C-cleanup: split out from `debugLogs` so the toggle
+     *  doesn't hide real crashes. */
+    val analyzerErrorLog: List<DebugLogEntry> = emptyList(),
     /** Non-null while a tool needs free-form user input to continue
      *  (e.g. navigate_to_block's destination).  The UI shows a dialog;
      *  AppViewModel.submitUserInput(text) feeds it back into the

@@ -145,7 +145,7 @@ data class OcrResult(
                 if (isCropHint) {
                     "【zoom_in crop OCR 高保真重扫】on-device OCR 已对该裁剪区域重新扫描（更高分辨率，比 round-1 hint 的同区域更可靠），下面按行给出字符+坐标+置信度（坐标是 crop frame，归一化 [0,1]，顺序: 左上→右上→右下→左下）。\n"
                 } else {
-                    "【read_text 全图扫描结果】on-device OCR 已扫过整张图，下面按行给出字符+坐标+置信度（坐标归一化 [0,1]，顺序: 左上→右上→右下→左下）。\n"
+                    "【on-device OCR 全图扫描结果】on-device OCR 已扫过整张图，下面按行给出字符+坐标+置信度（坐标归一化 [0,1]，顺序: 左上→右上→右下→左下）。\n"
                 }
             )
             sorted.forEachIndexed { i, b ->

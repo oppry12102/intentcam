@@ -431,7 +431,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "## 端云协同识别工作流（**这是核心，请严格按这个走**）\n" +
                     "\n" +
                     "### Step 1: round-1 — 读 OCR 全图扫描 + 看缩略图\n" +
-                    "你的 user message 里有一份 **【read_text 全图扫描结果】**——on-device OCR 在 4096-px 全分辨率扫过整张图，按行返回字符 + 4 点坐标 + 可信度（按 conf 降序，最多 30 行，[LOW] 标记 < 0.5）。\n" +
+                    "你的 user message 里有一份 **【on-device OCR 全图扫描结果】**——on-device OCR 在 4096-px 全分辨率扫过整张图，按行返回字符 + 4 点坐标 + 可信度（按 conf 降序，最多 30 行，[LOW] 标记 < 0.5）。\n" +
                     "**这是 verbatim 字符基准**：OCR 给的字符直接 verbatim 引用到 emit_bubble.content 和 details[]，不要自己重新组织、意译、概括。\n" +
                     "**这张缩略图是 3200-px 降采样版**（原图手机直出 8000+ 像素，cap 到 3200 给 LLM——2026-07-12 实测的 sweet spot），够看清大部分文字，但**密集小字 / 角落字 / 模糊字在缩略图上会糊**——遇到这种情况必须走 Step 2。\n" +
                     "\n" +

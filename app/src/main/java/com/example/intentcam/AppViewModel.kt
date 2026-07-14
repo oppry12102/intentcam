@@ -239,6 +239,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // (via onFrame) and from viewModelScope coroutines concurrently.
     private val debugLogs = ArrayDeque<DebugLogEntry>()
     private val debugLogsLock = Any()
+    // 2026-07-14 C-cleanup: analyzer errors live in a SEPARATE buffer
+    // from `debugLogs` so they survive a `setDebugEnabled(false)` toggle.
+    // The in-app overlay shows this list regardless of the toggle.
+    private val analyzerErrorLog = ArrayDeque<DebugLogEntry>()
+    private val analyzerErrorLogLock = Any()
     // Monotonic counter for unique LazyColumn keys.  timestampMs has
     // millisecond resolution and multiple logDebug calls in the same ms
     // (very common in a tight tool-use loop) would crash the panel with
@@ -277,14 +282,39 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         debugLogs.toList()
     }
 
+    private fun snapshotAnalyzerErrorLog(): List<DebugLogEntry> = synchronized(analyzerErrorLogLock) {
+        analyzerErrorLog.toList()
+    }
+
     /**
      * Public surface for the camera analyzer to surface exceptions into the
      * in-app debug overlay.  Lives next to [logDebug] (private) so the only
      * way external callers reach the debug log is through named wrappers
      * that hard-code the tag.
+     *
+     * 2026-07-14 C-cleanup: analyzer errors are now ALWAYS recorded
+     * (independent of [UiState.debugEnabled]) so an OOM or exception
+     * inside `FrameAnalyzer.analyze` is still visible after the user
+     * toggled the debug panel off.  Storage stays in a separate
+     * `analyzerErrorLog` buffer that survives the toggle; the
+     * in-app overlay shows a separate red-bordered section when
+     * non-empty.  `logDebug` (other call sites) is unchanged.
      */
     fun logAnalyzerError(message: String) {
-        logDebug("ANALYZER", message)
+        val safe = message.replace('\n', ' ').replace('\r', ' ')
+        val entry = DebugLogEntry(
+            timestampMs = System.currentTimeMillis(),
+            seq = debugLogSeq.incrementAndGet(),
+            tag = "ANALYZER",
+            message = safe,
+        )
+        synchronized(analyzerErrorLogLock) {
+            analyzerErrorLog.addLast(entry)
+            while (analyzerErrorLog.size > UiState.DEBUG_LOG_MAX) analyzerErrorLog.removeFirst()
+        }
+        _state.value = _state.value.copy(
+            analyzerErrorLog = snapshotAnalyzerErrorLog()
+        )
     }
 
     /**

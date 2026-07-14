@@ -24,6 +24,7 @@ import android.util.Size
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -187,6 +188,17 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 if (state.debugEnabled && state.phase == Phase.SCANNING) {
                     DebugLogPanel(
                         logs = state.debugLogs,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                // 2026-07-14 C-cleanup: analyzer-error panel is shown
+                //  INDEPENDENTLY of the debugEnabled toggle so a
+                //  FrameAnalyzer OOM / decode failure is always
+                //  visible.  Red border to distinguish from the
+                //  debug log.  Only renders when non-empty.
+                if (state.analyzerErrorLog.isNotEmpty() && state.phase == Phase.SCANNING) {
+                    AnalyzerErrorPanel(
+                        logs = state.analyzerErrorLog,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -1127,6 +1139,51 @@ private fun DebugLogRow(entry: DebugLogEntry) {
         fontFamily = FontFamily.Monospace,
         modifier = Modifier.padding(vertical = 1.dp),
     )
+}
+
+/**
+ * Always-visible panel for `FrameAnalyzer` errors (OOM, decode
+ * failure, etc.) — INDEPENDENT of the debugEnabled toggle so a
+ * user with the panel off can still surface analyzer faults.
+ * 2026-07-14 C-cleanup: split from `DebugLogPanel` for the
+ * above reason; only renders when `logs` is non-empty.
+ */
+@Composable
+private fun AnalyzerErrorPanel(
+    logs: List<DebugLogEntry>,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(logs.size) {
+        if (logs.isNotEmpty()) {
+            if (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 >= logs.size - 2) {
+                listState.scrollToItem(logs.size - 1)
+            }
+        }
+    }
+    Column(
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xCC2A0F12))
+            .border(1.dp, Color(0xFFE64A8C), RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = "⚠ FrameAnalyzer errors (${logs.size})",
+            color = Color(0xFFFF8FB1),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.heightIn(max = 120.dp),
+        ) {
+            items(logs, key = { it.seq }) { entry ->
+                DebugLogRow(entry)
+            }
+        }
+    }
 }
 
 // ThreadLocal because SimpleDateFormat isn't thread-safe and the lazy
