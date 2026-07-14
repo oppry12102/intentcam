@@ -66,6 +66,23 @@ object IntentVerifier {
      *  is incidental.  The (?!.*广告) lookahead catches both cases. */
     private val RECRUIT = Regex("""(?:招聘|招工|急招|诚招|诚聘|招服务员|招营业员|招工作人员|聘请|高薪诚聘|高薪聘请)""")
 
+    /** [2026-07-14] Phase L — explicit job-title vocabulary used by
+     *  Pass 4b to distinguish a real recruitment poster from an
+     *  incidental "招聘" mention in a menu/sign.  When a corpus
+     *  has 招聘 AND a job-title word from this set, the LLM is
+     *  almost certainly looking at a dedicated recruitment poster
+     *  side-mounted on the image (e.g. 招牌菜 + 招聘启事).  When
+     *  it has 招聘 alone, it is likely the verb-on-sign context
+     *  ("招牌菜 + 招聘服务员 3500") and the dominant signal is
+     *  the restaurant content.  This set is intentionally narrow
+     *  to avoid over-fire; image_5380 (重庆渔翁鱼庄 招聘服务员
+     *  厨房勤杂工) crosses the threshold.  Image_4109 (湘辣王
+     *  "招聘 + 菜品") does not. */
+    private val RECRUIT_JOB_TITLES = setOf(
+        "服务员", "营业员", "工作人员", "勤杂工", "厨师", "店员", "前台",
+        "后厨", "迎宾", "配菜", "收银", "服务员厨工",
+    )
+
     /** Real-estate signal — "出租" / "出售" with a structured
      *  context (typically followed by 房/室/平米/户型).  Plain
      *  "出租" alone is too noisy (most real-estate ads use the
@@ -310,6 +327,27 @@ object IntentVerifier {
         //  "招聘广告制作" on info-style posters getting
         //  over-flipped.
         if (currentType == "info" && RECRUIT.containsMatchIn(corpus)) {
+            return "recruit_hiring"
+        }
+        // [2026-07-14 Phase L] Pass 4b: menu_food | location +
+        //  recruit POSTER (招聘 AND ≥1 explicit job-title word) →
+        //  recruit_hiring.  Catches the case where the LLM
+        //  classifies a restaurant-with-side-hiring-poster as
+        //  menu_food (or as location, when the address is
+        //  address-dominant) but the user-relevant intent is the
+        //  hiring.  Restricted to BOTH (a) RECRUIT keyword AND
+        //  (b) ≥1 word from RECRUIT_JOB_TITLES to avoid over-firing
+        //  on the common case of "招牌菜 + 招聘服务员 3500" where
+        //  招聘 is part of the menu description.
+        //
+        //  Ordered AFTER Pass 4 so info-source flips fire first;
+        //  BEFORE all observe-intent post-guards (Pass 9+) so a
+        //  recruit-flipped type still wins over a menu/observation
+        //  re-flip.
+        if ((currentType == "menu_food" || currentType == "location")
+            && RECRUIT.containsMatchIn(corpus)
+            && RECRUIT_JOB_TITLES.any { it in corpus }
+        ) {
             return "recruit_hiring"
         }
         // Pass 5: info + structured real-estate token →

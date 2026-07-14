@@ -2,7 +2,7 @@
   "version": 1,
   "description": "recruit_hiring mini-suite (Phase K-light) — 13 hand-curated fixtures matching the verifier's RECRUIT regex (IntentVerifier.kt:67). All fixtures have at least one RECRUIT token (招聘/招工/急招/诚招/诚聘/...) so Pass 4 (info + RECRUIT → recruit_hiring) and Pass N (location + RECRUIT → recruit_hiring) fire correctly. Categories span 6 — restaurant_recruit 5, shop_recruit 2, gym_recruit 2, school_recruit / service_recruit / company_recruit each 1. Canonical action: save_posting.",
   "rctw_root": "/home/oppry/RCTW-171",
-  "auto_scaled_count": 9,
+  "auto_scaled_count": 11,
   "expected_actions": [
     "save_posting"
   ],
@@ -61,6 +61,19 @@
       "curation_note": "Hand-curated for recruit_hiring. Restaurant roles. 诚聘. Has 严禁入内 but Pass 4 (recruit) fires before Pass 8 (warning)."
     },
     {
+      "id": "image_4641",
+      "file": "image_4641.jpg",
+      "src": "hand-curated 2026-07-14 ([2026-07-14c] re-added — menu_food + recruit POSTER (招聘+job-title) → verified Pass 4b flips to recruit_hiring)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "吉祥馄饨 招聘 服务员 钟点工 3000-4000元/月",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "[2026-07-14c] RE-ADDED. Originally dropped 2026-07-14c because verifier couldn't flip menu_food → recruit_hiring. Re-added 2026-07-14 with new Pass 4b. Corpus '招聘 真材实料的你 服务员 钟点工' has both RECRUIT keyword AND job-title word (服务员, 钟点工)."
+    },
+    {
       "id": "image_4767",
       "file": "image_4767.jpg",
       "src": "hand-curated 2026-07-14 (RECRUIT regex match: Service provider recruitment. 招聘启事 formal sign....)",
@@ -72,6 +85,19 @@
         "save_posting"
       ],
       "curation_note": "Hand-curated for recruit_hiring. Service provider recruitment. 招聘启事 formal sign."
+    },
+    {
+      "id": "image_5380",
+      "file": "image_5380.jpg",
+      "src": "hand-curated 2026-07-14 ([2026-07-14c] re-added — menu_food + recruit POSTER (招聘+job-title) → verified Pass 4b flips to recruit_hiring)",
+      "category": "restaurant_recruit",
+      "what_is_pictured": "重庆渔翁鱼庄 汉口宵夜 特色小吃 招聘 服务员 厨房勤杂工 订餐电话 15994230877",
+      "must_have_in_scene_or_observation": [],
+      "expected_top_intent_type": "recruit_hiring",
+      "expected_actions": [
+        "save_posting"
+      ],
+      "curation_note": "[2026-07-14c] RE-ADDED. Originally dropped 2026-07-14c because verifier couldn't flip menu_food → recruit_hiring. Re-added 2026-07-14 with new Pass 4b (verifier IntentVerifier.kt:332-352) which targets this exact case. Corpus '招聘 服务员 厨房勤杂工' has both RECRUIT keyword AND job-title word, so Pass 4b fires correctly. Image is a 宵夜 restaurant 招牌菜 ad with side-mounted 招聘启事 — user-relevant intent IS the hiring."
     },
     {
       "id": "image_7234",
