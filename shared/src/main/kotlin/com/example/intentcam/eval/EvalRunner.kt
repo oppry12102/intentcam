@@ -1,6 +1,7 @@
 package com.example.intentcam.eval
 
 import com.example.intentcam.CapturedFrame
+import com.example.intentcam.ImagePipeline
 import com.example.intentcam.IntentFamily
 import com.example.intentcam.IntentRegistry
 import com.example.intentcam.LlmClient
@@ -89,8 +90,20 @@ internal class EvalRunner(private val config: EvalConfig) {
             return 1
         }
         val gt = JSONObject(config.groundTruth.readText())
-        val scenes = gt.optJSONArray("scenes") ?: JSONArray()
+        val scenes = gt.optJSONArray("scenes")
+        if (scenes == null) {
+            System.err.println(
+                "ERROR: ground truth ${config.groundTruth} is missing the 'scenes' key. " +
+                "The eval reads the 'scenes' array (not 'fixtures') — see memory " +
+                "'feedback-eval-runner-scenes-key'."
+            )
+            return 1
+        }
         val sceneList = (0 until scenes.length()).map { scenes.getJSONObject(it) }
+        if (sceneList.isEmpty()) {
+            System.err.println("ERROR: ground truth ${config.groundTruth} has empty 'scenes' array.")
+            return 1
+        }
         // Phase 2b (2026-07-12): --fixtures restricts the run to a
         // curated id set, preserving GT order so jsonOut is
         // comparable to the 20-fixture baselines.  When the user
@@ -102,6 +115,10 @@ internal class EvalRunner(private val config: EvalConfig) {
                     val missing = wanted - check.map { it.optString("id") }.toSet()
                     if (missing.isNotEmpty()) {
                         System.err.println("  WARN: --fixtures ids not in GT: $missing")
+                    }
+                    if (check.isEmpty()) {
+                        System.err.println("ERROR: --fixtures filtered out every scene in ${config.groundTruth}.")
+                        return 1
                     }
                 }
         } else sceneList
@@ -138,8 +155,14 @@ internal class EvalRunner(private val config: EvalConfig) {
             // --resize/--quality.
             val rawBytes = imgPath.readBytes()
             // TEST 2026-07-12: mirror MAX_FULL_DIM 2048→4096
-            // (matches FrameAnalyzer.kt:167 retest).
-            val fullRes = encodeThumbnail(rawBytes, maxDim = 4096, quality = 95) ?: rawBytes
+            // (matches FrameAnalyzer.kt:167 retest).  2026-07-14:
+            // hardcoded literal replaced with `ImagePipeline`
+            // shared constant — see shared/.../ImagePipeline.kt.
+            val fullRes = encodeThumbnail(
+                rawBytes,
+                maxDim = ImagePipeline.MAX_FULL_DIM,
+                quality = ImagePipeline.FULL_QUALITY,
+            ) ?: rawBytes
             val thumbnail = encodeThumbnail(
                 rawBytes,
                 maxDim = config.resize,

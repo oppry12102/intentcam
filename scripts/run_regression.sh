@@ -69,6 +69,33 @@ selected = set(sys.argv[4:]) if len(sys.argv) > 4 else set()
 data = json.load(open(baselines_path))
 threshold = data["_meta"]["threshold"]
 suites = data["suites"]
+
+# [2026-07-14 C-cleanup] Reference-only suites (suffixed `_ref` —
+# historical Huawei Cloud numbers) and `*_server_cpu` (slow CPU-mode
+# PP-OCRv4 reference) are excluded by default; the baselines.json
+# `note` field on each says "reference only — do NOT use for
+# regression checks".  They still appear in `baselines.json` so the
+# reference data is recorded, but the regression script now honors
+# that note.  Pass the suite name explicitly on the CLI to run one.
+def is_reference(s):
+    name = s["name"]
+    note = (s.get("note") or "").lower()
+    if name.endswith("_ref"):
+        return True
+    if name.endswith("_server_cpu"):
+        return True
+    if "reference only" in note and "do not" in note:
+        return True
+    return False
+
+before_filter = len(suites)
+if not selected:
+    ref_skipped = [s["name"] for s in suites if is_reference(s)]
+    suites = [s for s in suites if not is_reference(s)]
+    if ref_skipped:
+        print(f">> Skipping {len(ref_skipped)} reference suite(s) by default: {ref_skipped}")
+        print("   (pass the suite name explicitly to run one)")
+
 if selected:
     suites = [s for s in suites if s["name"] in selected]
 if not suites:

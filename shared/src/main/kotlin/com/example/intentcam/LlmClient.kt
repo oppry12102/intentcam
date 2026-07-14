@@ -519,13 +519,6 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "\n" +
                     "**必须**调 emit_bubble 收尾——**永远不要因为 OCR 不完美就跳过 emit_bubble**。\n" +
                     "\n"
-                            /** Legacy system prompt for the one-shot path (unused by
-         *  ToolUseLoop but kept for the /v1/messages fallthrough in
-         *  tests). */
-        const val FINAL_ANSWER_SYSTEM =
-            "你是 IntentCam 的视觉意图助手。系统已经替你跑过选定的工具，并返回了工具结果摘要。" +
-                    "请用一段简短的中文 JSON 总结：scene（看到了什么，一句话）, intent（用户最可能的意图，动宾短语≤12字），" +
-                    "type（注册过的 intent id 之一，由 __INTENT_BLOCK__ 动态注入；legacy 路径下退回到 info），confidence（0-1）。不要 markdown 围栏，不要多余解释。"
 
         /** Build the live tool-use system prompt by splicing the
          *  dynamic intent + action blocks into [TOOL_USE_SYSTEM] at

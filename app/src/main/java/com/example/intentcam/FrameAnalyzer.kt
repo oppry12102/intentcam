@@ -124,8 +124,8 @@ class FrameAnalyzer(
         // the downscaled thumbnail.  We can keep the full-res bitmap
         // referenced for any zoom_in calls that follow; the thumbnail
         // is the small payload that ships to the LLM.
-        val fullRes = encodeBitmap(work, quality = FULL_QUALITY, maxDim = MAX_FULL_DIM)
-        val thumbnail = encodeBitmap(work, quality = QUALITY, maxDim = MAX_DIM)
+        val fullRes = encodeBitmap(work, quality = ImagePipeline.FULL_QUALITY, maxDim = ImagePipeline.MAX_FULL_DIM)
+        val thumbnail = encodeBitmap(work, quality = ImagePipeline.QUALITY, maxDim = ImagePipeline.MAX_DIM)
         work.recycle()
         if (fullRes == null || thumbnail == null) return null
         return CapturedFrame(thumbnail = thumbnail, fullRes = fullRes)
@@ -156,14 +156,14 @@ class FrameAnalyzer(
         // Token cost: 3200² ≈ 10.24M px (vs 4096² ≈ 16.78M,
         // 1.64× less).  Round-1 thumbnail is sent every round, so
         // 3200 stays under 16M px / round — well under the cap.
-        const val MAX_DIM = 3200
-        const val QUALITY = 90
+        //
         // Full-res kept in memory for zoom_in crops (sibling views).
         // No downscale; the JPEG is at native phone-photo size
         // (e.g. 1920x1440 for a 4:3 sensor, or 4032x3024 for higher-end
         // sensors — the 4096 cap just bounds memory).  q95 is
         // "visually lossless" so each subsequent crop is also
         // visually lossless.
+        //
         // TEST 2026-07-12 (revisit): bump 2048→4096 back to test
         // against the Phase 2 architecture (auto-OCR on every
         // zoom crop + 4-step trust-crop-OCR workflow).  The
@@ -173,8 +173,10 @@ class FrameAnalyzer(
         // raw chars the crop OCR recognises → 'trust verbatim'
         // step can surface them.  See [[user-decision-4096-2026-07-12]]
         // for tracking; revert if composite regresses > noise.
-        const val MAX_FULL_DIM = 4096
-        const val FULL_QUALITY = 95
+        //
+        // 2026-07-14: these four constants moved to
+        // `shared/.../ImagePipeline.kt` so `:shared:eval` and
+        // `:app` share one source of truth.
     }
 }
 

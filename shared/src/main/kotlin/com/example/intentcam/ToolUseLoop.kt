@@ -732,39 +732,6 @@ class ToolUseLoop(
         val bubble: com.example.intentcam.Bubble,
     )
 
-    private data class ParsedAnswer(
-        val scene: String,
-        val intent: String,
-        val type: String,
-        val confidence: Float,
-    )
-
-    private fun parseFinalAnswer(raw: String): ParsedAnswer {
-        val cleaned = raw.trim()
-            .removePrefix("```json")
-            .removePrefix("```JSON")
-            .removePrefix("```")
-            .removeSuffix("```")
-            .trim()
-        val first = cleaned.indexOf('{')
-        val last = cleaned.lastIndexOf('}')
-        if (first >= 0 && last > first) {
-            val parsed = runCatching {
-                JSONObject(cleaned.substring(first, last + 1))
-            }.getOrNull()
-            if (parsed != null) {
-                val scene = parsed.optString("scene", "")
-                val intent = parsed.optString("intent", "")
-                val type = parsed.optString("type", IntentRegistry.FALLBACK_ID).ifBlank { IntentRegistry.FALLBACK_ID }
-                val conf = parsed.optDouble("confidence", 0.7).toFloat().coerceIn(0f, 1f)
-                return ParsedAnswer(scene, intent, type, conf)
-            }
-        }
-        // Fallback: use first sentence as intent.
-        val firstSentence = cleaned.take(40).trim().ifBlank { "未识别" }
-        return ParsedAnswer(scene = cleaned.take(160), intent = firstSentence, type = IntentRegistry.FALLBACK_ID, confidence = 0.5f)
-    }
-
     private companion object {
         /** Soft cap on rounds per recognition cycle.  With the
          *  two-stage content-then-intent flow + iterative zoom_in,

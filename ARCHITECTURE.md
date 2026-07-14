@@ -38,17 +38,17 @@ zoom_in(x, y, w, h, source, focus)
   - focus:  一句话描述要找什么
 ```
 
-The client's `BitmapRegionDecoder` crops the **2048-px fullRes JPEG**
+The client's `BitmapRegionDecoder` crops the **4096-px fullRes JPEG**
 (kept in memory by `FrameAnalyzer`) at the requested region, returns
 the crop as a `followUpJpeg`.  The orchestrator **auto-runs OCR on
 the crop** (via `OcrEngine.recognize(cropBytes)`) and attaches both
 the image and the formatted crop hint to the next user message —
 the model sees the high-detail region and the verbatim characters
-in one round-trip, with no need for a separate `read_text` call.
+in one round-trip, with no need for a separate OCR call.
 
 - **Sibling mode** (default `source="original"`): crops the original
-  2048-px fullRes.  Coords are absolute.  This is the **default**
-  because the round-1 thumbnail is 1568-px (downsampled from 2048-px);
+  4096-px fullRes.  Coords are absolute.  This is the **default**
+  because the round-1 thumbnail is 3200-px (downsampled from 4096-px);
   cropping the thumbnail would only downsample again.  Sibling mode
   is the "real magnifier."
 - **Chain mode** (`source="last"`): crops whatever was just produced.
@@ -121,13 +121,13 @@ zoom_in for a fresh re-scan.  No LLM round-trip — runs in ~1ms.
 
 ```
 Round 1:
-  messages = [user(thumbnail 1568-px + OCR hint + "调用工具。")]
+  messages = [user(thumbnail 3200-px + OCR hint + "调用工具。")]
   LLM → tool_use (zoom_in or emit_bubble)
   body runs locally → ToolResult
   if body returned followUpJpeg:
     the real crop goes into the next user message
 
-Round 2..15:
+Round 2..30:
   LLM sees the crop, decides: zoom_in again (chain) or emit_bubble
   if emit_bubble:
     extract structured fields, build Bubble, end cycle
@@ -136,12 +136,12 @@ Round 2..15:
 
 Stop when:
   - emit_bubble fires → final Bubble
-  - 15 rounds hit (兜底 Bubble — uses last good details, 0.5 score)
+  - 30 rounds hit (兜底 Bubble — uses last good details, 0.5 score)
   - 60s timeout (per round; hardcoded in LlmClient.TOTAL_TIMEOUT_MS)
 ```
 
-The image the LLM sees in round 1 is the **1568-px thumbnail** (with
-OCR text in the same message).  The full-res photo (2048-px) stays
+The image the LLM sees in round 1 is the **3200-px thumbnail** (with
+OCR text in the same message).  The full-res photo (4096-px) stays
 in client memory and is only sent when a `zoom_in` tool body crops
 a region.  The LLM therefore sees **both** views when it asks for
 detail — the round-1 thumbnail (in context) and the crop (in the
@@ -356,7 +356,7 @@ in v1.1 — `extract_text` is now a valid recon tool (pickScore
 
 ## 5. 1-only image strategy (since 2026-07-06)
 
-Round-1 ships **one** image — the 1568-px thumbnail.  No 4-quadrant
+Round-1 ships **one** image — the 3200-px thumbnail.  No 4-quadrant
 breakdown.  The LLM zooms into regions it needs.
 
 Why: 1+4 (5-image round 1) was tested and benchmarked worse on
@@ -674,13 +674,21 @@ v1.0 layout:
   (Phase G action body has it but the LLM isn't advised about it
   in the prompt).
 
-## 15. Intent↔Action framework (2026-07-10 → 2026-07-12)
+## 15. Intent↔Action framework (2026-07-10 → 2026-07-14)
 
 Added on top of the visual pipeline as a separate classification +
-action layer.  Each `emit_bubble` now carries an 11-vocabulary
-intent `type` and a list of canonical `action_ids` the app can
-render as chips.  A 10-pass verifier + post-guard silently
-correct mis-classifications using on-image signals.
+action layer.  Each `emit_bubble` carries an 11-vocabulary intent
+`type` and a list of canonical `action_ids` the app renders as
+chips.  The LLM picks the action set directly; the v1.2-era
+`IntentVerifier` (13-pass regex post-processor) was **retired in
+Phase E (commit 59c1128, 2026-07-14)** as part of the v3.0
+architectural refactor.  v3.0 trade-off: phone suites lift
+(LLM picks `dial_number` without the verifier crutch) but the
+OBSERVE-family + PII cluster drops because the LLM is less
+reliable at emitting the canonical `copy_*` action.  See
+`release-2026-07-14f.md` and the **archived** §15.4 for the
+retired verifier details.  Planned follow-up: re-introduce the
+type→canonical mapping as a soft system-prompt hint.
 
 ### 15.1 Module map
 
@@ -696,15 +704,10 @@ correct mis-classifications using on-image signals.
                                               │                ▲
                                               ▼                │
                     ┌─────────────────────────────────────────┐  │
-                    │ IntentVerifier.kt (shared)               │  │
-                    │   post-emit_bubble — silent type flip    │──┘
-                    │   pass 1-1e (location source)             │
-                    │   pass 2-10 (info source)                │
-                    │   pass 7 (real_estate MOBILE guard)      │
-                    │   post-guard (final LANDLINE / SERVICE)  │
-                    │   actionFor(type) — canonical injection  │
-                    └────────────────┬──────────────────────────┘
-                                     │ flip + additive inject
+                    │ IntentVerifier.kt — RETIRED 2026-07-14  │  │
+                    │   (Phase E removed; see archived §15.4)  │──┘
+                    └─────────────────────────────────────────┘
+                                     │
                                      ▼
                     ┌─────────────────────────────────────────┐
                     │ ActionDecl.kt (app)                      │
@@ -719,9 +722,9 @@ correct mis-classifications using on-image signals.
                               (runAction on tap)
 ```
 
-**`shared` vs `app` split is intentional**: `IntentDecl` and
-`IntentVerifier` live in `:shared` because `:shared:eval`
-imports them; `ActionDecl` lives in `:app` because action
+**`shared` vs `app` split is intentional**: `IntentDecl` lives
+in `:shared` because `:shared:eval` imports it; `ActionDecl`
+lives in `:app` because action
 intents (dial / share sheet) are Android-platform-specific
 (Toast, `ACTION_SEND`, `ACTION_DIAL`).
 
@@ -789,7 +792,7 @@ OR-semantics — `intent ∈ applicableIntents || intent.family ∈
 applicableFamilies` matches.  Both empty = applies to nothing
 (misconfiguration guard).
 
-### 15.4 IntentVerifier — 13 passes + Pass 7/12/13 post-guards
+### 15.4 IntentVerifier — 13 passes + Pass 7/12/13 post-guards  *(ARCHIVED 2026-07-14 — file deleted in commit 59c1128)*
 
 Runs *post-emit_bubble* in `ToolUseLoop`; silently overwrites
 `bubble.type` when a strong out-of-family signal fires.  **The
@@ -852,12 +855,14 @@ use for additive injection:
 // "info", "solve" -> null (no canonical action; view_details is implicit)
 ```
 
-### 15.5 ⚠️ 3-register lockstep (Phase F invariant)
+### 15.5 ⚠️ 2-register lockstep (was 3-register pre-v3.0; verifier retired)
 
 When adding a new intent that maps to a canonical action,
-the following THREE sites must be updated **in the same
+the following TWO sites must be updated **in the same
 commit**, or the eval scorer's `defaultActionIds` and the
-verifier's auto-inject drift apart silently:
+prod `ActionRegistry` drift apart silently (the verifier was
+the third site in the pre-v3.0 era and is no longer in the
+loop):
 
 1. **`app/.../ActionDecl.kt`** `registerDefaultActions()` —
    add the `ActionDef`
