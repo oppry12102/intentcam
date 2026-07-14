@@ -14,43 +14,59 @@ the screen at full aspect ratio) and a `details` table of every
 visible text / number / brand / date / price the model read.
 
 On top of the visual pipeline, a separate **Intent↔Action
-framework** classifies each capture into one of 11 intents
-(`info`, `location`, `phone`, `real_estate_rental`,
+framework** classifies each capture into one of 14 intents
+(`info`, `location`, `solve`, `phone`, `real_estate_rental`,
 `recruit_hiring`, `payment_qr`, `id_document`, `warning_safety`,
-`menu_food`, `hours_schedule`, `solve`) and resolves a per-intent
-set of 10 user-facing actions (`dial_number`, `copy_listing`,
-`copy_menu`, `copy_hours`, ...).  A 10-pass verifier + post-guard
-silently corrects mis-classifications using on-image signals
-(phone number shape, 禁止/请勿 keywords, HH:MM-HH:MM hours regex,
-QR-payment language).  See **[ARCHITECTURE.md §15](ARCHITECTURE.md#15-intentaction-framework-2026-07-10--2026-07-12)**
+`menu_food`, `hours_schedule`, `route_to`, `service_institution`,
+`shopping_promo`) and resolves a per-intent set of 11 user-facing
+actions (10 actionable + `view_details` reserved no-op:
+`dial_number`, `copy_listing`, `copy_menu`, `copy_hours`,
+`copy_promo`, `save_posting`, `redact_id`, `scan_to_pay`,
+`copy_warning`, `open_in_maps`).  A 13-pass verifier + Pass 7/12/13
+post-guards silently corrects mis-classifications using on-image
+signals (phone number shape, 禁止/请勿 keywords, HH:MM-HH:MM hours
+regex, QR-payment language, recruit POSTER + job-title gate).
+See **[ARCHITECTURE.md §15](ARCHITECTURE.md#15-intentaction-framework-2026-07-10--2026-07-12)**
 for the design and **[CONFIG.md §H-L](CONFIG.md#h-intentaction-framework-2026-07-10--2026-07-12)**
 for the knob-level config.
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design and
 **[CONFIG.md](CONFIG.md)** for every tunable constant.
 
-## Headline (Kotlin eval, prod-mirror, local PP-OCRv4)
+## Headline (Kotlin eval, prod-mirror, local PP-OCRv4, version 2.1)
 
-| metric | value |
-|---|---|
-| **composite `pii_20` @ 18 fixtures (with OCR + Intent↔Action framework)** | **0.929** — local OCR baseline @`144ba61` |
-| composite `phone_20` @ 20 fixtures | **0.944** — local OCR baseline @`144ba61` |
-| composite `direction_arrow_20` @ 20 fixtures | **0.974** — local OCR baseline @`144ba61` |
-| composite `service_institution_60` @ 63 fixtures | **0.9664** — Phase I (post-GT-reclass v2) |
-| composite `shopping_promo_20` @ 20 fixtures | **0.918** — Phase J NEW (r3 lift opportunity tracked) |
-| composite Phase G 15-fixture mini-suite | **0.973** (warning + menu + hours; pre-PP-OCRv4 ref) |
-| composite `RCTW-100` (with OCR) | **0.903** (Phase 2: 3200+4096 + union r2_text) |
-| composite @ 20 fixtures (generic) | 0.883 mean (v1.1: 3 runs 0.880/0.862/0.908) |
-| baseline chain (RCTW) | 0.652 → 0.819 → 0.835 → 0.853 → 0.868 → 0.887 → 0.903 |
+All numbers post-r3 verifier fix (commit `355c001`) and post-full
+8-suite net (commit `e85ec64`). Source of truth:
+`profiling/baselines.json`. Δ vs [2026-07-13] release point
+captured in the changelog.
+
+| Suite | Composite | n | Phase / ship |
+|---|---:|---:|---|
+| `phone_20` | **0.907** | 20 | local OCR baseline (Δ=-0.037 vs 0.944 Huawei, within ±0.03 noise band; `ac4dd55`) |
+| `pii_20` | **0.947** | 18 | local OCR baseline (Δ=+0.018 over 0.929 Huawei, r3-fix lift; `ac4dd55`) |
+| `direction_arrow_20` | **0.995** | 20 | post Phase H v2 + Pass 1b' (Δ=+0.021 vs Huawei 0.9694; `e85ec64`) |
+| `direction_arrow_60` | **0.990** | 20 | corpus-limited scaled suite (Δ=+0.021; `e85ec64`) |
+| `phone_60` | **0.918** | 55 | post-Phase-I GT-reclass v2 (`e85ec64`) |
+| `pii20_60` | **0.964** | 18 | post-Phase-I GT-reclass + r3-fix lift (`e85ec64`) |
+| `service_institution_60` | **0.976** | 67 | Phase I (post-GT-reclass v2; `e85ec64`) |
+| `shopping_promo_20` | **0.943** | 20 | Phase J (Δ=+0.025 from r3-fix lift on top of 0.918 inaugural; `e85ec64`) |
+| `phaseG_15` | **0.959** | 15 | warning + menu + hours mini-suite (Δ=-0.014 within noise; `e85ec64`) |
+| `recruit_hiring_11` | **0.970** | 11 | post Pass 4b (`9b68dca`); see [CHANGELOG §[2026-07-14d]](CHANGELOG.md#2026-07-14d--verifier-pass-4b-menu_foodrecruit_hiring) |
+| `real_estate_rental_11` | **0.957** | 10 | post GT-trim (`097899a`); see [CHANGELOG §[2026-07-14c]](CHANGELOG.md#2026-07-14c--recruit_hiring--real_estate_rental-suite-trim) |
+| `RCTW-100` (with OCR) | 0.903 | 100 | Phase 2 reference: 3200+4096 + union r2_text |
+| `@20 generic` | 0.883 mean | 20 | v1.1: 3 runs 0.880/0.862/0.908 |
+| baseline chain (RCTW) | — | — | 0.652 → 0.819 → 0.835 → 0.853 → 0.868 → 0.887 → 0.903 |
 
 OCR backend swapped 2026-07-13 from Huawei Cloud to local PP-OCRv4 mobile
 (see [CHANGELOG](CHANGELOG.md#2026-07-13--typeintentfocus-refactor--phase-i--local-ocr-backend));
-Huawei Cloud numbers retained as historical reference only. The 5-suite
-regression net (`profiling/baselines.json` + `scripts/run_regression.sh`)
-auto-checks Δ ≥ 0.05 against current baselines.
+Huawei Cloud numbers retained as historical reference only. The
+15-suite regression net (`profiling/baselines.json` +
+`scripts/run_regression.sh`) auto-checks Δ ≥ 0.05 against current
+baselines.
 
-`phone_20` / `pii_20` / `direction_arrow_20` / `service_institution_60` / `shopping_promo_20` are the
-**true validation suites** for the Intent↔Action framework (RCTW's
+`phone_20` / `pii_20` / `direction_arrow_20` / `service_institution_60` /
+`shopping_promo_20` / `recruit_hiring_11` / `real_estate_rental_11` are
+the **true validation suites** for the Intent↔Action framework (RCTW's
 `expected_type="info"` doesn't exercise intent diversity — see CONFIG §L).
 Their headline numbers reflect four stacked layers:
 
@@ -59,8 +75,8 @@ Their headline numbers reflect four stacked layers:
    5 PII actions; Phase G: 3 OBSERVE intents — warning / menu / hours;
    Phase H: route_to / direction_arrow; Phase I: service_institution;
    Phase J: shopping_promo)
-3. **IntentVerifier** (13-pass regex-based flip + post-guard
-   for missed phone signals)
+3. **IntentVerifier** (13-pass regex-based flip + Pass 7/12/13
+   post-guards for missed phone / institution / promo signals)
 4. **C3 v3 prompt** (type → canonical-action table so the model
    emits the right `action_ids` from round 1)
 

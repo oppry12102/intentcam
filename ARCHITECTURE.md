@@ -62,10 +62,11 @@ in one round-trip, with no need for a separate `read_text` call.
 emit_bubble(
   content,        // 一两句话整体描述 — must include all visible text
   intent,         // 用户想做什么（动宾短语，≤30字）
-  type,           // 13 intent ids — see §15 / CONFIG §H.1
+  type,           // 14 intent ids — see §15 / CONFIG §H.1
                   //   OBSERVE family: info | location | warning_safety
                   //                  | menu_food | hours_schedule
                   //                  | route_to | service_institution
+                  //                  | shopping_promo
                   //   ACT_ON family:  solve | phone | real_estate_rental
                   //                  | recruit_hiring | payment_qr | id_document
   confidence,     // 0.0~1.0
@@ -73,14 +74,14 @@ emit_bubble(
                   //   list of canonical action ids the model recommends:
                   //   dial_number / copy_listing / save_posting /
                   //   scan_to_pay / redact_id / open_in_maps /
-                  //   copy_warning / copy_menu / copy_hours
+                  //   copy_warning / copy_menu / copy_hours / copy_promo
   details: [      // 详情页表格行
     {kind, label, value, bbox?}, ...
   ]
 )
 ```
 
-The expanded `type` vocabulary (11 ids vs the original 3) is
+The expanded `type` vocabulary (14 ids vs the original 3) is
 backed by the **Intent↔Action framework** — see §15 for the
 full design, CONFIG §H for the registry knobs, and §7 below for
 how the resulting `Bubble` carries `actionIds` through the UI.
@@ -409,7 +410,7 @@ data class Detail(
 
 data class Bubble(
     val id: String,
-    val type: String,            // 13 intent ids — see §15 / CONFIG §H.1 (precise id from IntentDecl)
+    val type: String,            // 14 intent ids — see §15 / CONFIG §H.1 (precise id from IntentDecl)
     val title: String,            // user-facing intent, ≤30 chars
     val detail: String,           // content description
     val confidence: Float,
@@ -485,10 +486,10 @@ screen header — see §15 for the full design.
 | `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
 | `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
 | `extract_text` (v1.1) | text-only OCR | `ToolImplementations.kt:210-330` | v1.1: new tool. Same crop path as `zoom_in` follow-up but no `followUpJpeg` — returns only OCR text. Model picks it for 25-30% of fixtures when the region is already visible in the round-1 thumbnail. |
-| `IntentDecl.registerDefaultIntents()` | **11 ids** | `shared/.../IntentDecl.kt:82-182` | Phase G — what the user wants (intent classification). The 3 v1.0 ids (`info`/`location`/`solve`) plus 4 PII (real_estate/recruit/payment_qr/id_document) plus 3 OBSERVE Phase G (warning/menu/hours) plus `phone` (Phase A). |
-| `ActionDecl.registerDefaultActions()` | **10 defs** | `app/.../ActionDecl.kt:158-415` | what the app can do per-intent. 5 carry `userPrefKey` (SettingsStore consent toggle, OFF default). `scan_to_pay` and `redact_id` are Toast-only by design. |
+| `IntentDecl.registerDefaultIntents()` | **14 ids** | `shared/.../IntentDecl.kt:82-232` | Phase J — what the user wants (intent classification). The 3 v1.0 ids (`info`/`location`/`solve`) + `phone` (Phase A) + 4 PII Phase B (real_estate/recruit/payment_qr/id_document) + 3 OBSERVE Phase G (warning/menu/hours) + `route_to` Phase H + `service_institution` Phase I + `shopping_promo` Phase J. |
+| `ActionDecl.registerDefaultActions()` | **11 defs** | `app/.../ActionDecl.kt:158-442` | what the app can do per-intent. 5 carry `userPrefKey` (SettingsStore consent toggle, OFF default). `scan_to_pay` and `redact_id` are Toast-only by design. `view_details` is a reserved no-op (completeness anchor only). |
 | `IntentVerifier` | **10 passes + post-guard** | `shared/.../IntentVerifier.kt` | post-emit_bubble regex flip — `info`/`location` → `phone`/`payment_qr`/`recruit`/`real_estate`/`id_document`/`warning`/`menu`/`hours` based on corpus signal. Phase F invariant: modifies `bubble.type` only, never `bubble.actionIds`. |
-| `actionFor(type)` | **11 type → 9 canonical action maps** | `IntentVerifier.kt:156-167` | Phase F — ToolUseLoop additive inject. **3-register lockstep** when adding a new intent: ActionDecl + EvalRunner.defaultActionIds + actionFor(). Drift = silent r3 regression. |
+| `actionFor(type)` | **14 type → 10 canonical action maps** | `IntentVerifier.kt:226-259` | Phase F — ToolUseLoop additive inject. **3-register lockstep** when adding a new intent: ActionDecl + EvalRunner.defaultActionIds + actionFor(). Drift = silent r3 regression. `info` and `solve` carry no canonical action (return null). |
 | **3-register lockstep** | invariant | Phase F (2026-07-11) | Adding a new intent requires lockstep edits in 3 files (or 4 if you also add a C3 v3 prompt row). See §15.5 / CONFIG §J.1. |
 
 ## 10. Debug overlay
@@ -724,7 +725,7 @@ imports them; `ActionDecl` lives in `:app` because action
 intents (dial / share sheet) are Android-platform-specific
 (Toast, `ACTION_SEND`, `ACTION_DIAL`).
 
-### 15.2 IntentDecl — 11 ids, 2 families
+### 15.2 IntentDecl — 14 ids, 2 families
 
 | Intent id | Family | LLM hint (Chinese) |
 |---|---|---|
@@ -748,7 +749,7 @@ OBSERVE family with 3 more ids (`warning_safety` / `menu_food`
 / `hours_schedule`) so they interchange with `info` for full
 credit too.
 
-### 15.3 ActionDecl — 10 defs, 5 user-consented, 2 Toast-only
+### 15.3 ActionDecl — 11 defs, 5 user-consented, 2 Toast-only
 
 ```kotlin
 data class ActionDef(
@@ -788,7 +789,7 @@ OR-semantics — `intent ∈ applicableIntents || intent.family ∈
 applicableFamilies` matches.  Both empty = applies to nothing
 (misconfiguration guard).
 
-### 15.4 IntentVerifier — 10 passes + post-guard
+### 15.4 IntentVerifier — 13 passes + Pass 7/12/13 post-guards
 
 Runs *post-emit_bubble* in `ToolUseLoop`; silently overwrites
 `bubble.type` when a strong out-of-family signal fires.  **The
@@ -943,7 +944,12 @@ side doesn't:
 | G — 3 OBSERVE | 2026-07-12 | warning / menu / hours + verifier Pass 8/9/10 + post-guard | Phase G 15-fixture 0.973 |
 | GT schema dual-read | 2026-07-12 | EvalRunner reads expected_top_intent_type | pii_20 +0.0837 cumulative |
 | post-guard option (a) — Pass 1b' | 2026-07-12 | LANDLINE in Pass 1 (was stub) | phone_20 0.9081 → **0.9450 (+0.037)** |
-| H — `route_to` (architecture) | 2026-07-12 | new direction_arrow intent + Verifier Pass 11 + open_in_maps.applicableIntents widens + C3 v3 row 10→11 | (fixtures PENDING — pure add, regression risk LOW) |
+| H — `route_to` (architecture) | 2026-07-12 | new direction_arrow intent + Verifier Pass 11 + open_in_maps.applicableIntents widens + C3 v3 row 10→11 | direction_arrow_20 v2 0.9850 (+0.0263) |
+| I — `service_institution` | 2026-07-12 | 13th intent OBSERVE (医院 / 学校 / 政府机关) + Pass 12 verifier + 32-keyword regex v2 + C3 v3 row 13 | service_institution_60 0.9664 (post-GT-reclass v2) |
+| J — `shopping_promo` | 2026-07-13 | 14th intent OBSERVE (特价 / 促销 / 满减) + Pass 13 verifier + `copy_promo` action + C3 v3 row 14 | shopping_promo_20 0.918 inaugural → 0.943 post-r3-fix |
+| r3 verifier fix | 2026-07-13 | `actionFor()` injection broadened from type-flip-only to include missing-canonical case (`355c001`) | shopping_promo_20 +0.025; phone_60 r3 0.50 → 0.75 |
+| L — verifier Pass 4b | 2026-07-14 | menu_food \| location + recruit POSTER + ≥1 job-title word → recruit_hiring (avoids over-fire on restaurants with passing 招聘 text) | recruit_hiring_13 → recruit_hiring_11 (after re-add of image_5380 / 4641); suite baseline 0.970 |
+| canonical-action injection robustness | 2026-07-14 | `6456839` — fix canonical injection so type-flip case also adds the new type's canonical | recruit_hiring_13 +0.032 (0.960 → 0.992); real_estate_rental_11 +0.058 (0.923 → 0.981) |
 
 **Why this stays plumbing-only** (per `eval-type-guide-D1-
 rejected-2026-07-11.md`): the verifier changes `bubble.type`

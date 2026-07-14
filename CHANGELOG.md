@@ -4,6 +4,57 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14e] — version 2.1 anchor + doc cleanup
+
+Documentation-only release. No functional code change. Marks the
+first APK version bump since 2.0 — every commit from [2026-07-14b]
+through [2026-07-14d] now ships under one coherent version label
+(2.1) and the public docs agree with the registry.
+
+### Bumped — `versionCode 2 → 3`, `versionName 2.0 → 2.1`
+
+The 4 [2026-07-14] feature commits all touched on-device code
+(`6456839` verifier canonical-action injection robustness,
+`9b68dca` Pass 4b menu_food|location → recruit_hiring, plus the
+`097899a` GT-trim that drives regression baselines) but did not
+bump `versionCode`. This entry ships the bump so a Play Store
+release from this point forward carries a coherent version label
+that matches the changelog trail.
+
+### Fixed — stale intent / action counts in public docs
+
+| Location | Before | After |
+|---|---|---|
+| README.md § Intent↔Action framework | "11 intents / 10 actions" | "14 intents / 11 actions (10 actionable + `view_details` reserved)" |
+| ARCHITECTURE.md §1 emit_bubble signature | "13 intent ids" | "14 intent ids" |
+| ARCHITECTURE.md §15.2 heading | "IntentDecl — 11 ids" | "IntentDecl — 14 ids" |
+| ARCHITECTURE.md §15.3 heading | "ActionDecl — 10 defs" | "ActionDecl — 11 defs" |
+| ARCHITECTURE.md §15.4 heading | "10 passes + post-guard" | "13 passes + Pass 7/12/13 post-guards" |
+| ARCHITECTURE.md §15.5 lockstep map | "11 type → 9 canonical action maps" | "14 type → 10 canonical action maps" |
+
+These were drift from the 2026-07-10 ship, when the registry had 3
+intents (info / location / solve) + 1 (phone) = 4. Phase B-J
+extended the registry to 14 without updating every cross-reference;
+this commit closes the gap before the next architectural
+discussion.
+
+### Verified — eval baselines unchanged
+
+This is a docs-only release; the post-`e85ec64` 8-suite regression
+net (`profiling/baselines.json`) is the canonical measurement
+point and remains valid. No regression re-run needed.
+
+### APK artifacts (post-rebuild at versionCode=3)
+
+| Variant | Path | Size |
+|---|---|---|
+| Debug | `/home/oppry/work/app3/intentcam.apk` | rebuilt post-2.1 bump |
+| Release | `/home/oppry/work/app3/intentcam-release.apk` | rebuilt post-2.1 bump |
+
+The release APK is byte-equivalent on-device to the [2026-07-14d]
+build at `9b68dca` (no `app/` source change beyond the version
+fields). The bump is purely administrative.
+
 ## [2026-07-14d] — verifier Pass 4b (menu_food→recruit_hiring)
 
 User-facing feature release: new verifier pass that catches the
