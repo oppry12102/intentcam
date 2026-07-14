@@ -192,6 +192,18 @@ internal class EvalRunner(private val config: EvalConfig) {
             val detailsCount = bubble?.details?.size ?: 0
             val contentLen = bubble?.detail?.length ?: 0
             val r2TextFuzzy = scoreRound2TextFuzzy(outcome, scene)
+            // [2026-07-14 Phase D — inversion v3.0] Run ScorerV2 in
+            //  parallel with the legacy scorer.  Both composites
+            //  land in the per-fixture JSON output + summary line.
+            //  Phase D caveat: r_inputs_complete and
+            //  r_rounds_efficiency are 1.0 floors in this commit
+            //  pending Phase E wiring (GT migration + n_rounds
+            //  propagation through ToolUseLoop).
+            val scorerV2 = com.example.intentcam.eval.ScorerV2Result.compute(
+                bubble = bubble,
+                scene = scene,
+                textScore = r2.first,
+            )
             // Stash raw content + details rows so future scorer
             // experiments can be dry-run re-scored against saved
             // outputs (no LLM re-run).  Keeps the per-fixture JSON
@@ -208,11 +220,17 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "id" to sceneId,
                 "category" to category,
                 "composite" to composite,
+                "composite_v2" to scorerV2.composite,
                 "r1" to r1.first,
                 "r2_text" to r2.first,
                 "r2_type" to r2.second,
                 "r2_text_fuzzy" to r2TextFuzzy,
                 "r3_actions" to r3.first,
+                "v2_actions_recall" to scorerV2.actionsRecall,
+                "v2_inputs_complete" to scorerV2.inputsComplete,
+                "v2_intent_derived" to scorerV2.intentDerived,
+                "v2_rounds_efficiency" to scorerV2.roundsEfficiency,
+                "v2_text" to scorerV2.text,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
@@ -229,7 +247,8 @@ internal class EvalRunner(private val config: EvalConfig) {
                     "  [${i + 1}/${useScenes.size}] ${sceneId.padEnd(30)} " +
                         "cat=${category.padEnd(15)} picked=$picked " +
                         "r1=${"%.2f".format(r1.first)} r2_text=${"%.2f".format(r2.first)} " +
-                        "r2_type=${"%.2f".format(r2.second)} composite=${"%.2f".format(composite)}"
+                        "r2_type=${"%.2f".format(r2.second)} composite=${"%.2f".format(composite)} " +
+                        "composite_v2=${"%.2f".format(scorerV2.composite)}"
                 )
             }
         }
@@ -239,7 +258,13 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("fixtures: ${results.size}")
         if (results.isNotEmpty()) {
             val overall = results.map { it["composite"] as Double }.average()
-            println("average composite: ${"%.3f".format(overall)}")
+            println("average composite (old): ${"%.3f".format(overall)}")
+            // [2026-07-14 Phase D — inversion v3.0] ScorerV2
+            //  side-by-side.  Both composites printed so we can
+            //  compare without hard-cutting the regression net.
+            //  Phase E will eventually drop the old one.
+            val overallV2 = results.map { it["composite_v2"] as Double }.average()
+            println("average composite_v2:     ${"%.3f".format(overallV2)}")
             // Diagnostic aggregates — not part of composite.
             val r2Strict = results.map { it["r2_text"] as Double }.average()
             val r2Fuzzy = results.map { it["r2_text_fuzzy"] as Double }.average()
