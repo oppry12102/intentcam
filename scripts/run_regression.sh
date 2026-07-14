@@ -123,34 +123,52 @@ for cfg in suites:
     # Parse composite from JSON output (preferred) or stdout fallback.
     composite = None
     err_count = 0
+    composite_v2 = None
+    composite_legacy = None
     if os.path.exists(json_out):
         try:
             j = json.load(open(json_out))
-            composite = j.get("overall_composite")
+            composite_v2 = j.get("overall_composite_v2")
+            composite_legacy = j.get("overall_composite")
             err_count = sum(1 for f in j.get("fixtures", []) if "Error" in str(f.get("raw_content", "")))
         except Exception as e:
             print(f"   WARN: could not parse {json_out}: {e}", file=sys.stderr)
-    if composite is None:
+    if composite_v2 is None:
+        # Fall back to stdout parse (legacy path — for old builds
+        # that haven't been rebuilt to write overall_composite_v2).
+        m = re.search(r"average composite_v2:\s*([0-9.]+)", proc.stdout)
+        if m:
+            composite_v2 = float(m.group(1))
+    if composite_v2 is None:
         m = re.search(r"average composite:\s*([0-9.]+)", proc.stdout)
         if m:
-            composite = float(m.group(1))
+            composite_legacy = float(m.group(1))
+            # Pre-v3.0 build — use legacy as the canonical.
+            composite_v2 = composite_legacy
 
-    if composite is None:
+    if composite_v2 is None:
         print(f"   WARN: no composite found — gradle stdout tail:")
         print(proc.stdout[-800:])
-        composite = float("nan")
+        composite_v2 = float("nan")
 
+    # [2026-07-14 v3.0] Threshold check uses composite_v2 against the
+    #  new canonical baseline (= composite_v2 number). Legacy composite
+    #  is reported for historical comparison.
+    composite = composite_v2
     delta = composite - cfg["baseline"]
     flagged = abs(delta) >= threshold
     status = "FAIL" if flagged else "PASS"
-    print(f"   composite={composite:.3f}  baseline={cfg['baseline']:.3f}  Δ={delta:+.3f}  → {status}")
+    legacy_str = f"  legacy={composite_legacy:.3f}" if composite_legacy is not None else ""
+    print(f"   composite_v2={composite:.3f}  baseline={cfg['baseline']:.3f}  Δ={delta:+.3f}{legacy_str}  → {status}")
     if err_count:
         print(f"   ({err_count} Outcome.Error in JSON — possible 529 contamination)")
 
     results.append({
         "name": name,
         "baseline": cfg["baseline"],
+        "baseline_legacy": cfg.get("baseline_legacy"),
         "composite": composite,
+        "composite_legacy": composite_legacy,
         "delta": round(delta, 4),
         "status": status,
         "elapsed_sec": round(elapsed, 1),

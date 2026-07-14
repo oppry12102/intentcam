@@ -334,6 +334,16 @@ internal class EvalRunner(private val config: EvalConfig) {
             results.map { it["composite"] as Double }.average()
         } else 0.0
         root.put("overall_composite", overall)
+        // [2026-07-14 Phase H — inversion v3.0 baseline flip] The
+        //  legacy composite (0.45·r1 + 0.45·r2 + 0.10·r3) is still
+        //  written for reference, but composite_v2 is the canonical
+        //  baseline for v3.0+.  run_regression.sh / check_regression.py
+        //  compare against overall_composite_v2; the legacy field
+        //  is for historical comparison only.
+        val overallV2 = if (results.isNotEmpty()) {
+            results.map { it["composite_v2"] as Double }.average()
+        } else 0.0
+        root.put("overall_composite_v2", overallV2)
         root.put("fixture_count", results.size)
         val perCategory = JSONObject()
         for ((cat, avg) in categoryAvgs) {

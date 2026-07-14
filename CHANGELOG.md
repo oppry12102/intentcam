@@ -4,6 +4,78 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14g] — v3.0 baseline flip (composite_v2 = canonical)
+
+The 14-suite regression net at v3.0 (`summary_20260714_153204`,
+~3.2 hours wall-time) revealed the inversion's expected trade-off:
+phone + service_institution LIFT (LLM picks dial_number /
+open_in_maps without verifier rescue), but OBSERVE-family + PII
+suites DROP because the type→canonical action injection was
+carrying ~20-40% of those fixtures.
+
+Decision: **accept the trade-off**. The new canonical baseline is
+`composite_v2`, not the legacy `composite`. Per-suite details
+captured in `profiling/baselines.json` (each entry now carries
+both `baseline` = composite_v2 number and `baseline_legacy` = old
+value for reference).
+
+### Changed — canonical baseline flipped
+
+| Suite | baseline_legacy (v2.1) | **baseline (v3.0)** | Δ composite_v2 vs legacy | direction |
+|---|---:|---:|---:|---|
+| phone_20 | 0.907 | **0.911** | +0.004 | ✅ LIFT (inversion validates) |
+| phone_60 | 0.918 | **0.897** | -0.022 | ✅ close to legacy |
+| pii_20 | 0.947 | **0.738** | -0.209 | ❌ biggest PII drop |
+| pii20_60 | 0.964 | **0.824** | -0.140 | ❌ |
+| direction_arrow_20 | 0.995 | **0.846** | -0.149 | ❌ verifier Pass 11 was carrying |
+| direction_arrow_60 | 0.990 | **0.850** | -0.140 | ❌ |
+| service_institution_60 | 0.977 | **0.865** | -0.112 | ❌ verifier Pass 12 was carrying |
+| phaseG_15 | 0.959 | **0.799** | -0.160 | ❌ Pass 8/9/10 |
+| shopping_promo_20 | 0.943 | **0.771** | -0.172 | ❌ Pass 13 |
+| real_estate_rental_11 | 0.957 | **0.588** | -0.370 | ❌❌ Pass 1c/5 + canonical injection |
+| recruit_hiring_11 | 0.970 | **0.848** | -0.122 | ❌ Pass 4 + 4b |
+
+### Why this is OK
+
+Per `feedback-investigate-before-revert`:
+1. ✅ 529 contamination: all suites `errors=0`. Not API noise.
+2. ✅ Per-fixture signal: drops are consistent — verifier Pass N
+   + canonical injection were carrying 20-40% of fixtures in
+   OBSERVE family + PII cluster.
+3. ✅ Code audit: not a bug. The inversion's design accepts the
+   trade-off as the thesis payoff (generalization > test-fit).
+4. ⚠️ Soft-verifier follow-up: re-introducing the verifier as a
+   "soft hint" in the system prompt (e.g. "if you see 招聘, emit
+   `save_posting`") would recover most of the OBSERVE-family
+   losses without re-introducing the verifier file. Tracked as
+   a follow-up; not blocking this ship.
+
+### Changed — EvalRunner writes both composites
+
+`profiling/regression/<suite>_<ts>.json` now has both
+`overall_composite` (legacy) AND `overall_composite_v2` at top
+level. Per-fixture records carry both `composite` and
+`composite_v2` + the v2 component breakdown (`v2_actions_recall`,
+`v2_inputs_complete`, `v2_intent_derived`, `v2_rounds_efficiency`,
+`v2_text`).
+
+### Changed — run_regression.sh threshold checks composite_v2
+
+`scripts/run_regression.sh` now reads `overall_composite_v2`
+from each suite's JSON output and compares against the new
+`baseline` (= composite_v2 number) in `baselines.json`. Legacy
+composite is reported alongside for visibility but not used for
+the threshold check. Fallback to stdout parsing still works for
+older builds that haven't been rebuilt with the v2 field.
+
+### Memory
+
+- New `feedback-evaluate-2026-07-14.md` reference: v3.0 baseline
+  trade-off, composite_v2 = canonical, follow-up plan
+  (soft-verifier system-prompt hint).
+- `feedback-529-contamination-awareness`: still relevant — the
+  net was 0 contamination, so the drops are real inversion cost.
+
 ## [2026-07-14f] — version 3.0 architectural refactor
 
 Major release. Five commits deep: Phase A (orchestrator
