@@ -191,7 +191,17 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                     )
                 }
                 ShutterButton(
-                    enabled = !state.analyzing && state.phase == Phase.SCANNING,
+                    // [2026-07-14 Phase B] Camera button is always
+                    //  enabled when phase == SCANNING.  CycleManager
+                    //  caps concurrent cycles at
+                    //  UiState.CYCLE_MAX_CONCURRENT = 2; older
+                    //  cycles are superseded when a 3rd tap arrives.
+                    //  The legacy `analyzing` flag is now a derived
+                    //  read of cycleManager.hasFocusedJob() and is
+                    //  kept around only for legacy callers (debug
+                    //  overlay etc.) — the shutter no longer reads
+                    //  it.
+                    enabled = state.phase == Phase.SCANNING,
                     onClick = { viewModel.captureLatestFrame() },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -446,31 +456,112 @@ private fun IntentBubbles(
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        if (state.bubbles.isNotEmpty()) {
+        // [2026-07-14 Phase C — inversion v3.0] Two display modes:
+        //   - **Phase B+ mode** (cycles non-empty): iterate every
+        //     in-flight [com.example.intentcam.CycleSnapshot] and
+        //     react to its `bubble` + `status` flows.  This is the
+        //     "live UI" path — chips transition Spinner → Validated
+        //     in real time as the cycle's bubble flow updates.
+        //   - **Legacy mode** (cycles empty): fall back to
+        //     [UiState.bubbles] so the rest of the codebase
+        //     (debug overlay, submitUserInput text-input path)
+        //     keeps working without an immediate refactor.
+        val snapshotCards = state.cycles.values.toList()
+        val legacyBubbles = state.bubbles
+        if (snapshotCards.isNotEmpty()) {
+            Text(
+                "识别中的意图（实时更新）",
+                color = Color.White,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            // Newest-first so the most-recent capture is at the top —
+            // the user just took that photo, so they want to see it
+            // first.  Cycles with no bubble yet (PENDING / early
+            // IN_FLIGHT) are rendered as a placeholder card so the
+            // card list stays stable while the LLM is thinking.
+            snapshotCards
+                .sortedByDescending { it.capturedAtMs }
+                .forEach { snap ->
+                    val bubble by snap.bubble.collectAsState()
+                    val status by snap.status.collectAsState()
+                    if (bubble == null) {
+                        // Placeholder: the cycle is alive but the LLM
+                        // hasn't emitted yet.  Renders a small
+                        // "识别中…" card so the user knows the
+                        // capture is in flight.
+                        InFlightCard(capturedAtMs = snap.capturedAtMs)
+                    } else {
+                        // [Compose] Smart-cast doesn't work on delegated
+                        //  properties — `bubble!!` would also work but
+                        //  re-wraps a non-null Bubble; the explicit
+                        //  `b` val keeps the call sites tidy.
+                        val b = bubble!!
+                        val actionDefs = b.actions.mapNotNull {
+                            viewModel.actionRegistry.get(it)
+                        }
+                        BubbleCard(
+                            bubble = b,
+                            cycleStatus = status,
+                            onPick = onPick,
+                            actionDefs = actionDefs,
+                            onActionTap = { actionId -> viewModel.runAction(actionId, b.id) },
+                            accent = bubbleAccent(b.type, viewModel.intentRegistry),
+                        )
+                    }
+                }
+        } else if (legacyBubbles.isNotEmpty()) {
             Text(
                 "识别到的意图（点击查看详情）",
                 color = Color.White,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
-        }
-        // Rendered newest-last so the most recent is closest to the camera
-        // preview / bottom edge.  The bubble list is a FIFO queue capped at
-        // UiState.BUBBLE_MAX; older bubbles have already been evicted.
-        state.bubbles.forEach { bubble ->
-            // [2026-07-10] Resolve bubble.actions ids through the
-            //  registry at render time.  Stale ids (e.g., a retired
-            //  action referenced by an older bubble in history) are
-            //  silently dropped via mapNotNull.
-            val actionDefs = bubble.actions.mapNotNull {
-                viewModel.actionRegistry.get(it)
+            legacyBubbles.forEach { bubble ->
+                val actionDefs = bubble.actions.mapNotNull {
+                    viewModel.actionRegistry.get(it)
+                }
+                BubbleCard(
+                    bubble = bubble,
+                    cycleStatus = JobStatus.COMPLETE,
+                    onPick = onPick,
+                    actionDefs = actionDefs,
+                    onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
+                    accent = bubbleAccent(bubble.type, viewModel.intentRegistry),
+                )
             }
-            BubbleCard(
-                bubble = bubble,
-                onPick = onPick,
-                actionDefs = actionDefs,
-                onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
-                accent = bubbleAccent(bubble.type, viewModel.intentRegistry),
+        }
+    }
+}
+
+/** [2026-07-14 Phase C] Placeholder card rendered for a CycleJob
+ *  whose LLM hasn't emitted its first bubble yet (PENDING or
+ *  early IN_FLIGHT).  Shows the captured timestamp + a small
+ *  spinner so the user knows the capture is in flight and the
+ *  cycle hasn't died.  When the bubble flow finally emits, the
+ *  placeholder is swapped for a real [BubbleCard]. */
+@Composable
+private fun InFlightCard(capturedAtMs: Long) {
+    val ageSec = ((System.currentTimeMillis() - capturedAtMs) / 1000).toInt()
+    Surface(
+        color = Color(0x66FFFFFF),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.material3.CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = Color(0xFF4F8CFF),
+            )
+            Spacer(Modifier.size(10.dp))
+            Text(
+                "识别中… ${ageSec}s",
+                color = Color(0xCCFFFFFF),
+                style = MaterialTheme.typography.bodySmall,
             )
         }
     }
@@ -479,6 +570,7 @@ private fun IntentBubbles(
 @Composable
 private fun BubbleCard(
     bubble: Bubble,
+    cycleStatus: JobStatus,
     onPick: (Bubble) -> Unit,
     actionDefs: List<ActionDef> = emptyList(),
     onActionTap: (actionId: String) -> Unit = {},
@@ -571,8 +663,10 @@ private fun BubbleCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         actionDefs.forEach { def ->
+                            val chipState = resolveChipState(bubble, def, cycleStatus)
                             ActionChip(
                                 label = def.label,
+                                state = chipState,
                                 onClick = { onActionTap(def.id) },
                             )
                         }
@@ -597,20 +691,61 @@ private fun BubbleCard(
  * rather than the icon mapping from [ActionDef.iconKey] — icon
  * assets aren't in scope for this iteration; later we'll plumb a
  * proper Material icon set.
+ *
+ * [2026-07-14 Phase C] [state] drives the chip's color + tappability:
+ *   - Validated  → blue solid (default look), tappable
+ *   - Ghost      → gray translucent, tappable (body handles "未发现
+ *                  号码" Toast for dial_number / etc.)
+ *   - Spinner    → yellow with a tiny spinner, NOT tappable (the
+ *                  cycle hasn't finished validating yet)
+ *   - Hidden     → not rendered (caller skips via mapNotNull)
+ *
+ * The visual transition is observable in real time as
+ * [resolveChipState]'s inputs change — Compose recomposes the chip
+ * row when `bubble.validatedInputs` updates (which happens on
+ * every `onProgress` from the cycle).
  */
 @Composable
-private fun ActionChip(label: String, onClick: () -> Unit) {
+private fun ActionChip(label: String, state: ChipState, onClick: () -> Unit) {
+    val bg = when (state) {
+        is ChipState.Validated -> Color(0xCC3F6CD8) // blue solid
+        is ChipState.Ghost     -> Color(0x33FFFFFF) // gray translucent
+        is ChipState.Spinner   -> Color(0x66F5A623) // yellow with alpha
+        is ChipState.Hidden    -> Color.Transparent
+    }
+    val fg = when (state) {
+        is ChipState.Validated -> Color(0xFFE7ECF7)
+        is ChipState.Ghost     -> Color(0xCCFFFFFF)
+        is ChipState.Spinner   -> Color(0xFFFFF7E0)
+        is ChipState.Hidden    -> Color.Transparent
+    }
     Surface(
-        color = Color(0x553F6CD8),
+        color = bg,
         shape = RoundedCornerShape(10.dp),
-        onClick = onClick,
+        // Ghost chips stay tappable (the body shows a Toast); Spinner
+        // chips are non-tappable to avoid firing an action whose
+        // requiredInputs haven't been validated yet.
+        onClick = if (state is ChipState.Spinner) ({}) else onClick,
+        enabled = state !is ChipState.Spinner,
     ) {
-        Text(
-            label,
-            color = Color(0xFFE7ECF7),
-            style = MaterialTheme.typography.labelSmall,
+        Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        )
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (state is ChipState.Spinner) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(10.dp),
+                    strokeWidth = 1.5.dp,
+                    color = fg,
+                )
+                Spacer(Modifier.size(4.dp))
+            }
+            Text(
+                label,
+                color = fg,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
     }
 }
 
@@ -835,8 +970,10 @@ private fun DetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             actionDefs.forEach { def ->
+                                val chipState = resolveChipState(bubble, def, JobStatus.COMPLETE)
                                 ActionChip(
                                     label = def.label,
+                                    state = chipState,
                                     onClick = { onActionTap(def.id) },
                                 )
                             }
