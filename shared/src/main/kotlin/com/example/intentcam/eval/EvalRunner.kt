@@ -346,6 +346,16 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("id", r["id"])
             o.put("category", r["category"])
             o.put("composite", r["composite"] as Double)
+            // [2026-07-14 Phase D — inversion v3.0] ScorerV2
+            //  composite + component breakdown.  Written alongside
+            //  the legacy composite so post-hoc analysis can
+            //  re-cut the score without re-running the LLM.
+            o.put("composite_v2", r["composite_v2"] as Double)
+            o.put("v2_actions_recall", r["v2_actions_recall"] as Double)
+            o.put("v2_inputs_complete", r["v2_inputs_complete"] as Double)
+            o.put("v2_intent_derived", r["v2_intent_derived"] as Double)
+            o.put("v2_rounds_efficiency", r["v2_rounds_efficiency"] as Double)
+            o.put("v2_text", r["v2_text"] as Double)
             o.put("r1", r["r1"] as Double)
             o.put("r2_text", r["r2_text"] as Double)
             o.put("r2_type", r["r2_type"] as Double)

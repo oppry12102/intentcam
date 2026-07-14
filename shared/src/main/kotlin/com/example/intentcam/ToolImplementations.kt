@@ -318,38 +318,49 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
     )
 
     // ── 4. emit_bubble ───────────────────────────────────────────
-    // End the cycle with a structured final answer.  Two stages:
+    // End the cycle with a structured final answer.  Schema fields:
     //   - content:        what you see in the image (after any zoom_ins)
-    //   - intent:         what the user probably wants to do with it
-    //   - type:           precise intent id — the enum is driven by the
-    //                     IntentRegistry (all 13 default intents; new
-    //                     intents get added by registering one
-    //                     IntentDecl, NOT by editing this tool
-    //                     description)
+    //   - intent:         [2026-07-14 Phase E — inversion v3.0]
+    //                     free-form Chinese phrase (≤30 chars)
+    //                     describing what the user wants to do with
+    //                     this bubble.  REPLACES the 14-bucket `type`
+    //                     classification — the LLM now describes
+    //                     intent in its own words instead of picking
+    //                     from a closed enum.
+    //   - type:           [Phase E] Optional legacy field.  Defaults
+    //                     to FALLBACK_ID ("info") when omitted.
+    //                     Kept so older eval fixtures can still score;
+    //                     the scorer reads it for backwards compat
+    //                     but the orchestrator no longer uses it.
     //   - action_ids:     [2026-07-13] which [ActionDef]s should
-    //                     light up as chips on this bubble.  Optional —
-    //                     leaving it blank / empty means "fall through
-    //                     to the applicability filter" (the pre-A
-    //                     behavior).  Listing ids explicitly overrides
-    //                     the filter: only the listed ids become chips
-    //                     (intersected with user-enabled ids).  Lets
-    //                     the model opt in / out of suggestions per
-    //                     bubble instead of letting every applicable
-    //                     action show by default.
+    //                     light up as chips on this bubble.  In Phase
+    //                     E the LLM picks them WITHOUT the legacy
+    //                     type→canonical-action table — the
+    //                     orchestrator validates inputs separately.
+    //                     Listing ids explicitly = only those ids
+    //                     become chips (intersected with user-enabled
+    //                     ids).  Empty = fall through to
+    //                     ActionResolver's applicability filter.
     //   - confidence:     0.0 .. 1.0
     register(
         ToolDef(
             name = "emit_bubble",
             description = "当你完全理解了图片内容和用户意图后，调这个工具结束识别循环。" +
                 "**content** 字段：详细描述你看到了什么（一两句话），并原样写出所有可见文字。" +
-                "**intent** 字段：用户想用这张图做什么（动宾短语，≤30字）。" +
-                "**type** 字段：${intents.renderTypeList()}" +
+                "**intent** 字段：**用一句中文短语（≤30字）描述用户想用这张图做什么**。" +
+                "  例：\"拨打联系电话\"、\"导航到这家店\"、\"复制营业时间\"、\"保存招聘启事\"。" +
+                "  不要再从一个固定的意图列表里挑 —— intent 是自由文本，由你根据图片内容 + 用户场景自由总结。" +
+                "**type** 字段（可选）：如果你也输出一个意图大类（info / location / phone / warning_safety / ...）" +
+                "会有助于兼容老评测；省略时默认 \"info\"。" +
                 "**details** 字段（**重要**）：图里每一处独立的文字/数字/品牌/日期/价格都要有一行，" +
                 "value 写逐字原文（勿意译、勿概括）。图里有文字却 details 为空 = 没完成任务。" +
                 "**confidence** 字段：0.0~1.0 的置信度。" +
-                "**action_ids** 字段：**默认应填**，并且按 type 强制映射 — phone → **dial_number**；real_estate_rental → **copy_listing**；recruit_hiring → **save_posting**；id_document → **redact_id**；payment_qr → **scan_to_pay**；location → **open_in_maps**；warning_safety → **copy_warning**；menu_food → **copy_menu**；hours_schedule → **copy_hours**；route_to → **open_in_maps**；service_institution → **open_in_maps**；shopping_promo → **copy_promo**（上述映射的 id 必填，可再叠加 view_details 等通用 id）。把你认为对当前 bubble 有用的 chip id 列出来（系统提示里 actions ∈ {...} 的子集）。" +
-                "只有当你判断「这个 bubble 完全不需要任何 chip」（最常见：纯文字 type=info 的描述，如" +
-                "读一条不带联系方式 / 地址 / 价格 / 时间的签名）→ 留空 `[]`。" +
+                "**action_ids** 字段：**默认应填**。把你认为对当前 bubble 有用的 chip id 列出来" +
+                "（系统提示里 actions ∈ {...} 的子集）。常见映射参考：识别到电话号码 → **dial_number**；" +
+                "识别到位置 / 地址 / 机构名 → **open_in_maps**；识别到招聘 / 房源 / 警示 / 菜单 / 营业时间 / 促销文本 → " +
+                "**save_posting** / **copy_listing** / **copy_warning** / **copy_menu** / **copy_hours** / **copy_promo**；" +
+                "识别到证件 / 支付码 → **redact_id** / **scan_to_pay**。" +
+                "只有当你判断「这个 bubble 完全不需要任何 chip」→ 留空 `[]`；" +
                 "其余 case 都应填至少 1 个。" +
                 "**必须**调这个工具结束循环，不能用纯文本收尾。",
             inputSchema = JSONObject().apply {
@@ -361,17 +372,17 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                     })
                     put("intent", JSONObject().apply {
                         put("type", "string")
-                        put("description", "用户想做什么（动宾短语，≤30字）")
+                        put("description", "用户想做什么的中文短语（≤30字，自由文本）")
                     })
                     put("type", JSONObject().apply {
                         put("type", "string")
-                        // Schema enum follows the registered intents —
-                        // adding a new IntentDecl automatically extends
-                        // the valid set the model can emit.
-                        put("enum", JSONArray().apply {
-                            intents.allIds().forEach { put(it) }
-                        })
-                        put("description", "意图大类")
+                        // [2026-07-14 Phase E] Drop the enum constraint.
+                        //  type is now free-form; the orchestrator
+                        //  doesn't use it for action routing anymore
+                        //  (action_ids from the LLM is the source of
+                        //  truth).  Kept as a string field for legacy
+                        //  eval scoring (r2_type still reads it).
+                        put("description", "意图大类（可选；自由文本；缺省 info）")
                     })
                     put("details", JSONObject().apply {
                         put("type", "array")

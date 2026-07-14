@@ -451,8 +451,18 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "**请先相信 crop OCR 的字符**：它是高保真重扫，比 round-1 OCR 更可靠。crop OCR 的字符**直接 verbatim 引用**到 emit_bubble（[LOW] 行也 verbatim 引用——[LOW] 只是 OCR 引擎 confidence 低，字符本身仍然是你能直接用的 verbatim 字符；标记 \"[LOW]\" 让用户在 UI 看到这一行 OCR 不太确定）。\n" +
                     "\n" +
                     "### Step 4: emit_bubble\n" +
-                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type, confidence, details?, action_ids?) 总结。\n" +
-                    "__INTENT_BLOCK__\n" +
+                    // [2026-07-14 Phase E — inversion v3.0] emit_bubble
+                    //  schema drops the `type` enum.  The LLM now picks
+                    //  a free-form `intent` Chinese phrase (≤30 字) and
+                    //  an `action_ids` subset — no more 14-bucket
+                    //  classification.  `type` stays as an optional
+                    //  legacy field (defaults to FALLBACK_ID = "info")
+                    //  for backwards compat with v=2 GT fixtures.
+                    "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type?, confidence, details?, action_ids?) 总结。\n" +
+                    // __INTENT_BLOCK__ placeholder — Phase E leaves it
+                    //  empty (no more 14-id type enum to inject; intent
+                    //  is free-form text).
+                    "\n" +
                     "__ACTIONS_BLOCK__\n" +
                     "\n" +
                     "## 工具 1: zoom_in —— 看清细节 + 自动 OCR\n" +
@@ -535,21 +545,30 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  type — `app/` passes `actionRegistry.allIds()`.
          */
         fun toolUseSystemPrompt(intents: IntentRegistry, actionIds: List<String> = emptyList()): String {
-            val renderedIntents = intents.renderIntentBlock()
+            // [2026-07-14 Phase E — inversion v3.0] Both
+            //  placeholders are now optional.  __INTENT_BLOCK__ is
+            //  not rendered into TOOL_USE_SYSTEM anymore (LLM picks
+            //  `intent` as free-form text); the call still accepts
+            //  the `intents` parameter for API compatibility but
+            //  ignores it.  __ACTIONS_BLOCK__ still drives the
+            //  `actions ∈ {...}` line.
             val renderedActions = if (actionIds.isEmpty()) {
                 "actions ∈ {}（暂无动作可选；emit_bubble.action_ids 留空即可）"
             } else {
                 "actions ∈ {${actionIds.joinToString(", ")}}。"
             }
-            require(TOOL_USE_SYSTEM.contains("__INTENT_BLOCK__")) {
-                "TOOL_USE_SYSTEM missing __INTENT_BLOCK__ placeholder"
-            }
             require(TOOL_USE_SYSTEM.contains("__ACTIONS_BLOCK__")) {
                 "TOOL_USE_SYSTEM missing __ACTIONS_BLOCK__ placeholder"
             }
-            return TOOL_USE_SYSTEM
-                .replace("__INTENT_BLOCK__", renderedIntents)
-                .replace("__ACTIONS_BLOCK__", renderedActions)
+            // Defensive: if a future prompt edit re-adds the
+            //  __INTENT_BLOCK__ placeholder, replace it with the
+            //  (now empty) intent block.  Don't require() it —
+            //  Phase E intentionally removed it.
+            var prompt = TOOL_USE_SYSTEM.replace("__ACTIONS_BLOCK__", renderedActions)
+            if (prompt.contains("__INTENT_BLOCK__")) {
+                prompt = prompt.replace("__INTENT_BLOCK__", intents.renderIntentBlock())
+            }
+            return prompt
         }
     }
 }

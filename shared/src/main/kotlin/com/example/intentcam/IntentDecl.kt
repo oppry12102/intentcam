@@ -252,8 +252,7 @@ fun registerDefaultIntents(reg: IntentRegistry) {
  * reach the model via the `emit_bubble` tool description, which
  * [renderTypeList] renders the same way.
  */
-fun IntentRegistry.renderIntentBlock(): String =
-    "type ∈ {${allIds().joinToString(", ")}}。"
+fun IntentRegistry.renderIntentBlock(): String = ""
 
 /** Compact "id（label） / id（label） / ..." form used by tool descriptions. */
 fun IntentRegistry.renderTypeList(): String =
