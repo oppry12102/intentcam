@@ -1,0 +1,203 @@
+package com.example.intentcam
+
+import com.example.intentcam.CycleProgress
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/**
+ * [2026-07-14 Phase B — inversion v3.0] Owns concurrent
+ * recognition cycles.  Replaces the legacy single-cycle flow inside
+ * [AppViewModel.captureLatestFrame] where an [java.util.concurrent.atomic.AtomicBoolean]
+ * (`analyzing`) gated the shutter button — under CycleManager the
+ * shutter is **never** blocked, every tap spawns a new [CycleJob],
+ * and old jobs continue in the background until they reach
+ * COMPLETE / ERRORED.
+ *
+ * Concurrency cap is [UiState.CYCLE_MAX_CONCURRENT] = 2: when a 3rd
+ * job arrives while 2 are still active, the oldest non-COMPLETE
+ * job is marked SUPERSEDED and dropped from [allJobs] (its
+ * coroutine keeps running so the LLM round isn't wasted, but its
+ * bubble never reaches the UI).  Cap = 2 chosen to (a) match the
+ * mental model of "user taps shutter while one photo is mid-cycle"
+ * and (b) bound LLM API request rate on real networks.
+ *
+ * Status flow:
+ *   - [startCycle] → new CycleJob (PENDING), launches coroutine
+ *   - coroutine → IN_FLIGHT, runCycle on ToolUseLoop
+ *   - every [CycleProgress] → CycleJob.applyProgress + refreshValidation
+ *   - cycle returns Outcome.Bubble → status = COMPLETE
+ *   - new cycle arrives → oldest non-COMPLETE marked SUPERSEDED
+ *   - exception / 529 storm → status = ERRORED
+ *
+ * Public surface:
+ *   - [startCycle] — spawn a new job
+ *   - [supersedeCurrent] — explicitly mark the most-recently-focused
+ *     non-COMPLETE job as SUPERSEDED (rarely called directly;
+ *     startCycle does it implicitly when cap is hit)
+ *   - [focusedJobId] — most-recent job's id, drives the live UI's
+ *     "current capture" indicator
+ *   - [allJobs] — every active job keyed by id; the UI iterates
+ *     this to render cards
+ *
+ * Total ~110 lines.  The actual ToolUseLoop call is one
+ * [ToolUseLoop.runCycle] invocation; everything else is bookkeeping.
+ */
+class CycleManager(
+    private val scope: CoroutineScope,
+    private val toolUseLoop: ToolUseLoop,
+    private val orchestrator: ActionOrchestrator,
+    private val actionRegistry: ActionRegistry,
+    private val actionResolver: ActionResolver,
+    private val enabledIds: suspend () -> Set<String>,
+    private val log: (tag: String, msg: String) -> Unit = { _, _ -> },
+) {
+    private val _allJobs = MutableStateFlow<Map<String, CycleJob>>(emptyMap())
+    val allJobs: StateFlow<Map<String, CycleJob>> = _allJobs.asStateFlow()
+
+    private val _focusedJobId = MutableStateFlow<String?>(null)
+    val focusedJobId: StateFlow<String?> = _focusedJobId.asStateFlow()
+
+    /** Spawn a new cycle for [frame].  Returns the job handle
+     *  synchronously; the actual LLM work happens on [scope].  If
+     *  [UiState.CYCLE_MAX_CONCURRENT] is already saturated, the
+     *  oldest non-COMPLETE job is dropped from [allJobs] (marked
+     *  SUPERSEDED, its coroutine continues in the background). */
+    fun startCycle(frame: CapturedFrame): CycleJob {
+        val job = CycleJob(frame = frame)
+        _focusedJobId.value = job.id
+
+        // Insert + enforce concurrency cap.  Use a copy-and-replace
+        // pattern so collectors always see an immutable map
+        // snapshot — Compose's recomposition relies on this for
+        // structural-equality diffing.
+        val updated = LinkedHashMap<String, CycleJob>(_allJobs.value)
+        updated[job.id] = job
+        // Drop oldest non-COMPLETE jobs until under cap.
+        while (updated.size > UiState.CYCLE_MAX_CONCURRENT) {
+            val toDrop = updated.values
+                .filter { it.status.value != JobStatus.COMPLETE }
+                .minByOrNull { it.createdAtMs }
+            if (toDrop == null) break  // all COMPLETE; cap is soft
+            toDrop.status.value = JobStatus.SUPERSEDED
+            updated.remove(toDrop.id)
+            log("CYCLE", "superseded ${toDrop.id} (cap=${UiState.CYCLE_MAX_CONCURRENT})")
+        }
+        _allJobs.value = updated
+
+        scope.launch {
+            runCycleLoop(job)
+        }
+        return job
+    }
+
+    /** Mark the currently-focused job (if any non-COMPLETE) as
+     *  SUPERSEDED.  Does NOT remove from [allJobs] — that's the
+     *  startCycle cap-enforcement's job.  Useful when the UI
+     *  wants to demote a cycle without immediately evicting it
+     *  (e.g. user scrolled past it). */
+    fun supersedeCurrent() {
+        val focusedId = _focusedJobId.value ?: return
+        val job = _allJobs.value[focusedId] ?: return
+        if (job.status.value == JobStatus.COMPLETE) return
+        job.status.value = JobStatus.SUPERSEDED
+        log("CYCLE", "superseded focused $focusedId")
+    }
+
+    /** True iff there's at least one job that should block the
+     *  user from doing something silly (e.g. tapping a second
+     *  action chip on a different bubble).  Phase C will use
+     *  this for the shutter button: button is enabled iff there
+     *  is no focused non-COMPLETE job (so the user can always
+     *  take a photo — CycleManager handles the buffering). */
+    fun hasFocusedJob(): Boolean {
+        val focusedId = _focusedJobId.value ?: return false
+        val job = _allJobs.value[focusedId] ?: return false
+        return job.status.value != JobStatus.COMPLETE
+    }
+
+    /** Drive one cycle: mark IN_FLIGHT, call runCycle with the
+     *  job's id + an onProgress callback that mirrors
+     *  CycleProgress back into the job's MutableStateFlows.
+     *  Errors transition to ERRORED; cancellation does NOT (the
+     *  job's coroutine continues in the background per
+     *  startCycle's lifecycle). */
+    private suspend fun runCycleLoop(job: CycleJob) {
+        job.status.value = JobStatus.IN_FLIGHT
+        try {
+            val outcome = withContext(Dispatchers.IO) {
+                toolUseLoop.runCycle(
+                    thumbnail = job.frame.thumbnail,
+                    fullRes = job.frame.fullRes,
+                    userText = "",
+                    actionIds = actionRegistry.allIds(),
+                    cycleId = job.id,
+                    onProgress = { progress ->
+                        job.applyProgress(progress)
+                        // Resolve actions on every partial emit so
+                        // the live UI sees chips as soon as the LLM
+                        // settles on a proposed set.  Cheap (single
+                        // suspend call to SettingsStore via
+                        // enabledIds closure).
+                        val resolved = actionResolver.suggestIds(progress.bubble)
+                        val withActions = if (resolved.toSet() == progress.bubble.actions.toSet()) {
+                            progress.bubble
+                        } else {
+                            progress.bubble.copy(actions = resolved)
+                        }
+                        job.bubble.value = withActions
+                        job.refreshValidation(orchestrator)
+                        log(
+                            "CYCLE",
+                            "progress ${job.id} round=${progress.round} " +
+                                "terminal=${progress.isTerminal} " +
+                                "actions=${withActions.actions.size} " +
+                                "missing=${job.pendingInputs.value.size}"
+                        )
+                    },
+                )
+            }
+            when (outcome) {
+                is ToolUseLoop.Outcome.Bubble -> {
+                    // Bubble is already in job.bubble via the final
+                    // onProgress.  Mark COMPLETE for the UI to
+                    // optionally badge "done".
+                    job.status.value = JobStatus.COMPLETE
+                    log("CYCLE", "complete ${job.id} bubble=${outcome.bubble.id}")
+                }
+                is ToolUseLoop.Outcome.PendingUserInput -> {
+                    // The model needs free-form input to continue;
+                    // leave IN_FLIGHT and let AppViewModel's
+                    // existing userInputRequest flow park the
+                    // dialog.  Future cycle will pick up via
+                    // submitUserInput().
+                    log("CYCLE", "pending-user-input ${job.id}")
+                }
+                is ToolUseLoop.Outcome.Error -> {
+                    job.status.value = JobStatus.ERRORED
+                    log("CYCLE", "error ${job.id}: ${outcome.message}")
+                }
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Coroutine cancelled (e.g. process backgrounded).  Do
+            // NOT mark ERRORED — the user might just have closed
+            // the app.  Leave the job in its last observed state;
+            // it will be GC'd when superseded by the next cycle.
+            log("CYCLE", "cancelled ${job.id}: ${e.message}")
+            throw e
+        } catch (e: Throwable) {
+            job.status.value = JobStatus.ERRORED
+            log("CYCLE", "ERROR ${job.id}: ${e.message}")
+        }
+    }
+
+    /** For tests + AppViewModel's idle-check. */
+    fun activeJobCount(): Int = _allJobs.value.count {
+        it.value.status.value != JobStatus.COMPLETE
+    }
+}

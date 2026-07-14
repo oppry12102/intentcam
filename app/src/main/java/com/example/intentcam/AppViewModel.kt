@@ -90,6 +90,40 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         log = ::logDebug,
     )
 
+    /** [2026-07-14 Phase A] Thin orchestrator for action-driven
+     *  input validation.  Constructed after the action registry
+     *  (needs the registered actions to render the system prompt
+     *  block).  Consumed by [CycleManager] for per-emit validation
+     *  + missing-input framing.  In Phase A it sits unused; Phase
+     *  B wires it into the cycle loop. */
+    private val actionOrchestrator = ActionOrchestrator(actions = actionRegistry)
+
+    /** [2026-07-14 Phase B — inversion v3.0] Owns concurrent
+     *  recognition cycles.  Replaces the single-cycle flow that
+     *  `captureLatestFrame()` used to launch directly.  The
+     *  shutter button is now always enabled; tapping it just
+     *  spawns a new [com.example.intentcam.CycleJob] (up to
+     *  [UiState.CYCLE_MAX_CONCURRENT] = 2 in flight, oldest
+     *  superseded when the cap is hit).  See CycleManager.kt
+     *  for the full lifecycle. */
+    private val cycleManager = CycleManager(
+        scope = viewModelScope,
+        toolUseLoop = toolUseLoop,
+        orchestrator = actionOrchestrator,
+        actionRegistry = actionRegistry,
+        actionResolver = actionResolver,
+        enabledIds = {
+            val base = settings.loadEnabledActions() ?: actionRegistry.allIds().toSet()
+            val gated = base.toMutableSet()
+            for (def in actionRegistry.list()) {
+                val key = def.userPrefKey ?: continue
+                if (!settings.loadActionPermission(key)) gated.remove(def.id)
+            }
+            gated
+        },
+        log = ::logDebug,
+    )
+
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
@@ -112,9 +146,43 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }, java.util.concurrent.Executor { it.run() })
         }
 
-    /** Bus flag for "a recognition cycle is currently running".  Read by
-     *  the camera analyzer's `isBusy()` callback and the shutter button. */
-    private val analyzing = AtomicBoolean(false)
+    /** [2026-07-14 Phase B] Subscribe to cycleManager.allJobs +
+     *  focusedJobId and mirror them into [UiState.cycles].  Compose
+     *  reads from UiState so this is the only coupling between
+     *  CycleManager and the rest of the app.  The legacy
+     *  [UiState.bubbles] field is also updated (derived from the
+     *  focused job's bubble) so Phase A/C features that read
+     *  `bubbles` keep working without rewriting every call site.
+     *
+     *  The `analyzing` flag is now driven by
+     *  `cycleManager.hasFocusedJob()` rather than the legacy
+     *  AtomicBoolean — see [captureLatestFrame] / [runToolUseCycle]. */
+    init {
+        viewModelScope.launch {
+            cycleManager.allJobs.collect { jobs ->
+                _state.value = _state.value.copy(
+                    cycles = jobs.mapValues { (_, job) ->
+                        com.example.intentcam.CycleSnapshot(
+                            id = job.id,
+                            status = job.status,
+                            bubble = job.bubble,
+                            nRounds = job.nRounds,
+                            capturedAtMs = job.createdAtMs,
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    /** Bus flag for "a recognition cycle is currently running".
+     *  [2026-07-14 Phase B] Now a derived read of
+     *  [cycleManager.hasFocusedJob] — the AtomicBoolean legacy
+     *  field has been removed; the only authoritative source for
+     *  "is the camera busy" is the focused job's status.  Kept
+     *  as a `val` (not a `var`) so call sites can't write to it. */
+    private val analyzing: Boolean
+        get() = cycleManager.hasFocusedJob()
 
     init {
         // Restore the persisted debug-overlay preference.  Defer the state
@@ -178,7 +246,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val debugLogSeq = AtomicLong(0)
 
     fun isBusy(): Boolean {
-        if (analyzing.get()) return true
+        if (analyzing) return true
         // When the user is looking at a bubble's detail view, the camera
         // pipeline must stay quiet so the displayed image doesn't go stale.
         // SelectedBubble and phase are kept in sync by [selectBubble] /
@@ -278,33 +346,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * User tapped the shutter button.  Arms the camera analyzer (so the
-     * next frame it produces is the one we use), waits up to 500 ms for
-     * the frame to arrive, then runs one recognition cycle.  No-op if
-     * another cycle is already in flight (button stays disabled).
+     * next frame it produces is the one we use), waits up to 3000 ms for
+     * the frame to arrive, then hands it to [CycleManager.startCycle].
+     *
+     * [2026-07-14 Phase B — inversion v3.0] No longer gates on the
+     * legacy `AtomicBoolean analyzing` re-entrancy flag — every tap
+     * spawns a new [com.example.intentcam.CycleJob], and CycleManager
+     * caps concurrency at [UiState.CYCLE_MAX_CONCURRENT] = 2 (oldest
+     * non-COMPLETE job is dropped when a 3rd tap arrives).  The
+     * shutter button in [MainActivity] now derives its `enabled`
+     * state from `cycleManager.hasFocusedJob()` so the button is
+     * **always** tappable; the gating that used to block rapid taps
+     * now lives at the CycleManager cap.
      */
     fun captureLatestFrame() {
-        if (!analyzing.compareAndSet(false, true)) return
         captureArmed.set(true)
         enterAnalyzing()
         viewModelScope.launch {
             try {
                 // Wait for the analyzer to deliver the next frame.
-                // [2026-07-12] raised 500ms→3000ms.  Two reasons:
-                //  1. Cold start: CameraX bindToLifecycle takes
-                //     200-800ms on first launch; `analyze()` doesn't
-                //     fire at all until binding completes, so the
-                //     first shutter tap after `onPermissionsGranted`
-                //     would always hit 500ms and fail.  Second tap
-                //     worked because binding finished in between.
-                //  2. Larger encodes: ResolutionSelector now targets
-                //     sensor max (~4032×3024).  JPEG q95 on the
-                //     full-res bitmap takes ~200-400ms on its own,
-                //     so even with the camera warm we burn ~300ms
-                //     before the first analyze() returns.  500ms
-                //     was tight for 640×480; it's racy for sensor max.
-                // 3s is enough for both: covers cold bind + encode
-                // overhead, with no impact on the warm path (typical
-                // wait is 50-80ms so we exit the loop early).
+                // [2026-07-12] raised 500ms→3000ms (cold start + larger
+                //  encodes).  See Phase B preamble in plan file for the
+                //  full rationale.
                 val deadline = SystemClock.elapsedRealtime() + 3000L
                 val t0 = SystemClock.elapsedRealtime()
                 while (latestFrame == null &&
@@ -328,14 +391,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         "full=${frame.fullRes.size / 1024}KB " +
                         "src=${jpegBounds(frame.fullRes)}"
                 )
-                runRecognitionCycle(frame)
+                // Hand off to CycleManager — it owns the actual cycle
+                // coroutine + per-job bubble flow.  We do NOT block
+                // on completion; the user can take more photos in the
+                // meantime.
+                cycleManager.startCycle(frame)
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 logDebug("FATAL", formatThrowable(e))
                 _state.value = _state.value.copy(error = e.message)
             } finally {
-                analyzing.set(false)
-                _state.value = _state.value.copy(analyzing = false)
+                // The `analyzing` UI flag is now derived from
+                // cycleManager.hasFocusedJob() — no manual flip
+                // needed.  But we still clear `enterAnalyzing()`'s
+                // effect for the rare path where no frame arrived
+                // (the cycle never spawned).
+                if (cycleManager.activeJobCount() == 0) {
+                    _state.value = _state.value.copy(analyzing = false)
+                }
             }
         }
     }
@@ -734,7 +807,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** User explicitly tapped "重新扫描" — full reset including bubble history. */
     fun restartScanning() {
         latestFrame = null
-        analyzing.set(false)
+        // [2026-07-14 Phase B] `analyzing` is now a derived read of
+        // cycleManager.hasFocusedJob(); no manual reset.  CycleManager
+        // will report hasFocusedJob=false once any active cycles
+        // finish naturally (typically <1s for a paused pipeline).
         _state.value = _state.value.copy(
             phase = Phase.SCANNING,
             bubbles = emptyList(),

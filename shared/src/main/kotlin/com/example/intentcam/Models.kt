@@ -60,6 +60,13 @@ data class Detail(
  */
 data class Bubble(
     val id: String,
+    /** [2026-07-14 Phase B — inversion v3.0] Owning cycle job's id
+     *  (UUID from [com.example.intentcam.CycleManager.startCycle]).
+     *  Defaults to the bubble's own [id] for the legacy single-cycle
+     *  path (eval, ad-hoc emit_bubble outside CycleManager).  Lets
+     *  the live UI route per-bubble taps back to the right cycle
+     *  when 2+ jobs are concurrent (Phase C). */
+    val cycleId: String = id,
     /** Legacy field: 14-id intent classification (Phase A-K).
      *  Kept as a `@Deprecated` alias for one release cycle after
      *  Phase E ships — see [intent] for the new free-form summary.
@@ -149,6 +156,18 @@ data class UiState(
      *  yes/no gate, an args form is a fields-to-fill gate, mixing
      *  them would compose badly. */
     val pendingConfirmation: PendingConfirmation? = null,
+    /** [2026-07-14 Phase B — inversion v3.0] Live in-flight cycles
+     *  keyed by [com.example.intentcam.CycleJob.id].  Each entry's
+     *  [CycleSnapshot] exposes the cycle's current bubble + status
+     *  as `StateFlow`s so the live UI can `collectAsState` per
+     *  cycle without re-rendering the whole list on every emit.
+     *  Empty in the legacy single-cycle path; populated only when
+     *  [com.example.intentcam.CycleManager] is in use (Phase B+).
+     *  Legacy code paths that read [bubbles] still work — the
+     *  bubble list is now derived as `cycles.values.mapNotNull
+     *  { it.bubble.value }` so the FIFO cap (BUBBLE_MAX) keeps
+     *  its semantics. */
+    val cycles: Map<String, CycleSnapshot> = emptyMap(),
 ) {
     companion object {
         /** Hard cap on bubble count.  When a new bubble arrives and we're
@@ -156,7 +175,64 @@ data class UiState(
         const val BUBBLE_MAX = 4
         /** Max entries kept in [debugLogs] before the oldest is evicted. */
         const val DEBUG_LOG_MAX = 40
+        /** [2026-07-14 Phase B] Hard cap on concurrent cycles the
+         *  CycleManager will keep alive.  Beyond this count the
+         *  oldest non-completed job is dropped from the UI map
+         *  (its coroutine continues to completion in the
+         *  background, but its bubble never reaches the user).
+         *  2 = the user can have one focused job + one buffered
+         *  (e.g. they tapped the shutter twice in quick
+         *  succession); 3+ risks LLM API rate-limit throttle on
+         *  real networks. */
+        const val CYCLE_MAX_CONCURRENT = 2
     }
+}
+
+/** [2026-07-14 Phase B — inversion v3.0] One cycle job's reactive
+ *  surface, surfaced to Compose via [UiState.cycles].  Carries
+ *  `StateFlow` references (not values) so the UI can `collectAsState`
+ *  per cycle independently — updating one job's bubble does not
+ *  force every other cycle's card to recompose.
+ *
+ *  Identity ([id]) is stable across the cycle's lifetime.  Status
+ *  transitions PENDING → IN_FLIGHT → COMPLETE / SUPERSEDED /
+ *  ERRORED; the bubble flow's `null` value signals "no bubble
+ *  emitted yet" (PENDING or early IN_FLIGHT).
+ *
+ *  Lives in `shared/` so [UiState] (also in shared/) can hold a
+ *  `Map<String, CycleSnapshot>` without dragging Android types.
+ *  The concrete `MutableStateFlow` instances are constructed in
+ *  `app/CycleManager.kt`. */
+data class CycleSnapshot(
+    val id: String,
+    val status: kotlinx.coroutines.flow.StateFlow<JobStatus>,
+    val bubble: kotlinx.coroutines.flow.StateFlow<Bubble?>,
+    val nRounds: kotlinx.coroutines.flow.StateFlow<Int>,
+    val capturedAtMs: Long,
+)
+
+/** [2026-07-14 Phase B] One cycle job's lifecycle status.  See
+ *  [com.example.intentcam.CycleManager] for the transition rules.
+ *  `SUPERSEDED` is the only soft state — a superseded job keeps
+ *  running in the background and may eventually reach COMPLETE,
+ *  but the user has already moved on to a newer cycle. */
+enum class JobStatus {
+    /** Newly registered in [com.example.intentcam.CycleManager.allJobs];
+     *  ToolUseLoop has not started round 1 yet. */
+    PENDING,
+    /** Round 1 (or later) in flight. */
+    IN_FLIGHT,
+    /** Cycle reached its terminal bubble (or max-rounds); bubble
+     *  flow carries the final value; UI may show "complete" badge. */
+    COMPLETE,
+    /** User took a newer photo before this cycle reached COMPLETE;
+     *  the cycle keeps running but its UI affordances are demoted
+     *  (faded card or auto-evicted when CYCLE_MAX_CONCURRENT is hit). */
+    SUPERSEDED,
+    /** Cycle terminated by an unrecoverable error (LLM 529 storm,
+     *  network failure, parse-time exception).  Bubble flow carries
+     *  the last good value or null. */
+    ERRORED,
 }
 
 /** Asked by a tool body that needs a free-form follow-up from the

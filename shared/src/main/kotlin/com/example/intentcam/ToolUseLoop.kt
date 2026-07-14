@@ -86,6 +86,32 @@ class ToolUseLoop(
         userText: String,
         cropOcrCap: Int = 0,
         actionIds: List<String> = emptyList(),
+        /** [2026-07-14 Phase B — inversion v3.0] Stable id of the
+         *  owning cycle job (set by [com.example.intentcam.CycleManager]
+         *  via [CycleProgress.cycleId]).  Defaults to "default" for
+         *  the legacy single-cycle caller (eval, single-shot
+         *  triggers) so the parameter is fully backwards-compatible.
+         *  The id lands on [com.example.intentcam.Bubble.cycleId] so
+         *  the live UI can route per-bubble events back to the
+         *  originating CycleJob even when multiple jobs run
+         *  concurrently. */
+        cycleId: String = "default",
+        /** [2026-07-14 Phase B] Per-emit progress callback.  Fires
+         *  every time the cycle produces a finalized (post-verifier)
+         *  bubble — at minimum once per cycle when [Outcome.Bubble]
+         *  is returned, plus on every successful `emit_bubble` parse
+         *  inside the loop (so the live UI sees the partial bubble
+         *  before the cycle's final round).  No-op by default.
+         *  Carries enough data for [CycleManager] to drive
+         *  `CycleJob.bubble` without re-querying the tool loop.
+         *
+         *  `suspend` because [CycleManager]'s callback re-invokes
+         *  [com.example.intentcam.ActionResolver.suggestIds] (also
+         *  suspend — it reads SharedPreferences) on every partial
+         *  emit.  Cheap when the action set is stable; the
+         *  suspend boundary lets us call without a separate
+         *  launch-per-emit. */
+        onProgress: suspend (CycleProgress) -> Unit = {},
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
@@ -597,37 +623,48 @@ class ToolUseLoop(
                     )
                 }
                 val verifiedActions: List<String>? = actionsList.takeIf { it.isNotEmpty() }
-                return Outcome.Bubble(
-                    com.example.intentcam.Bubble(
-                        id = "bubble-${System.currentTimeMillis()}",
-                        type = verifiedType,
-                        title = tb.title.ifBlank { "未识别" },
-                        detail = tb.detail,
-                        confidence = tb.confidence,
-                        imageBytes = thumbnail,
-                        createdAtMs = System.currentTimeMillis(),
-                        toolName = chosenToolName,
-                        // emit_bubble body populates tb.details from
-                        // the model's details[] JSON array.  Without
-                        // this, every Bubble from runCycle has an
-                        // empty details list even when the model did
-                        // emit the rows — the r2_text plateau's
-                        // companion symptom.
-                        details = tb.details,
-                        // [2026-07-13] Persist the model's explicit
-                        // action_ids choice onto the bubble so
-                        // AppViewModel's resolver can use it as the
-                        // LLM-override branch.  Null when emit_bubble
-                        // didn't receive the field (the legacy
-                        // applicability path).
-                        // [2026-07-11] Phase F: `verifiedActions` == the
-                        // model's list, plus the corrected type's
-                        // canonical action when the verifier flipped
-                        // type (else identical to tb.proposedActions).
-                        llmProposedActions = verifiedActions,
-                    ),
-                    firstToolName = chosenToolName,
+                val finalBubble = com.example.intentcam.Bubble(
+                    id = "bubble-${System.currentTimeMillis()}",
+                    cycleId = cycleId,
+                    type = verifiedType,
+                    title = tb.title.ifBlank { "未识别" },
+                    detail = tb.detail,
+                    confidence = tb.confidence,
+                    imageBytes = thumbnail,
+                    createdAtMs = System.currentTimeMillis(),
+                    toolName = chosenToolName,
+                    // emit_bubble body populates tb.details from
+                    // the model's details[] JSON array.  Without
+                    // this, every Bubble from runCycle has an
+                    // empty details list even when the model did
+                    // emit the rows — the r2_text plateau's
+                    // companion symptom.
+                    details = tb.details,
+                    // [2026-07-13] Persist the model's explicit
+                    // action_ids choice onto the bubble so
+                    // AppViewModel's resolver can use it as the
+                    // LLM-override branch.  Null when emit_bubble
+                    // didn't receive the field (the legacy
+                    // applicability path).
+                    // [2026-07-11] Phase F: `verifiedActions` == the
+                    // model's list, plus the corrected type's
+                    // canonical action when the verifier flipped
+                    // type (else identical to tb.proposedActions).
+                    llmProposedActions = verifiedActions,
                 )
+                // [2026-07-14 Phase B] Notify the CycleManager that
+                // this cycle has a finalized bubble.  `isTerminal =
+                // true` because the cycle returns Outcome.Bubble
+                // immediately after this callback.  CycleManager
+                // pushes the bubble into its CycleJob.bubble
+                // StateFlow; the live UI (Phase C) will render it.
+                onProgress.invoke(CycleProgress(
+                    cycleId = cycleId,
+                    round = round,
+                    bubble = finalBubble,
+                    isTerminal = true,
+                ))
+                return Outcome.Bubble(finalBubble, firstToolName = chosenToolName)
             }
             if (anyNeedsInput && pendingUserInput != null) {
                 val pui = pendingUserInput
@@ -769,3 +806,26 @@ class ToolUseLoop(
         const val FINAL_BUBBLE_TOOL = "emit_bubble"
     }
 }
+
+/**
+ * [2026-07-14 Phase B — inversion v3.0] One progress event from
+ * [ToolUseLoop.runCycle].  Fired on every successful `emit_bubble`
+ * parse inside the loop (so partial bubbles reach the live UI
+ * before the cycle's terminal round) and once more on the final
+ * round.  Carries enough state for [com.example.intentcam.CycleJob]
+ * to update its `MutableStateFlow`s without re-querying the tool
+ * loop.  `round` is the 1-indexed round number that produced the
+ * bubble; `isTerminal` is true when this is the last bubble the
+ * cycle will emit (i.e. when [ToolUseLoop.runCycle] returns
+ * `Outcome.Bubble`).
+ *
+ * Lives in `shared/` because [ToolUseLoop] is in `shared/` and the
+ * callback type must be importable from both `:shared` (the LLM
+ * driver) and `:app` (the CycleManager consumer).
+ */
+data class CycleProgress(
+    val cycleId: String,
+    val round: Int,
+    val bubble: com.example.intentcam.Bubble,
+    val isTerminal: Boolean,
+)
