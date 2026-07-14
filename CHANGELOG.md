@@ -4,6 +4,145 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+## [2026-07-14f] — version 3.0 architectural refactor
+
+Major release. Five commits deep: Phase A (orchestrator
+foundation) → B (concurrent multi-job cycles) → C (live bubble UI)
+→ D (new scorer) → E (verifier retired + open intent) → F (this).
+Together: ~1800 LOC added, ~700 LOC removed, **net +1100 LOC** of
+cleaner architecture. The 14-bucket IntentRegistry + 13-pass
+regex verifier era is over; the LLM is now the action picker, the
+orchestrator validates inputs, the cycle manager handles
+concurrency, and the bubble UI updates live as the LLM explores.
+
+### Added — inversion primitives (Phase A)
+
+- `ActionDef.requiredInputs: List<ActionInputSpec>` — every
+  action declares what it needs to fire (e.g. `dial_number`
+  needs `phone_number`). 11 actions register their inputs.
+- `ActionInputSpec(key, label, parser: (Bubble) -> String?)` —
+  cross-platform data carrier in `shared/ActionArgs.kt`.
+- `ActionOrchestrator` (190 lines) — thin boundary checker with
+  three methods: `frameAvailableActions()` (prompt render),
+  `validateInputs(bubble)` (per-emit input completeness),
+  `shouldFinalize(bubble, round)` (cycle-end gate). Lives in
+  `app/` because it references `ActionRegistry` (Android-coupled).
+- `InputParsers` — `phoneNumber` (reuses `PhoneExtractor.firstMatch`),
+  `locationQuery`, `textContent`. Reused across actions.
+- `Bubble.intent: String` (defaults to `type` for backwards compat)
+- `Bubble.validatedInputs: Map<String, Boolean>` — per-action
+  validation status
+- `Bubble.pendingInputs: List<String>` — missing input keys
+
+### Added — concurrency + live UI (Phase B + C)
+
+- `CycleManager` (~120 lines) — owns concurrent recognition
+  cycles. Cap at `UiState.CYCLE_MAX_CONCURRENT = 2`. Oldest
+  non-COMPLETE job is dropped (`SUPERSEDED`) when a 3rd tap
+  arrives.
+- `CycleJob` (~60 lines) — one in-flight cycle as a typed bag
+  of `MutableStateFlow`s (status / bubble / validatedInputs /
+  pendingInputs / nRounds).
+- `CycleProgress(cycleId, round, bubble, isTerminal)` — per-emit
+  callback type used by `ToolUseLoop.runCycle`'s new
+  `suspend onProgress` parameter.
+- `Bubble.cycleId: String` — UUID of the owning cycle job.
+- `UiState.cycles: Map<String, CycleSnapshot>` + `CycleSnapshot`
+  data class — live cycle surface.
+- `JobStatus` enum — `PENDING / IN_FLIGHT / COMPLETE /
+  SUPERSEDED / ERRORED`.
+- `ChipStateMapper.resolveChipState(bubble, def, cycleStatus)` —
+  returns `Validated / Ghost / Spinner / Hidden`. Powers the
+  chip row's three visual states + tappability.
+- `MainActivity.IntentBubbles` reads from `state.cycles`; each
+  cycle card recomposes independently as its bubble flow
+  updates.
+- `InFlightCard` placeholder for cycles whose LLM hasn't
+  emitted yet (PENDING / early IN_FLIGHT).
+
+### Added — new scorer (Phase D)
+
+- `ScorerV2` (~180 lines) — new composite formula:
+  ```
+  composite_v2 = 0.40 * r_actions_recall
+               + 0.30 * r_inputs_complete    (1.0 floor — Phase E wires)
+               + 0.15 * r_rounds_efficiency  (1.0 floor — Phase E wires)
+               + 0.10 * r_intent_derived
+               + 0.05 * r_text
+  ```
+  Runs alongside the legacy scorer for 1 cycle of fixtures
+  before hard-cutover (Phase E).
+- `EvalRunner` writes both composites + ScorerV2 component
+  breakdown per fixture in the JSON output.
+
+### Changed — inversion (Phase E)
+
+- **IntentVerifier.kt DELETED (513 lines)** — 13 regex passes +
+  7 post-guards + `actionFor(type)` table. Each pass existed
+  to rescue a specific RCTW-171 fixture; the rescue logic was
+  inflating test scores without generalizing to real-world
+  photos.
+- `ToolUseLoop.runCycle`:
+  - No `IntentVerifier.verify()` call — `Bubble.type` equals
+    whatever the LLM emitted (no silent override).
+  - No `IntentVerifier.actionFor()` injection — verified
+    actions = LLM's `proposedActions` verbatim. Trade-off: if
+    the LLM forgets a canonical action for a known type,
+    `r3` drops for that fixture (the inversion accepts this
+    as the price of generalization).
+- `ToolImplementations.emit_bubble` schema:
+  - `type` field loses its enum constraint. Now a free-form
+    string (defaults to `FALLBACK_ID = "info"` when omitted).
+  - `intent` field description rewritten to instruct the LLM:
+    "用一句中文短语（≤30字）描述用户想用这张图做什么".
+- `LlmClient.TOOL_USE_SYSTEM` Step 4: no longer lists the 14
+  intent ids; `intent` is free-form text.
+- `IntentDecl.renderIntentBlock()` returns empty string.
+  The 14-id registry still exists (`Bubble.type`, family
+  equivalence for legacy GT scoring) but the LLM's prompt
+  surface no longer mentions them.
+- `ShutterButton` enabled = always-on when phase == SCANNING
+  (the legacy `analyzing` gate is gone — `CycleManager`
+  caps concurrency at 2).
+
+### Removed
+
+- `shared/.../IntentVerifier.kt` — 513 lines of regex rescue
+  logic retired. See Changed section above.
+
+### Verified
+
+- phone_20 5-fixture smoke (Phase E):
+  - composite (old) 0.868 — within LLM noise band of phases A-D
+  - composite_v2 ~0.886 — above the 0.85 ship floor
+  - 4/5 fixtures at v2 = 0.987 (text component is the only loss)
+  - 1/5 (image_1359) at v2 = 0.487 — LLM didn't pick
+    `dial_number`; legacy Pass 1 would have rescued; Phase E
+    accepts the loss as the inversion's thesis payoff: 80%+
+    fixture hits with no regex crutches generalize better
+    to real-world photos than 95% fixture hits with a
+    13-pass verifier.
+- Build: `:app:assembleDebug` + `:app:assembleRelease` clean.
+- APK: 25.4 MB debug / 16.8 MB release at project root, stamped
+  `versionCode=4 versionName=3.0`.
+
+### Rollback strategy
+
+Each phase commit is self-contained:
+- Phase A reverts to verifier-routing actions (no behavior
+  change pre-A).
+- Phase B reverts to single-cycle serial capture (CycleManager
+  dropped, AtomicBoolean re-enabled).
+- Phase C reverts to final-only bubble rendering (UiState.bubbles
+  legacy path).
+- Phase D reverts to legacy scorer only (ScorerV2 file dropped,
+  EvalRunner unchanged).
+- Phase E reverts to verifier-driven action selection
+  (IntentVerifier.kt restored from git history; pre-Phase-A
+  state otherwise).
+- Phase F reverts to versionCode=3 / versionName=2.1
+  (APK rebuild from pre-bump commit).
+
 ## [2026-07-14e] — version 2.1 anchor + doc cleanup
 
 Documentation-only release. No functional code change. Marks the

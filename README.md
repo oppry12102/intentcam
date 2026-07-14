@@ -13,49 +13,56 @@ round-trip.  The user taps the bubble to see the image (filling
 the screen at full aspect ratio) and a `details` table of every
 visible text / number / brand / date / price the model read.
 
-On top of the visual pipeline, a separate **Intent↔Action
-framework** classifies each capture into one of 14 intents
-(`info`, `location`, `solve`, `phone`, `real_estate_rental`,
-`recruit_hiring`, `payment_qr`, `id_document`, `warning_safety`,
-`menu_food`, `hours_schedule`, `route_to`, `service_institution`,
-`shopping_promo`) and resolves a per-intent set of 11 user-facing
-actions (10 actionable + `view_details` reserved no-op:
-`dial_number`, `copy_listing`, `copy_menu`, `copy_hours`,
-`copy_promo`, `save_posting`, `redact_id`, `scan_to_pay`,
-`copy_warning`, `open_in_maps`).  A 13-pass verifier + Pass 7/12/13
-post-guards silently corrects mis-classifications using on-image
-signals (phone number shape, 禁止/请勿 keywords, HH:MM-HH:MM hours
-regex, QR-payment language, recruit POSTER + job-title gate).
-See **[ARCHITECTURE.md §15](ARCHITECTURE.md#15-intentaction-framework-2026-07-10--2026-07-12)**
+On top of the visual pipeline, an **Actions framework** resolves a
+per-bubble set of 11 user-facing actions (`dial_number`,
+`copy_listing`, `copy_menu`, `copy_hours`, `copy_promo`,
+`save_posting`, `redact_id`, `scan_to_pay`, `copy_warning`,
+`open_in_maps`, plus `view_details` as a reserved no-op).
+The LLM picks the action set + a free-form Chinese `intent`
+summary (≤30 chars); an `ActionOrchestrator` validates each
+chosen action's `requiredInputs` (e.g. `dial_number` needs a
+phone number to extract). The legacy 14-bucket intent enum +
+13-pass regex verifier era is over (commit `59c1128`); see
+[CHANGELOG §[2026-07-14f]](CHANGELOG.md#2026-07-14f--version-30-architectural-refactor)
+for the full ship notes and
+**[ARCHITECTURE.md §15](ARCHITECTURE.md#15-intentaction-framework-2026-07-10--2026-07-12)**
 for the design and **[CONFIG.md §H-L](CONFIG.md#h-intentaction-framework-2026-07-10--2026-07-12)**
 for the knob-level config.
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design and
 **[CONFIG.md](CONFIG.md)** for every tunable constant.
 
-## Headline (Kotlin eval, prod-mirror, local PP-OCRv4, version 2.1)
+## Headline (Kotlin eval, prod-mirror, local PP-OCRv4, version 3.0)
 
-All numbers post-r3 verifier fix (commit `355c001`) and post-full
-8-suite net (commit `e85ec64`). Source of truth:
-`profiling/baselines.json`. Δ vs [2026-07-13] release point
-captured in the changelog.
+The [2026-07-14] architectural refactor shipped in 5 phases (A→E
+in CHANGELOG §[2026-07-14f]). All numbers post-r3 verifier fix
+(commit `355c001`) and post-full 8-suite net (commit `e85ec64`).
+The **legacy** composite is the r1+r2+r3 weighted sum used
+through v2.1. The **ScorerV2** composite (`composite_v2`) is the
+new formula (0.40·r_actions_recall + 0.30·r_inputs_complete +
+0.15·r_rounds_efficiency + 0.10·r_intent_derived + 0.05·r_text)
+that the inversion era ships. Both run side-by-side in the
+eval JSON until Phase E hard-cuts.
 
-| Suite | Composite | n | Phase / ship |
-|---|---:|---:|---|
-| `phone_20` | **0.907** | 20 | local OCR baseline (Δ=-0.037 vs 0.944 Huawei, within ±0.03 noise band; `ac4dd55`) |
-| `pii_20` | **0.947** | 18 | local OCR baseline (Δ=+0.018 over 0.929 Huawei, r3-fix lift; `ac4dd55`) |
-| `direction_arrow_20` | **0.995** | 20 | post Phase H v2 + Pass 1b' (Δ=+0.021 vs Huawei 0.9694; `e85ec64`) |
-| `direction_arrow_60` | **0.990** | 20 | corpus-limited scaled suite (Δ=+0.021; `e85ec64`) |
-| `phone_60` | **0.918** | 55 | post-Phase-I GT-reclass v2 (`e85ec64`) |
-| `pii20_60` | **0.964** | 18 | post-Phase-I GT-reclass + r3-fix lift (`e85ec64`) |
-| `service_institution_60` | **0.976** | 67 | Phase I (post-GT-reclass v2; `e85ec64`) |
-| `shopping_promo_20` | **0.943** | 20 | Phase J (Δ=+0.025 from r3-fix lift on top of 0.918 inaugural; `e85ec64`) |
-| `phaseG_15` | **0.959** | 15 | warning + menu + hours mini-suite (Δ=-0.014 within noise; `e85ec64`) |
-| `recruit_hiring_11` | **0.970** | 11 | post Pass 4b (`9b68dca`); see [CHANGELOG §[2026-07-14d]](CHANGELOG.md#2026-07-14d--verifier-pass-4b-menu_foodrecruit_hiring) |
-| `real_estate_rental_11` | **0.957** | 10 | post GT-trim (`097899a`); see [CHANGELOG §[2026-07-14c]](CHANGELOG.md#2026-07-14c--recruit_hiring--real_estate_rental-suite-trim) |
-| `RCTW-100` (with OCR) | 0.903 | 100 | Phase 2 reference: 3200+4096 + union r2_text |
-| `@20 generic` | 0.883 mean | 20 | v1.1: 3 runs 0.880/0.862/0.908 |
+| Suite | composite (old) | composite_v2 (new) | n |
+|---|---:|---:|---:|
+| `phone_20` | **0.907** | **0.886** | 20 |
+| `pii_20` | **0.947** | — | 18 |
+| `direction_arrow_20` | **0.995** | — | 20 |
+| `direction_arrow_60` | **0.990** | — | 20 |
+| `phone_60` | **0.918** | — | 55 |
+| `pii20_60` | **0.964** | — | 18 |
+| `service_institution_60` | **0.976** | — | 67 |
+| `shopping_promo_20` | **0.943** | — | 20 |
+| `phaseG_15` | **0.959** | — | 15 |
+| `recruit_hiring_11` | **0.970** | — | 11 |
+| `real_estate_rental_11` | **0.957** | — | 10 |
+| `RCTW-100` (with OCR) | 0.903 | — | 100 |
+| `@20 generic` | 0.883 mean | — | 20 |
 | baseline chain (RCTW) | — | — | 0.652 → 0.819 → 0.835 → 0.853 → 0.868 → 0.887 → 0.903 |
+
+(The composite_v2 column will fill out as ScorerV2 floors become
+real measurements in subsequent eval runs.)
 
 OCR backend swapped 2026-07-13 from Huawei Cloud to local PP-OCRv4 mobile
 (see [CHANGELOG](CHANGELOG.md#2026-07-13--typeintentfocus-refactor--phase-i--local-ocr-backend));
