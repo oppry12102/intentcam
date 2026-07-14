@@ -102,6 +102,22 @@ data class ActionDef(
      *  "follow the family" — adding a new in-OBSERVE intent
      *  automatically lights it up. */
     val applicableFamilies: Set<IntentFamily> = emptySet(),
+    /** [2026-07-14 Phase A — inversion v3.0] Inputs this action
+     *  needs to fire.  Each spec's [ActionInputSpec.parser] pulls
+     *  the value out of the bubble's text surface
+     *  (title + detail + details[].value); null = missing.  The
+     *  orchestrator (`ActionOrchestrator.validateInputs`) drives
+     *  the live-UI ghost-chip state and the LLM's targeted
+     *  exploration framing from this list.  Empty = action is
+     *  always fireable as soon as the user taps it (e.g. copy
+     *  actions, view_details). */
+    val requiredInputs: List<ActionInputSpec> = emptyList(),
+    /** [2026-07-14 Phase A] Display priority when multiple chips
+     *  show on the same bubble.  Higher = more prominent.
+     *  Negative = "show last" pattern (e.g. the always-on
+     *  `copy_structured` default uses `Int.MIN_VALUE` to land at
+     *  the end).  Default `0`. */
+    val priority: Int = 0,
     /** When true, the chip throws a confirmation AlertDialog before
      *  firing [body].  Set on actions with side effects (share,
      *  set-reminder, etc.); false on read-only actions. */
@@ -174,6 +190,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "在地图中打开",
         iconKey = "map",
         applicableIntents = setOf("location", "route_to", "service_institution"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "query",
+            label = "地点或地址",
+            parser = InputParsers.locationQuery,
+        )),
         body = { _, bubble, _ ->
             // Query = the user's intent (动宾短语) if present, else
             // the scene description.  Maps app will resolve however
@@ -213,6 +234,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "拨号",
         iconKey = "phone",
         applicableIntents = setOf("phone"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "phone_number",
+            label = "手机号",
+            parser = InputParsers.phoneNumber,
+        )),
         requiresConfirmation = true,
         userPrefKey = "action_dial_number_enabled",
         body = { _, bubble, _ ->
@@ -249,6 +275,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "复制房源",
         iconKey = "clipboard",
         applicableIntents = setOf("real_estate_rental"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "text",
+            label = "房源正文",
+            parser = InputParsers.textContent,
+        )),
         requiresConfirmation = true,
         userPrefKey = "action_copy_listing_enabled",
         body = { _, bubble, _ ->
@@ -274,6 +305,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "保存招聘",
         iconKey = "clipboard",
         applicableIntents = setOf("recruit_hiring"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "text",
+            label = "招聘正文",
+            parser = InputParsers.textContent,
+        )),
         requiresConfirmation = true,
         userPrefKey = "action_save_posting_enabled",
         body = { _, bubble, _ ->
@@ -298,6 +334,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "扫码支付",
         iconKey = "wallet",
         applicableIntents = setOf("payment_qr"),
+        // [2026-07-14 Phase A] Toast-only body — no parser needed.
+        // The requiredInputs list is empty; the action is always
+        // fireable, but the body itself surfaces a guidance Toast
+        // instead of launching a payment app (see body comment for
+        // the security rationale).
         requiresConfirmation = true,
         userPrefKey = "action_scan_to_pay_enabled",
         body = { _, _, _ ->
@@ -322,6 +363,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "遮挡证件号",
         iconKey = "lock",
         applicableIntents = setOf("id_document"),
+        // [2026-07-14 Phase A] Toast-only body.  The id_document
+        // bubble's text surface IS the input the user would care
+        // about (身份证号 etc.), but the conservative-v1 body just
+        // shows a guidance Toast — no real parser is wired because
+        // we never write the value to a real sink yet.
         requiresConfirmation = true,
         userPrefKey = "action_redact_id_enabled",
         body = { _, bubble, _ ->
@@ -361,6 +407,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "复制警示",
         iconKey = "warning",
         applicableIntents = setOf("warning_safety"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "text",
+            label = "警示正文",
+            parser = InputParsers.textContent,
+        )),
         body = { _, bubble, _ ->
             val payload = buildString {
                 append(bubble.title.takeIf { it.isNotBlank() } ?: "警示标识")
@@ -380,6 +431,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "复制菜单",
         iconKey = "restaurant",
         applicableIntents = setOf("menu_food"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "text",
+            label = "菜单正文",
+            parser = InputParsers.textContent,
+        )),
         body = { _, bubble, _ ->
             // Menu bubble is detail-heavy (long item list).  Cap the
             //  payload at 600 chars so a share-sheet target doesn't
@@ -402,6 +458,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "复制营业时间",
         iconKey = "schedule",
         applicableIntents = setOf("hours_schedule", "service_institution"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "text",
+            label = "营业时间正文",
+            parser = InputParsers.textContent,
+        )),
         body = { _, bubble, _ ->
             val payload = buildString {
                 append(bubble.title.takeIf { it.isNotBlank() } ?: "营业时间")
@@ -425,6 +486,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "复制促销",
         iconKey = "local_offer",
         applicableIntents = setOf("shopping_promo"),
+        requiredInputs = listOf(ActionInputSpec(
+            key = "text",
+            label = "促销正文",
+            parser = InputParsers.textContent,
+        )),
         body = { _, bubble, _ ->
             val payload = buildString {
                 append(bubble.title.takeIf { it.isNotBlank() } ?: "促销信息")
@@ -455,6 +521,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
  *  Returns null on no match — the action then surfaces a Toast.
  *  Side-effect-free; safe to call from any context (it's a suspend-
  *  ready regex on a string).
+ *
+ *  [2026-07-14 Phase A — inversion v3.0] Now also exported as
+ *  [InputParsers.phoneNumber] so [ActionDef.requiredInputs] can
+ *  declare `phone_number` as a parser without reaching into a
+ *  private object.  Same logic, just a function reference.
  */
 internal object PhoneExtractor {
     // Mobile: 1[3-9] + 9 digits (covers all 3 Chinese carriers incl.
@@ -482,6 +553,51 @@ internal object PhoneExtractor {
         service.find(corpus)?.value?.let { return it.replace(Regex("""[\s-]"""), "-") }
         landline.find(corpus)?.value?.let { return it.replace(Regex("""[\s-]"""), "") }
         return null
+    }
+}
+
+/** [2026-07-14 Phase A — inversion v3.0] Reusable parsers for the
+ *  common [ActionInputSpec] inputs.  Each function returns the parsed
+ *  value or `null` when the input cannot be derived from the bubble
+ *  (the orchestrator treats null as "missing input" → ghost chip or
+ *  "ask the LLM to explore more").  Side-effect-free.
+ *
+ *  Lives in `app/` (alongside [PhoneExtractor]) because it touches
+ *  no Android types but is conceptually co-located with the action
+ *  registry.  `shared/ActionOrchestrator` only consumes the function
+ *  references via `ActionInputSpec.parser` — no direct dependency on
+ *  this object.
+ */
+internal object InputParsers {
+    /** Reuse [PhoneExtractor]'s regex chain (mobile → 400/800 →
+     *  landline).  Returns the parsed number as a string (digits +
+     *  hyphens where the format has separators), or null when no
+     *  plausible number appears in title/detail/details[].value. */
+    val phoneNumber: (Bubble) -> String? = { bubble -> PhoneExtractor.firstMatch(bubble) }
+
+    /** For `open_in_maps` (and any future location-aware action).
+     *  Maps app accepts free-form queries, so we don't need to
+     *  validate as a strict address — anything non-blank from the
+     *  bubble's title or detail works.  Prefers title (the model
+     *  often puts the storefront name / address there). */
+    val locationQuery: (Bubble) -> String? = { bubble ->
+        bubble.title.takeIf { it.isNotBlank() }
+            ?: bubble.detail.takeIf { it.isNotBlank() }?.take(40)
+            ?: bubble.details.firstOrNull { it.value.isNotBlank() }?.value
+    }
+
+    /** For all `copy_*` text-share actions.  Concatenates title +
+     *  detail so the share-sheet payload matches what the existing
+     *  bodies build inline today.  Returns null only when the
+     *  bubble is empty (no title, no detail, no detail rows) —
+     *  extremely rare since every recognized bubble has at least
+     *  a title or detail string. */
+    val textContent: (Bubble) -> String? = { bubble ->
+        buildString {
+            append(bubble.title.takeIf { it.isNotBlank() } ?: "")
+            if (isNotEmpty() && bubble.detail.isNotBlank()) append('\n')
+            append(bubble.detail)
+        }.takeIf { it.isNotBlank() }
     }
 }
 

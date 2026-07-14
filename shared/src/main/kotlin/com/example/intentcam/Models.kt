@@ -60,7 +60,19 @@ data class Detail(
  */
 data class Bubble(
     val id: String,
-    val type: String,             // "info" | "location" | "solve"
+    /** Legacy field: 14-id intent classification (Phase A-K).
+     *  Kept as a `@Deprecated` alias for one release cycle after
+     *  Phase E ships — see [intent] for the new free-form summary.
+     *  When [intent] is unset (Phase A-D), downstream UI / eval
+     *  fall back to this string. */
+    val type: String,             // "info" | "location" | "solve" | ... (legacy 14-bucket)
+    /** [2026-07-14 Phase A — inversion v3.0] Free-form Chinese phrase
+     *  describing what the user wants to do with this bubble (≤30
+     *  chars, e.g. "拨打联系电话", "导航去这家店").  Replaces the
+     *  hardcoded [type] enumeration starting in Phase E.  Defaults
+     *  to [type] for backwards compatibility through Phase A-D —
+     *  every existing call site keeps working unchanged. */
+    val intent: String = type,
     val title: String,             // intent (动宾短语)
     val detail: String,            // content description (was 'detail' in tool)
     val confidence: Float,
@@ -79,6 +91,22 @@ data class Bubble(
     //  post-resolve chip list) so debug payloads can tell which
     //  path produced the final set.
     val llmProposedActions: List<String>? = null,
+    /** [2026-07-14 Phase A — inversion v3.0] Per-action validation
+     *  status.  Key = action id, value = true when every required
+     *  input for that action was satisfied by the bubble's surface
+     *  text (per [com.example.intentcam.ActionInputSpec.parser]),
+     *  false otherwise.  Populated by [com.example.intentcam.ActionOrchestrator]
+     *  after each `emit_bubble`.  Empty for legacy bubbles (no
+     *  requiredInputs registered → all actions are implicitly
+     *  "validated").  Drives the live-UI chip state in Phase C. */
+    val validatedInputs: Map<String, Boolean> = emptyMap(),
+    /** [2026-07-14 Phase A] Cross-action aggregate of missing input
+     *  keys (deduplicated, ordered by first appearance across
+     *  [actions]).  Empty when every action's requiredInputs are
+     *  satisfied.  Drives the orchestrator's missing-input framing
+     *  for the next LLM round — the LLM sees a flat list of
+     *  labels to chase, not a per-action map. */
+    val pendingInputs: List<String> = emptyList(),
 )
 
 /** Whole-screen UI state exposed by [AppViewModel]. */

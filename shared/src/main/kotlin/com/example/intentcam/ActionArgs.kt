@@ -89,3 +89,45 @@ data class PendingConfirmation(
      *  even if the user is offline. */
     val detail: String,
 )
+
+/** [2026-07-14 Phase A — inversion v3.0] One declared input that an
+ *  [ActionDef] requires before it can fire.  Distinct from
+ *  [ActionArgSpec] (which is the form rendered at runtime when the
+ *  user fills in missing fields):
+ *
+ *  - **ActionInputSpec** = "this action needs a `phone_number` value
+ *    to function; the parser extracts it from the bubble's text".
+ *    Drives the orchestrator's requiredInputs validator and the
+ *    LLM's targeted exploration framing.
+ *  - **ActionArgSpec** = "this action pops a form with these fields
+ *    the user must type into before the body runs".  Drives the
+ *    `RequestArgs` runtime form.
+ *
+ *  Same `key` namespace as `ActionArgSpec.key` — a future action
+ *  can declare a `requiredInputs` entry for `phone_number` AND
+ *  request the same key via `RequestArgs` if it wants a user-typed
+ *  fallback after the bubble-derived value fails the parser.
+ *
+ *  Lives in `shared/` because `ActionDef.requiredInputs` is consumed
+ *  by `ActionOrchestrator` (a shared/ class) and `EvalScorerV2`'s
+ *  `r_inputs_complete` calculation.  The Android-only piece —
+ *  the actual body that *uses* the parsed value — stays in
+ *  `app/ActionDecl.kt`.
+ */
+data class ActionInputSpec(
+    /** Stable id; matches `ActionArgSpec.key` when the same action
+     *  also exposes a runtime form.  Required, non-blank. */
+    val key: String,
+    /** Human-readable label, e.g. "手机号" / "地点或地址" / "正文内容".
+     *  Surfaced in the orchestrator's missing-input framing so the
+     *  LLM knows what to look for. */
+    val label: String,
+    /** Pure function that pulls the input value out of the bubble's
+     *  text surface (title + detail + details[].value).  Returns
+     *  `null` when the input cannot be derived from this bubble —
+     *  the orchestrator treats that as a "missing input" signal
+     *  and either surfaces a ghost chip or prompts the LLM to
+     *  explore further.  Side-effect-free; safe to call from any
+     *  context. */
+    val parser: (Bubble) -> String?,
+)
