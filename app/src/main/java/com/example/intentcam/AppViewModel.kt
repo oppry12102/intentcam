@@ -670,7 +670,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * navigated away between render and tap).
      */
     fun runAction(actionId: String, bubbleId: String) {
-        val bubble = _state.value.bubbles.firstOrNull { it.id == bubbleId }
+        val bubble = findBubble(bubbleId)
         if (bubble == null) {
             logDebug("ACTION", "tap 收到 actionId=$actionId 但 bubble $bubbleId 不在历史中")
             return
@@ -713,7 +713,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // Clear the dialog first so a body that throws doesn't leave
         // the dialog visible.
         _state.value = _state.value.copy(pendingConfirmation = null)
-        val bubble = _state.value.bubbles.firstOrNull { it.id == pending.bubbleId }
+        val bubble = findBubble(pending.bubbleId)
         if (bubble == null) return
         val def = actionRegistry.get(pending.actionId) ?: return
         // One-time opt-in: persist userPrefKey so future chips on
@@ -722,6 +722,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         def.userPrefKey?.let { settings.saveActionPermission(it, true) }
         executeAndDispatch(def, bubble, parsedArgsFor(bubble), pending.bubbleId)
     }
+
+    /**
+     * Find a bubble by id across both the legacy `bubbles` list AND
+     * the live-UI `cycles` map.  Used by [runAction] / [confirmAction]
+     * / [submitActionArgs] to look up a bubble for an action chip tap.
+     *
+     * [2026-07-15 UI polish] Previous version only searched
+     * `_state.value.bubbles`; under CycleManager (Phase B+ live UI)
+     * a fresh cycle's bubble lives in
+     * `_state.value.cycles[cycleId].bubble.value` and is NOT mirrored
+     * into `bubbles` (which is a separate legacy-only queue).  The
+     * result: tapping a chip on a just-recognized phone bubble would
+     * log "bubble 不在历史中" and silently no-op.  Searching the
+     * cycles map too is the minimal-risk fix — no data shape change,
+     * the legacy path still resolves `bubbles` first, eval still goes
+     * through `bubbles` because it doesn't use CycleManager.
+     */
+    private fun findBubble(id: String): Bubble? =
+        _state.value.bubbles.firstOrNull { it.id == id }
+            ?: _state.value.cycles.values.firstNotNullOfOrNull { it.bubble.value }
 
     /** [2026-07-15] Pre-compute the args map the body wants.
      *
@@ -770,7 +790,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun submitActionArgs(args: Map<String, String>) {
         val pending = _state.value.pendingAction ?: return
-        val bubble = _state.value.bubbles.firstOrNull { it.id == pending.bubbleId }
+        val bubble = findBubble(pending.bubbleId)
         if (bubble == null) {
             // Stale pending — bubble already evicted; just clear.
             logDebug("ACTION", "submit 但 bubble ${pending.bubbleId} 不在历史中")
