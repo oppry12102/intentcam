@@ -472,6 +472,15 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("v2_text", r["v2_text"] as Double)
             o.put("v2_actions", r["v2_actions"] as Double)
             o.put("v2_inputs", r["v2_inputs"] as Double)
+            // [2026-07-15 v4] dual-run side-channel — informational only
+            //  during the dual-run window; canonical switch gated on
+            //  IntentCam Dev sign-off (see ~/.claude/plans/action-first-
+            //  architecture.md §3 Step 4).
+            o.put("composite_v3", r["composite_v3"] as Double)
+            o.put("v3_actions", r["v3_actions"] as Double)
+            o.put("v3_text", r["v3_text"] as Double)
+            o.put("v3_inputs", r["v3_inputs"] as Double)
+            o.put("v3_intent_hint", r["v3_intent_hint"] as Double)
             // Raw LLM proposal + GT expected actions + raw content /
             //  details, kept so post-hoc scorer experiments can re-cut
             //  the score without re-running the LLM.
