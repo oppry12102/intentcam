@@ -54,6 +54,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -401,7 +404,15 @@ private fun ShutterButton(
             //  disabled state is now visually identical to enabled
             //  (same color), so the alpha=0.35 branch was dead code.
             color = palette.accentDelegate,
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier
+                .size(72.dp)
+                // [2026-07-15 a11y] TalkBack announcement.  When
+                //  enabled, the button is "识别当前画面"; when a
+                //  cycle is in flight it becomes "正在识别" so the
+                //  user can hear that the tap was registered.
+                .semantics {
+                    contentDescription = if (enabled) "识别当前画面" else "正在识别"
+                },
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 if (enabled) {
@@ -777,7 +788,14 @@ private fun InFlightCard(capturedAtMs: Long) {
     Surface(
         color = Color.White.copy(alpha = 0.40f),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // [2026-07-15 a11y] TalkBack announces the in-flight
+            //  cycle with its wait time so a screen-reader user
+            //  knows the capture hasn't died.
+            .semantics {
+                contentDescription = "正在识别，已等待 ${ageSec} 秒"
+            },
     ) {
         Row(
             Modifier.padding(12.dp),
@@ -828,7 +846,23 @@ private fun BubbleCard(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (superseded) 0.45f else 1f),
+            .alpha(if (superseded) 0.45f else 1f)
+            // [2026-07-15 a11y] mergeDescendants so TalkBack
+            //  reads the card as one announcement: "识别结果：
+            //  <title>。置信度 N%。M 个可执行操作" instead of
+            //  reading every child (title, type, detail, chips)
+            //  separately.
+            .semantics(mergeDescendants = true) {
+                contentDescription = buildString {
+                    append("识别结果:")
+                    if (bubble.title.isNotBlank()) append(" ").append(bubble.title)
+                    append("。置信度 ").append((bubble.confidence * 100).toInt()).append("%")
+                    if (actionDefs.isNotEmpty()) {
+                        append("。").append(actionDefs.size).append(" 个可执行操作")
+                    }
+                    if (superseded) append("。已替换")
+                }
+            },
         onClick = { onPick(bubble) }
     ) {
         Row(
@@ -984,6 +1018,19 @@ private fun ActionChip(label: String, state: ChipState, onClick: () -> Unit) {
     Surface(
         color = bg,
         shape = RoundedCornerShape(10.dp),
+        // [2026-07-15 a11y] `stateDescription` lets TalkBack
+        //  announce the chip's current state separately from
+        //  its label, so a screen-reader user hears
+        //  "拨号, 需要补充信息" instead of just "拨号" for
+        //  a ghost chip.
+        modifier = Modifier.semantics {
+            stateDescription = when (state) {
+                is ChipState.Validated -> "可执行"
+                is ChipState.Ghost -> "需要补充信息"
+                is ChipState.Spinner -> "正在校验"
+                is ChipState.Hidden -> "隐藏"
+            }
+        },
         // Ghost chips stay tappable (the body shows a Toast); Spinner
         // chips are non-tappable to avoid firing an action whose
         // requiredInputs haven't been validated yet.
