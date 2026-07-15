@@ -883,6 +883,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
+    /** [2026-07-15 UI polish] Clear the surfaced error banner without
+     *  restarting scanning.  Used by MainActivity's `ErrorBanner`
+     *  dismiss button so the user can clear a transient failure
+     *  (529 storm, network blip) without losing their in-flight
+     *  cycle list.  `restartScanning()` is the nuclear option; this
+     *  is the polite "I saw it, hide it now" tap. */
+    fun clearError() {
+        if (_state.value.error == null) return
+        _state.value = _state.value.copy(error = null)
+    }
+
     fun openSettings() {
         _state.value = _state.value.copy(phase = Phase.SETTINGS)
     }

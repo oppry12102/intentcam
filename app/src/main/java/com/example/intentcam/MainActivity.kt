@@ -40,6 +40,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
@@ -178,6 +179,25 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 onToggleDebug = { viewModel.setDebugEnabled(!state.debugEnabled) },
                 onSettings = viewModel::openSettings,
             )
+            // [2026-07-15 UI polish] Surfaced error banner — `AppViewModel`
+            //  has been writing `error` for four places since Phase B
+            //  (LLM 529 storms, ToolUseLoop throwables, etc.) but no
+            //  composable ever read it.  Now it sits between the top
+            //  overlay and the rest of the screen, dismissable via
+            //  the trailing ✕ (which calls `viewModel.clearError()`
+            //  instead of a full restartScanning, so an in-flight
+            //  cycle list survives the dismissal).  Padding-top
+            //  clears the status-bar-padded TopOverlay below it.
+            state.error?.let { msg ->
+                ErrorBanner(
+                    message = msg,
+                    onDismiss = viewModel::clearError,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(top = 56.dp)
+                )
+            }
             Column(
                 Modifier
                     .align(Alignment.BottomCenter)
@@ -440,6 +460,56 @@ private fun TopOverlay(
         }
         IconButton(onClick = onSettings) {
             Icon(Icons.Filled.Settings, contentDescription = "设置", tint = Color.White)
+        }
+    }
+}
+
+/**
+ * [2026-07-15 UI polish] Red banner that surfaces [UiState.error] — the
+ * value `AppViewModel` has been writing for a while (LLM 529 storms,
+ * `ToolUseLoop.Outcome.Error` payloads, exception thrown out of
+ * `captureLatestFrame`) but no composable was reading.  Renders a
+ * short red strip with the error text and a trailing ✕ that calls
+ * [onDismiss] (= `viewModel.clearError()`) without nuking in-flight
+ * cycles.
+ *
+ * Pinned to the top of the screen so it's the first thing the user
+ * notices; the bottom Column is left alone so the debug log + shutter
+ * + bubbles keep their existing layout.  Wrapped in a translucent
+ * dark backdrop so the text stays readable over the live preview.
+ */
+@Composable
+private fun ErrorBanner(
+    message: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = Color(0xE62A0F12),
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE64A8C)),
+        modifier = modifier.padding(horizontal = 12.dp),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "⚠ $message",
+                color = Color(0xFFFF8FB1),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.size(28.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "关闭错误提示",
+                    tint = Color(0xFFFF8FB1),
+                )
+            }
         }
     }
 }
