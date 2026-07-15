@@ -200,16 +200,30 @@ data class UiState(
         const val BUBBLE_MAX = 8
         /** Max entries kept in [debugLogs] before the oldest is evicted. */
         const val DEBUG_LOG_MAX = 40
-        /** [2026-07-14 Phase B] Hard cap on concurrent cycles the
-         *  CycleManager will keep alive.  Beyond this count the
-         *  oldest non-completed job is dropped from the UI map
-         *  (its coroutine continues to completion in the
-         *  background, but its bubble never reaches the user).
-         *  2 = the user can have one focused job + one buffered
-         *  (e.g. they tapped the shutter twice in quick
-         *  succession); 3+ risks LLM API rate-limit throttle on
-         *  real networks. */
-        const val CYCLE_MAX_CONCURRENT = 2
+        /** [2026-07-14 Phase B → v3.0 polish] Hard cap on
+         *  *active* (PENDING + IN_FLIGHT) cycles the CycleManager
+         *  will keep alive concurrently.  Beyond this count the
+         *  oldest active job is dropped from the UI map (its
+         *  coroutine is cancelled so the LLM API call doesn't
+         *  bill for a discarded result).
+         *
+         *  History: was 2 in Phase B (the "one focused + one
+         *  buffered" rapid-2-photo use case).  Bumped to 8 in
+         *  the v3.0 UI polish batch to match the user-facing
+         *  "还可以拍 8 张" shutter counter — a user wanting
+         *  exactly 8 captures per session shouldn't be limited
+         *  by the backend's "2 in flight" cap, and the cycle's
+         *  90s timeout (see CycleManager.llmTimeoutMs) makes
+         *  8-concurrent manageable.
+         *
+         *  Note: COMPLETE cycles don't count toward this cap.
+         *  When a cycle finishes, the active count drops by 1
+         *  automatically (its status transitions to COMPLETE),
+         *  freeing a slot for the next shutter tap.  This is
+         *  the "释放出一个" semantics the user asked for — the
+         *  shutter counter decrements as cycles complete, not
+         *  just as new ones are added. */
+        const val CYCLE_MAX_CONCURRENT = 8
 
         /** [2026-07-15 UI polish] Hard cap on the total number
          *  of cycles kept in the [cycles] map (any status —

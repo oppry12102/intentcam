@@ -312,27 +312,38 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                     // [2026-07-14 Phase B] Camera button is always
                     //  enabled when phase == SCANNING.  CycleManager
                     //  caps concurrent cycles at
-                    //  UiState.CYCLE_MAX_CONCURRENT = 2; older
-                    //  cycles are superseded when a 3rd tap arrives.
+                    //  UiState.CYCLE_MAX_CONCURRENT; older cycles
+                    //  are superseded when the active cap is hit.
                     // [2026-07-15] Pass `analyzing` separately
                     //  so the inner content swaps to a spinner
-                    //  when a cycle is in flight (was previously
-                    //  the static "识别" text — user couldn't tell
-                    //  the cycle was running without scrolling
-                    //  down to the InFlightCard).  Button stays
-                    //  tappable for the rapid 2-photo case; the
-                    //  superseded cycle's LLM is now actually
-                    //  cancelled (commit d2bb3e3) so a fast double
-                    //  tap doesn't burn API quota.
+                    //  when a cycle is in flight.
                     // [2026-07-15] Pass `remaining` so the
                     //  button shows the "还可以拍几张" counter
-                    //  (8 - state.cycles.size).  When remaining
-                    //  hits 0 the button is grayed + disabled; the
-                    //  user must tap "重新扫描" to clear the
-                    //  session and start over.
+                    //  (CYCLE_MAX_CONCURRENT - activeCount).  Bug
+                    //  fix: previous version used `cycles.size`
+                    //  (all entries including COMPLETE) — so a
+                    //  completed cycle never freed its slot, and
+                    //  the button stayed at 0 forever once 8 were
+                    //  taken.  New version counts only active
+                    //  (PENDING + IN_FLIGHT) cycles, so the
+                    //  counter decrements as each cycle
+                    //  completes — matching the user's "释放出
+                    //  一个" intent.  When remaining hits 0 the
+                    //  button is grayed + disabled; the user
+                    //  must tap "重新扫描" to clear the session.
                     enabled = state.phase == Phase.SCANNING,
                     analyzing = state.analyzing,
-                    remaining = UiState.CYCLES_MAX_TOTAL - state.cycles.size,
+                    remaining = UiState.CYCLE_MAX_CONCURRENT - state.cycles.count {
+                        // Each CycleSnapshot's status is a
+                        //  StateFlow; collect its current value
+                        //  synchronously here.  Compose reads
+                        //  state.cycles reactively so the count
+                        //  recomputes on every status transition
+                        //  (PENDING→IN_FLIGHT→COMPLETE) and
+                        //  the button updates without us having
+                        //  to subscribe manually.
+                        it.value.status.value != JobStatus.COMPLETE
+                    },
                     onClick = { viewModel.captureLatestFrame() },
                     modifier = Modifier
                         .fillMaxWidth()
