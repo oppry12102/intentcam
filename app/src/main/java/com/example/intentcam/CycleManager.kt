@@ -1,5 +1,6 @@
 package com.example.intentcam
 
+import android.os.SystemClock
 import com.example.intentcam.CycleProgress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * [2026-07-14 Phase B — inversion v3.0] Owns concurrent
@@ -56,6 +58,16 @@ class CycleManager(
     private val actionResolver: ActionResolver,
     private val enabledIds: suspend () -> Set<String>,
     private val log: (tag: String, msg: String) -> Unit = { _, _ -> },
+    /**
+     * [2026-07-15] Per-cycle wall-clock cap on the LLM call.
+     * Default 90s — generous enough for 2-3-round cycles on
+     * slow networks (median ~2-3s per round) but tight enough
+     * that a true API hang surfaces within ~90s and the
+     * InFlightCard flips to its "识别超时" branch instead of
+     * pinning the cycle in IN_FLIGHT forever.  Configurable
+     * for tests (a 100ms cap lets you exercise the timeout
+     * branch in <1s). */
+    private val llmTimeoutMs: Long = 90_000L,
 ) {
     private val _allJobs = MutableStateFlow<Map<String, CycleJob>>(emptyMap())
     val allJobs: StateFlow<Map<String, CycleJob>> = _allJobs.asStateFlow()
@@ -126,80 +138,115 @@ class CycleManager(
      *  CycleProgress back into the job's MutableStateFlows.
      *  Errors transition to ERRORED; cancellation does NOT (the
      *  job's coroutine continues in the background per
-     *  startCycle's lifecycle). */
+     *  startCycle's lifecycle).
+     *
+     *  [2026-07-15] Wrapped the LLM call in
+     *  [withTimeoutOrNull] (default 90s) so a hung API call can't
+     *  pin a cycle in IN_FLIGHT forever — the user reported
+     *  "second photo completes, first one stays gray with
+     *  识别中... spinning indefinitely" when the API was slow.
+     *  90s is ~6-12× the median cycle (2-3 rounds × 2-3s per
+     *  round) — generous enough not to false-positive on a
+     *  legitimately long image, tight enough that a true hang
+     *  surfaces within a minute-and-a-half.  On timeout the
+     *  cycle is marked ERRORED; any partial bubble that was
+     *  emitted via onProgress before the timeout is preserved
+     *  in `job.bubble` so the InFlightCard's ERRORED branch
+     *  ("识别超时, 请再拍一张") takes over from the bubble-card
+     *  branch on the next state read. */
     private suspend fun runCycleLoop(job: CycleJob) {
         job.status.value = JobStatus.IN_FLIGHT
+        val t0 = SystemClock.elapsedRealtime()
         try {
-            val outcome = withContext(Dispatchers.IO) {
-                toolUseLoop.runCycle(
-                    thumbnail = job.frame.thumbnail,
-                    fullRes = job.frame.fullRes,
-                    userText = "",
-                    actionIds = actionRegistry.allIds(),
-                    cycleId = job.id,
-                    // [2026-07-15] Wire the orchestrator's per-emit
-                    //  gate.  After every successful `emit_bubble`
-                    //  parse inside ToolUseLoop, this closure fires
-                    //  with the post-resolve bubble (LLM proposal ∩
-                    //  applicability ∩ enabled set).  When the
-                    //  orchestrator returns CONTINUE, ToolUseLoop
-                    //  injects a missing-input nudge and re-loops
-                    //  (capped at 3 retries); when it returns
-                    //  FINALIZE, the cycle ends with the current
-                    //  bubble.  maxRounds=4 matches the orchestrator
-                    //  default — 1 round for emit + 2-3 rounds for
-                    //  the LLM to fill missing inputs.
-                    onEmit = { bubble, round ->
-                        orchestrator.shouldFinalize(bubble, round, maxRounds = 4)
-                    },
-                    // [2026-07-15] Stamp validation state onto the
-                    //  final bubble before the cycle returns.  This
-                    //  populates `bubble.validatedInputs` and
-                    //  `bubble.pendingInputs` (the data-class fields,
-                    //  separate from CycleJob's reactive flows which
-                    //  are kept in sync by [CycleJob.refreshValidation]
-                    //  + this callback's pre-return projection).
-                    markValidated = { bubble -> orchestrator.markValidatedInputs(bubble) },
-                    onProgress = { progress ->
-                        job.applyProgress(progress)
-                        // Resolve actions on every partial emit so
-                        // the live UI sees chips as soon as the LLM
-                        // settles on a proposed set.  Cheap (single
-                        // suspend call to SettingsStore via
-                        // enabledIds closure).
-                        val resolved = actionResolver.suggestIds(progress.bubble)
-                        val withActions = if (resolved.toSet() == progress.bubble.actions.toSet()) {
-                            progress.bubble
-                        } else {
-                            progress.bubble.copy(actions = resolved)
-                        }
-                        job.bubble.value = withActions
-                        job.refreshValidation(orchestrator)
-                        // [2026-07-15] Soft intent-alignment check.
-                        //  Logs a breadcrumb when bubble.intent doesn't
-                        //  mention any primary noun from the bubble's
-                        //  chosen action set — useful when investigating
-                        //  "model picked right action, wrote wrong intent"
-                        //  regressions.  Warn-only; doesn't fail the
-                        //  cycle (intent is display-only per Decision C).
-                        when (val a = validateIntentAlignment(withActions)) {
-                            is IntentAlignmentCheck.Mismatch -> log(
-                                "INTENT_WARN",
-                                "cycle ${job.id} round=${progress.round} " +
-                                    "intent='${withActions.intent.take(40)}' " +
-                                    "missing=${a.missingNouns.take(5)}"
+            val outcome = withTimeoutOrNull(llmTimeoutMs) {
+                withContext(Dispatchers.IO) {
+                    toolUseLoop.runCycle(
+                        thumbnail = job.frame.thumbnail,
+                        fullRes = job.frame.fullRes,
+                        userText = "",
+                        actionIds = actionRegistry.allIds(),
+                        cycleId = job.id,
+                        // [2026-07-15] Wire the orchestrator's per-emit
+                        //  gate.  After every successful `emit_bubble`
+                        //  parse inside ToolUseLoop, this closure fires
+                        //  with the post-resolve bubble (LLM proposal ∩
+                        //  applicability ∩ enabled set).  When the
+                        //  orchestrator returns CONTINUE, ToolUseLoop
+                        //  injects a missing-input nudge and re-loops
+                        //  (capped at 3 retries); when it returns
+                        //  FINALIZE, the cycle ends with the current
+                        //  bubble.  maxRounds=4 matches the orchestrator
+                        //  default — 1 round for emit + 2-3 rounds for
+                        //  the LLM to fill missing inputs.
+                        onEmit = { bubble, round ->
+                            orchestrator.shouldFinalize(bubble, round, maxRounds = 4)
+                        },
+                        // [2026-07-15] Stamp validation state onto the
+                        //  final bubble before the cycle returns.  This
+                        //  populates `bubble.validatedInputs` and
+                        //  `bubble.pendingInputs` (the data-class fields,
+                        //  separate from CycleJob's reactive flows which
+                        //  are kept in sync by [CycleJob.refreshValidation]
+                        //  + this callback's pre-return projection).
+                        markValidated = { bubble -> orchestrator.markValidatedInputs(bubble) },
+                        onProgress = { progress ->
+                            job.applyProgress(progress)
+                            // Resolve actions on every partial emit so
+                            // the live UI sees chips as soon as the LLM
+                            // settles on a proposed set.  Cheap (single
+                            // suspend call to SettingsStore via
+                            // enabledIds closure).
+                            val resolved = actionResolver.suggestIds(progress.bubble)
+                            val withActions = if (resolved.toSet() == progress.bubble.actions.toSet()) {
+                                progress.bubble
+                            } else {
+                                progress.bubble.copy(actions = resolved)
+                            }
+                            job.bubble.value = withActions
+                            job.refreshValidation(orchestrator)
+                            // [2026-07-15] Soft intent-alignment check.
+                            //  Logs a breadcrumb when bubble.intent doesn't
+                            //  mention any primary noun from the bubble's
+                            //  chosen action set — useful when investigating
+                            //  "model picked right action, wrote wrong intent"
+                            //  regressions.  Warn-only; doesn't fail the
+                            //  cycle (intent is display-only per Decision C).
+                            when (val a = validateIntentAlignment(withActions)) {
+                                is IntentAlignmentCheck.Mismatch -> log(
+                                    "INTENT_WARN",
+                                    "cycle ${job.id} round=${progress.round} " +
+                                        "intent='${withActions.intent.take(40)}' " +
+                                        "missing=${a.missingNouns.take(5)}"
+                                )
+                                IntentAlignmentCheck.Aligned -> { /* no-op */ }
+                            }
+                            log(
+                                "CYCLE",
+                                "progress ${job.id} round=${progress.round} " +
+                                    "terminal=${progress.isTerminal} " +
+                                    "actions=${withActions.actions.size} " +
+                                    "missing=${job.pendingInputs.value.size}"
                             )
-                            IntentAlignmentCheck.Aligned -> { /* no-op */ }
-                        }
-                        log(
-                            "CYCLE",
-                            "progress ${job.id} round=${progress.round} " +
-                                "terminal=${progress.isTerminal} " +
-                                "actions=${withActions.actions.size} " +
-                                "missing=${job.pendingInputs.value.size}"
-                        )
-                    },
+                        },
+                    )
+                }
+            }
+            if (outcome == null) {
+                // withTimeoutOrNull returned null — the LLM call
+                //  hung past `llmTimeoutMs`.  Mark ERRORED so the
+                //  InFlightCard flips to its "识别超时" branch and
+                //  the user knows the cycle is dead.  The
+                //  CancellationException is caught by
+                //  withTimeoutOrNull internally (it cancels the
+                //  inner coroutine, then the outer returns null),
+                //  so we don't re-throw it here.
+                val elapsed = SystemClock.elapsedRealtime() - t0
+                job.status.value = JobStatus.ERRORED
+                log(
+                    "CYCLE",
+                    "TIMEOUT ${job.id} after ${elapsed}ms (cap=${llmTimeoutMs}ms)"
                 )
+                return
             }
             when (outcome) {
                 is ToolUseLoop.Outcome.Bubble -> {
