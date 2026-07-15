@@ -281,6 +281,20 @@ internal class EvalRunner(private val config: EvalConfig) {
                 textScore = textScore,
                 typeScore = typeScore,
             )
+            // [2026-07-15 v4 — action-first scorer, dual-run] companion
+            //  ScorerV3 runs side-by-side.  Reuses ScorerV2's already-
+            //  computed r_text/r_actions/r_inputs (no double evaluation).
+            //  Until IntentCam Dev signs off on the dual-run report,
+            //  composite_v2 remains the regression-gating headline;
+            //  composite_v3 is purely informational here.  See
+            //  ~/.claude/plans/action-first-architecture.md §3 Step 1.
+            val scorerV3 = com.example.intentcam.eval.ScorerV3Result.compute(
+                bubble = bubble,
+                scene = scene,
+                textScore = scorerV2.text,
+                inputsScore = scorerV2.inputs,
+                actionsScore = scorerV2.actions,
+            )
             // Diagnostic side-metrics (do NOT feed composite) — stashed
             //  so post-hoc analysis can re-inspect text/action gaps
             //  without re-running the LLM.
@@ -305,6 +319,14 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "v2_text" to scorerV2.text,
                 "v2_actions" to scorerV2.actions,
                 "v2_inputs" to scorerV2.inputs,
+                // [2026-07-15 v4] dual-run side-channel; composite_v3
+                //  is purely informational here until IntentCam Dev
+                //  signs off on the dual-run report.
+                "composite_v3" to scorerV3.composite,
+                "v3_actions" to scorerV3.actions,
+                "v3_text" to scorerV3.text,
+                "v3_inputs" to scorerV3.inputs,
+                "v3_intent_hint" to scorerV3.intentHint,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
@@ -318,9 +340,11 @@ internal class EvalRunner(private val config: EvalConfig) {
                 println(
                     "  [${i + 1}/${useScenes.size}] ${sceneId.padEnd(30)} " +
                         "cat=${category.padEnd(15)} " +
-                        "type=${"%.2f".format(scorerV2.type)} text=${"%.2f".format(scorerV2.text)} " +
-                        "actions=${"%.2f".format(scorerV2.actions)} inputs=${"%.2f".format(scorerV2.inputs)} " +
-                        "composite_v2=${"%.2f".format(scorerV2.composite)}"
+                        "v2[ t=${"%.2f".format(scorerV2.type)} tx=${"%.2f".format(scorerV2.text)} " +
+                        "a=${"%.2f".format(scorerV2.actions)} i=${"%.2f".format(scorerV2.inputs)} " +
+                        "c=${"%.2f".format(scorerV2.composite)} ] " +
+                        "v3[ a=${"%.2f".format(scorerV3.actions)} h=${"%.2f".format(scorerV3.intentHint)} " +
+                        "c=${"%.2f".format(scorerV3.composite)} ]"
                 )
             }
         }
@@ -331,13 +355,24 @@ internal class EvalRunner(private val config: EvalConfig) {
         if (results.isNotEmpty()) {
             val overallV2 = results.map { it["composite_v2"] as Double }.average()
             println("average composite_v2: ${"%.3f".format(overallV2)}")
+            // [2026-07-15 v4] dual-run side-channel — informational only
+            //  until IntentCam Dev signs off on the dual-run report.
+            //  See ~/.claude/plans/action-first-architecture.md §3 Step 1.
+            val overallV3 = results.map { it["composite_v3"] as Double }.average()
+            println("average composite_v3: ${"%.3f".format(overallV3)}")
             val avgType = results.map { it["v2_type"] as Double }.average()
             val avgText = results.map { it["v2_text"] as Double }.average()
             val avgActions = results.map { it["v2_actions"] as Double }.average()
             val avgInputs = results.map { it["v2_inputs"] as Double }.average()
             println(
-                "components: type=${"%.3f".format(avgType)} text=${"%.3f".format(avgText)} " +
+                "v2 components: type=${"%.3f".format(avgType)} text=${"%.3f".format(avgText)} " +
                     "actions=${"%.3f".format(avgActions)} inputs=${"%.3f".format(avgInputs)}"
+            )
+            val avgV3Actions = results.map { it["v3_actions"] as Double }.average()
+            val avgV3Intent = results.map { it["v3_intent_hint"] as Double }.average()
+            println(
+                "v3 components: actions=${"%.3f".format(avgV3Actions)} " +
+                    "intent_hint=${"%.3f".format(avgV3Intent)}"
             )
             // Diagnostic aggregates — not part of composite.
             val avgDetails = results.map { (it["details_count"] as Int).toDouble() }.average()
@@ -382,6 +417,15 @@ internal class EvalRunner(private val config: EvalConfig) {
             results.map { it["composite_v2"] as Double }.average()
         } else 0.0
         root.put("overall_composite_v2", overallV2)
+        // [2026-07-15 v4] dual-run side-channel.  Until IntentCam Dev
+        //  signs off on the v4 plan's regression-stability gate
+        //  (composite_v2 PASS + composite_v3 |Δ| ≤ 0.03 week-over-week),
+        //  overall_composite_v3 is purely informational.  After sign-off,
+        //  `check_regression.py` flips its read target to this field.
+        val overallV3 = if (results.isNotEmpty()) {
+            results.map { it["composite_v3"] as Double }.average()
+        } else 0.0
+        root.put("overall_composite_v3", overallV3)
         // Per-component averages (top-level keys for the baseline
         //  checkers' per-component threshold checks).
         if (results.isNotEmpty()) {
@@ -393,11 +437,24 @@ internal class EvalRunner(private val config: EvalConfig) {
                 results.map { it["v2_actions"] as Double }.average())
             root.put("overall_v2_inputs",
                 results.map { it["v2_inputs"] as Double }.average())
+            // [2026-07-15 v4] v3 component aggregates
+            root.put("overall_v3_actions",
+                results.map { it["v3_actions"] as Double }.average())
+            root.put("overall_v3_text",
+                results.map { it["v3_text"] as Double }.average())
+            root.put("overall_v3_inputs",
+                results.map { it["v3_inputs"] as Double }.average())
+            root.put("overall_v3_intent_hint",
+                results.map { it["v3_intent_hint"] as Double }.average())
         } else {
             root.put("overall_v2_type", 0.0)
             root.put("overall_v2_text", 0.0)
             root.put("overall_v2_actions", 0.0)
             root.put("overall_v2_inputs", 0.0)
+            root.put("overall_v3_actions", 0.0)
+            root.put("overall_v3_text", 0.0)
+            root.put("overall_v3_inputs", 0.0)
+            root.put("overall_v3_intent_hint", 0.0)
         }
         root.put("fixture_count", results.size)
         val perCategory = JSONObject()
