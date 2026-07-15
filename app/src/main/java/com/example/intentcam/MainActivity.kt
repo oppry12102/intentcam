@@ -1510,6 +1510,14 @@ private fun LogList(
  * Sits above the bubble list (camera preview stays partially visible
  * below the top overlay) with a thin dark background so the text stays
  * legible against any camera frame.
+ *
+ * [2026-07-15 UI polish] Collapsible: a single-row header
+ *  ("调试日志 (N) ▾ / ▴") by default, expanding to the full
+ *  200dp log on tap.  Saves ~160dp of vertical space on
+ *  small phones where the log was squeezing the shutter /
+ *  bubbles.  State is component-local (not rememberSaveable) —
+ *  the panel re-collapses on app restart, which is the right
+ *  default for a debug tool.
  */
 @Composable
 private fun DebugLogPanel(
@@ -1517,14 +1525,43 @@ private fun DebugLogPanel(
     modifier: Modifier = Modifier,
 ) {
     val palette = IntentCamTheme.palette
-    LogList(
-        logs = logs,
+    var expanded by remember { mutableStateOf(false) }
+    Column(
         modifier = modifier
-            .heightIn(max = 200.dp)
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(palette.surfaceMuted),
-    )
+            .background(palette.surfaceMuted)
+            .clickable { expanded = !expanded },
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "调试日志 (${logs.size})",
+                color = palette.onSurfaceMuted,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = if (expanded) {
+                    androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp
+                } else {
+                    androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown
+                },
+                contentDescription = if (expanded) "折叠调试日志" else "展开调试日志",
+                tint = palette.onSurfaceMuted,
+            )
+        }
+        if (expanded) {
+            LogList(
+                logs = logs,
+                modifier = Modifier.heightIn(max = 200.dp),
+            )
+        }
+    }
 }
 
 @Composable
