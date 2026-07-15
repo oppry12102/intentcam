@@ -324,8 +324,15 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                     //  superseded cycle's LLM is now actually
                     //  cancelled (commit d2bb3e3) so a fast double
                     //  tap doesn't burn API quota.
+                    // [2026-07-15] Pass `remaining` so the
+                    //  button shows the "还可以拍几张" counter
+                    //  (8 - state.cycles.size).  When remaining
+                    //  hits 0 the button is grayed + disabled; the
+                    //  user must tap "重新扫描" to clear the
+                    //  session and start over.
                     enabled = state.phase == Phase.SCANNING,
                     analyzing = state.analyzing,
+                    remaining = UiState.CYCLES_MAX_TOTAL - state.cycles.size,
                     onClick = { viewModel.captureLatestFrame() },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -397,16 +404,30 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
  *  when a cycle is in flight (preserves the "rapid 2-photo"
  *  use case where the user intentionally supersedes), but
  *  the inner content swaps to a spinner so the user can see
- *  "识别中" without scanning down to the bubble card. */
+ *  "识别中" without scanning down to the bubble card.
+ *
+ *  [2026-07-15] "还可以拍几个" counter.  The button now shows
+ *   the number of cycles the user can still take before
+ *   hitting CYCLES_MAX_TOTAL (8).  Starts at 8, decreases by
+ *   1 per tap, and when it hits 0 the button visually grays
+ *   out (palette.onSurfaceMuted) AND is disabled — the user
+ *   must tap "重新扫描" in the top bar to clear the
+ *   session and start over.  Analyzing still shows the
+ *   spinner (replacing the number) so the user has a
+ *   single "this is what's happening" affordance per state. */
 @Composable
 private fun ShutterButton(
     enabled: Boolean,
     analyzing: Boolean = false,
+    remaining: Int = 0,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = IntentCamTheme.palette
     val haptics = LocalHapticFeedback.current
+    val noSlots = remaining <= 0
+    val finalEnabled = enabled && !noSlots
+    val finalColor = if (noSlots) palette.onSurfaceMuted else palette.accentDelegate
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
@@ -416,43 +437,39 @@ private fun ShutterButton(
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 onClick()
             },
-            enabled = enabled,
+            enabled = finalEnabled,
             shape = CircleShape,
-            // [2026-07-15 UI polish] Drop the disabled-color branch.
-            //  Phase B rewired the shutter so the gate lives in
-            //  CycleManager (CYCLE_MAX_CONCURRENT=2) and the Surface's
-            //  `enabled` flips on `state.phase == SCANNING`.  The
-            //  disabled state is now visually identical to enabled
-            //  (same color), so the alpha=0.35 branch was dead code.
-            color = palette.accentDelegate,
+            color = finalColor,
             modifier = Modifier
                 .size(72.dp)
-                // [2026-07-15 a11y] TalkBack announcement.  When
-                //  enabled, the button is "识别当前画面"; when a
-                //  cycle is in flight it becomes "正在识别" so the
-                //  user can hear that the tap was registered.
+                // [2026-07-15 a11y] TalkBack reads the counter so
+                //  a screen-reader user knows the cap state
+                //  ("还可以拍 3 张", "已满").
                 .semantics {
-                    contentDescription = if (analyzing) "正在识别" else "识别当前画面"
+                    contentDescription = when {
+                        analyzing -> "正在识别"
+                        noSlots -> "已满, 需重新扫描"
+                        else -> "识别当前画面, 还可以拍 $remaining 张"
+                    }
                 },
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                if (analyzing) {
-                    // Cycle in flight: spinner so the user gets
-                    //  visual feedback that something is happening
-                    //  without scanning to the bubble card.  The
-                    //  button stays tappable for the rapid-capture
-                    //  use case (C cancels the previous cycle's
-                    //  LLM call so the user doesn't waste quota).
-                    CircularProgressIndicator(
+                when {
+                    analyzing -> CircularProgressIndicator(
                         modifier = Modifier.size(28.dp),
                         strokeWidth = 3.dp,
                         color = Color.White,
                     )
-                } else {
-                    Text(
-                        "识别",
+                    noSlots -> Text(
+                        "0",
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    else -> Text(
+                        "$remaining",
                         color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
                 }
