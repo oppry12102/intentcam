@@ -176,9 +176,28 @@ data class UiState(
     val cycles: Map<String, CycleSnapshot> = emptyMap(),
 ) {
     companion object {
-        /** Hard cap on bubble count.  When a new bubble arrives and we're
-         *  already at this count, the oldest is dropped. */
-        const val BUBBLE_MAX = 4
+        /** [2026-07-15] Hard cap on the legacy [bubbles] FIFO queue.
+         *  When a new bubble arrives and we're already at this count,
+         *  the oldest is dropped.
+         *
+         *  History: was 4 in Phase A; bumped to 8 in the v3.0 polish
+         *  batch because users taking a long photo session wanted to
+         *  scroll back further than 4 entries to find an earlier
+         *  result.  Note: this cap is for the **legacy** single-cycle
+         *  path ([bubbles]); the live-UI path uses the [cycles] map
+         *  whose cap is [CYCLE_MAX_CONCURRENT] (= 2 concurrent
+         *  IN_FLIGHT cycles, not a "saved bubbles" cap).  The two
+         *  caps serve different purposes — see CycleManager.kt for
+         *  the live-UI cap logic.
+         *
+         *  [Future work] Persistence: this is in-memory only and is
+         *  wiped on process death.  A follow-up will write
+         *  [bubbles] to disk on `onStop` and rehydrate on cold
+         *  start, bumping the cap further (or moving it to a
+         *  queryable window) once storage cost is bounded.  Until
+         *  then 8 is the sweet spot — enough history to scroll
+         *  back, not so much that a long session OOMs. */
+        const val BUBBLE_MAX = 8
         /** Max entries kept in [debugLogs] before the oldest is evicted. */
         const val DEBUG_LOG_MAX = 40
         /** [2026-07-14 Phase B] Hard cap on concurrent cycles the
