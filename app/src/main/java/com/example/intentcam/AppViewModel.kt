@@ -396,7 +396,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * now lives at the CycleManager cap.
      */
     fun captureLatestFrame() {
-        captureArmed.set(true)
+        // [2026-07-15 UI polish] CAS instead of set(true).  Previously,
+        //  a fast double-tap of the shutter would race: the first tap
+        //  set `captureArmed=true` and the second tap saw `latestFrame`
+        //  == null still, so the second `viewModelScope.launch`'s
+        //  3-second wait loop timed out and the user saw a "3000ms
+        //  内没拿到帧" warning.  The atomic `compareAndSet(false,
+        //  true)` makes the second tap a no-op — the shutter's spinner
+        //  is the user's only signal that one capture is in flight.
+        //  Phase B already caps the number of concurrent cycles at
+        //  CYCLE_MAX_CONCURRENT=2, but a second tap that races the
+        //  analyzer's encode (~50-200ms on a mid-range phone) is
+        //  genuinely "double-tap on the same frame" and not "I want
+        //  a second cycle queued", so we drop it.
+        if (!captureArmed.compareAndSet(false, true)) {
+            logDebug("CAP", "第二次 shutter tap 忽略（captureArmed 已被上一拍占用）")
+            return
+        }
         enterAnalyzing()
         viewModelScope.launch {
             try {
