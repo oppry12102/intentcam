@@ -1,7 +1,6 @@
 package com.example.intentcam.eval
 
 import com.example.intentcam.Bubble
-import org.json.JSONArray
 
 /**
  * [2026-07-15 v4 — action-first scorer] Companion scorer that runs
@@ -9,10 +8,9 @@ import org.json.JSONArray
  *
  * ## Formula
  * ```
- * composite_v3 = 0.50 · r_actions
- *             + 0.25 · r_text
+ * composite_v3 = 0.55 · r_actions
+ *             + 0.30 · r_text
  *             + 0.15 · r_inputs
- *             + 0.10 · r_intent_hint
  * ```
  *
  * ## Why this formula
@@ -26,20 +24,29 @@ import org.json.JSONArray
  *
  * `r_type` is dropped from the canonical dimension and demoted to a
  * UI accent input ([2026-07-15 v4 plan §2.3]). `r_actions` moves
- * from 0.20 to 0.50 to become the headline signal — it's the
+ * from 0.20 to **0.55** to become the headline signal — it's the
  * user-can-act score.
  *
- * - **r_actions (0.50)** — Jaccard `|∩|/|∪|` of expected vs actual
+ * - **r_actions (0.55)** — Jaccard `|∩|/|∪|` of expected vs actual
  *   action ids. Same logic as [ScorerV2Result]; promoted to the
  *   dominant weight. Empty expected → 1.0 (un-annotated floor).
- * - **r_text (0.25)** — verbatim OCR fidelity. Reused from
+ * - **r_text (0.30)** — verbatim OCR fidelity. Reused from
  *   [ScorerV2Result] inputs (no re-computation).
  * - **r_inputs (0.15)** — fraction of `expected_inputs` satisfiable
  *   from the bubble's text surface. Reused from [ScorerV2Result].
- * - **r_intent_hint (0.10)** — NEW. Optional UX subtitle signal:
- *   both null → 1.0; LLM null + GT present → 0.5 (LLM under-emitted
- *   context); both present → strict_text overlap ≥ 0.67. Built for
- *   GT `expected_intent_hint` (Step 2 of the v4 plan).
+ *
+ * ## Why `r_intent_hint` was dropped (Step 2 sign-off, 2026-07-15)
+ *
+ * The original v4 plan proposed a fourth dimension `r_intent_hint`
+ * graded against GT `expected_intent_hint`. Audit revealed: GT has
+ * no reliable per-fixture "user want" annotation — RCTW XMLs
+ * carry bbox + text only, not user intent. `what_is_pictured` is
+ * the wrong semantic axis (image content, not user goal). With
+ * GT null, ScorerV3's `r_intent_hint` collapsed to a 0.5 floor
+ * (LLM present + GT null) for every fixture — inception noise,
+ * not signal. Action-axis weight lifted to 0.55 to absorb the
+ * released 10%. See plan `~/.claude/plans/action-first-architecture.md`
+ * §2.2 for the full reasoning.
  *
  * ## Canonical switch
  *
@@ -60,15 +67,20 @@ data class ScorerV3Result(
     val actions: Double,
     val text: Double,
     val inputs: Double,
-    val intentHint: Double,
     val composite: Double,
 ) {
     companion object {
         /**
          * @param bubble LLM-emitted bubble (may be null on error).
-         * @param scene  GT fixture JSON. Reads `expected_actions`,
-         *   `expected_inputs`, and (after Step 2 ships) the optional
-         *   `expected_intent_hint` string.
+         *   Field-specific data is currently unused (ScorerV3 only
+         *   reads action-ids via [bubble.llmProposedActions] /
+         *   [bubble.actions] inside [ScorerV2Result]). Kept for
+         *   forward-compat if a future v4 axis needs `bubble.title`
+         *   or detail text.
+         * @param scene  GT fixture JSON. Reads `expected_actions`
+         *   and `expected_inputs` — both already populated across
+         *   the 11 production suites by
+         *   `scripts/migrate_gt_v2_to_v3.py` (commit `072af4d`).
          * @param textScore r_text — verbatim OCR fidelity, computed
          *   by `EvalRunner.scoreRound2Text`. Reused as-is from the
          *   parallel ScorerV2 call site (no double evaluation).
@@ -77,7 +89,15 @@ data class ScorerV3Result(
          *   Reused as-is (no double evaluation).
          * @param actionsScore r_actions — Jaccard overlap, computed
          *   inside [ScorerV2Result.compute]. Reused as-is.
+         *
+         * The unused `bubble` + unused `scene` parameters are kept
+         * so the call-site signature matches ScorerV2's
+         * `compute(bubble, scene, textScore, typeScore)` for
+         * diff-readability — ScorerV2 reads `bubble` itself,
+         * ScorerV3 reads it only via the cached scores already
+         * computed by ScorerV2.
          */
+        @Suppress("UNUSED_PARAMETER")
         fun compute(
             bubble: Bubble?,
             scene: org.json.JSONObject,
@@ -88,84 +108,17 @@ data class ScorerV3Result(
             val text = textScore.coerceIn(0.0, 1.0)
             val inputs = inputsScore.coerceIn(0.0, 1.0)
             val actions = actionsScore.coerceIn(0.0, 1.0)
-            val intentHint = computeIntentHint(bubble, scene)
 
-            val composite = 0.50 * actions +
-                0.25 * text +
-                0.15 * inputs +
-                0.10 * intentHint
+            val composite = 0.55 * actions +
+                0.30 * text +
+                0.15 * inputs
             return ScorerV3Result(
                 actions = actions,
                 text = text,
                 inputs = inputs,
-                intentHint = intentHint,
                 composite = composite.coerceIn(0.0, 1.0),
             )
         }
-
-        /**
-         * Per-component intent-hint score. Mirrors the C3 v3 prompt
-         * convention: hint is an optional ≤30-char Chinese phrase the
-         * LLM emits as a UX subtitle, not a classifier.
-         *
-         * Grading:
-         *   - both null/empty          → 1.0 (no signal to mismatch)
-         *   - LLM null + GT present   → 0.5 (under-emitted context)
-         *   - LLM present + GT null   → 0.5 (over-emitted context)
-         *   - both present             → [strictTextOverlap] ≥ 0.67
-         *
-         * Mirrors the action-mismatch symmetry (under / over / match)
-         * so this signal is comparable to r_actions at the same
-         * scale. Empty-string LLM hint is treated as null (model
-         * emitted the field but left it blank).
-         */
-        private fun computeIntentHint(
-            bubble: Bubble?,
-            scene: org.json.JSONObject,
-        ): Double {
-            val expected = scene.optString("expected_intent_hint", "").trim().takeIf { it.isNotEmpty() }
-            // [2026-07-15 v4 Step 2] expected_intent_hint only present
-            //  after the GT migration script runs. Before Step 2, the
-            //  field is absent → ScorerV3 falls through to the
-            //  "no-signal" 1.0 case, so dual-run numbers stay
-            //  comparable to ScorerV2.
-            //
-            //  After Step 2, fixtures with null expected_intent_hint
-            //  still score 1.0 (no expectation, no penalty). Only
-            //  fixtures the migration script annotated carry the
-            //  signal.
-            //
-            // LLM-side hint: read from `bubble.title` (Phase E put
-            //  the free-form intent phrase in `title`). Fall back to
-            //  null when the bubble is missing or title is blank.
-            val actual = bubble?.title?.trim()?.takeIf { it.isNotEmpty() }
-            if (expected == null && actual == null) return 1.0
-            if (expected == null || actual == null) return 0.5
-            return if (strictTextOverlap(actual, expected) >= 0.67) 1.0 else 0.0
-        }
-
-        /**
-         * Char-overlap coefficient on the intersection of [a] and
-         * [b]. Conservative — counts each character's first
-         * appearance (no double-counting on repeated chars), so
-         * "拨打联系电话" vs "拨打电话联系" yields a meaningful
-         * mid-range score rather than inflated full-credit.
-         *
-         * Returns 0.0..1.0. Empty inputs return 0.0; callers
-         * already short-circuit on nullity before reaching here.
-         */
-        private fun strictTextOverlap(a: String, b: String): Double {
-            if (a.isEmpty() || b.isEmpty()) return 0.0
-            val seen = HashSet<Char>()
-            for (c in a) if (c.isLetterOrDigit() || c.code > 0x7F) seen.add(c)
-            val matched = seen.count { c -> b.contains(c) }
-            return matched.toDouble() / seen.size
-        }
-
-        // Suppress unused-import warning (JSONArray re-exported for
-        //  future fixture-hint migration scripts).
-        @Suppress("unused")
-        private val unused: JSONArray? = null
     }
 }
 
@@ -176,5 +129,4 @@ internal fun ScorerV3Result.format(): String =
     "v3_actions=${"%.2f".format(actions)} " +
         "v3_text=${"%.2f".format(text)} " +
         "v3_inputs=${"%.2f".format(inputs)} " +
-        "v3_hint=${"%.2f".format(intentHint)} " +
         "composite_v3=${"%.2f".format(composite)}"

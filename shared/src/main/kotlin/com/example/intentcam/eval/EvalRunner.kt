@@ -326,7 +326,6 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "v3_actions" to scorerV3.actions,
                 "v3_text" to scorerV3.text,
                 "v3_inputs" to scorerV3.inputs,
-                "v3_intent_hint" to scorerV3.intentHint,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
@@ -343,7 +342,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                         "v2[ t=${"%.2f".format(scorerV2.type)} tx=${"%.2f".format(scorerV2.text)} " +
                         "a=${"%.2f".format(scorerV2.actions)} i=${"%.2f".format(scorerV2.inputs)} " +
                         "c=${"%.2f".format(scorerV2.composite)} ] " +
-                        "v3[ a=${"%.2f".format(scorerV3.actions)} h=${"%.2f".format(scorerV3.intentHint)} " +
+                        "v3[ a=${"%.2f".format(scorerV3.actions)} " +
                         "c=${"%.2f".format(scorerV3.composite)} ]"
                 )
             }
@@ -369,10 +368,11 @@ internal class EvalRunner(private val config: EvalConfig) {
                     "actions=${"%.3f".format(avgActions)} inputs=${"%.3f".format(avgInputs)}"
             )
             val avgV3Actions = results.map { it["v3_actions"] as Double }.average()
-            val avgV3Intent = results.map { it["v3_intent_hint"] as Double }.average()
+            val avgV3Text = results.map { it["v3_text"] as Double }.average()
+            val avgV3Inputs = results.map { it["v3_inputs"] as Double }.average()
             println(
                 "v3 components: actions=${"%.3f".format(avgV3Actions)} " +
-                    "intent_hint=${"%.3f".format(avgV3Intent)}"
+                    "text=${"%.3f".format(avgV3Text)} inputs=${"%.3f".format(avgV3Inputs)}"
             )
             // Diagnostic aggregates — not part of composite.
             val avgDetails = results.map { (it["details_count"] as Int).toDouble() }.average()
@@ -444,8 +444,6 @@ internal class EvalRunner(private val config: EvalConfig) {
                 results.map { it["v3_text"] as Double }.average())
             root.put("overall_v3_inputs",
                 results.map { it["v3_inputs"] as Double }.average())
-            root.put("overall_v3_intent_hint",
-                results.map { it["v3_intent_hint"] as Double }.average())
         } else {
             root.put("overall_v2_type", 0.0)
             root.put("overall_v2_text", 0.0)
@@ -454,7 +452,6 @@ internal class EvalRunner(private val config: EvalConfig) {
             root.put("overall_v3_actions", 0.0)
             root.put("overall_v3_text", 0.0)
             root.put("overall_v3_inputs", 0.0)
-            root.put("overall_v3_intent_hint", 0.0)
         }
         root.put("fixture_count", results.size)
         val perCategory = JSONObject()
@@ -480,7 +477,6 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("v3_actions", r["v3_actions"] as Double)
             o.put("v3_text", r["v3_text"] as Double)
             o.put("v3_inputs", r["v3_inputs"] as Double)
-            o.put("v3_intent_hint", r["v3_intent_hint"] as Double)
             // Raw LLM proposal + GT expected actions + raw content /
             //  details, kept so post-hoc scorer experiments can re-cut
             //  the score without re-running the LLM.
