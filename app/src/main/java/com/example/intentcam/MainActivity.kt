@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.app.ActivityCompat
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.ImageAnalysis
@@ -117,6 +118,25 @@ private fun AppRoot(viewModel: AppViewModel) {
         if (granted) viewModel.onPermissionsGranted()
     }
 
+    // [2026-07-15 UI polish] Track whether the user has denied the
+    //  camera permission at least once, so we can offer a
+    //  "去系统设置" path on the second+ visit.  Android's
+    //  shouldShowRequestPermissionRationale returns true on a
+    //  "soft" denial (the dialog's "Don't allow" button) and
+    //  false once the user has selected "Don't ask again" or
+    //  hit the system-level toggle off — at that point the
+    //  launcher dialog won't even appear, so a manual jump to
+    //  Settings is the only path forward.
+    var permissionDeniedCount by remember { mutableStateOf(0) }
+    var hasLaunchedOnce by remember { mutableStateOf(false) }
+    val permanentlyDenied = remember(permissionDeniedCount, hasLaunchedOnce) {
+        hasLaunchedOnce && permissionDeniedCount > 0 &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(
+                context as androidx.activity.ComponentActivity,
+                Manifest.permission.CAMERA,
+            )
+    }
+
     LaunchedEffect(Unit) {
         val cameraGranted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CAMERA
@@ -124,6 +144,7 @@ private fun AppRoot(viewModel: AppViewModel) {
         if (cameraGranted) {
             viewModel.onPermissionsGranted()
         } else {
+            hasLaunchedOnce = true
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
@@ -137,20 +158,71 @@ private fun AppRoot(viewModel: AppViewModel) {
             onClose = viewModel::closeSettings,
             onTogglePii = viewModel::setPiiActionPermission,
         )
-        Phase.NEED_PERMISSION -> PermissionScreen {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
+        Phase.NEED_PERMISSION -> {
+            // [2026-07-15 UI polish] Bump denial count whenever the
+            //  user lands back on the permission screen with the
+            //  camera still ungranted.  Each launcher.launch() is a
+            //  re-prompt attempt — if the system dialog returns
+            //  ungranted and the user lands back here, count++.
+            //  Combined with `shouldShowRequestPermissionRationale`,
+            //  this gives us the "permanently denied" signal the
+            //  single-attempt launcher couldn't surface.
+            LaunchedEffect(Unit) {
+                if (hasLaunchedOnce && ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.CAMERA
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    permissionDeniedCount++
+                }
+            }
+            PermissionScreen(
+                onRequest = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                onOpenSettings = {
+                    val intent = android.content.Intent(
+                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        android.net.Uri.fromParts("package", context.packageName, null),
+                    ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                },
+                permanentlyDenied = permanentlyDenied,
+            )
         }
         else -> CameraScreen(viewModel, state)
     }
 }
 
+/**
+ * [2026-07-15 UI polish] Two states: first-time / shouldShowRationale
+ *  asks the user to grant; permanently denied (shouldShowRationale
+ *  == false after at least one denial) surfaces a "去系统设置" path
+ *  so the user can flip the toggle manually instead of being stuck
+ *  in a launcher-dialog loop.  `onOpenSettings` fires
+ *  Settings.ACTION_APPLICATION_DETAILS_SETTINGS so the user lands on
+ *  this app's permission page directly.
+ */
 @Composable
-private fun PermissionScreen(onRequest: () -> Unit) {
+private fun PermissionScreen(
+    onRequest: () -> Unit,
+    onOpenSettings: () -> Unit,
+    permanentlyDenied: Boolean,
+) {
     Box(Modifier.fillMaxSize().background(Color(0xFF0B1021)), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("需要相机权限才能识别意图", color = Color.White)
+            if (permanentlyDenied) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "权限已被永久拒绝。请到系统设置里手动开启。",
+                    color = Color(0xFFB9C4DE),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             Spacer(Modifier.height(16.dp))
             Button(onClick = onRequest) { Text("授予权限") }
+            if (permanentlyDenied) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onOpenSettings) { Text("去系统设置") }
+            }
         }
     }
 }
