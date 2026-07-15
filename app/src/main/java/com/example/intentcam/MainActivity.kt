@@ -856,11 +856,20 @@ private fun BubbleCard(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (bubble.title.isNotBlank()) {
+                        // [2026-07-15 UI polish] `fill = true` so the
+                        //  title takes the full remaining width and
+                        //  ellipsizes cleanly when next to a wide
+                        //  IntentChip.  The previous `fill = false`
+                        //  caused a 14-character title to truncate
+                        //  prematurely when an `Open in Maps` chip
+                        //  was present.
                         Text(
                             bubble.title,
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f, fill = false),
+                            modifier = Modifier.weight(1f, fill = true),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     val chipLabel = bubble.type
@@ -1127,6 +1136,15 @@ private fun DetailScreen(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                // [2026-07-15 UI polish] Respect the status-bar inset
+                //  on the overlay.  The fullscreen image below keeps
+                //  its `fillMaxSize()` so the user sees the full
+                //  photo; only the overlay (which contains text the
+                //  user needs to read) clears the status bar.  Without
+                //  this, devices with a display cutout / dynamic island
+                //  would have the title row drawn under the camera
+                //  notch.
+                .statusBarsPadding()
         ) {
             // Sheet header — always visible, tap to collapse/expand.
             Row(
@@ -1235,20 +1253,36 @@ private fun DetailScreen(
                     }
                 }
             }
-            // 退出 button — sticky at the bottom, floating over the image.
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xE6111828))
-                    .navigationBarsPadding()
-                    .padding(20.dp),
-            ) {
-                Button(
-                    onClick = onRestart,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("退出")
-                }
+            // [2026-07-15 UI polish] 退出 button — moved out of the
+            //  bottom-anchored column into a top-right floating
+            //  IconButton overlay.  The previous layout stacked the
+            //  full-width 退出 button below the sheet inside the
+            //  bottom Column; on short screens (e.g. 5" phones,
+            //  landscape gestures) the half-screen sheet + button
+            //  could push the title row off the top OR overlap the
+            //  退出 button.  A top-right X follows the conventional
+            //  fullscreen-media dismiss pattern (photos, videos)
+            //  and never conflicts with the sheet content.
+        }
+        // Top-right 退出 button — drawn AFTER the bottom Column so
+        //  it sits on top in the Box's z-order, and outside the
+        //  statusBarsPadding so it clears the notch.
+        Surface(
+            onClick = onRestart,
+            shape = CircleShape,
+            color = Color(0xCC0B1021),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(12.dp)
+                .size(40.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "退出",
+                    tint = Color.White,
+                )
             }
         }
     }
