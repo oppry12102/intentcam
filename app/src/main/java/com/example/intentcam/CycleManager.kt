@@ -59,6 +59,19 @@ class CycleManager(
     private val enabledIds: suspend () -> Set<String>,
     private val log: (tag: String, msg: String) -> Unit = { _, _ -> },
     /**
+     * [2026-07-15] Callback fired every time a cycle
+     * transitions to ERRORED (timeout / LLM error /
+     * exception).  AppViewModel uses this to surface a
+     * global `ErrorBanner` so the user gets a system-level
+     * signal beyond the per-cycle InFlightCard "识别超时"
+     * branch — the user might not be looking at the bubble
+     * list when a cycle dies, and the banner is the only
+     * thing pinned to the top of the screen.  Pair with
+     * [reportedCycleErrors] (Set) on the caller side for
+     * dedup so a cycle that emits multiple error events
+     * only shows the banner once. */
+    private val onCycleError: (cycleId: String, message: String) -> Unit = { _, _ -> },
+    /**
      * [2026-07-15] Per-cycle wall-clock cap on the LLM call.
      * Default 90s — generous enough for 2-3-round cycles on
      * slow networks (median ~2-3s per round) but tight enough
@@ -246,6 +259,7 @@ class CycleManager(
                     "CYCLE",
                     "TIMEOUT ${job.id} after ${elapsed}ms (cap=${llmTimeoutMs}ms)"
                 )
+                onCycleError(job.id, "识别超时 (${elapsed / 1000}s)")
                 return
             }
             when (outcome) {
@@ -267,6 +281,7 @@ class CycleManager(
                 is ToolUseLoop.Outcome.Error -> {
                     job.status.value = JobStatus.ERRORED
                     log("CYCLE", "error ${job.id}: ${outcome.message}")
+                    onCycleError(job.id, outcome.message)
                 }
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
@@ -279,6 +294,7 @@ class CycleManager(
         } catch (e: Throwable) {
             job.status.value = JobStatus.ERRORED
             log("CYCLE", "ERROR ${job.id}: ${e.message}")
+            onCycleError(job.id, e.message ?: "识别异常")
         }
     }
 

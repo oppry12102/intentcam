@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.ConcurrentHashMap
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -106,6 +107,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  [UiState.CYCLE_MAX_CONCURRENT] = 2 in flight, oldest
      *  superseded when the cap is hit).  See CycleManager.kt
      *  for the full lifecycle. */
+    /**
+     * [2026-07-15] Tracks which cycle ids have already fired
+     * `onCycleError`, so a cycle that hits ERRORED via multiple
+     * paths (LLM error + exception, or timeout + then a
+     * subsequent retry-error) only writes `state.error` once.
+     * ConcurrentHashMap because `onCycleError` is invoked from
+     * CycleManager's coroutine scope, which can be a different
+     * thread than the state-write path.  Bounded by the
+     * `allJobs` map size (cleared on restartScanning).
+     */
+    private val reportedCycleErrors = ConcurrentHashMap.newKeySet<String>()
+
     private val cycleManager = CycleManager(
         scope = viewModelScope,
         toolUseLoop = toolUseLoop,
@@ -122,6 +135,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             gated
         },
         log = ::logDebug,
+        // [2026-07-15] Surface cycle ERRORED events to the global
+        //  ErrorBanner.  Dedup per cycle id so a single failed
+        //  cycle doesn't spam the banner (a cycle can hit the
+        //  callback more than once if the orchestrator's exception
+        //  path fires after a timeout already set ERRORED).
+        onCycleError = { cycleId, message ->
+            if (reportedCycleErrors.add(cycleId)) {
+                // Format: prepend a short tag so the user can tell
+                //  at a glance this is a cycle-level failure vs a
+                //  capture-time / config-time error.  Keeps the
+                //  original message for the action-aware user.
+                _state.value = _state.value.copy(
+                    error = "识别失败: $message"
+                )
+            }
+        },
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -906,6 +935,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** User explicitly tapped "重新扫描" — full reset including bubble history. */
     fun restartScanning() {
         latestFrame = null
+        // [2026-07-15] Clear the per-cycle error dedup set so future
+        //  cycles with new ids can re-report ERRORED.  Bounded by
+        //  the concurrent cycle count, so the set is small; clear
+        //  here rather than per-insert to keep the hot path O(1).
+        reportedCycleErrors.clear()
         // [2026-07-14 Phase B] `analyzing` is now a derived read of
         // cycleManager.hasFocusedJob(); no manual reset.  CycleManager
         // will report hasFocusedJob=false once any active cycles
