@@ -49,6 +49,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -583,12 +584,30 @@ private fun IntentBubbles(
         val snapshotCards = state.cycles.values.toList()
         val legacyBubbles = state.bubbles
         if (snapshotCards.isNotEmpty()) {
-            Text(
-                "识别中的意图（实时更新）",
-                color = Color.White,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "识别中的意图（实时更新）",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
+                // [2026-07-15 UI polish] Surface the live cycle count
+                //  so the user knows how many captures are still being
+                //  tracked.  CYCLE_MAX_CONCURRENT=2 is the cap; when
+                //  a 3rd tap arrives the oldest is silently superseded
+                //  and a "已替换" pill appears on its card (see
+                //  BubbleCard.superseded).  The visible count includes
+                //  both still-running and already-superseded cycles.
+                Text(
+                    "共 ${snapshotCards.size} 张",
+                    color = Color(0xFF6E7891),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             // Newest-first so the most-recent capture is at the top —
             // the user just took that photo, so they want to see it
             // first.  Cycles with no bubble yet (PENDING / early
@@ -707,6 +726,14 @@ private fun BubbleCard(
     onActionTap: (actionId: String) -> Unit = {},
     accent: Color = bubbleAccentActions(bubble),
 ) {
+    // [2026-07-15 UI polish] A cycle that's been SUPERSEDED by a
+    //  newer shutter tap is still in the snapshot list (capped at
+    //  CYCLE_MAX_CONCURRENT=2) but its card is no longer the user's
+    //  focus.  Dim the card and prepend a small "已替换" pill so
+    //  the user understands why an old capture faded out — the
+    //  previous version just silently dropped the oldest cycle
+    //  from `allJobs` (CycleManager.kt:81-90) with no UI signal.
+    val superseded = cycleStatus == JobStatus.SUPERSEDED
     val thumbnail = remember(bubble.imageBytes) {
         // Decode on a worker thread; the result bitmap is cached for the
         // composition's lifetime so re-emits are cheap.  Downscaled to a
@@ -717,7 +744,9 @@ private fun BubbleCard(
     Surface(
         color = Color(0xE6161C2E),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (superseded) 0.45f else 1f),
         onClick = { onPick(bubble) }
     ) {
         Row(
@@ -743,6 +772,16 @@ private fun BubbleCard(
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f)) {
+                if (superseded) {
+                    // Small pill above the title so the dimmed card
+                    //  is at-a-glance labelled.
+                    Text(
+                        "已替换",
+                        color = Color(0xFF6E7891),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(bottom = 2.dp),
+                    )
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (bubble.title.isNotBlank()) {
                         Text(
