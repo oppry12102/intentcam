@@ -714,9 +714,13 @@ private fun IntentBubbles(
                     if (bubble == null) {
                         // Placeholder: the cycle is alive but the LLM
                         // hasn't emitted yet.  Renders a small
-                        // "识别中…" card so the user knows the
-                        // capture is in flight.
-                        InFlightCard(capturedAtMs = snap.capturedAtMs)
+                        // card.  The status branch (SUPERSEDED /
+                        // ERRORED / IN_FLIGHT) is handled inside
+                        // InFlightCard — see its docstring.
+                        InFlightCard(
+                            capturedAtMs = snap.capturedAtMs,
+                            cycleStatus = status,
+                        )
                     } else {
                         // [Compose] Smart-cast doesn't work on delegated
                         //  properties — `bubble!!` would also work but
@@ -772,9 +776,29 @@ private fun IntentBubbles(
  *  `capturedAtMs` change (which never happens for a single
  *  in-flight cycle), so the count stayed at 0s forever.  Now
  *  driven by a 1Hz `LaunchedEffect` that bumps a state Int;
- *  caps at 99s so a long-waiting cycle doesn't churn digits. */
+ *  caps at 99s so a long-waiting cycle doesn't churn digits.
+ *
+ *  [2026-07-15 bug fix — "in-flight 灰卡像卡死"]  Color was
+ *  `Color.White.copy(alpha = 0.40f)` on a black camera
+ *  background — that renders as light gray, visually a totally
+ *  different shape from a [BubbleCard] (which uses dark
+ *  `palette.surface`).  Users saw the InFlightCard next to a
+ *  fresh BubbleCard and assumed the InFlightCard was a broken /
+ *  dimmed BubbleCard that "stuck" at the loading state.  New
+ *  color is `palette.surface.copy(alpha = 0.6f)` — same family
+ *  as BubbleCard, just dimmer, so the card reads as "bubble
+ *  ghost, still loading" instead of "stray gray panel".
+ *
+ *  Also takes [cycleStatus] so a SUPERSEDED cycle whose bubble
+ *  hasn't emitted yet shows "已替换, 等待识别完成" instead of
+ *  the active spinner.  A SUPERSEDED cycle is dead from the
+ *  UI's POV (its result will never reach the user); a still-
+ *  spinning spinner on it implies the user is waiting for a
+ *  result that won't come.  The LLM may still be working in
+ *  the background, but the user can't act on that, so we drop
+ *  the spinner and dim the card. */
 @Composable
-private fun InFlightCard(capturedAtMs: Long) {
+private fun InFlightCard(capturedAtMs: Long, cycleStatus: JobStatus = JobStatus.IN_FLIGHT) {
     var ageSec by remember(capturedAtMs) {
         mutableStateOf(((System.currentTimeMillis() - capturedAtMs) / 1000).toInt())
     }
@@ -787,31 +811,72 @@ private fun InFlightCard(capturedAtMs: Long) {
         }
     }
     val palette = IntentCamTheme.palette
+    val isSuperseded = cycleStatus == JobStatus.SUPERSEDED
+    val isErrored = cycleStatus == JobStatus.ERRORED
+    val descriptionText = when {
+        isSuperseded -> "已替换, 等待识别完成"
+        isErrored -> "识别超时, 请再拍一张"
+        else -> "正在识别, 已等待 ${ageSec} 秒"
+    }
     Surface(
-        color = Color.White.copy(alpha = 0.40f),
+        color = palette.surface.copy(alpha = 0.6f),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            // [2026-07-15 a11y] TalkBack announces the in-flight
-            //  cycle with its wait time so a screen-reader user
-            //  knows the capture hasn't died.
+            .alpha(if (isSuperseded) 0.45f else 1f)
+            // [2026-07-15 a11y] TalkBack announces the cycle
+            //  state alongside the wait time so a screen-reader
+            //  user knows whether the cycle is still active,
+            //  superseded, or errored.
             .semantics {
-                contentDescription = "正在识别，已等待 ${ageSec} 秒"
+                contentDescription = descriptionText
             },
     ) {
         Row(
             Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            androidx.compose.material3.CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = palette.accentDelegate,
-            )
+            if (isSuperseded) {
+                // No spinner — the cycle is dead from the UI's
+                //  POV.  A spinning indicator would imply the
+                //  user is still waiting for a result.
+                Box(
+                    Modifier
+                        .size(20.dp)
+                        .background(
+                            palette.onSurfaceMuted.copy(alpha = 0.6f),
+                            CircleShape,
+                        ),
+                )
+            } else if (isErrored) {
+                // Errored: a static warning icon.  Replaces the
+                //  spinner so the user knows the cycle is dead
+                //  and the result won't arrive.
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = palette.danger,
+                    modifier = Modifier.size(20.dp),
+                )
+            } else {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = palette.accentDelegate,
+                )
+            }
             Spacer(Modifier.size(10.dp))
             Text(
-                "识别中… ${ageSec}s",
-                color = Color.White.copy(alpha = 0.80f),
+                when {
+                    isSuperseded -> "已替换, 等待识别完成"
+                    isErrored -> "识别超时, 请再拍一张"
+                    else -> "识别中… ${ageSec}s"
+                },
+                color = when {
+                    isSuperseded -> palette.onSurfaceMuted.copy(alpha = 0.6f)
+                    isErrored -> palette.danger
+                    else -> palette.onSurface
+                },
                 style = MaterialTheme.typography.bodySmall,
             )
         }
