@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -23,13 +24,26 @@ fun SettingsScreen(
     onTogglePii: (key: String, enabled: Boolean) -> Unit,
 ) {
     val palette = IntentCamTheme.palette
-    var baseUrl by remember { mutableStateOf(current.baseUrl) }
+    // [2026-07-15 P1 fix] Use rememberSaveable so the user's
+    //  in-progress edits survive process death (e.g. OS kills
+    //  the app while the user is in Settings to copy a token
+    //  from their password manager).  Previous `remember` lost
+    //  everything on Activity recreation; combined with the
+    //  manifest's `configChanges` not covering `uiMode` /
+    //  `density` / system-initiated restart, this was a real
+    //  data-loss path.  No `key` argument because the explicit
+    //  `MutableState` overload requires a stateSaver when one
+    //  is provided; the `rememberSaveable { mutableStateOf(...) }`
+    //  form (no key) infers the right saver automatically and
+    //  still saves across process death because the wrapping
+    //  MutableState IS the SavedStateRegistry entry.
+    var baseUrl by rememberSaveable { mutableStateOf(current.baseUrl) }
     // Token field is intentionally left blank — we never display the active
     // token on screen so it can't be shoulder-surfed.  Leaving it blank (or
     // hitting "恢复默认") keeps whatever is currently active in the runtime
     // config; only an explicit non-empty edit changes it.
-    var token by remember { mutableStateOf("") }
-    var model by remember { mutableStateOf(current.model) }
+    var token by rememberSaveable { mutableStateOf("") }
+    var model by rememberSaveable { mutableStateOf(current.model) }
 
     Scaffold(
         topBar = {

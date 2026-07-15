@@ -396,6 +396,17 @@ class ToolUseLoop(
                             jpeg = thumbnail,
                             toolName = def.name,
                             detail = toolResult.toolSummary,
+                            // [2026-07-15 P0 fix] Stamp the owning
+                            //  cycle's id onto the placeholder so
+                            //  AppViewModel can route the user's
+                            //  follow-up text back to the correct
+                            //  CycleJob via `Bubble.cycleId`.  The
+                            //  legacy single-cycle caller (eval)
+                            //  passes the default "default" cycleId,
+                            //  matching Bubble.cycleId's default
+                            //  behavior so backward compat is
+                            //  preserved.
+                            cycleId = cycleId,
                         ),
                     )
                 }
@@ -746,8 +757,17 @@ class ToolUseLoop(
         jpeg: ByteArray,
         toolName: String,
         detail: String,
+        // [2026-07-15 P0 fix] Cycle id stamped onto the placeholder's
+        //  Bubble.cycleId so AppViewModel can route the user's
+        //  follow-up text back to the originating CycleJob when
+        //  multiple cycles run concurrently.  Defaults to the
+        //  legacy "default" value used by eval / single-shot callers
+        //  so backward compatibility is preserved for tests that
+        //  don't pass a cycleId.
+        cycleId: String = "default",
     ): com.example.intentcam.Bubble = com.example.intentcam.Bubble(
         id = "bubble-${System.currentTimeMillis()}",
+        cycleId = cycleId,
         type = IntentRegistry.FALLBACK_ID,
         title = "需要补充信息",
         // [2026-07-13] Drop the "via $toolName" fallback — that string

@@ -38,6 +38,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -45,7 +46,6 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.animation.animateColorAsState
@@ -67,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,6 +80,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -237,6 +239,20 @@ private fun PermissionScreen(
 
 @Composable
 private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
+    // [2026-07-15 P1 removal] The TopOverlay "重新扫描" button +
+    //  confirmation dialog are gone.  With the active-cycle
+    //  counter (`activeCycleCount` + `CYCLE_MAX_CONCURRENT`),
+    //  the shutter auto-releases as cycles complete — the user
+    //  never needs to manually reset to take more photos.  For
+    //  a stuck cycle (LLM hang), the 90s `llmTimeoutMs` budget
+    //  marks it ERRORED and frees the slot on its own.
+    //
+    //  `restartScanning()` itself is kept as an internal method
+    //  because `closeSettings()` calls it — when the user
+    //  changes LLM config and comes back to the camera, a clean
+    //  state (no in-flight cycles holding the old config) is
+    //  the right behavior.  That path is implicit and doesn't
+    //  need a UI affordance.
     Box(Modifier.fillMaxSize()) {
         if (state.phase == Phase.SHOWING_DETAIL && state.selectedBubble != null) {
             // Detail view: show the captured image full-bleed, with a header
@@ -259,31 +275,46 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
             // shutter button.  No motion-sensor trigger — recognition
             // fires when the user taps the shutter.
             CameraPreview(viewModel)
-            TopOverlay(
-                state = state,
-                debugEnabled = state.debugEnabled,
-                onToggleDebug = { viewModel.setDebugEnabled(!state.debugEnabled) },
-                onSettings = viewModel::openSettings,
-                onRestart = viewModel::restartScanning,
-            )
-            // [2026-07-15 UI polish] Surfaced error banner — `AppViewModel`
-            //  has been writing `error` for four places since Phase B
-            //  (LLM 529 storms, ToolUseLoop throwables, etc.) but no
-            //  composable ever read it.  Now it sits between the top
-            //  overlay and the rest of the screen, dismissable via
-            //  the trailing ✕ (which calls `viewModel.clearError()`
-            //  instead of a full restartScanning, so an in-flight
-            //  cycle list survives the dismissal).  Padding-top
-            //  clears the status-bar-padded TopOverlay below it.
-            state.error?.let { msg ->
-                ErrorBanner(
-                    message = msg,
-                    onDismiss = viewModel::clearError,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .padding(top = 56.dp)
+            // [2026-07-15 P2 fix] Stack TopOverlay + ErrorBanner in a
+            //  Column so the banner sits directly below the
+            //  overlay without a magic-number `padding-top`
+            //  offset.  Previous version hardcoded 56dp to
+            //  approximate the overlay's rendered height —
+            //  fragile when the overlay grew to a multi-line
+            //  scene text on small phones (status-bar + 2 lines
+            //  of labelLarge easily exceeds 56dp).  The Column
+            //  reports its actual measured height, so the
+            //  banner always lands flush against the overlay
+            //  regardless of content / font scale / notch.
+            Column(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+            ) {
+                TopOverlay(
+                    state = state,
+                    debugEnabled = state.debugEnabled,
+                    onToggleDebug = { viewModel.setDebugEnabled(!state.debugEnabled) },
+                    onSettings = viewModel::openSettings,
                 )
+                // [2026-07-15 UI polish] Surfaced error banner —
+                //  `AppViewModel` has been writing `error` for
+                //  four places since Phase B (LLM 529 storms,
+                //  ToolUseLoop throwables, etc.) but no
+                //  composable ever read it.  Now it sits
+                //  directly below the TopOverlay (in the
+                //  Column above), dismissable via the trailing
+                //  ✕ (which calls `viewModel.clearError()`
+                //  instead of a full restartScanning, so an
+                //  in-flight cycle list survives the
+                //  dismissal).
+                state.error?.let { msg ->
+                    ErrorBanner(
+                        message = msg,
+                        onDismiss = viewModel::clearError,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
             Column(
                 Modifier
@@ -317,33 +348,27 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                     // [2026-07-15] Pass `analyzing` separately
                     //  so the inner content swaps to a spinner
                     //  when a cycle is in flight.
-                    // [2026-07-15] Pass `remaining` so the
-                    //  button shows the "还可以拍几张" counter
-                    //  (CYCLE_MAX_CONCURRENT - activeCount).  Bug
-                    //  fix: previous version used `cycles.size`
-                    //  (all entries including COMPLETE) — so a
-                    //  completed cycle never freed its slot, and
-                    //  the button stayed at 0 forever once 8 were
-                    //  taken.  New version counts only active
-                    //  (PENDING + IN_FLIGHT) cycles, so the
-                    //  counter decrements as each cycle
-                    //  completes — matching the user's "释放出
-                    //  一个" intent.  When remaining hits 0 the
-                    //  button is grayed + disabled; the user
-                    //  must tap "重新扫描" to clear the session.
+                    // [2026-07-15 P0 fix] Track the counter via
+                    //  `state.activeCycleCount` (PENDING +
+                    //  IN_FLIGHT only) instead of
+                    //  `CYCLES_MAX_TOTAL - cycles.size` (total
+                    //  map size).  Pre-fix, COMPLETE bubbles
+                    //  stayed in the cycles map forever, so after
+                    //  8 captures the counter read 0 even after
+                    //  every cycle had completed — the shutter
+                    //  stayed disabled until the user tapped
+                    //  "重新扫描".  With activeCycleCount the
+                    //  counter ticks back up as cycles complete
+                    //  (the "释放出一个" semantics from the
+                    //  CYCLE_MAX_CONCURRENT docstring).  The map-
+                    //  size cap (CYCLES_MAX_TOTAL) is still
+                    //  enforced inside CycleManager via FIFO
+                    //  eviction, but it's a memory-protection
+                    //  mechanism rather than a user-facing gate.
                     enabled = state.phase == Phase.SCANNING,
                     analyzing = state.analyzing,
-                    remaining = UiState.CYCLE_MAX_CONCURRENT - state.cycles.count {
-                        // Each CycleSnapshot's status is a
-                        //  StateFlow; collect its current value
-                        //  synchronously here.  Compose reads
-                        //  state.cycles reactively so the count
-                        //  recomputes on every status transition
-                        //  (PENDING→IN_FLIGHT→COMPLETE) and
-                        //  the button updates without us having
-                        //  to subscribe manually.
-                        it.value.status.value != JobStatus.COMPLETE
-                    },
+                    remaining = (UiState.CYCLE_MAX_CONCURRENT -
+                        state.activeCycleCount).coerceAtLeast(0),
                     onClick = { viewModel.captureLatestFrame() },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -389,14 +414,21 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 onCancel = viewModel::cancelConfirmation,
             )
         }
+        // [2026-07-15 P1 removal] Restart-confirmation dialog
+        //  removed.  See the comment at the top of
+        //  CameraScreen for the rationale: the active-cycle
+        //  counter auto-releases the shutter as cycles
+        //  complete, so a manual "wipe everything" affordance
+        //  has no remaining UX purpose.  Power-user reset
+        //  (clearing bubble history + aborting in-flight
+        //  cycles after a config change) is handled implicitly
+        //  by `closeSettings()` → `restartScanning()`.
     }
 }
 
 /**
- * Large round shutter button.  Disabled while a recognition cycle is
- * in flight (the spinner inside shows that work is happening).  Disabled
- * outside of SCANNING so we don't dispatch while the user is reading
- * a bubble detail.
+ * Large round shutter button.  Disabled outside of SCANNING so we
+ * don't dispatch while the user is reading a bubble detail.
  *
  * [2026-07-15 UI polish] Triggers a long-press haptic on tap so the
  * user gets the standard camera-shutter tactile feedback.  Fire on
@@ -404,28 +436,40 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
  * capture; `HapticFeedbackType.LongPress` is the conventional
  * "physical button press" variant across Android camera apps.
  *
- * [2026-07-15 bug fix — "1s 连拍没反馈"]  Previously the inner
- *  branch was keyed on `enabled` alone, but `enabled = phase ==
- *  SCANNING` is true for the entire camera screen session — so
- *  the button always showed the static "识别" text, never a
- *  spinner.  The user couldn't tell that a cycle was in flight
- *  from the shutter alone (they had to look at the InFlightCard
- *  at the bottom).  New: the inner branch is keyed on
- *  `state.analyzing` separately.  The Surface is still tappable
- *  when a cycle is in flight (preserves the "rapid 2-photo"
- *  use case where the user intentionally supersedes), but
- *  the inner content swaps to a spinner so the user can see
- *  "识别中" without scanning down to the bubble card.
+ * [2026-07-16 P2 fix — "转圈动画遮住 cycle 计数"]  Previously the
+ *  inner content swapped to a 28dp `CircularProgressIndicator`
+ *  while a cycle was in flight, completely hiding the remaining-
+ *  cycle count number — users couldn't tell "how many more
+ *  photos can I take" without waiting for the cycle to finish
+ *  and the number to reappear.  Tried as a thin progress RING
+ *  around the button edge in the intermediate fix; **dropped
+ *  entirely** in [2026-07-16 P3] because the ring was a third
+ *  redundant "in flight" signal on top of (1) TopOverlay's
+ *  "识别中…" + 14dp spinner at the top of the screen, and (2)
+ *  `BubbleCard`'s own spinners (in both the title row and the
+ *  trailing confidence slot) for every active cycle at the
+ *  bottom of the screen.  Three simultaneous spinning widgets
+ *  was visual noise; one (the per-cycle BubbleCard spinner) is
+ *  enough because each active cycle's card already tells the
+ *  user "this one is being processed".  The shutter button's
+ *  sole job is the remaining-cycle count, which is now
+ *  unconditionally visible whenever `noSlots` is false (the
+ *  user explicitly called out that the count should not be
+ *  obscured).  When noSlots, the number ("0") dims + disables
+ *  as before.
  *
- *  [2026-07-15] "还可以拍几个" counter.  The button now shows
- *   the number of cycles the user can still take before
- *   hitting CYCLES_MAX_TOTAL (8).  Starts at 8, decreases by
- *   1 per tap, and when it hits 0 the button visually grays
- *   out (palette.onSurfaceMuted) AND is disabled — the user
- *   must tap "重新扫描" in the top bar to clear the
- *   session and start over.  Analyzing still shows the
- *   spinner (replacing the number) so the user has a
- *   single "this is what's happening" affordance per state. */
+ *  [2026-07-15 P1 fix] "还可以拍几个" counter.  The button
+ *   shows the number of cycles the user can still take before
+ *   hitting CYCLE_MAX_CONCURRENT (8 active cycles).  Starts
+ *   at 8, decreases by 1 per tap, and when it hits 0 the
+ *   button visually DIMS (palette.surfaceMuted background +
+ *   onSurfaceMuted foreground) AND is disabled — the user
+ *   waits for at least one in-flight cycle to complete
+ *   (the active counter auto-decrements; see the
+ *   [UiState.activeCycleCount] docstring).
+ *   The [analyzing] parameter is still consumed by the
+ *   `contentDescription` so TalkBack announces the in-flight
+ *   state, but no visual ring is rendered. */
 @Composable
 private fun ShutterButton(
     enabled: Boolean,
@@ -438,7 +482,12 @@ private fun ShutterButton(
     val haptics = LocalHapticFeedback.current
     val noSlots = remaining <= 0
     val finalEnabled = enabled && !noSlots
-    val finalColor = if (noSlots) palette.onSurfaceMuted else palette.accentDelegate
+    // P1 fix: surfaceMuted (dark debug-panel bg) for the
+    //  background when disabled, onSurfaceMuted for the "0"
+    //  text.  Matches the visual language of the disabled
+    //  DebugLogPanel header.
+    val finalColor = if (noSlots) palette.surfaceMuted else palette.accentDelegate
+    val finalTextColor = if (noSlots) palette.onSurfaceMuted else Color.White
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
@@ -455,35 +504,38 @@ private fun ShutterButton(
                 .size(72.dp)
                 // [2026-07-15 a11y] TalkBack reads the counter so
                 //  a screen-reader user knows the cap state
-                //  ("还可以拍 3 张", "已满").
+                //  ("还可以拍 3 张", "已满, 等待识别完成").
+                //  [2026-07-16 P3] Even though no spinner is
+                //  rendered now, the `analyzing` branch is kept
+                //  for accessibility — a screen-reader user still
+                //  hears "正在识别, 还可以拍 N 张" so they know
+                //  work is happening, even though sighted users
+                //  see no visual change at the button itself
+                //  (they get the same signal from TopOverlay's
+                //  "识别中…" text and the per-cycle BubbleCard
+                //  spinner).
                 .semantics {
                     contentDescription = when {
-                        analyzing -> "正在识别"
-                        noSlots -> "已满, 需重新扫描"
+                        analyzing -> "正在识别, 还可以拍 $remaining 张"
+                        noSlots -> "已满, 等待识别完成以释放"
                         else -> "识别当前画面, 还可以拍 $remaining 张"
                     }
                 },
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                when {
-                    analyzing -> CircularProgressIndicator(
-                        modifier = Modifier.size(28.dp),
-                        strokeWidth = 3.dp,
-                        color = Color.White,
-                    )
-                    noSlots -> Text(
-                        "0",
-                        color = Color.White.copy(alpha = 0.8f),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    else -> Text(
-                        "$remaining",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
+                // The number is ALWAYS visible when the button has
+                // slots — including while a cycle is in flight.
+                // [2026-07-16 P2 fix] for the "转圈动画遮住
+                // cycle 计数" bug; [2026-07-16 P3] dropped the
+                // alternative thin-ring solution in favor of
+                // pure-text rendering because the ring was
+                // redundant with BubbleCard's spinner.
+                Text(
+                    "$remaining",
+                    color = finalTextColor,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
@@ -556,14 +608,68 @@ private fun CameraPreview(viewModel: AppViewModel) {
                         )
                     }
                 try {
-                    provider.unbindAll()
+                    // [2026-07-15 P2 fix] Drop the leading
+                    //  `provider.unbindAll()`.  CameraX's
+                    //  `bindToLifecycle` is idempotent when
+                    //  called with the same use cases + same
+                    //  lifecycle owner — it returns the existing
+                    //  session rather than re-binding.  The
+                    //  previous `unbindAll → bindToLifecycle`
+                    //  pair caused a visible black-frame flicker
+                    //  every time CameraScreen re-entered
+                    //  composition (e.g. returning from
+                    //  Settings) because the camera surface
+                    //  tore down and re-attached.  We still
+                    //  need to handle the case where the
+                    //  AndroidView factory re-fires for a
+                    //  different `lifecycleOwner` instance —
+                    //  catch covers that (bindToLifecycle throws
+                    //  IllegalStateException if the lifecycle
+                    //  hasn't started yet, or if the use cases
+                    //  were bound to a different owner).
                     provider.bindToLifecycle(
                         lifecycleOwner,
                         CameraSelector.DEFAULT_BACK_CAMERA,
                         preview,
                         analysis
                     )
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    // [2026-07-15 P0 fix] Previously this catch was
+                    //  empty (`} catch (_: Exception) {}`), silently
+                    //  swallowing CameraX bind failures (camera in
+                    //  use by another app, HAL fault, mid-launch
+                    //  permission revoke).
+                    //
+                    //  [2026-07-16 P2 fix] Drop the
+                    //   `logAnalyzerError` call — that buffer
+                    //   powers the "FrameAnalyzer errors" panel,
+                    //   which is meant for `FrameAnalyzer.analyze
+                    //   ()` exceptions (OOM mid-decode, image
+                    //   format failures, etc.), NOT for one-time
+                    //   CameraX init/bind failures.  Mixing the
+                    //   two made the panel render "[ANALYZER]
+                    //   CameraX bind failed: ..." entries that
+                    //   users mistook for per-frame analysis
+                    //   crashes, especially after a single shutter
+                    //   tap that triggered a transient bind issue
+                    //   earlier in the session.  The init error
+                    //   now surfaces through two channels:
+                    //   (1) `state.error` → ErrorBanner at the
+                    //   top of the screen (user-facing,
+                    //   dismissable), and (2) `android.util.Log.w`
+                    //   to logcat so devs running `adb logcat` see
+                    //   the same stack trace FrameAnalyzer logs
+                    //   for its own swallowed exceptions.  Both
+                    //   are the right audiences for "the camera
+                    //   failed to start".
+                    android.util.Log.w(
+                        "IntentCam",
+                        "CameraX bind failed",
+                        e
+                    )
+                    viewModel.setError(
+                        "相机初始化失败: ${e.message?.take(40) ?: "未知"}"
+                    )
                 }
             }, ContextCompat.getMainExecutor(ctx))
             previewView
@@ -577,7 +683,6 @@ private fun TopOverlay(
     debugEnabled: Boolean,
     onToggleDebug: () -> Unit,
     onSettings: () -> Unit,
-    onRestart: () -> Unit,
 ) {
     val palette = IntentCamTheme.palette
     Row(
@@ -615,17 +720,13 @@ private fun TopOverlay(
                 )
             }
         }
-        // [2026-07-15 UI polish] Restart-scanning button.  Drops the
-        //  whole bubble history + clears any errored cycle and returns
-        //  the user to a clean SCANNING state.  Previously the only
-        //  way to clear the bubble list was to swipe-kill the app.
-        IconButton(onClick = onRestart) {
-            Icon(
-                Icons.Filled.Refresh,
-                contentDescription = "重新扫描",
-                tint = Color.White,
-            )
-        }
+        // [2026-07-15 P1 removal] Restart-scanning button
+        //  removed.  See the comment at the top of
+        //  CameraScreen: the active-cycle counter auto-
+        //  releases the shutter as cycles complete, so a
+        //  manual "wipe everything" affordance has no
+        //  remaining UX purpose.  Stuck cycles are bounded
+        //  by the 90s `llmTimeoutMs` in CycleManager.
         // Debug toggle.  Bug icon is green when the scrolling log overlay
         // is active (default), gray when it's muted.  Tap to flip; the
         // preference persists across launches via SettingsStore.
@@ -764,34 +865,35 @@ private fun IntentBubbles(
                 .forEach { snap ->
                     val bubble by snap.bubble.collectAsState()
                     val status by snap.status.collectAsState()
-                    if (bubble == null) {
-                        // Placeholder: the cycle is alive but the LLM
-                        // hasn't emitted yet.  Renders a small
-                        // card.  The status branch (SUPERSEDED /
-                        // ERRORED / IN_FLIGHT) is handled inside
-                        // InFlightCard — see its docstring.
-                        InFlightCard(
-                            capturedAtMs = snap.capturedAtMs,
-                            cycleStatus = status,
-                        )
-                    } else {
-                        // [Compose] Smart-cast doesn't work on delegated
-                        //  properties — `bubble!!` would also work but
-                        //  re-wraps a non-null Bubble; the explicit
-                        //  `b` val keeps the call sites tidy.
-                        val b = bubble!!
-                        val actionDefs = b.actions.mapNotNull {
-                            viewModel.actionRegistry.get(it)
-                        }
-                        BubbleCard(
-                            bubble = b,
-                            cycleStatus = status,
-                            onPick = onPick,
-                            actionDefs = actionDefs,
-                            onActionTap = { actionId -> viewModel.runAction(actionId, b.id) },
-                            accent = bubbleAccentActions(b, palette, viewModel.actionRegistry),
-                        )
-                    }
+                    // [2026-07-15 P1 fix] Always render a
+                    //  BubbleCard, even when `bubble == null` —
+                    //  the captured thumbnail (from
+                    //  `snap.thumbnail`) keeps the card's shape
+                    //  stable from shutter-tap onward, and only
+                    //  the title / detail / action-chip row /
+                    //  confidence slot fill in as the LLM emits.
+                    //  Pre-fix this branch routed to a smaller
+                    //  `InFlightCard` while bubble was null, then
+                    //  swapped to a wider BubbleCard when the
+                    //  bubble arrived — visible layout jump on
+                    //  every cycle.  See BubbleCard's docstring
+                    //  for the full loading-state contract.
+                    val actionDefs = bubble?.actions?.mapNotNull {
+                        viewModel.actionRegistry.get(it)
+                    } ?: emptyList()
+                    BubbleCard(
+                        bubble = bubble,
+                        thumbnail = snap.thumbnail,
+                        cycleStatus = status,
+                        onPick = onPick,
+                        actionDefs = actionDefs,
+                        onActionTap = { actionId ->
+                            bubble?.let { viewModel.runAction(actionId, it.id) }
+                        },
+                        accent = bubble?.let {
+                            bubbleAccentActions(it, palette, viewModel.actionRegistry)
+                        } ?: palette.accentDelegate,
+                    )
                 }
         } else if (legacyBubbles.isNotEmpty()) {
             Text(
@@ -800,12 +902,26 @@ private fun IntentBubbles(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
-            legacyBubbles.forEach { bubble ->
+            // [2026-07-15 P1 fix] Sort newest-first to match the
+            //  snapshotCards branch above (line 826 sorts by
+            //  capturedAtMs DESC).  Previous version iterated in
+            //  insertion order — oldest bubble rendered first,
+            //  so the user's most recent capture was buried at
+            //  the bottom of the list.  Same visual contract as
+            //  the live-UI branch.
+            legacyBubbles.sortedByDescending { it.createdAtMs }.forEach { bubble ->
                 val actionDefs = bubble.actions.mapNotNull {
                     viewModel.actionRegistry.get(it)
                 }
                 BubbleCard(
                     bubble = bubble,
+                    // [2026-07-15 P1 fix] Legacy bubbles don't have
+                    //  a CycleSnapshot; bubble.imageBytes IS the
+                    //  captured thumbnail (set by ToolUseLoop when
+                    //  the bubble is finalized), so use it as the
+                    //  thumbnail source — same bytes the live-UI
+                    //  branch decodes from `snap.thumbnail`.
+                    thumbnail = bubble.imageBytes,
                     cycleStatus = JobStatus.COMPLETE,
                     onPick = onPick,
                     actionDefs = actionDefs,
@@ -817,181 +933,106 @@ private fun IntentBubbles(
     }
 }
 
-/** [2026-07-14 Phase C] Placeholder card rendered for a CycleJob
- *  whose LLM hasn't emitted its first bubble yet (PENDING or
- *  early IN_FLIGHT).  Shows the captured timestamp + a small
- *  spinner so the user knows the capture is in flight and the
- *  cycle hasn't died.  When the bubble flow finally emits, the
- *  placeholder is swapped for a real [BubbleCard].
- *
- *  [2026-07-15 UI polish] `ageSec` previously froze at the value
- *  captured at first composition — re-renders only fire on
- *  `capturedAtMs` change (which never happens for a single
- *  in-flight cycle), so the count stayed at 0s forever.  Now
- *  driven by a 1Hz `LaunchedEffect` that bumps a state Int;
- *  caps at 99s so a long-waiting cycle doesn't churn digits.
- *
- *  [2026-07-15 bug fix — "in-flight 灰卡像卡死"]  Color was
- *  `Color.White.copy(alpha = 0.40f)` on a black camera
- *  background — that renders as light gray, visually a totally
- *  different shape from a [BubbleCard] (which uses dark
- *  `palette.surface`).  Users saw the InFlightCard next to a
- *  fresh BubbleCard and assumed the InFlightCard was a broken /
- *  dimmed BubbleCard that "stuck" at the loading state.  New
- *  color is `palette.surface.copy(alpha = 0.6f)` — same family
- *  as BubbleCard, just dimmer, so the card reads as "bubble
- *  ghost, still loading" instead of "stray gray panel".
- *
- *  Also takes [cycleStatus] so a SUPERSEDED cycle whose bubble
- *  hasn't emitted yet shows "已替换, 等待识别完成" instead of
- *  the active spinner.  A SUPERSEDED cycle is dead from the
- *  UI's POV (its result will never reach the user); a still-
- *  spinning spinner on it implies the user is waiting for a
- *  result that won't come.  The LLM may still be working in
- *  the background, but the user can't act on that, so we drop
- *  the spinner and dim the card. */
-@Composable
-private fun InFlightCard(capturedAtMs: Long, cycleStatus: JobStatus = JobStatus.IN_FLIGHT) {
-    var ageSec by remember(capturedAtMs) {
-        mutableStateOf(((System.currentTimeMillis() - capturedAtMs) / 1000).toInt())
-    }
-    LaunchedEffect(capturedAtMs) {
-        while (true) {
-            delay(1000L)
-            ageSec = ((System.currentTimeMillis() - capturedAtMs) / 1000)
-                .toInt()
-                .coerceAtMost(99)
-        }
-    }
-    val palette = IntentCamTheme.palette
-    val isSuperseded = cycleStatus == JobStatus.SUPERSEDED
-    val isErrored = cycleStatus == JobStatus.ERRORED
-    val descriptionText = when {
-        isSuperseded -> "已替换, 等待识别完成"
-        isErrored -> "识别超时, 请再拍一张"
-        else -> "正在识别, 已等待 ${ageSec} 秒"
-    }
-    Surface(
-        color = palette.surface.copy(alpha = 0.6f),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(if (isSuperseded) 0.45f else 1f)
-            // [2026-07-15 a11y] TalkBack announces the cycle
-            //  state alongside the wait time so a screen-reader
-            //  user knows whether the cycle is still active,
-            //  superseded, or errored.
-            .semantics {
-                contentDescription = descriptionText
-            },
-    ) {
-        Row(
-            Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (isSuperseded) {
-                // No spinner — the cycle is dead from the UI's
-                //  POV.  A spinning indicator would imply the
-                //  user is still waiting for a result.
-                Box(
-                    Modifier
-                        .size(20.dp)
-                        .background(
-                            palette.onSurfaceMuted.copy(alpha = 0.6f),
-                            CircleShape,
-                        ),
-                )
-            } else if (isErrored) {
-                // Errored: a static warning icon.  Replaces the
-                //  spinner so the user knows the cycle is dead
-                //  and the result won't arrive.
-                androidx.compose.material3.Icon(
-                    androidx.compose.material.icons.Icons.Filled.Close,
-                    contentDescription = null,
-                    tint = palette.danger,
-                    modifier = Modifier.size(20.dp),
-                )
-            } else {
-                androidx.compose.material3.CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = palette.accentDelegate,
-                )
-            }
-            Spacer(Modifier.size(10.dp))
-            Text(
-                when {
-                    isSuperseded -> "已替换, 等待识别完成"
-                    isErrored -> "识别超时, 请再拍一张"
-                    else -> "识别中… ${ageSec}s"
-                },
-                color = when {
-                    isSuperseded -> palette.onSurfaceMuted.copy(alpha = 0.6f)
-                    isErrored -> palette.danger
-                    else -> palette.onSurface
-                },
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}
 
+/**
+ * One bubble card with two render modes (see [UiState.activeCycleCount]
+ * for the active-cycle gauge that drives the shutter counter).
+ *
+ *  - **Final** (`bubble != null`): full result — title, detail,
+ *    action chips, confidence percentage.  Tappable.
+ *
+ *  - **Loading** (`bubble == null`): the cycle is alive but the
+ *    LLM hasn't emitted yet (PENDING / IN_FLIGHT) OR errored
+ *    before any emit (ERRORED).  Same Surface / Row / Column
+ *    layout — captured thumbnail (from [thumbnail]) is decoded
+ *    into the image slot, title becomes "识别中…" or "识别超时,
+ *    请再拍一张", detail / actions / confidence suppressed, a
+ *    small spinner takes the confidence slot.  Non-tappable.
+ *
+ * [2026-07-15 P1 fix — "shutter 后 bubble 框跳动"] Pre-fix the UI
+ *  routed to a smaller `InFlightCard` while `bubble == null`,
+ *  then swapped to a wider `BubbleCard` when the bubble arrived.
+ *  Every cycle produced a visible layout jump.  With the unified
+ *  shape the card height is stable from shutter-tap onward;
+ *  only inner-column content + the trailing confidence slot
+ *  change as the cycle progresses.
+ *
+ * [2026-07-15 P1 fix — "读秒没有意义"] Removed the 1Hz "已等待 N 秒"
+ *  counter that lived in the previous InFlightCard.
+ *
+ * @param bubble    finalized bubble, or null while loading.
+ *                  When non-null, `bubble.imageBytes` is the same
+ *                  bytes as [thumbnail] (ToolUseLoop sets both).
+ * @param thumbnail captured frame's thumbnail bytes, always present.
+ * @param cycleStatus drives SUPERSEDED dim and ERRORED title.
+ */
 @Composable
 private fun BubbleCard(
-    bubble: Bubble,
+    bubble: Bubble?,
+    thumbnail: ByteArray,
     cycleStatus: JobStatus,
     onPick: (Bubble) -> Unit,
     actionDefs: List<ActionDef> = emptyList(),
     onActionTap: (actionId: String) -> Unit = {},
     accent: Color,
 ) {
-    // [2026-07-15 UI polish] A cycle that's been SUPERSEDED by a
-    //  newer shutter tap is still in the snapshot list (capped at
-    //  CYCLE_MAX_CONCURRENT=2) but its card is no longer the user's
-    //  focus.  Dim the card and prepend a small "已替换" pill so
-    //  the user understands why an old capture faded out — the
-    //  previous version just silently dropped the oldest cycle
-    //  from `allJobs` (CycleManager.kt:81-90) with no UI signal.
-    val superseded = cycleStatus == JobStatus.SUPERSEDED
+    val isLoading = bubble == null
+    val isErrored = isLoading && cycleStatus == JobStatus.ERRORED
+    val isSuperseded = cycleStatus == JobStatus.SUPERSEDED
+    val titleText = when {
+        isErrored -> "识别超时, 请再拍一张"
+        isLoading -> "识别中…"
+        else -> bubble?.title?.ifBlank { "未命名" } ?: "未命名"
+    }
     val palette = IntentCamTheme.palette
-    val thumbnail = remember(bubble.imageBytes) {
-        // Decode on a worker thread; the result bitmap is cached for the
-        // composition's lifetime so re-emits are cheap.  Downscaled to a
-        // card-sized bitmap — no point decoding a 3200 px thumbnail full
-        // for a 56 dp preview.
-        decodeScaled(bubble.imageBytes, DecodedSize.Thumbnail)
+    val displayBitmap by produceState<Bitmap?>(initialValue = null, thumbnail) {
+        value = withContext(kotlinx.coroutines.Dispatchers.IO) {
+            decodeScaled(thumbnail, DecodedSize.Thumbnail)
+        }
+    }
+    DisposableEffect(thumbnail) {
+        onDispose {
+            displayBitmap?.takeIf { !it.isRecycled }?.recycle()
+        }
     }
     Surface(
         color = palette.surface,
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (superseded) 0.45f else 1f)
-            // [2026-07-15 a11y] mergeDescendants so TalkBack
-            //  reads the card as one announcement: "识别结果：
-            //  <title>。置信度 N%。M 个可执行操作" instead of
-            //  reading every child (title, type, detail, chips)
-            //  separately.
+            .alpha(if (isSuperseded) 0.45f else 1f)
             .semantics(mergeDescendants = true) {
-                contentDescription = buildString {
-                    append("识别结果:")
-                    if (bubble.title.isNotBlank()) append(" ").append(bubble.title)
-                    append("。置信度 ").append((bubble.confidence * 100).toInt()).append("%")
-                    if (actionDefs.isNotEmpty()) {
-                        append("。").append(actionDefs.size).append(" 个可执行操作")
+                contentDescription = when {
+                    isErrored -> "识别超时, 请再拍一张"
+                    isLoading -> "识别中"
+                    bubble != null -> buildString {
+                        append("识别结果:")
+                        if (bubble.title.isNotBlank()) append(" ").append(bubble.title)
+                        append("。置信度 ").append((bubble.confidence * 100).toInt()).append("%")
+                        if (actionDefs.isNotEmpty()) {
+                            append("。").append(actionDefs.size).append(" 个可执行操作")
+                        }
+                        if (isSuperseded) append("。已替换")
                     }
-                    if (superseded) append("。已替换")
+                    else -> ""
                 }
             },
-        onClick = { onPick(bubble) }
+        // [2026-07-15 P1 fix] Disable tap while loading — there's
+        //  no bubble to show in detail.  Material3's clickable
+        //  Surface takes a non-nullable onClick so we pass a
+        //  no-op lambda and gate via `enabled`; when disabled
+        //  the ripple + click target are removed by the framework.
+        onClick = { bubble?.let { onPick(it) } },
+        enabled = bubble != null,
     ) {
         Row(
             Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (thumbnail != null) {
+            if (displayBitmap != null) {
+                val bmp = displayBitmap!!
                 Image(
-                    bitmap = thumbnail.asImageBitmap(),
+                    bitmap = bmp.asImageBitmap(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -999,18 +1040,9 @@ private fun BubbleCard(
                         .clip(RoundedCornerShape(8.dp))
                 )
                 Spacer(Modifier.width(12.dp))
-            } else {
-                Box(
-                    Modifier
-                        .size(10.dp)
-                        .background(accent, RoundedCornerShape(5.dp))
-                )
-                Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f)) {
-                if (superseded) {
-                    // Small pill above the title so the dimmed card
-                    //  is at-a-glance labelled.
+                if (isSuperseded) {
                     Text(
                         "已替换",
                         color = palette.onSurfaceMuted.copy(alpha = 0.6f),
@@ -1019,57 +1051,48 @@ private fun BubbleCard(
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (bubble.title.isNotBlank()) {
-                        // [2026-07-15 UI polish] `fill = true` so the
-                        //  title takes the full remaining width and
-                        //  ellipsizes cleanly when next to a wide
-                        //  IntentChip.  The previous `fill = false`
-                        //  caused a 14-character title to truncate
-                        //  prematurely when an `Open in Maps` chip
-                        //  was present.
-                        Text(
-                            bubble.title,
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f, fill = true),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    val chipLabel = bubble.type
-                    if (chipLabel.isNotBlank()) {
-                        Spacer(Modifier.width(6.dp))
-                        IntentChip(label = chipLabel, accent = accent)
+                    Text(
+                        titleText,
+                        color = if (isErrored) palette.danger else Color.White,
+                        fontWeight = if (isLoading) FontWeight.Normal
+                                     else FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f, fill = true),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    when {
+                        isLoading && !isErrored ->
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                strokeWidth = 2.dp,
+                                color = palette.accentDelegate,
+                            )
+                        !isLoading && bubble != null -> {
+                            val chipLabel = bubble.type
+                            if (chipLabel.isNotBlank()) {
+                                Spacer(Modifier.width(6.dp))
+                                IntentChip(label = chipLabel, accent = accent)
+                            }
+                        }
                     }
                 }
-                if (bubble.detail.isNotBlank()) {
+                if (!isLoading && bubble != null && bubble.detail.isNotBlank()) {
                     Text(
                         bubble.detail,
-                        color = if (bubble.title.isBlank()) palette.onSurface
-                               else palette.onSurfaceMuted,
-                        fontWeight = if (bubble.title.isBlank()) FontWeight.Normal
-                                     else FontWeight.Normal,
-                        style = if (bubble.title.isBlank())
-                                    MaterialTheme.typography.bodyMedium
-                                 else MaterialTheme.typography.bodySmall,
-                        maxLines = if (bubble.title.isBlank()) 2 else 1,
+                        color = palette.onSurfaceMuted,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (bubble.needsUserInput) {
+                if (!isLoading && bubble != null && bubble.needsUserInput) {
                     Text(
                         "需要补充信息",
                         color = palette.warning,
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
-                // [2026-07-10] Action chips: each chip is a tap target
-                //  that fires `onActionTap(actionId)`.  Horizontal
-                //  scroll keeps a long chip list from squashing the
-                //  title / detail columns above.  Empty list → the
-                //  Row collapses to zero-height and no visual change
-                //  (existing bubble card layout is preserved).
-                if (actionDefs.isNotEmpty()) {
+                if (!isLoading && !isErrored && bubble != null && actionDefs.isNotEmpty()) {
                     Spacer(Modifier.height(6.dp))
                     Row(
                         modifier = Modifier
@@ -1077,26 +1100,48 @@ private fun BubbleCard(
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
+                        val chipStates = remember(
+                            bubble.id,
+                            actionDefs.map { it.id },
+                            cycleStatus,
+                            bubble.validatedInputs,
+                        ) {
+                            actionDefs.associateWith {
+                                resolveChipState(bubble, it, cycleStatus)
+                            }
+                        }
                         actionDefs.forEach { def ->
-                            val chipState = resolveChipState(bubble, def, cycleStatus)
                             ActionChip(
                                 label = def.label,
-                                state = chipState,
+                                state = chipStates[def] ?: ChipState.Hidden,
                                 onClick = { onActionTap(def.id) },
                             )
                         }
                     }
                 }
             }
-            Text(
-                "${(bubble.confidence * 100).toInt()}%",
-                color = accent,
-                style = MaterialTheme.typography.labelMedium
-            )
+            when {
+                isLoading && !isErrored ->
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = palette.accentDelegate,
+                    )
+                isErrored -> androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = palette.danger,
+                    modifier = Modifier.size(20.dp),
+                )
+                bubble != null -> Text(
+                    "${(bubble.confidence * 100).toInt()}%",
+                    color = accent,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
         }
     }
 }
-
 /**
  * Small pill-shaped chip rendered for each [ActionDef] suggested on a
  * bubble.  Tap fires [onClick] (which the caller wires to
@@ -1244,12 +1289,36 @@ private fun decodeScaled(bytes: ByteArray, preset: DecodedSize): Bitmap? {
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
     val longest = maxOf(bounds.outWidth, bounds.outHeight)
     if (longest <= 0) return null
+    // Pick a power-of-2 inSampleSize that's >= the floor we
+    //  need; this guarantees the decoded bitmap won't exceed
+    //  targetMaxDim by more than 2x before the optional
+    //  secondary scale pass below.
     var sample = 1
     while (longest / (sample * 2) >= targetMaxDim) sample *= 2
     val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-    return runCatching {
+    val raw = runCatching {
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
-    }.getOrNull()
+    }.getOrNull() ?: return null
+    // [2026-07-15 P2 fix] Power-of-2 inSampleSize overshoots
+    //  by up to 2x for non-power-of-2 sources — a 4000 px
+    //  source with a 1600 px target decodes to 2000 px
+    //  (~1.5 MB ARGB) when we'd prefer 1600 px (~1 MB).
+    //  Apply a secondary exact scale so the decoded bitmap's
+    //  longest side matches targetMaxDim exactly.  Bilinear
+    //  filter is fine — both surfaces render the bitmap at
+    //  its native resolution, the scale is purely a memory
+    //  optimization.  createScaledBitmap returns the source
+    //  bitmap unchanged when dimensions already match (no
+    //  allocation), so the recycle guard is a no-op in that
+    //  case.
+    val rawLongest = maxOf(raw.width, raw.height)
+    if (rawLongest <= targetMaxDim) return raw
+    val scale = targetMaxDim.toFloat() / rawLongest
+    val scaledWidth = (raw.width * scale).toInt().coerceAtLeast(1)
+    val scaledHeight = (raw.height * scale).toInt().coerceAtLeast(1)
+    val scaled = Bitmap.createScaledBitmap(raw, scaledWidth, scaledHeight, true)
+    if (scaled !== raw) raw.recycle()
+    return scaled
 }
 
 /**
@@ -1305,11 +1374,31 @@ private fun DetailScreen(
     actionRegistry: ActionRegistry,
     modifier: Modifier,
 ) {
-    val fullImage = remember(bubble.imageBytes) {
-        // The bubble carries the ~3200 px display thumbnail; decode it
-        // downscaled to ~1600 px — plenty for a Fit view on a phone
-        // screen, and ~1/4 the ARGB footprint of a full decode.
-        decodeScaled(bubble.imageBytes, DecodedSize.Full)
+    // [2026-07-15 P1 fix] Same async-decode pattern as
+    //  BubbleCard's thumbnail.  DetailScreen enters with a
+    //  full-resolution bitmap (~1600 px → ~10 MB ARGB) which
+    //  used to decode synchronously on the UI thread for
+    //  ~100-300 ms — visible jank on the "tap to view" tap.
+    //  produceState fires the decode on Dispatchers.IO and the
+    //  Image composable renders nothing until it's ready (the
+    //  Box's black background stands in).
+    val fullImage by produceState<Bitmap?>(initialValue = null, bubble.imageBytes) {
+        value = withContext(kotlinx.coroutines.Dispatchers.IO) {
+            // The bubble carries the ~3200 px display thumbnail; decode it
+            // downscaled to ~1600 px — plenty for a Fit view on a phone
+            // screen, and ~1/4 the ARGB footprint of a full decode.
+            decodeScaled(bubble.imageBytes, DecodedSize.Full)
+        }
+    }
+    // [2026-07-15 P1 fix] Same recycle-on-dispose pattern as
+    //  BubbleCard.  The DetailScreen bitmap is 4× the bubble
+    //  thumbnail's ARGB footprint, so leaking it has a much
+    //  bigger memory cost (a few visits to the detail view
+    //  on a low-RAM device can OOM).
+    DisposableEffect(bubble.imageBytes) {
+        onDispose {
+            fullImage?.takeIf { !it.isRecycled }?.recycle()
+        }
     }
     val palette = IntentCamTheme.palette
     val accent = bubbleAccentActions(bubble, palette, actionRegistry)
@@ -1343,8 +1432,15 @@ private fun DetailScreen(
         // Layer 1 — fullscreen image.  When bytes are missing (rare), the
         // Box's black background stands in.
         if (fullImage != null) {
+            // [2026-07-15 P1 fix] Local val snapshot for
+            //  smart-cast — `fullImage` is a delegated
+            //  property (produceState).  See BubbleCard for
+            //  the same pattern.  `!!` because we've null-
+            //  checked but the compiler can't propagate
+            //  through the assignment.
+            val bmp = fullImage!!
             Image(
-                bitmap = fullImage.asImageBitmap(),
+                bitmap = bmp.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize()
@@ -1494,7 +1590,11 @@ private fun DetailScreen(
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
                 .padding(12.dp)
-                .size(40.dp),
+                // [2026-07-15 P1 fix] 40dp → 48dp per Material
+                //  Design's minimum touch target.  The 40dp version
+                //  was hard to hit on small (5") phones, especially
+                //  when holding the device one-handed.
+                .size(48.dp),
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Icon(
@@ -1596,14 +1696,40 @@ private fun LogList(
     contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
 ) {
     val listState = rememberLazyListState()
-    LaunchedEffect(logs.size) {
-        if (logs.isNotEmpty()) {
-            // Snap to the newest entry when the user is already at
-            //  (or near) the bottom; preserve the scroll position
-            //  when they've scrolled up to read history.
-            if (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 >= logs.size - 2) {
-                listState.scrollToItem(logs.size - 1)
+    // [2026-07-15 P1 fix] Track whether the user has manually
+    //  scrolled away from the bottom.  When `true`, new log
+    //  entries don't snap-scroll (so the user isn't yanked
+    //  away from history they're reading).  Resets to `false`
+    //  when the user scrolls back to the bottom.  Previous
+    //  heuristic (`lastVisible >= logs.size - 2`) yanks users
+    //  in small panels — a 120dp AnalyzerErrorPanel with 3-4
+    //  visible rows treats every "second-to-last" position as
+    //  "near bottom" and scrolls the user away from item
+    //  they're reading.
+    var userScrolledUp by remember { mutableStateOf(false) }
+    LaunchedEffect(listState) {
+        var prevLastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        }.collect { newLastVisible ->
+            // Upward scroll: user moved away from the bottom.
+            //  Detect by lastVisible decreasing — a list growth
+            //  (new entry) doesn't decrease lastVisible, it shifts
+            //  the visible window up but the user hasn't actively
+            //  scrolled, so we don't update the flag.
+            if (newLastVisible < prevLastVisible) {
+                userScrolledUp = true
             }
+            // Down to the bottom → re-enable auto-scroll.
+            if (newLastVisible >= logs.size - 1) {
+                userScrolledUp = false
+            }
+            prevLastVisible = newLastVisible
+        }
+    }
+    LaunchedEffect(logs.size) {
+        if (logs.isNotEmpty() && !userScrolledUp) {
+            listState.scrollToItem(logs.size - 1)
         }
     }
     LazyColumn(
@@ -1754,7 +1880,7 @@ private fun UserInputDialog(
     onSubmit: (String) -> Unit,
     onCancel: () -> Unit,
 ) {
-    var text by remember(request) { mutableStateOf("") }
+    var text by rememberSaveable(request) { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onCancel,
         title = {
@@ -1773,6 +1899,20 @@ private fun UserInputDialog(
                     singleLine = false,
                     minLines = 2,
                     maxLines = 4,
+                    // [2026-07-15 P1 fix] Wire the IME's Enter
+                    //  key to the confirm button so users can
+                    //  submit without dismissing the keyboard
+                    //  first.  Previous version had no imeAction
+                    //  → keyboard's "Done" / "Send" button did
+                    //  nothing.  Reuses the same
+                    //  onSubmit-if-not-blank guard as the
+                    //  TextButton click handler.
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (text.isNotBlank()) onSubmit(text.trim())
+                        }
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

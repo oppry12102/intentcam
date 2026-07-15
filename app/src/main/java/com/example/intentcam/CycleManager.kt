@@ -72,6 +72,27 @@ class CycleManager(
      * only shows the banner once. */
     private val onCycleError: (cycleId: String, message: String) -> Unit = { _, _ -> },
     /**
+     * [2026-07-15 P0 fix] Callback fired when a cycle reaches
+     *  its terminal COMPLETE state via [ToolUseLoop.Outcome.Bubble].
+     *  AppViewModel uses this to clear `state.analyzing` — the
+     *  pre-existing flow only cleared `analyzing` on the legacy
+     *  single-cycle path, so live-UI cycles left the TopOverlay
+     *  "识别中…" spinner stuck after completion.  Pair with the
+     *  legacy `enterAnalyzing()` so the two paths now balance. */
+    private val onCycleComplete: (cycleId: String, bubble: Bubble) -> Unit = { _, _ -> },
+    /**
+     * [2026-07-15 P0 fix] Callback fired when a cycle returns
+     *  [ToolUseLoop.Outcome.PendingUserInput].  AppViewModel
+     *  surfaces this as the user-input AlertDialog and stashes
+     *  the originating frame's full-resolution JPEG so
+     *  [com.example.intentcam.AppViewModel.submitUserInput] can
+     *  resume via [resumeCycle].  The placeholder Bubble is
+     *  also written into `job.bubble.value` so the live UI
+     *  renders it as a BubbleCard (the live card list reads
+     *  `state.cycles`, not `state.bubbles`, so the placeholder
+     *  has to land in the per-job flow to be visible). */
+    private val onPendingUserInput: (cycleId: String, request: UserInputRequest, placeholder: Bubble) -> Unit = { _, _, _ -> },
+    /**
      * [2026-07-15] Per-cycle wall-clock cap on the LLM call.
      * Default 90s — generous enough for 2-3-round cycles on
      * slow networks (median ~2-3s per round) but tight enough
@@ -227,8 +248,16 @@ class CycleManager(
      *  emitted via onProgress before the timeout is preserved
      *  in `job.bubble` so the InFlightCard's ERRORED branch
      *  ("识别超时, 请再拍一张") takes over from the bubble-card
-     *  branch on the next state read. */
-    private suspend fun runCycleLoop(job: CycleJob) {
+     *  branch on the next state read.
+     *
+     * [2026-07-15 P0 fix] `userText` parameter (default "") —
+     *  empty on the initial [startCycle] invocation, populated
+     *  with the user's submitted follow-up text on a [resumeCycle]
+     *  re-invocation.  Re-using the same `runCycleLoop` for both
+     *  initial + resumed paths keeps the timeout / cancellation /
+     *  per-emit validation / progress-mirroring logic in a single
+     *  place. */
+    private suspend fun runCycleLoop(job: CycleJob, userText: String = "") {
         job.status.value = JobStatus.IN_FLIGHT
         val t0 = SystemClock.elapsedRealtime()
         try {
@@ -237,7 +266,7 @@ class CycleManager(
                     toolUseLoop.runCycle(
                         thumbnail = job.frame.thumbnail,
                         fullRes = job.frame.fullRes,
-                        userText = "",
+                        userText = userText,
                         actionIds = actionRegistry.allIds(),
                         cycleId = job.id,
                         // [2026-07-15] Wire the orchestrator's per-emit
@@ -329,14 +358,40 @@ class CycleManager(
                     // onProgress.  Mark COMPLETE for the UI to
                     // optionally badge "done".
                     job.status.value = JobStatus.COMPLETE
+                    // [2026-07-15 P0 fix] Fire the completion
+                    //  callback so AppViewModel can clear
+                    //  `state.analyzing`.  Pre-existing bug: the
+                    //  TopOverlay's "识别中…" spinner was stuck on
+                    //  after a live-UI cycle finished because the
+                    //  legacy `analyzing` flip was wired only to
+                    //  the single-cycle path.
+                    onCycleComplete(job.id, outcome.bubble)
                     log("CYCLE", "complete ${job.id} bubble=${outcome.bubble.id}")
                 }
                 is ToolUseLoop.Outcome.PendingUserInput -> {
-                    // The model needs free-form input to continue;
-                    // leave IN_FLIGHT and let AppViewModel's
-                    // existing userInputRequest flow park the
-                    // dialog.  Future cycle will pick up via
-                    // submitUserInput().
+                    // [2026-07-15 P0 fix] The model needs free-form
+                    //  input to continue.  Previously this branch
+                    //  only logged — the user could never enter
+                    //  follow-up text because AppViewModel's
+                    //  userInputRequest was never set.  Now:
+                    //   1. Normalize the placeholder's cycleId so
+                    //      it always matches the owning CycleJob
+                    //      (defensive — ToolUseLoop.buildPlaceholder
+                    //      already does this since 2026-07-15 but
+                    //      we don't want a future regression there
+                    //      to silently break resume routing).
+                    //   2. Write the placeholder into `job.bubble`
+                    //      so the live UI renders it as a BubbleCard.
+                    //      IntentBubbles reads `state.cycles` (not
+                    //      `state.bubbles`) when cycles is non-empty,
+                    //      so the per-job flow is the only way to
+                    //      make the placeholder visible in the live
+                    //      card list.
+                    //   3. Fire the callback so AppViewModel can
+                    //      surface the AlertDialog + stash fullRes.
+                    val placeholder = outcome.placeholder.copy(cycleId = job.id)
+                    job.bubble.value = placeholder
+                    onPendingUserInput(job.id, outcome.request, placeholder)
                     log("CYCLE", "pending-user-input ${job.id}")
                 }
                 is ToolUseLoop.Outcome.Error -> {
@@ -359,8 +414,147 @@ class CycleManager(
         }
     }
 
+    /** [2026-07-15 P0 fix] Resume a cycle that returned
+     *  [ToolUseLoop.Outcome.PendingUserInput] after the user
+     *  submitted follow-up text.  Looks up the job by [cycleId]
+     *  and re-launches [runCycleLoop] with the submitted
+     *  `userText`.  Returns `true` if the resume was accepted,
+     *  `false` if the cycle is no longer in a state where it can
+     *  be resumed (not found, already terminal, or stale — the
+     *  stale-job case should not silently fall back to the legacy
+     *  single-cycle path; see AppViewModel.submitUserInput).
+     *
+     *  The previous-coroutine invariant: [runCycleLoop] returns
+     *  synchronously after firing the PendingUserInput callback,
+     *  so by the time [resumeCycle] is called the old `job.coroutine`
+     *  handle is already completed.  We replace it with the new
+     *  handle so supersede / cancelAll can kill the resumed call
+     *  if the user dismisses the dialog and immediately takes a
+     *  new photo.
+     *
+     *  [2026-07-15] Side-effects before launching the new call:
+     *   - `job.bubble.value = null` — clears the parked
+     *     placeholder so the live UI flips back to an InFlightCard
+     *     spinner while the resumed LLM call runs.  Without this
+     *     the card would keep showing the "需要补充信息" BubbleCard
+     *     until the resumed call emits a new bubble.
+     *   - Reset `validatedInputs` + `pendingInputs` + `nRounds` so
+     *     the live chip states (`Spinner` → `Validated`) recompute
+     *     from scratch against the resumed bubble.
+     *
+     *  Returns `false` (resume rejected) if the cycle is missing
+     *  or already terminal — the caller should clear the
+     *  userInputRequest dialog without firing another LLM call. */
+    fun resumeCycle(cycleId: String, userText: String): Boolean {
+        val job = _allJobs.value[cycleId] ?: run {
+            log("CYCLE", "resume REJECTED $cycleId: not in allJobs")
+            return false
+        }
+        if (job.status.value == JobStatus.COMPLETE ||
+            job.status.value == JobStatus.ERRORED ||
+            job.status.value == JobStatus.SUPERSEDED
+        ) {
+            log(
+                "CYCLE",
+                "resume REJECTED $cycleId: status=${job.status.value}"
+            )
+            return false
+        }
+        if (userText.isBlank()) {
+            log("CYCLE", "resume REJECTED $cycleId: blank userText")
+            return false
+        }
+        // Clear the parked placeholder + validation state so the
+        // live UI flips back to InFlightCard while the resumed
+        // LLM call runs.
+        job.bubble.value = null
+        job.validatedInputs.value = emptyMap()
+        job.pendingInputs.value = emptyList()
+        job.nRounds.value = 0
+        // Launch the resumed call.  CoroutineStart.LAZY so we can
+        // install the handle into `job.coroutine` BEFORE execution
+        // begins — without LAZY, `scope.launch` may start running
+        // synchronously up to the first suspension point, racing
+        // against the supersede path's `job.coroutine?.cancel()`.
+        val handle = scope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
+            runCycleLoop(job, userText = userText)
+        }
+        job.coroutine = handle
+        handle.start()
+        log(
+            "CYCLE",
+            "resume $cycleId userText='${userText.take(40)}' (size=${userText.length})"
+        )
+        return true
+    }
+
+    /** [2026-07-15 P0 fix] Discard a pending-input cycle when the
+     *  user cancels the user-input dialog.  Without this, a
+     *  cancelled input request would leave the cycle parked in
+     *  IN_FLIGHT forever (consuming a slot in CYCLES_MAX_TOTAL +
+     *  keeping the InFlightCard "识别中..." spinner stuck).
+     *  Marks the job SUPERSEDED + cancels its coroutine (if any)
+     *  and removes it from [allJobs] — the standard eviction
+     *  path used by [startCycle] when a new capture supersedes
+     *  an older one.  Idempotent on missing / already-terminal
+     *  cycle ids. */
+    fun cancelCycle(cycleId: String, reason: String) {
+        val job = _allJobs.value[cycleId] ?: return
+        if (job.status.value == JobStatus.COMPLETE ||
+            job.status.value == JobStatus.ERRORED
+        ) return
+        job.status.value = JobStatus.SUPERSEDED
+        job.coroutine?.cancel()
+        val updated = LinkedHashMap(_allJobs.value)
+        updated.remove(cycleId)
+        _allJobs.value = updated
+        log("CYCLE", "cancelled pending cycle $cycleId: $reason")
+    }
+
     /** For tests + AppViewModel's idle-check. */
     fun activeJobCount(): Int = _allJobs.value.count {
         it.value.status.value != JobStatus.COMPLETE
+    }
+
+    /** [2026-07-15 P0 fix] Count of cycles whose status is
+     *  [JobStatus.PENDING] or [JobStatus.IN_FLIGHT] — the
+     *  user-facing "in flight" gauge that drives the shutter
+     *  counter (CYCLE_MAX_CONCURRENT - inFlightJobCount() =
+     *  "remaining slots").  Distinct from [activeJobCount] which
+     *  also includes [JobStatus.ERRORED] and
+     *  [JobStatus.SUPERSEDED]: those are terminal and should
+     *  not gate the shutter.
+     *
+     *  Used by [com.example.intentcam.AppViewModel.syncCycleCounters]
+     *  to populate [com.example.intentcam.UiState.activeCycleCount]
+     *  on every cycle transition.  Cheap O(n) over the cycles
+     *  map (n <= 8 in practice due to CYCLES_MAX_TOTAL). */
+    fun inFlightJobCount(): Int = _allJobs.value.values.count {
+        it.status.value == JobStatus.IN_FLIGHT ||
+            it.status.value == JobStatus.PENDING
+    }
+
+    /** [2026-07-15 P0 fix] Discard every cycle currently in
+     *  [allJobs] and clear the map.  Each non-COMPLETE job is
+     *  marked SUPERSEDED and its [Job.coroutine] cancelled so the
+     *  in-flight LLM HTTP request aborts (otherwise a 90-second
+     *  `llmTimeoutMs` budget would bill for a discarded result).
+     *  Wired into [com.example.intentcam.AppViewModel.restartScanning]
+     *  so tapping "重新扫描" actually stops whatever the camera was
+     *  doing — the previous version cleared `UiState.bubbles` but
+     *  left cycles running in the background, wasting API quota.
+     *  Called from the main thread; safe because it only mutates
+     *  StateFlows and calls `Job.cancel()` (which is thread-safe). */
+    fun cancelAll(reason: String = "user restart") {
+        val jobs = _allJobs.value.values.toList()
+        for (job in jobs) {
+            if (job.status.value != JobStatus.COMPLETE) {
+                job.status.value = JobStatus.SUPERSEDED
+                job.coroutine?.cancel()
+            }
+        }
+        _allJobs.value = emptyMap()
+        _focusedJobId.value = null
+        log("CYCLE", "cancelled all (${jobs.size}) reason=$reason")
     }
 }

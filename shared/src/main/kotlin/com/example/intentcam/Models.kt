@@ -174,6 +174,33 @@ data class UiState(
      *  { it.bubble.value }` so the FIFO cap (BUBBLE_MAX) keeps
      *  its semantics. */
     val cycles: Map<String, CycleSnapshot> = emptyMap(),
+    /** [2026-07-15 P0 fix] Count of cycles whose status is
+     *  [JobStatus.PENDING] or [JobStatus.IN_FLIGHT].  Drives the
+     *  shutter button's "还可以拍 N 张" counter via
+     *  `CYCLE_MAX_CONCURRENT - activeCycleCount`.  Updated by
+     *  [com.example.intentcam.AppViewModel.syncCycleCounters] on
+     *  every cycle transition (startCycle / complete / error /
+     *  cancel / restart).
+     *
+     *  Why a separate field instead of computing from `cycles`:
+     *  `cycles` contains COMPLETE / ERRORED / SUPERSEDED entries
+     *  too, and recomposition would require per-cycle status
+     *  subscriptions to track status changes (the cycles map's
+     *  *structure* doesn't change when a status flips).  A plain
+     *  Int in UiState recomposes on every state copy and lets the
+     *  ShutterButton read with zero ceremony.
+     *
+     *  Bug this fixes: pre-fix the counter was
+     *  `CYCLES_MAX_TOTAL - cycles.size` (total).  After 8
+     *  captures the counter stayed at 0 even after every cycle
+     *  COMPLETE'd, because COMPLETE entries never leave the map
+     *  (the bubble UI keeps referencing them).  The user had to
+     *  tap "重新扫描" to release the shutter.  With this field
+     *  tracking active count, the counter increments back to 8
+     *  as cycles complete and "重新扫描" is only needed for
+     *  the explicit "clean slate" intent (clearing bubbles,
+     *  dismissing error banners). */
+    val activeCycleCount: Int = 0,
 ) {
     companion object {
         /** [2026-07-15] Hard cap on the legacy [bubbles] FIFO queue.
@@ -282,6 +309,24 @@ data class CycleSnapshot(
     //  snapshot instead of reaching back into the Android-only
     //  CycleJob.  Empty when validation is Complete.
     val pendingInputs: kotlinx.coroutines.flow.StateFlow<List<String>>,
+    /** [2026-07-15 P1 fix] The captured frame's thumbnail JPEG
+     *  bytes — the same bytes that land on the bubble's
+     *  [Bubble.imageBytes] when the cycle emits.  Exposed here
+     *  so the live UI can render the BubbleCard's thumbnail
+     *  slot IMMEDIATELY when the user taps the shutter, instead
+     *  of waiting for the first `emit_bubble` round.  Pre-fix
+     *  the UI showed a separate, smaller `InFlightCard` while
+     *  `bubble == null`, then swapped to the full BubbleCard
+     *  shape when the bubble arrived — visible layout jump
+     *  every cycle.  With this field, BubbleCard decodes once
+     *  from `thumbnail` and stays the same shape end-to-end;
+     *  only title / detail / actions / confidence slot change
+     *  as the bubble fills in.
+     *
+     *  Memory cost: cycle.frame.thumbnail is already in memory
+     *  (CycleJob holds it).  We're just exposing a reference,
+     *  not copying. */
+    val thumbnail: ByteArray,
 )
 
 /** [2026-07-14 Phase B] One cycle job's lifecycle status.  See
