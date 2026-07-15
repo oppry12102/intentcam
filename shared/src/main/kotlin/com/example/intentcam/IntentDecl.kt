@@ -228,6 +228,14 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "促销：特价 / 打折 / 满减 / 秒杀 / 亏本 / 清仓 / 甩卖 / 红包 / 限时 / 抢购",
         family = IntentFamily.OBSERVE,
     ))
+    // [2026-07-13] End of phase-ship timeline.  See ARCHITECTURE.md
+    //  §15 + ~/.claude/plans/action-first-architecture.md for the
+    //  v3.0→v4 thesis: the 14 IntentDecl ids above are now UI-input
+    //  fallbacks (visual accent derivation + eval backwards-compat
+    //  via r_type), not classification targets.  The canonical user-
+    //  visible discriminator is [com.example.intentcam.Bubble.actions]
+    //  (the 5 action ids), and [com.example.intentcam.eval.ScorerV3Result]
+    //  is the dual-run scorer replacing the r_type-anchored v2.
 }
 
 /**

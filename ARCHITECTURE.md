@@ -957,3 +957,45 @@ only, never the LLM's text.  That keeps r2_type lift distinct
 from r2_text lift — when a regression happens, you can tell
 which pass went wrong from which signal moved.  Prompt-side
 changes (C3 v3 in §15.6) shift r3 instead.
+
+### 15.10 v4 (2026-07-15) — action-first scorer + UI accent
+
+The v3.0 inversion (§15 paragraph) was a half-flip: the prompt
+became action-driven (`action_ids` default-required, free-form
+`intent`/`type`), but the scorer still anchored on a 14-bucket
+`r_type` partial-credit grade. The 2026-07-15 `072af4d` action
+merge (six per-intent share actions collapsed into one intent-
+agnostic `share`) empirically confirmed that most intents
+resolve to the same `share` chip — the 14-bucket type boundary
+is fuzzy in a way that doesn't matter to the user's actual
+outcome.
+
+**v4 closes the loop** (plan: `~/.claude/plans/action-first-
+architecture.md`):
+
+1. `ScorerV3Result` (`shared/.../eval/ScorerV3.kt`) — new
+   canonical composite weighing action coverage highest:
+   `composite_v3 = 0.55·r_actions + 0.30·r_text + 0.15·r_inputs`.
+   `r_type` drops from the scorer dimension; `Bubble.type` stays
+   as a UI accent input only.
+2. `EvalRunner` (`shared/.../eval/EvalRunner.kt`) — runs v3
+   side-by-side with v2; `check_regression.py` still gates on
+   `composite_v2` until IntentCam Dev signs off on dual-run
+   stability. Phase G_15 smoke (2026-07-15):
+   `composite_v2 = 0.825` vs `composite_v3 = 0.782` (Δ=−0.043).
+3. `MainActivity.bubbleAccentActions` (`app/.../MainActivity.kt`)
+   replaces the type-based accent helper with an actions-driven
+   three-cluster resolver (EXECUTE=pink / DELEGATE=blue /
+   CLARIFY=gray); the legacy `bubbleAccent(type, registry?)` is
+   removed. UI accent now follows the canonical chip surface.
+4. The 14 `IntentDecl` ids above remain registered as UI-input
+   fallbacks + eval-side `r_type` backwards-compat (Step 4 plan
+   §2.3). Adding new ids is **not** the recommended path going
+   forward — adding new canonical actions at `app/.../ActionDecl.kt`
+   is.
+
+Canonical switch (Step 4 of the v4 plan) is **gated** on
+`composite_v2` regression PASS + `composite_v3` week-over-week
+|Δ| ≤ 0.03 across all 11 production suites, plus manual sign-off
+from IntentCam Dev after reviewing the dual-run report. Until
+then, every eval run prints both numbers; no canonical flip.
