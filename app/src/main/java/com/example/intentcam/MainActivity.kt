@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -61,11 +62,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
@@ -178,6 +182,7 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 debugEnabled = state.debugEnabled,
                 onToggleDebug = { viewModel.setDebugEnabled(!state.debugEnabled) },
                 onSettings = viewModel::openSettings,
+                onRestart = viewModel::restartScanning,
             )
             // [2026-07-15 UI polish] Surfaced error banner — `AppViewModel`
             //  has been writing `error` for four places since Phase B
@@ -286,6 +291,12 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
  * in flight (the spinner inside shows that work is happening).  Disabled
  * outside of SCANNING so we don't dispatch while the user is reading
  * a bubble detail.
+ *
+ * [2026-07-15 UI polish] Triggers a long-press haptic on tap so the
+ * user gets the standard camera-shutter tactile feedback.  Fire on
+ * tap (not on press-down) so the haptic aligns with the actual
+ * capture; `HapticFeedbackType.LongPress` is the conventional
+ * "physical button press" variant across Android camera apps.
  */
 @Composable
 private fun ShutterButton(
@@ -293,12 +304,16 @@ private fun ShutterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = LocalHapticFeedback.current
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            onClick = onClick,
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick()
+            },
             enabled = enabled,
             shape = CircleShape,
             color = if (enabled) Color(0xFF4F8CFF) else Color(0xFF4F8CFF).copy(alpha = 0.35f),
@@ -412,6 +427,7 @@ private fun TopOverlay(
     debugEnabled: Boolean,
     onToggleDebug: () -> Unit,
     onSettings: () -> Unit,
+    onRestart: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -447,6 +463,17 @@ private fun TopOverlay(
                     maxLines = 2
                 )
             }
+        }
+        // [2026-07-15 UI polish] Restart-scanning button.  Drops the
+        //  whole bubble history + clears any errored cycle and returns
+        //  the user to a clean SCANNING state.  Previously the only
+        //  way to clear the bubble list was to swipe-kill the app.
+        IconButton(onClick = onRestart) {
+            Icon(
+                Icons.Filled.Refresh,
+                contentDescription = "重新扫描",
+                tint = Color.White,
+            )
         }
         // Debug toggle.  Bug icon is green when the scrolling log overlay
         // is active (default), gray when it's muted.  Tap to flip; the
@@ -620,10 +647,27 @@ private fun IntentBubbles(
  *  early IN_FLIGHT).  Shows the captured timestamp + a small
  *  spinner so the user knows the capture is in flight and the
  *  cycle hasn't died.  When the bubble flow finally emits, the
- *  placeholder is swapped for a real [BubbleCard]. */
+ *  placeholder is swapped for a real [BubbleCard].
+ *
+ *  [2026-07-15 UI polish] `ageSec` previously froze at the value
+ *  captured at first composition — re-renders only fire on
+ *  `capturedAtMs` change (which never happens for a single
+ *  in-flight cycle), so the count stayed at 0s forever.  Now
+ *  driven by a 1Hz `LaunchedEffect` that bumps a state Int;
+ *  caps at 99s so a long-waiting cycle doesn't churn digits. */
 @Composable
 private fun InFlightCard(capturedAtMs: Long) {
-    val ageSec = ((System.currentTimeMillis() - capturedAtMs) / 1000).toInt()
+    var ageSec by remember(capturedAtMs) {
+        mutableStateOf(((System.currentTimeMillis() - capturedAtMs) / 1000).toInt())
+    }
+    LaunchedEffect(capturedAtMs) {
+        while (true) {
+            delay(1000L)
+            ageSec = ((System.currentTimeMillis() - capturedAtMs) / 1000)
+                .toInt()
+                .coerceAtMost(99)
+        }
+    }
     Surface(
         color = Color(0x66FFFFFF),
         shape = RoundedCornerShape(16.dp),
