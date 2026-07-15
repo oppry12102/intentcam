@@ -314,12 +314,18 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                     //  caps concurrent cycles at
                     //  UiState.CYCLE_MAX_CONCURRENT = 2; older
                     //  cycles are superseded when a 3rd tap arrives.
-                    //  The legacy `analyzing` flag is now a derived
-                    //  read of cycleManager.hasFocusedJob() and is
-                    //  kept around only for legacy callers (debug
-                    //  overlay etc.) — the shutter no longer reads
-                    //  it.
+                    // [2026-07-15] Pass `analyzing` separately
+                    //  so the inner content swaps to a spinner
+                    //  when a cycle is in flight (was previously
+                    //  the static "识别" text — user couldn't tell
+                    //  the cycle was running without scrolling
+                    //  down to the InFlightCard).  Button stays
+                    //  tappable for the rapid 2-photo case; the
+                    //  superseded cycle's LLM is now actually
+                    //  cancelled (commit d2bb3e3) so a fast double
+                    //  tap doesn't burn API quota.
                     enabled = state.phase == Phase.SCANNING,
+                    analyzing = state.analyzing,
                     onClick = { viewModel.captureLatestFrame() },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -379,10 +385,23 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
  * tap (not on press-down) so the haptic aligns with the actual
  * capture; `HapticFeedbackType.LongPress` is the conventional
  * "physical button press" variant across Android camera apps.
- */
+ *
+ * [2026-07-15 bug fix — "1s 连拍没反馈"]  Previously the inner
+ *  branch was keyed on `enabled` alone, but `enabled = phase ==
+ *  SCANNING` is true for the entire camera screen session — so
+ *  the button always showed the static "识别" text, never a
+ *  spinner.  The user couldn't tell that a cycle was in flight
+ *  from the shutter alone (they had to look at the InFlightCard
+ *  at the bottom).  New: the inner branch is keyed on
+ *  `state.analyzing` separately.  The Surface is still tappable
+ *  when a cycle is in flight (preserves the "rapid 2-photo"
+ *  use case where the user intentionally supersedes), but
+ *  the inner content swaps to a spinner so the user can see
+ *  "识别中" without scanning down to the bubble card. */
 @Composable
 private fun ShutterButton(
     enabled: Boolean,
+    analyzing: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -413,22 +432,28 @@ private fun ShutterButton(
                 //  cycle is in flight it becomes "正在识别" so the
                 //  user can hear that the tap was registered.
                 .semantics {
-                    contentDescription = if (enabled) "识别当前画面" else "正在识别"
+                    contentDescription = if (analyzing) "正在识别" else "识别当前画面"
                 },
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                if (enabled) {
+                if (analyzing) {
+                    // Cycle in flight: spinner so the user gets
+                    //  visual feedback that something is happening
+                    //  without scanning to the bubble card.  The
+                    //  button stays tappable for the rapid-capture
+                    //  use case (C cancels the previous cycle's
+                    //  LLM call so the user doesn't waste quota).
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 3.dp,
+                        color = Color.White,
+                    )
+                } else {
                     Text(
                         "识别",
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                    )
-                } else {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(28.dp),
-                        strokeWidth = 3.dp,
-                        color = Color.White,
                     )
                 }
             }
