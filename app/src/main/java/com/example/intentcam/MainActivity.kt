@@ -245,6 +245,7 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 actionDefs = state.selectedBubble!!.actions.mapNotNull {
                     viewModel.actionRegistry.get(it)
                 },
+                actionRegistry = viewModel.actionRegistry,
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -717,7 +718,7 @@ private fun IntentBubbles(
                             onPick = onPick,
                             actionDefs = actionDefs,
                             onActionTap = { actionId -> viewModel.runAction(actionId, b.id) },
-                            accent = bubbleAccentActions(b, palette),
+                            accent = bubbleAccentActions(b, palette, viewModel.actionRegistry),
                         )
                     }
                 }
@@ -738,7 +739,7 @@ private fun IntentBubbles(
                     onPick = onPick,
                     actionDefs = actionDefs,
                     onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
-                    accent = bubbleAccentActions(bubble, palette),
+                    accent = bubbleAccentActions(bubble, palette, viewModel.actionRegistry),
                 )
             }
         }
@@ -803,7 +804,7 @@ private fun BubbleCard(
     onPick: (Bubble) -> Unit,
     actionDefs: List<ActionDef> = emptyList(),
     onActionTap: (actionId: String) -> Unit = {},
-    accent: Color = bubbleAccentActions(bubble, IntentCamTheme.palette),
+    accent: Color,
 ) {
     // [2026-07-15 UI polish] A cycle that's been SUPERSEDED by a
     //  newer shutter tap is still in the snapshot list (capped at
@@ -1077,28 +1078,20 @@ private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
  * return gray — better than silently pretending an unknown id is
  * a known behaviour cluster.
  */
-private fun bubbleAccentActions(bubble: Bubble, palette: IntentCamPalette): Color {
-    val actions = bubble.actions.map { it.lowercase() }.toSet()
-    val execute = actions.any { it in EXECUTE_IDS }
-    val delegate = actions.any { it in DELEGATE_IDS }
+private fun bubbleAccentActions(
+    bubble: Bubble,
+    palette: IntentCamPalette,
+    actionRegistry: ActionRegistry,
+): Color {
+    val actions = bubble.actions.mapNotNull { actionRegistry.get(it) }
+    val execute = actions.any { it.accent == AccentCluster.EXECUTE }
+    val delegate = actions.any { it.accent == AccentCluster.DELEGATE }
     return when {
         execute -> palette.accentExecute
         delegate -> palette.accentDelegate
         else -> palette.accentClarify
     }
 }
-
-/** Action ids whose accent is the pink "consent-gated" cluster
- *  (was override for `phone` / `payment_qr` under the type-based
- *  accent scheme).  Single source of truth for the EXECUTE
- *  cluster — when a new PII action ships, add its id here. */
-private val EXECUTE_IDS = setOf("dial_number", "scan_to_pay", "redact_id")
-
-/** Action ids whose accent is the blue "OS-handoff" cluster (was
- *  OBSERVE-family base).  `open_in_maps` and the unified `share`
- *  action both qualify — any chip that hands off to the OS chooser
- *  lives here. */
-private val DELEGATE_IDS = setOf("open_in_maps", "share")
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1107,6 +1100,7 @@ private fun DetailScreen(
     onRestart: () -> Unit,
     onActionTap: (actionId: String) -> Unit,
     actionDefs: List<ActionDef>,
+    actionRegistry: ActionRegistry,
     modifier: Modifier,
 ) {
     val fullImage = remember(bubble.imageBytes) {
@@ -1116,7 +1110,7 @@ private fun DetailScreen(
         decodeScaled(bubble.imageBytes, targetMaxDim = 1600)
     }
     val palette = IntentCamTheme.palette
-    val accent = bubbleAccentActions(bubble, palette)
+    val accent = bubbleAccentActions(bubble, palette, actionRegistry)
     // [2026-07-13] fullscreen redesign: the image fills the entire screen
     // (ContentScale.Fit, black letterbox) so the user can see it clearly
     // and cross-check it against the results.  The result panel and the

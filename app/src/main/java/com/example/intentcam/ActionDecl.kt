@@ -135,7 +135,31 @@ data class ActionDef(
      *  [ActionOutcome.LaunchAndroidIntent] makes MainActivity
      *  `startActivity` with the given Intent. */
     val body: suspend (ctx: Context, bubble: Bubble, args: Map<String, String>) -> ActionOutcome,
+    /** [2026-07-15 UI polish] Accent cluster this action belongs to,
+     *  drives [bubbleAccentActions] in MainActivity.  Was previously
+     *  a side-table of two `Set<String>`s in MainActivity.kt
+     *  (EXECUTE_IDS / DELEGATE_IDS); promoting the data onto
+     *  [ActionDef] means a new PII action only needs to set
+     *  `accent = AccentCluster.EXECUTE` here, with no UI-side
+     *  list to keep in sync.  `body` lambdas that don't fill the
+     *  field default to `DELEGATE` (most common; non-consent
+     *  actions like `share` / `open_in_maps`). */
+    val accent: AccentCluster = AccentCluster.DELEGATE,
 )
+
+/** [2026-07-15] Three accent clusters the bubble card uses to
+ *  color its left dot / IntentChip / confidence percentage:
+ *
+ *  - [EXECUTE]  — pink; consent-gated chip.  dials a number,
+ *    pays a QR, masks an ID.  Visually the highest-leverage
+ *    actions — the user should pause before tapping.
+ *  - [DELEGATE] — blue; OS-handoff chip.  opens a maps app,
+ *    shows a share-sheet.  The OS chooser is itself the consent
+ *    step.
+ *  - [CLARIFY]  — gray; pure info / no action.  The bubble
+ *    explains what the LLM saw but offers no follow-up.
+ */
+enum class AccentCluster { EXECUTE, DELEGATE, CLARIFY }
 
 /** Mutable bag of [ActionDef]s, build-once at app start.  Mirrors
  *  the shape of `IntentRegistry`. */
@@ -198,6 +222,10 @@ fun registerDefaultActions(reg: ActionRegistry) {
             ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             ActionOutcome.LaunchAndroidIntent(intent)
         },
+        // [2026-07-15] DELEGATE cluster: opens a system maps app
+        //  with no in-app side effect; the OS chooser is the
+        //  consent step.
+        accent = AccentCluster.DELEGATE,
     ))
     // [2026-07-13] Second real outbound action: dial a phone number
     //  extracted from a `phone` bubble.  Strictly consent-gated:
@@ -252,6 +280,10 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 } ?: ActionOutcome.ShowUiFeedback("未发现可拨打的号码")
             outcome
         },
+        // [2026-07-15] EXECUTE cluster: dials a phone number —
+        //  consent-gated side effect.  The AlertDialog before
+        //  dispatching is the "pause" that justifies the pink accent.
+        accent = AccentCluster.EXECUTE,
     ))
     // [2026-07-13] Phase B: PII-sensitive stub actions (scan_to_pay
     //  / redact_id).  Both share the same consent + default-off
@@ -289,6 +321,8 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 "请在相机/支付 App 里手动扫描二维码。不要直接扫描截图里的码。"
             )
         },
+        // [2026-07-15] EXECUTE cluster: payment-side-effect.
+        accent = AccentCluster.EXECUTE,
     ))
     reg.register(ActionDef(
         id = "redact_id",
@@ -319,6 +353,10 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 "识别到证件类图片。建议手打,不要截图分享。文本: ${text.take(40)}…"
             )
         },
+        // [2026-07-15] EXECUTE cluster: PII redaction — even the
+        //  Toast-only v1 is a "this is ID-bearing content" signal
+        //  worth visually flagging.
+        accent = AccentCluster.EXECUTE,
     ))
     // [2026-07-15] Unified `share` action — collapses the six former
     //  per-intent share-text actions (copy_listing / save_posting /
@@ -382,6 +420,10 @@ fun registerDefaultActions(reg: ActionRegistry) {
             }
             ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, chooserTitle))
         },
+        // [2026-07-15] DELEGATE cluster: the OS share-sheet target
+        //  picker is the consent step; the text payload is already
+        //  visible to the user.
+        accent = AccentCluster.DELEGATE,
     ))
 }
 
