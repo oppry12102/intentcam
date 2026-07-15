@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -1114,7 +1115,20 @@ private fun DetailScreen(
     // is a tap-to-collapse sheet — collapsed gives the image the whole
     // screen; expanded shows the (scrollable, half-screen-capped,
     // semi-transparent) content over the lower part of the image.
-    var textExpanded by remember { mutableStateOf(true) }
+    //
+    // [2026-07-15 UI polish] `textExpanded` is now a
+    //  `rememberSaveable` so collapsing survives rotation, and the
+    //  initial value is derived from the bubble's text length: a
+    //  short bubble (title + 1-line detail) starts collapsed so the
+    //  image gets the whole screen; a long one starts expanded so
+    //  the user can immediately scroll the table.  Hardcoded
+    //  `= true` (the previous default) forced a 30-char bubble to
+    //  the bottom-sheet state where the user had to tap the chevron
+    //  to see the photo.
+    val initialExpanded = remember(bubble.id) {
+        (bubble.title.length + bubble.detail.length) > 60
+    }
+    var textExpanded by rememberSaveable(bubble.id) { mutableStateOf(initialExpanded) }
     val textScroll = rememberScrollState()
     Box(
         modifier
