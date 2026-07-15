@@ -14,37 +14,30 @@ private val DarkColors = darkColorScheme(
     surface = Color(0xFF161C2E)
 )
 
-private val LightColors = darkColorScheme(
-    primary = Color(0xFF2C6BE0),
-    secondary = Color(0xFF119E6E)
-)
-
 /**
- * [2026-07-15 UI polish] Provides both the Material 3 color
- * scheme and the [IntentCamPalette] via CompositionLocal.
- *
- * The Material color scheme is kept for any third-party M3 widget
- * that reads it (AlertDialog, TopAppBar, etc.).  All IntentCam-
- * owned composables should read from [IntentCamTheme.palette]
- * (which is just `LocalIntentCamPalette.current`) instead of
- * `MaterialTheme.colorScheme` so the named slots stay
- * semantically meaningful.
+ * [2026-07-15 UI polish] Drop the `isSystemInDarkTheme()` branch.
+ * The previous version declared a `LightColors` scheme that was
+ * the same Material colorScheme as dark but with different
+ * primary/secondary hex values — but the Theme refactor (commit
+ * 10) painted the entire app with `IntentCamPalette`, which is
+ * dark-only.  A `lightTheme` branch would have produced a
+ * black-text-on-white-bubble UI in light mode, so the branch
+ * was effectively dead.  Force `DarkColors` always; the
+ * `darkTheme` parameter is kept for API compatibility but no
+ * longer drives the color scheme.  A real light-mode pass will
+ * need to fill `LightPalette` first.
  */
 @Composable
 fun IntentCamTheme(
     @Suppress("UNUSED_PARAMETER") darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val colors = if (darkTheme) DarkColors else LightColors
-    // Single palette instance for both branches today; see
-    // Palette.kt's LightPalette docstring for the future
-    // light-mode pass.
     val palette = DarkPalette
     CompositionLocalProvider(
         LocalIntentCamPalette provides palette,
     ) {
         MaterialTheme(
-            colorScheme = colors,
+            colorScheme = DarkColors,
             content = content,
         )
     }
