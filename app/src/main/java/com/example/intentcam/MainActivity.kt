@@ -165,7 +165,6 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
                 actionDefs = state.selectedBubble!!.actions.mapNotNull {
                     viewModel.actionRegistry.get(it)
                 },
-                intentRegistry = viewModel.intentRegistry,
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -518,7 +517,7 @@ private fun IntentBubbles(
                             onPick = onPick,
                             actionDefs = actionDefs,
                             onActionTap = { actionId -> viewModel.runAction(actionId, b.id) },
-                            accent = bubbleAccent(b.type, viewModel.intentRegistry),
+                            accent = bubbleAccentActions(b),
                         )
                     }
                 }
@@ -539,7 +538,7 @@ private fun IntentBubbles(
                     onPick = onPick,
                     actionDefs = actionDefs,
                     onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
-                    accent = bubbleAccent(bubble.type, viewModel.intentRegistry),
+                    accent = bubbleAccentActions(bubble),
                 )
             }
         }
@@ -586,7 +585,7 @@ private fun BubbleCard(
     onPick: (Bubble) -> Unit,
     actionDefs: List<ActionDef> = emptyList(),
     onActionTap: (actionId: String) -> Unit = {},
-    accent: Color = bubbleAccent(bubble.type, null),
+    accent: Color = bubbleAccentActions(bubble),
 ) {
     val thumbnail = remember(bubble.imageBytes) {
         // Decode on a worker thread; the result bitmap is cached for the
@@ -763,8 +762,9 @@ private fun ActionChip(label: String, state: ChipState, onClick: () -> Unit) {
 
 /** Small pill naming the intent id that produced this bubble
  *  (e.g. "phone", "payment_qr", "warning_safety").  Accent color is
- *  the per-family color computed by [bubbleAccent] in [BubbleCard],
- *  so the chip visually matches the bubble's left accent dot. */
+ *  the actions-driven color computed by [bubbleAccentActions] in
+ *  [BubbleCard], so the chip visually matches the bubble's left
+ *  accent dot. */
 @Composable
 private fun IntentChip(label: String, accent: Color = Color(0xFF37D399)) {
     Box(
@@ -801,36 +801,55 @@ private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
 }
 
 /**
- * Two-layer accent resolution for a bubble's `type`:
+ * [2026-07-15 v4 Step 3 — actions-driven accent] Resolves a bubble's
+ * accent color from its [Bubble.actions] list (the canonical post-
+ * resolver chip set), not from [Bubble.type] (the now-deprecated
+ * 14-bucket id).  The v4 thesis: most intents resolve to the same
+ * `share` chip, so the action set is the primary user-visible
+ * discriminator — accent should follow it.
  *
- *   1. **Family base** — every registered intent belongs to either
- *      [IntentFamily.OBSERVE] (blue) or [IntentFamily.ACT_ON] (orange).
- *      Unregistered / unknown types get a neutral gray so they don't
- *      masquerade as a real family.
- *   2. **Important-intent override** — `location` keeps the green
- *      anchor it always had (the "where do I go" cue), and the two
- *      high-priority tap actions `phone` / `payment_qr` get a pink
- *      accent so the user can spot them at a glance.
+ * ## Behaviour clusters
  *
- * The optional [registry] is passed by callers that have a live
- * [AppViewModel] in scope (e.g. the main feed).  Defaulting to `null`
- * yields gray for everything; that's a deliberate fail-loud signal
- * that a caller forgot to wire the registry — better than silently
- * pretending an unknown id is OBSERVE-blue.
+ * - **EXECUTE** — actions in {dial_number, scan_to_pay, redact_id}.
+ *   Pink accent (was `phone`/`payment_qr` override); these are the
+ *   consent-gated chips — visually the highest-leverage actions.
+ * - **DELEGATE** — actions in {open_in_maps, share}. Blue accent
+ *   (was OBSERVE-family base); the OS chooser is the consent step.
+ * - **CLARIFY** — empty actions list, or all actions unmapped.
+ *   Gray accent (was `info`/`solve` null family); pure info bubble,
+ *   no actionable chip.
+ *
+ * EXECUTE wins over DELEGATE when both classes are present
+ * (priority = "consent-required first, then consent-free").
+ *
+ * ## Fail-loud
+ *
+ * Unknown action ids (registered as neither EXECUTE nor DELEGATE)
+ * return gray — better than silently pretending an unknown id is
+ * a known behaviour cluster.
  */
-private fun bubbleAccent(type: String, registry: IntentRegistry?): Color {
-    val family = registry?.get(type)?.family
-    val base = when (family) {
-        IntentFamily.OBSERVE -> Color(0xFF4F8CFF)
-        IntentFamily.ACT_ON  -> Color(0xFFFFAF54)
-        null                 -> Color(0xFF888888)
-    }
-    return when (type) {
-        "location"            -> Color(0xFF37D399)
-        "phone", "payment_qr" -> Color(0xFFE64A8C)
-        else                  -> base
+private fun bubbleAccentActions(bubble: Bubble): Color {
+    val actions = bubble.actions.map { it.lowercase() }.toSet()
+    val execute = actions.any { it in EXECUTE_IDS }
+    val delegate = actions.any { it in DELEGATE_IDS }
+    return when {
+        execute -> Color(0xFFE64A8C)   // pink — consent-gated chip
+        delegate -> Color(0xFF4F8CFF)  // blue — OS-handoff chip
+        else -> Color(0xFF888888)      // gray — CLARIFY or unknown
     }
 }
+
+/** Action ids whose accent is the pink "consent-gated" cluster
+ *  (was override for `phone` / `payment_qr` under the type-based
+ *  accent scheme).  Single source of truth for the EXECUTE
+ *  cluster — when a new PII action ships, add its id here. */
+private val EXECUTE_IDS = setOf("dial_number", "scan_to_pay", "redact_id")
+
+/** Action ids whose accent is the blue "OS-handoff" cluster (was
+ *  OBSERVE-family base).  `open_in_maps` and the unified `share`
+ *  action both qualify — any chip that hands off to the OS chooser
+ *  lives here. */
+private val DELEGATE_IDS = setOf("open_in_maps", "share")
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -840,7 +859,6 @@ private fun DetailScreen(
     onActionTap: (actionId: String) -> Unit,
     actionDefs: List<ActionDef>,
     modifier: Modifier,
-    intentRegistry: IntentRegistry? = null,
 ) {
     val fullImage = remember(bubble.imageBytes) {
         // The bubble carries the ~3200 px display thumbnail; decode it
@@ -848,7 +866,7 @@ private fun DetailScreen(
         // screen, and ~1/4 the ARGB footprint of a full decode.
         decodeScaled(bubble.imageBytes, targetMaxDim = 1600)
     }
-    val accent = bubbleAccent(bubble.type, intentRegistry)
+    val accent = bubbleAccentActions(bubble)
     // [2026-07-13] fullscreen redesign: the image fills the entire screen
     // (ContentScale.Fit, black letterbox) so the user can see it clearly
     // and cross-check it against the results.  The result panel and the
