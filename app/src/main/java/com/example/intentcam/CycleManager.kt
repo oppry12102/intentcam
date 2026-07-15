@@ -103,14 +103,33 @@ class CycleManager(
         // structural-equality diffing.
         val updated = LinkedHashMap<String, CycleJob>(_allJobs.value)
         updated[job.id] = job
-        // Drop oldest non-COMPLETE jobs until under cap.
-        while (updated.size > UiState.CYCLE_MAX_CONCURRENT) {
+        // [2026-07-15 bug fix] Cap on ACTIVE (non-COMPLETE) cycles,
+        //  not total map size.  Previous version compared
+        //  `updated.size > CYCLE_MAX_CONCURRENT` — but COMPLETE
+        //  cycles never get evicted from the map (the LLM work is
+        //  done but the job stays for the bubble-card UI to
+        //  reference).  After 2 cycles complete, the map held 2
+        //  COMPLETE entries; a 3rd tap added a 3rd entry (size=3
+        //  > cap=2), the "drop oldest non-COMPLETE" filter
+        //  returned the just-added cycle (the only non-COMPLETE),
+        //  and the new cycle was immediately SUPERSEDED before
+        //  the user saw any progress bar.  User reported: "tap
+        //  识别 twice, both finish, tap again — no response, debug
+        //  shows it's still processing the original 2".
+        //
+        //  New check counts only non-COMPLETE cycles, which is
+        //  the actual concurrency cap (the comment: "user taps
+        //  shutter while one photo is mid-cycle").  2 COMPLETE +
+        //  1 new IN_FLIGHT → activeCount=1, well under the cap.
+        var activeCount = updated.values.count { it.status.value != JobStatus.COMPLETE }
+        while (activeCount > UiState.CYCLE_MAX_CONCURRENT) {
             val toDrop = updated.values
                 .filter { it.status.value != JobStatus.COMPLETE }
                 .minByOrNull { it.createdAtMs }
-            if (toDrop == null) break  // all COMPLETE; cap is soft
+            if (toDrop == null) break  // shouldn't happen — activeCount > 0
             toDrop.status.value = JobStatus.SUPERSEDED
             updated.remove(toDrop.id)
+            activeCount--
             log("CYCLE", "superseded ${toDrop.id} (cap=${UiState.CYCLE_MAX_CONCURRENT})")
         }
         _allJobs.value = updated
