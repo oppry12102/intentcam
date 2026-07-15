@@ -969,10 +969,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  updates already, so this is consistent with the rest of the
      *  Settings layer's "you call me again, I re-read" pattern).
      */
-    fun piiActionPermissions(): Map<String, Boolean> =
+    /** [2026-07-15 UI polish] Snapshot of the current userPrefKey
+     *  grants for every PII-tagged action, paired with the
+     *  [ActionDef] so the Settings screen can render the action's
+     *  user-facing label (not the internal `userPrefKey` string)
+     *  and the consent-gate explanation.
+     *
+     *  Previously returned `Map<String, Boolean>` keyed by
+     *  userPrefKey.  The Settings screen then had to reverse-look-up
+     *  each key in the actionRegistry to find the action's
+     *  human label, which it never actually did — the screen
+     *  just rendered the raw `userPrefKey` id (e.g.
+     *  "action_dial_number_enabled") as the user-facing text.
+     *  Bundling the [ActionDef] here is the same read cost
+     *  (4 SharedPreferences booleans + a single registry list())
+     *  and lets the screen render a sensible label.
+     *
+     *  Kept as a function (not a property) so the Settings UI
+     *  re-reads after each toggle without needing a separate
+     *  observation Flow.
+     */
+    data class PiiPermission(val key: String, val action: ActionDef, val enabled: Boolean)
+
+    fun piiActionPermissions(): List<PiiPermission> =
         actionRegistry.list()
             .filter { it.requiresConfirmation && it.userPrefKey != null }
-            .associate { it.userPrefKey!! to settings.loadActionPermission(it.userPrefKey) }
+            .map { PiiPermission(it.userPrefKey!!, it, settings.loadActionPermission(it.userPrefKey)) }
 
     /** Flip one PII action's permission.  Both directions write
      *  through to [SettingsStore]; the read toggle in

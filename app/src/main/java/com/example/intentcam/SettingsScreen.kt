@@ -16,12 +16,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsScreen(
     current: LlmConfig,
-    piiPermissions: Map<String, Boolean>,
+    piiPermissions: List<AppViewModel.PiiPermission>,
     onSave: (LlmConfig) -> Unit,
     onResetDefault: () -> Unit,
     onClose: () -> Unit,
     onTogglePii: (key: String, enabled: Boolean) -> Unit,
 ) {
+    val palette = IntentCamTheme.palette
     var baseUrl by remember { mutableStateOf(current.baseUrl) }
     // Token field is intentionally left blank — we never display the active
     // token on screen so it can't be shoulder-surfed.  Leaving it blank (or
@@ -68,7 +69,12 @@ fun SettingsScreen(
                 onValueChange = { token = it },
                 label = { Text("ANTHROPIC_AUTH_TOKEN") },
                 placeholder = { Text("（留空使用内置默认）") },
-                supportingText = { Text("清空/留空 → 使用当前激活的 token；输入新值将覆盖") },
+                supportingText = {
+                    Text(
+                        "留空 = 使用应用内置默认 token（来自 BuildConfig）\n" +
+                            "输入新值将覆盖当前 token",
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 maxLines = 4
@@ -137,21 +143,34 @@ fun SettingsScreen(
                 "默认关闭。开启后，每次使用仍然会弹窗确认。",
                 style = MaterialTheme.typography.bodySmall,
             )
+            // [2026-07-15 UI polish] PII discoverability banner.
+            //  The previous version silently filtered out PII
+            //  actions whose toggle was off — a user on a `phone`
+            //  bubble would see no "拨号" chip and have no idea
+            //  why.  When at least one toggle is off, surface a
+            //  warning above the switch list so the user knows
+            //  there are PII controls here.
+            if (piiPermissions.any { !it.enabled }) {
+                Text(
+                    "以下敏感操作当前关闭。开启后，识别结果中才会出现对应的「${piiPermissions.first { !it.enabled }.action.label}」按钮。",
+                    color = palette.warning,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             // Stable order: by userPrefKey (which embeds the action id).
-            piiPermissions.toSortedMap().forEach { (key, enabled) ->
-                val actionId = key.removePrefix("action_").removeSuffix("_enabled")
+            piiPermissions.sortedBy { it.key }.forEach { perm ->
                 ListItem(
-                    headlineContent = { Text(actionId) },
+                    headlineContent = { Text(perm.action.label) },
                     supportingContent = {
                         Text(
-                            "userPrefKey: $key",
+                            "开启后，识别到对应内容时显示「${perm.action.label}」按钮，每次仍会弹窗确认",
                             style = MaterialTheme.typography.labelSmall,
                         )
                     },
                     trailingContent = {
                         Switch(
-                            checked = enabled,
-                            onCheckedChange = { onTogglePii(key, it) },
+                            checked = perm.enabled,
+                            onCheckedChange = { onTogglePii(perm.key, it) },
                         )
                     },
                 )
