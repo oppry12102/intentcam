@@ -28,6 +28,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -1379,6 +1380,43 @@ private fun DetailsTable(details: List<Detail>) {
 // chips come back to the emit_bubble schema.
 
 /**
+ * [2026-07-15 UI polish] Internal helper that owns the
+ * auto-scroll-to-bottom-on-append behavior shared by
+ * [DebugLogPanel] and [AnalyzerErrorPanel].  Both panels
+ * duplicate the `rememberLazyListState` + `LaunchedEffect`
+ * "snap to last when near the bottom" dance; this composable
+ * packages it once.  Style (background, border, header) stays
+ * at the caller — only the scrolling logic moves.
+ */
+@Composable
+private fun LogList(
+    logs: List<DebugLogEntry>,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(logs.size) {
+        if (logs.isNotEmpty()) {
+            // Snap to the newest entry when the user is already at
+            //  (or near) the bottom; preserve the scroll position
+            //  when they've scrolled up to read history.
+            if (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 >= logs.size - 2) {
+                listState.scrollToItem(logs.size - 1)
+            }
+        }
+    }
+    LazyColumn(
+        state = listState,
+        contentPadding = contentPadding,
+        modifier = modifier,
+    ) {
+        items(logs, key = { it.seq }) { entry ->
+            DebugLogRow(entry)
+        }
+    }
+}
+
+/**
  * Translucent scrolling panel that shows the recognition-pipeline log.
  * One row per [DebugLogEntry]; the list auto-scrolls to the newest entry
  * whenever [logs] grows.  No per-row line cap — entries with long stack
@@ -1396,30 +1434,14 @@ private fun DebugLogPanel(
     modifier: Modifier = Modifier,
 ) {
     val palette = IntentCamTheme.palette
-    val listState = rememberLazyListState()
-    LaunchedEffect(logs.size) {
-        if (logs.isNotEmpty()) {
-            // Skip the animation when the panel is first composed or
-            // when the user has scrolled up to read history; only snap
-            // forward when we're already at the bottom.
-            if (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 >= logs.size - 2) {
-                listState.scrollToItem(logs.size - 1)
-            }
-        }
-    }
-    LazyColumn(
-        state = listState,
+    LogList(
+        logs = logs,
         modifier = modifier
             .heightIn(max = 200.dp)
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(palette.surfaceMuted)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-    ) {
-        items(logs, key = { it.seq }) { entry ->
-            DebugLogRow(entry)
-        }
-    }
+            .background(palette.surfaceMuted),
+    )
 }
 
 @Composable
@@ -1450,14 +1472,6 @@ private fun AnalyzerErrorPanel(
     modifier: Modifier = Modifier,
 ) {
     val palette = IntentCamTheme.palette
-    val listState = rememberLazyListState()
-    LaunchedEffect(logs.size) {
-        if (logs.isNotEmpty()) {
-            if (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 >= logs.size - 2) {
-                listState.scrollToItem(logs.size - 1)
-            }
-        }
-    }
     Column(
         modifier = modifier
             .padding(horizontal = 12.dp, vertical = 4.dp)
@@ -1472,14 +1486,10 @@ private fun AnalyzerErrorPanel(
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 4.dp),
         )
-        LazyColumn(
-            state = listState,
+        LogList(
+            logs = logs,
             modifier = Modifier.heightIn(max = 120.dp),
-        ) {
-            items(logs, key = { it.seq }) { entry ->
-                DebugLogRow(entry)
-            }
-        }
+        )
     }
 }
 
