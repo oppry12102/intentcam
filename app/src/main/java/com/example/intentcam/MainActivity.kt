@@ -841,7 +841,7 @@ private fun BubbleCard(
         // composition's lifetime so re-emits are cheap.  Downscaled to a
         // card-sized bitmap — no point decoding a 3200 px thumbnail full
         // for a 56 dp preview.
-        decodeScaled(bubble.imageBytes, targetMaxDim = 400)
+        decodeScaled(bubble.imageBytes, DecodedSize.Thumbnail)
     }
     Surface(
         color = palette.surface,
@@ -1094,11 +1094,33 @@ private fun IntentChip(label: String, accent: Color = IntentCamTheme.palette.suc
     }
 }
 
-/** Decode [bytes] downscaled so the long side is ≈ [targetMaxDim] px, via
- *  a power-of-2 `inSampleSize`.  Avoids decoding a 3200 px thumbnail into a
- *  full ~30 MB ARGB bitmap just to render it small (card) or Fit-scaled to a
- *  ~1080 px screen (detail).  Returns null on empty/undecodable input. */
-private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
+/**
+ * [2026-07-15 UI polish] Named presets for [decodeScaled].  The
+ * raw `targetMaxDim: Int` argument is fine when there's only one
+ * call site, but with two (BubbleCard thumbnail at 400px and
+ * DetailScreen full at 1600px) the magic numbers were
+ * collision-prone — easy to write 400 at the detail site and
+ * ship a 400-pixel-wide "full" image.  A preset enum gives the
+ * call site a name (`decodeScaled(bytes, DecodedSize.Full)`)
+ * that's self-documenting and greppable.
+ */
+enum class DecodedSize(val maxDim: Int) {
+    /** 400px — bubble card thumbnail.  56dp at xxxhdpi = 224px on
+     *  the screen, so 400 is ~2x oversampling for sharp scaling. */
+    Thumbnail(400),
+    /** 1600px — detail screen full image.  Plenty for a Fit view
+     *  on a phone screen (typically 1080-1440px wide); 1/4 the
+     *  ARGB footprint of a 3200px full decode. */
+    Full(1600),
+}
+
+/** Decode [bytes] downscaled so the long side is ≈ [preset]'s
+ *  [DecodedSize.maxDim], via a power-of-2 `inSampleSize`.  Avoids
+ *  decoding a 3200 px thumbnail into a full ~30 MB ARGB bitmap
+ *  just to render it small (card) or Fit-scaled to a ~1080 px
+ *  screen (detail).  Returns null on empty/undecodable input. */
+private fun decodeScaled(bytes: ByteArray, preset: DecodedSize): Bitmap? {
+    val targetMaxDim = preset.maxDim
     if (bytes.isEmpty()) return null
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
@@ -1169,7 +1191,7 @@ private fun DetailScreen(
         // The bubble carries the ~3200 px display thumbnail; decode it
         // downscaled to ~1600 px — plenty for a Fit view on a phone
         // screen, and ~1/4 the ARGB footprint of a full decode.
-        decodeScaled(bubble.imageBytes, targetMaxDim = 1600)
+        decodeScaled(bubble.imageBytes, DecodedSize.Full)
     }
     val palette = IntentCamTheme.palette
     val accent = bubbleAccentActions(bubble, palette, actionRegistry)
