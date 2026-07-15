@@ -48,6 +48,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -1003,18 +1005,30 @@ private fun BubbleCard(
 @Composable
 private fun ActionChip(label: String, state: ChipState, onClick: () -> Unit) {
     val palette = IntentCamTheme.palette
-    val bg = when (state) {
+    // [2026-07-15 UI polish] Animate the background / foreground
+    //  color when the chip transitions between Validated / Ghost
+    //  / Spinner.  The previous version used `val bg = when (...)`
+    //  so a single render-time change snapped the color
+    //  instantly; now `animateColorAsState` interpolates over
+    //  300ms so the Spinner → Validated transition (the most
+    //  common case — happens as the orchestrator finishes its
+    //  validateInputs pass) is visible as a fade rather than
+    //  a flicker.  Hidden case stays instant since the chip
+    //  disappears entirely.
+    val targetBg = when (state) {
         is ChipState.Validated -> palette.accentDelegate.copy(alpha = 0.80f)
         is ChipState.Ghost     -> Color.White.copy(alpha = 0.20f)
         is ChipState.Spinner   -> palette.warning.copy(alpha = 0.40f)
         is ChipState.Hidden    -> Color.Transparent
     }
-    val fg = when (state) {
+    val targetFg = when (state) {
         is ChipState.Validated -> palette.onSurface
         is ChipState.Ghost     -> Color.White.copy(alpha = 0.80f)
         is ChipState.Spinner   -> palette.warning.copy(alpha = 0.70f)
         is ChipState.Hidden    -> Color.Transparent
     }
+    val bg by animateColorAsState(targetValue = targetBg, animationSpec = tween(300), label = "chipBg")
+    val fg by animateColorAsState(targetValue = targetFg, animationSpec = tween(300), label = "chipFg")
     Surface(
         color = bg,
         shape = RoundedCornerShape(10.dp),
