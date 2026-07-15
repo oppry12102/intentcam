@@ -316,7 +316,13 @@ private fun ShutterButton(
             },
             enabled = enabled,
             shape = CircleShape,
-            color = if (enabled) Color(0xFF4F8CFF) else Color(0xFF4F8CFF).copy(alpha = 0.35f),
+            // [2026-07-15 UI polish] Drop the disabled-color branch.
+            //  Phase B rewired the shutter so the gate lives in
+            //  CycleManager (CYCLE_MAX_CONCURRENT=2) and the Surface's
+            //  `enabled` flips on `state.phase == SCANNING`.  The
+            //  disabled state is now visually identical to enabled
+            //  (same color), so the alpha=0.35 branch was dead code.
+            color = Color(0xFF4F8CFF),
             modifier = Modifier.size(72.dp),
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -1061,13 +1067,6 @@ private fun DetailScreen(
                         .verticalScroll(textScroll)
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
-                    bubble.toolName?.let { _ ->
-                        // [2026-07-13] Drop the legacy debug-style
-                        //  ToolChip here too — its "via <tool>" pill
-                        //  leaked tool routing into the UI.  The
-                        //  detail view's image + body panel already
-                        //  conveys the bubble's source.
-                    }
                     if (bubble.detail.isNotBlank()) {
                         Text(
                             bubble.detail,
