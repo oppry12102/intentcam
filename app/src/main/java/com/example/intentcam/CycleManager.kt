@@ -128,15 +128,32 @@ class CycleManager(
                 .minByOrNull { it.createdAtMs }
             if (toDrop == null) break  // shouldn't happen — activeCount > 0
             toDrop.status.value = JobStatus.SUPERSEDED
+            // [2026-07-15] Actually cancel the LLM coroutine
+            //  instead of leaving it to run to completion.  The
+            //  previous behavior (mark SUPERSEDED + leave the
+            //  coroutine) meant every "rapid capture" cycle was
+            //  billed for an LLM call whose result would never
+            //  reach the user — the cycle was dropped from
+            //  allJobs so the bubble has no UI to render into.
+            //  With cancel() the OkHttp request gets
+            //  CancellationException, the LLM API call aborts
+            //  mid-stream, and the API quota is preserved.
+            toDrop.coroutine?.cancel()
             updated.remove(toDrop.id)
             activeCount--
-            log("CYCLE", "superseded ${toDrop.id} (cap=${UiState.CYCLE_MAX_CONCURRENT})")
+            log("CYCLE", "superseded+cancelled ${toDrop.id} (cap=${UiState.CYCLE_MAX_CONCURRENT})")
         }
         _allJobs.value = updated
 
-        scope.launch {
+        // [2026-07-15] Capture the launch handle so a later
+        //  supersede can cancel() it (see cap-enforcement above).
+        //  Without this, a SUPERSEDED cycle's coroutine would
+        //  keep running to completion — see CycleJob.coroutine's
+        //  docstring.
+        val launchHandle = scope.launch {
             runCycleLoop(job)
         }
+        job.coroutine = launchHandle
         return job
     }
 

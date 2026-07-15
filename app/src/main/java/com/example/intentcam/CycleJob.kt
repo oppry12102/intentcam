@@ -1,6 +1,7 @@
 package com.example.intentcam
 
 import com.example.intentcam.CycleProgress
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
@@ -46,6 +47,23 @@ class CycleJob internal constructor(
     val pendingInputs: MutableStateFlow<List<String>> = MutableStateFlow(emptyList()),
     val nRounds: MutableStateFlow<Int> = MutableStateFlow(0),
     val createdAtMs: Long = System.currentTimeMillis(),
+    /**
+     * [2026-07-15] Handle to the [kotlinx.coroutines.launch]-ed
+     * coroutine driving this cycle's LLM call.  Set by
+     * [CycleManager.startCycle] right after `scope.launch` so a
+     * later supersede can call `coroutine.cancel()` and actually
+     * stop the in-flight HTTP request — the previous behavior
+     * marked the cycle SUPERSEDED in the UI but left the
+     * coroutine running in the background, wasting API quota
+     * for cycles whose result would never reach the user.
+     *
+     * Nullable because the legacy single-cycle path
+     * (ToolUseLoop.runCycle called directly from
+     * AppViewModel.runToolUseCycle) constructs a CycleJob
+     * without going through CycleManager.startCycle; for those
+     * jobs there's no handle to cancel.  In the live-UI path
+     * (Phase B+), the field is always non-null. */
+    var coroutine: Job? = null,
 ) {
     /**
      * Apply one [CycleProgress] event from [ToolUseLoop.runCycle].
