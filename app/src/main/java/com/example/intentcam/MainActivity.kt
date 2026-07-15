@@ -207,14 +207,15 @@ private fun PermissionScreen(
     onOpenSettings: () -> Unit,
     permanentlyDenied: Boolean,
 ) {
-    Box(Modifier.fillMaxSize().background(Color(0xFF0B1021)), contentAlignment = Alignment.Center) {
+    val palette = IntentCamTheme.palette
+    Box(Modifier.fillMaxSize().background(palette.background), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("需要相机权限才能识别意图", color = Color.White)
+            Text("需要相机权限才能识别意图", color = palette.onSurface)
             if (permanentlyDenied) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "权限已被永久拒绝。请到系统设置里手动开启。",
-                    color = Color(0xFFB9C4DE),
+                    color = palette.onSurfaceMuted,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -378,6 +379,7 @@ private fun ShutterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = IntentCamTheme.palette
     val haptics = LocalHapticFeedback.current
     Box(
         modifier = modifier,
@@ -396,7 +398,7 @@ private fun ShutterButton(
             //  `enabled` flips on `state.phase == SCANNING`.  The
             //  disabled state is now visually identical to enabled
             //  (same color), so the alpha=0.35 branch was dead code.
-            color = Color(0xFF4F8CFF),
+            color = palette.accentDelegate,
             modifier = Modifier.size(72.dp),
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -509,10 +511,11 @@ private fun TopOverlay(
     onSettings: () -> Unit,
     onRestart: () -> Unit,
 ) {
+    val palette = IntentCamTheme.palette
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0x99000000))
+            .background(palette.background.copy(alpha = 0.6f))
             .statusBarsPadding()
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -562,7 +565,7 @@ private fun TopOverlay(
             Icon(
                 Icons.Filled.Build,
                 contentDescription = if (debugEnabled) "关闭调试输出" else "开启调试输出",
-                tint = if (debugEnabled) Color(0xFF37D399) else Color(0xFF6E7891),
+                tint = if (debugEnabled) palette.success else palette.onSurfaceMuted.copy(alpha = 0.6f),
             )
         }
         IconButton(onClick = onSettings) {
@@ -591,10 +594,11 @@ private fun ErrorBanner(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = IntentCamTheme.palette
     Surface(
-        color = Color(0xE62A0F12),
+        color = palette.danger.copy(alpha = 0.10f),
         shape = RoundedCornerShape(8.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE64A8C)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, palette.danger),
         modifier = modifier.padding(horizontal = 12.dp),
     ) {
         Row(
@@ -603,7 +607,7 @@ private fun ErrorBanner(
         ) {
             Text(
                 text = "⚠ $message",
-                color = Color(0xFFFF8FB1),
+                color = palette.danger,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
             )
@@ -614,7 +618,7 @@ private fun ErrorBanner(
                 Icon(
                     imageVector = Icons.Filled.Close,
                     contentDescription = "关闭错误提示",
-                    tint = Color(0xFFFF8FB1),
+                    tint = palette.danger,
                 )
             }
         }
@@ -627,6 +631,7 @@ private fun IntentBubbles(
     onPick: (Bubble) -> Unit,
     viewModel: AppViewModel,
 ) {
+    val palette = IntentCamTheme.palette
     // [2026-07-13] Cap the bubble list at 50% of the screen height and
     //  scroll any overflow.  Previously the list was a plain Column
     //  with `forEach`, so a long bubble.detail would push later
@@ -677,7 +682,7 @@ private fun IntentBubbles(
                 //  both still-running and already-superseded cycles.
                 Text(
                     "共 ${snapshotCards.size} 张",
-                    color = Color(0xFF6E7891),
+                    color = palette.onSurfaceMuted.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
@@ -712,7 +717,7 @@ private fun IntentBubbles(
                             onPick = onPick,
                             actionDefs = actionDefs,
                             onActionTap = { actionId -> viewModel.runAction(actionId, b.id) },
-                            accent = bubbleAccentActions(b),
+                            accent = bubbleAccentActions(b, palette),
                         )
                     }
                 }
@@ -733,7 +738,7 @@ private fun IntentBubbles(
                     onPick = onPick,
                     actionDefs = actionDefs,
                     onActionTap = { actionId -> viewModel.runAction(actionId, bubble.id) },
-                    accent = bubbleAccentActions(bubble),
+                    accent = bubbleAccentActions(bubble, palette),
                 )
             }
         }
@@ -766,8 +771,9 @@ private fun InFlightCard(capturedAtMs: Long) {
                 .coerceAtMost(99)
         }
     }
+    val palette = IntentCamTheme.palette
     Surface(
-        color = Color(0x66FFFFFF),
+        color = Color.White.copy(alpha = 0.40f),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -778,12 +784,12 @@ private fun InFlightCard(capturedAtMs: Long) {
             androidx.compose.material3.CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
                 strokeWidth = 2.dp,
-                color = Color(0xFF4F8CFF),
+                color = palette.accentDelegate,
             )
             Spacer(Modifier.size(10.dp))
             Text(
                 "识别中… ${ageSec}s",
-                color = Color(0xCCFFFFFF),
+                color = Color.White.copy(alpha = 0.80f),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -797,7 +803,7 @@ private fun BubbleCard(
     onPick: (Bubble) -> Unit,
     actionDefs: List<ActionDef> = emptyList(),
     onActionTap: (actionId: String) -> Unit = {},
-    accent: Color = bubbleAccentActions(bubble),
+    accent: Color = bubbleAccentActions(bubble, IntentCamTheme.palette),
 ) {
     // [2026-07-15 UI polish] A cycle that's been SUPERSEDED by a
     //  newer shutter tap is still in the snapshot list (capped at
@@ -807,6 +813,7 @@ private fun BubbleCard(
     //  previous version just silently dropped the oldest cycle
     //  from `allJobs` (CycleManager.kt:81-90) with no UI signal.
     val superseded = cycleStatus == JobStatus.SUPERSEDED
+    val palette = IntentCamTheme.palette
     val thumbnail = remember(bubble.imageBytes) {
         // Decode on a worker thread; the result bitmap is cached for the
         // composition's lifetime so re-emits are cheap.  Downscaled to a
@@ -815,7 +822,7 @@ private fun BubbleCard(
         decodeScaled(bubble.imageBytes, targetMaxDim = 400)
     }
     Surface(
-        color = Color(0xE6161C2E),
+        color = palette.surface,
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -850,7 +857,7 @@ private fun BubbleCard(
                     //  is at-a-glance labelled.
                     Text(
                         "已替换",
-                        color = Color(0xFF6E7891),
+                        color = palette.onSurfaceMuted.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(bottom = 2.dp),
                     )
@@ -882,8 +889,8 @@ private fun BubbleCard(
                 if (bubble.detail.isNotBlank()) {
                     Text(
                         bubble.detail,
-                        color = if (bubble.title.isBlank()) Color.White
-                               else Color(0xFFB9C4DE),
+                        color = if (bubble.title.isBlank()) palette.onSurface
+                               else palette.onSurfaceMuted,
                         fontWeight = if (bubble.title.isBlank()) FontWeight.Normal
                                      else FontWeight.Normal,
                         style = if (bubble.title.isBlank())
@@ -896,7 +903,7 @@ private fun BubbleCard(
                 if (bubble.needsUserInput) {
                     Text(
                         "需要补充信息",
-                        color = Color(0xFFFFAF54),
+                        color = palette.warning,
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
@@ -959,16 +966,17 @@ private fun BubbleCard(
  */
 @Composable
 private fun ActionChip(label: String, state: ChipState, onClick: () -> Unit) {
+    val palette = IntentCamTheme.palette
     val bg = when (state) {
-        is ChipState.Validated -> Color(0xCC3F6CD8) // blue solid
-        is ChipState.Ghost     -> Color(0x33FFFFFF) // gray translucent
-        is ChipState.Spinner   -> Color(0x66F5A623) // yellow with alpha
+        is ChipState.Validated -> palette.accentDelegate.copy(alpha = 0.80f)
+        is ChipState.Ghost     -> Color.White.copy(alpha = 0.20f)
+        is ChipState.Spinner   -> palette.warning.copy(alpha = 0.40f)
         is ChipState.Hidden    -> Color.Transparent
     }
     val fg = when (state) {
-        is ChipState.Validated -> Color(0xFFE7ECF7)
-        is ChipState.Ghost     -> Color(0xCCFFFFFF)
-        is ChipState.Spinner   -> Color(0xFFFFF7E0)
+        is ChipState.Validated -> palette.onSurface
+        is ChipState.Ghost     -> Color.White.copy(alpha = 0.80f)
+        is ChipState.Spinner   -> palette.warning.copy(alpha = 0.70f)
         is ChipState.Hidden    -> Color.Transparent
     }
     Surface(
@@ -1007,7 +1015,7 @@ private fun ActionChip(label: String, state: ChipState, onClick: () -> Unit) {
  *  [BubbleCard], so the chip visually matches the bubble's left
  *  accent dot. */
 @Composable
-private fun IntentChip(label: String, accent: Color = Color(0xFF37D399)) {
+private fun IntentChip(label: String, accent: Color = IntentCamTheme.palette.success) {
     Box(
         Modifier
             .background(accent.copy(alpha = 0.20f), RoundedCornerShape(6.dp))
@@ -1069,14 +1077,14 @@ private fun decodeScaled(bytes: ByteArray, targetMaxDim: Int): Bitmap? {
  * return gray — better than silently pretending an unknown id is
  * a known behaviour cluster.
  */
-private fun bubbleAccentActions(bubble: Bubble): Color {
+private fun bubbleAccentActions(bubble: Bubble, palette: IntentCamPalette): Color {
     val actions = bubble.actions.map { it.lowercase() }.toSet()
     val execute = actions.any { it in EXECUTE_IDS }
     val delegate = actions.any { it in DELEGATE_IDS }
     return when {
-        execute -> Color(0xFFE64A8C)   // pink — consent-gated chip
-        delegate -> Color(0xFF4F8CFF)  // blue — OS-handoff chip
-        else -> Color(0xFF888888)      // gray — CLARIFY or unknown
+        execute -> palette.accentExecute
+        delegate -> palette.accentDelegate
+        else -> palette.accentClarify
     }
 }
 
@@ -1107,7 +1115,8 @@ private fun DetailScreen(
         // screen, and ~1/4 the ARGB footprint of a full decode.
         decodeScaled(bubble.imageBytes, targetMaxDim = 1600)
     }
-    val accent = bubbleAccentActions(bubble)
+    val palette = IntentCamTheme.palette
+    val accent = bubbleAccentActions(bubble, palette)
     // [2026-07-13] fullscreen redesign: the image fills the entire screen
     // (ContentScale.Fit, black letterbox) so the user can see it clearly
     // and cross-check it against the results.  The result panel and the
@@ -1133,7 +1142,7 @@ private fun DetailScreen(
     Box(
         modifier
             .fillMaxSize()
-            .background(Color(0xFF000000))
+            .background(palette.background)
     ) {
         // Layer 1 — fullscreen image.  When bytes are missing (rare), the
         // Box's black background stands in.
@@ -1164,7 +1173,7 @@ private fun DetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xE6111828))
+                    .background(palette.surfaceOverlay)
                     .clickable { textExpanded = !textExpanded }
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1177,7 +1186,7 @@ private fun DetailScreen(
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = bubble.title.ifBlank { "识别结果" },
-                    color = Color.White,
+                    color = palette.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
@@ -1195,7 +1204,7 @@ private fun DetailScreen(
                         Icons.Filled.KeyboardArrowUp
                     },
                     contentDescription = if (textExpanded) "收起文字" else "展开文字",
-                    tint = Color(0xFFB9C4DE),
+                    tint = palette.onSurfaceMuted,
                 )
             }
             // Expanded content — semi-transparent panel over the image,
@@ -1206,14 +1215,14 @@ private fun DetailScreen(
                     Modifier
                         .fillMaxWidth()
                         .fillMaxHeight(0.5f)
-                        .background(Color(0xE60E1320))
+                        .background(palette.surfaceOverlay)
                         .verticalScroll(textScroll)
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
                     if (bubble.detail.isNotBlank()) {
                         Text(
                             bubble.detail,
-                            color = Color(0xFFE7ECF7),
+                            color = palette.onSurface,
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -1221,7 +1230,7 @@ private fun DetailScreen(
                         Spacer(Modifier.height(8.dp))
                         Text(
                             "需要补充信息（点击下方退出后重拍画面）",
-                            color = Color(0xFFFFAF54),
+                            color = palette.warning,
                             style = MaterialTheme.typography.labelSmall,
                         )
                     }
@@ -1229,7 +1238,7 @@ private fun DetailScreen(
                         Spacer(Modifier.height(12.dp))
                         Text(
                             "图片细节",
-                            color = Color(0xFFB9C4DE),
+                            color = palette.onSurfaceMuted,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -1245,7 +1254,7 @@ private fun DetailScreen(
                         Spacer(Modifier.height(16.dp))
                         Text(
                             "可执行操作",
-                            color = Color(0xFFB9C4DE),
+                            color = palette.onSurfaceMuted,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -1284,7 +1293,7 @@ private fun DetailScreen(
         Surface(
             onClick = onRestart,
             shape = CircleShape,
-            color = Color(0xCC0B1021),
+            color = palette.surfaceMuted,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
@@ -1295,7 +1304,7 @@ private fun DetailScreen(
                 Icon(
                     Icons.Filled.Close,
                     contentDescription = "退出",
-                    tint = Color.White,
+                    tint = palette.onSurface,
                 )
             }
         }
@@ -1312,10 +1321,11 @@ private fun DetailScreen(
  *  in the photo" (future enhancement: tap-to-zoom on the dot). */
 @Composable
 private fun DetailsTable(details: List<Detail>) {
+    val palette = IntentCamTheme.palette
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A2138), RoundedCornerShape(8.dp))
+            .background(palette.surface.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
             .padding(8.dp)
     ) {
         details.forEachIndexed { i, d ->
@@ -1327,19 +1337,19 @@ private fun DetailsTable(details: List<Detail>) {
             ) {
                 Text(
                     d.kind,
-                    color = Color(0xFF7B8FB8),
+                    color = palette.onSurfaceSubtle,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.width(60.dp),
                 )
                 Text(
                     d.label,
-                    color = Color(0xFFB9C4DE),
+                    color = palette.onSurfaceMuted,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.width(110.dp),
                 )
                 Text(
                     d.value,
-                    color = Color.White,
+                    color = palette.onSurface,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f),
                 )
@@ -1352,7 +1362,7 @@ private fun DetailsTable(details: List<Detail>) {
                         Modifier
                             .size(8.dp)
                             .align(Alignment.CenterVertically)
-                            .background(Color(0xFF37D399), shape = CircleShape)
+                            .background(palette.success, shape = CircleShape)
                     )
                 }
             }
@@ -1361,7 +1371,7 @@ private fun DetailsTable(details: List<Detail>) {
                     Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color(0xFF2A3050))
+                        .background(palette.divider)
                 )
             }
         }
@@ -1391,6 +1401,7 @@ private fun DebugLogPanel(
     logs: List<DebugLogEntry>,
     modifier: Modifier = Modifier,
 ) {
+    val palette = IntentCamTheme.palette
     val listState = rememberLazyListState()
     LaunchedEffect(logs.size) {
         if (logs.isNotEmpty()) {
@@ -1408,7 +1419,7 @@ private fun DebugLogPanel(
             .heightIn(max = 200.dp)
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xCC0B1021))
+            .background(palette.surfaceMuted)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
         items(logs, key = { it.seq }) { entry ->
@@ -1419,12 +1430,13 @@ private fun DebugLogPanel(
 
 @Composable
 private fun DebugLogRow(entry: DebugLogEntry) {
+    val palette = IntentCamTheme.palette
     val time = remember(entry.timestampMs) {
         TIME_FORMAT.get()!!.format(Date(entry.timestampMs))
     }
     Text(
         text = "$time  [${entry.tag}] ${entry.message}",
-        color = Color(0xFFB9C4DE),
+        color = palette.onSurfaceMuted,
         style = MaterialTheme.typography.labelSmall,
         fontFamily = FontFamily.Monospace,
         modifier = Modifier.padding(vertical = 1.dp),
@@ -1443,6 +1455,7 @@ private fun AnalyzerErrorPanel(
     logs: List<DebugLogEntry>,
     modifier: Modifier = Modifier,
 ) {
+    val palette = IntentCamTheme.palette
     val listState = rememberLazyListState()
     LaunchedEffect(logs.size) {
         if (logs.isNotEmpty()) {
@@ -1455,13 +1468,13 @@ private fun AnalyzerErrorPanel(
         modifier = modifier
             .padding(horizontal = 12.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xCC2A0F12))
-            .border(1.dp, Color(0xFFE64A8C), RoundedCornerShape(10.dp))
+            .background(palette.danger.copy(alpha = 0.10f))
+            .border(1.dp, palette.danger, RoundedCornerShape(10.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
         Text(
             text = "⚠ FrameAnalyzer errors (${logs.size})",
-            color = Color(0xFFFF8FB1),
+            color = palette.danger,
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 4.dp),
         )
@@ -1549,6 +1562,7 @@ private fun ActionArgInputDialog(
     onSubmit: (Map<String, String>) -> Unit,
     onCancel: () -> Unit,
 ) {
+    val palette = IntentCamTheme.palette
     // Per-field text state.  Default values from
     // [ActionArgSpec.default] pre-fill on first composition.
     val fieldState = remember(pending) {
@@ -1601,7 +1615,7 @@ private fun ActionArgInputDialog(
                         Spacer(Modifier.height(2.dp))
                         Text(
                             it,
-                            color = Color(0xFF7B8FB8),
+                            color = palette.onSurfaceSubtle,
                             style = MaterialTheme.typography.labelSmall,
                         )
                     }

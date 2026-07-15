@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.IntentCam" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.IntentCam" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- [2026-07-15 UI polish] Force a black window background so
+             the cold-start frame matches the IntentCamTheme's black
+             backdrop.  The default Material.Light parent paints
+             white, which produces a single-frame white flash on
+             launch — the user would see a white-to-black transition
+             before the camera preview kicks in.  Setting it to black
+             removes the flash. -->
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>
