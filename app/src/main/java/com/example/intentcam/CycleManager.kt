@@ -143,6 +143,31 @@ class CycleManager(
             activeCount--
             log("CYCLE", "superseded+cancelled ${toDrop.id} (cap=${UiState.CYCLE_MAX_CONCURRENT})")
         }
+
+        // [2026-07-15] Total cap enforcement (CYCLES_MAX_TOTAL=8).
+        //  Distinct from the IN_FLIGHT cap above — this one
+        //  bounds the *visible* count of cycles (any status) on
+        //  the camera screen, regardless of how many are
+        //  actively processing.  Shutter button is disabled when
+        //  we hit this cap, so the eviction path is defensive
+        //  (any future bypass of the button gate is still
+        //  safe).  Eviction is FIFO by createdAtMs; if the
+        //  evicted entry is IN_FLIGHT, its coroutine is
+        //  cancelled so we don't bill for a discarded LLM
+        //  call.  Same cancellation pattern as the
+        //  cap-2-IN_FLIGHT branch above.
+        while (updated.size > UiState.CYCLES_MAX_TOTAL) {
+            val toDrop = updated.values.minByOrNull { it.createdAtMs }
+                ?: break
+            toDrop.status.value = JobStatus.SUPERSEDED
+            toDrop.coroutine?.cancel()
+            updated.remove(toDrop.id)
+            log(
+                "CYCLE",
+                "evicted ${toDrop.id} (cap=${UiState.CYCLES_MAX_TOTAL} total, " +
+                    "status=${toDrop.status.value})"
+            )
+        }
         _allJobs.value = updated
 
         // [2026-07-15] Capture the launch handle so a later

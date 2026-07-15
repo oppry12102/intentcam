@@ -210,6 +210,34 @@ data class UiState(
          *  succession); 3+ risks LLM API rate-limit throttle on
          *  real networks. */
         const val CYCLE_MAX_CONCURRENT = 2
+
+        /** [2026-07-15 UI polish] Hard cap on the total number
+         *  of cycles kept in the [cycles] map (any status —
+         *  PENDING, IN_FLIGHT, COMPLETE, ERRORED, SUPERSEDED).
+         *  Distinct from [CYCLE_MAX_CONCURRENT] which only counts
+         *  IN_FLIGHT cycles — the user can have 8 COMPLETE
+         *  bubbles on screen with 0 currently processing.
+         *
+         *  When a new cycle is added and the map would exceed
+         *  this count, the oldest entry is evicted (FIFO); if
+         *  that entry is IN_FLIGHT, its coroutine is also
+         *  cancelled so the LLM API call doesn't bill for a
+         *  result that will never reach the user.  In normal
+         *  usage the shutter button is disabled when
+         *  cycles.size hits this cap, so the eviction path is
+         *  defensive — but the safety net is important if a
+         *  future code path bypasses the button gate.
+         *
+         *  8 = enough scrollback to find an earlier result in
+         *  a multi-photo session, low enough that decodeScaled's
+         *  400px thumbnail + the in-memory Bubble bytes don't
+         *  blow the heap.  The shutter displays the
+         *  (CYCLES_MAX_TOTAL - cycles.size) "remaining slots"
+         *  count so the user has a hard answer to "how many
+         *  more can I take before restart?"  Persisted bubble
+         *  history is a separate concern (TODO: onStop → DataStore
+         *  → onCreate rehydrate), tracked outside this constant. */
+        const val CYCLES_MAX_TOTAL = 8
     }
 }
 
