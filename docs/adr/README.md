@@ -21,6 +21,7 @@ context matters.
 | 2026-07-14 | [2026-07-14-v3-inversion.md](2026-07-14-v3-inversion.md) | v3.0 inversion: LLM authoritative, IntentVerifier retired |
 | 2026-07-15 | [2026-07-15-v4-action-first-composite.md](2026-07-15-v4-action-first-composite.md) | v4 action-first composite + UI accent |
 | 2026-07-16 | [2026-07-16-producer-consumer-pipeline.md](2026-07-16-producer-consumer-pipeline.md) | CycleManager producer/consumer pipeline + busy derived flow |
+| 2026-07-16 | [2026-07-16-input-parsers-drift-risk.md](2026-07-16-input-parsers-drift-risk.md) | InputParsers drift risk (phone regex duplicated 3 places) — mitigation pending |
 
 ## ADR template
 
