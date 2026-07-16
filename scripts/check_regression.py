@@ -52,10 +52,28 @@ def main() -> int:
     print(f"   threshold: |Δ| ≥ {threshold}")
     print()
     # [2026-07-15 redesign] Per-component check.  Each suite in
-    #  baselines.json can carry `v3_type` / `v3_text` / `v3_actions` /
-    #  `v3_inputs` baselines (null until re-measured post-redesign).  We
-    #  threshold-check ONLY when both the baseline AND the measured
-    #  value are present; missing either → skip.
+    #  baselines.json can carry `v3_composite` / `v3_text` /
+    #  `v3_actions` / `v3_inputs` baselines (null until re-measured
+    #  post-redesign).  We threshold-check ONLY when both the baseline
+    #  AND the measured value are present; missing either → skip.
+    #
+    #  [2026-07-16 dual-run wire-up] The previous mapping
+    #   ("v2_type", "v3_type") etc. was a bug: it read baseline.json's
+    #   v3_* field but summary's v2_* field, so the check was comparing
+    #   apples to oranges (or just both null and silently passing).
+    #   Now both sides use v3_* naming; v3 has no `type` dimension
+    #   (formula dropped it: 0.55·r_actions + 0.30·r_text + 0.15·r_inputs).
+    #
+    #  [2026-07-16 v3 threshold] v3 baseline is still in weekly
+    #   calibration (2-sample mean so far). v3 actions weight (0.55)
+    #   amplifies LLM variance — single-run noise regularly hits
+    #   ±0.10 on v3_actions. The v4 ADR sign-off gate is
+    #   week-over-week |Δ| ≤ 0.03 on composite_v3 across all suites;
+    #   until that gate passes, per-component v3 checks use a relaxed
+    #   threshold (V3_THRESHOLD = 0.15) and FAIL is reported but does
+    #   NOT count toward the regression exit code. Only composite_v2
+    #   is hard-gating until v3 sign-off.
+    V3_THRESHOLD = 0.15
     header = f"{'suite':<24} {'baseline':>9} {'now':>9} {'Δ':>8} {'status':>7}  {'errors':>6}  {'sec':>6}"
     print(header)
     print("-" * len(header))
@@ -65,7 +83,9 @@ def main() -> int:
     baseline_by_name = {s["name"]: s for s in baselines.get("suites", [])}
 
     fail = 0
+    v3_fail = 0
     comp_fail_lines = []
+    v3_fail_lines = []
     for s in suites:
         delta = s["delta"]
         status = s["status"]
@@ -77,21 +97,18 @@ def main() -> int:
         )
         if status == "FAIL":
             fail += 1
-        # Per-component check: v2_inputs is the headline signal for
-        # the orchestrator gate.
+        # Per-component v3 check (informational while v3 baseline
+        # calibrates week-over-week). Uses V3_THRESHOLD (0.15), not
+        # the v2 threshold (0.05). FAIL is reported but does NOT
+        # count toward the regression exit code.
         bl = baseline_by_name.get(s["name"], {})
-        for comp_key, comp_label in (
-            ("v2_type", "v3_type"),
-            ("v2_text", "v3_text"),
-            ("v2_actions", "v3_actions"),
-            ("v2_inputs", "v3_inputs"),
-        ):
+        for comp_label in ("v3_composite", "v3_actions", "v3_text", "v3_inputs"):
             bl_val = bl.get(comp_label)
-            now_val = s.get(comp_key)
+            now_val = s.get(comp_label)
             if bl_val is None or now_val is None:
                 continue  # not measured yet
             comp_delta = now_val - bl_val
-            comp_flagged = abs(comp_delta) >= threshold
+            comp_flagged = abs(comp_delta) >= V3_THRESHOLD
             comp_status = "FAIL" if comp_flagged else "PASS"
             comp_marker = "⚠️" if comp_flagged else "✓"
             print(
@@ -99,11 +116,12 @@ def main() -> int:
                 f"{comp_delta:>+8.4f} {comp_marker} {comp_status:<5}"
             )
             if comp_flagged:
-                comp_fail_lines.append(
+                v3_fail += 1
+                v3_fail_lines.append(
                     f"  - {s['name']} {comp_label}: baseline={bl_val:.4f} "
-                    f"now={now_val:.4f} Δ={comp_delta:+.4f}"
+                    f"now={now_val:.4f} Δ={comp_delta:+.4f} "
+                    f"(v3 informational, threshold {V3_THRESHOLD})"
                 )
-                fail += 1
 
     print()
     if fail:

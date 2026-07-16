@@ -153,20 +153,33 @@ for cfg in suites:
     # overall_composite_v2 is an incompatible schema and should surface
     # as NaN rather than silently substituting a different number.
     composite_v2 = None
+    composite_v3 = None
     err_count = 0
-    # Per-component averages (EvalRunner writes them as `overall_v2_*`).
-    #  Missing keys → None; check_regression.py handles None gracefully.
-    components = {"v2_type": None, "v2_text": None, "v2_actions": None, "v2_inputs": None}
+    # Per-component averages (EvalRunner writes them as `overall_v2_*` /
+    # `overall_v3_*` + `overall_composite_v3`). Missing keys → None;
+    # check_regression.py handles None gracefully. v3 has no `type`
+    # dimension (formula dropped it: 0.55·r_actions + 0.30·r_text +
+    # 0.15·r_inputs), so we only parse the three v3 components.
+    components = {
+        "v2_type": None, "v2_text": None, "v2_actions": None, "v2_inputs": None,
+        "v3_composite": None, "v3_actions": None, "v3_text": None, "v3_inputs": None,
+    }
     if os.path.exists(json_out):
         try:
             j = json.load(open(json_out))
             composite_v2 = j.get("overall_composite_v2")
+            composite_v3 = j.get("overall_composite_v3")
             err_count = sum(1 for f in j.get("fixtures", []) if "Error" in str(f.get("raw_content", "")))
+            if composite_v3 is not None:
+                components["v3_composite"] = float(composite_v3)
             for src_key, dst_key in (
                 ("overall_v2_type", "v2_type"),
                 ("overall_v2_text", "v2_text"),
                 ("overall_v2_actions", "v2_actions"),
                 ("overall_v2_inputs", "v2_inputs"),
+                ("overall_v3_actions", "v3_actions"),
+                ("overall_v3_text", "v3_text"),
+                ("overall_v3_inputs", "v3_inputs"),
             ):
                 v = j.get(src_key)
                 if v is not None:
@@ -190,6 +203,15 @@ for cfg in suites:
               f"text={components['v2_text']:.3f} "
               f"actions={components['v2_actions']:.3f} "
               f"inputs={components['v2_inputs']:.3f}")
+    # [2026-07-16] Dual-run side-channel: emit composite_v3 alongside
+    #  composite_v2. check_regression.py threshold-checks v3 components
+    #  against cfg["v3_*"] baselines; until those are filled in
+    #  baselines.json, per-component v3 checks are skipped (None).
+    if components["v3_composite"] is not None:
+        print(f"   v3 (informational): composite={components['v3_composite']:.3f} "
+              f"actions={components['v3_actions']:.3f} "
+              f"text={components['v3_text']:.3f} "
+              f"inputs={components['v3_inputs']:.3f}")
     if err_count:
         print(f"   ({err_count} Outcome.Error in JSON — possible 529 contamination)")
 
@@ -207,6 +229,10 @@ for cfg in suites:
         "v2_text": components["v2_text"],
         "v2_actions": components["v2_actions"],
         "v2_inputs": components["v2_inputs"],
+        "v3_composite": components["v3_composite"],
+        "v3_actions": components["v3_actions"],
+        "v3_text": components["v3_text"],
+        "v3_inputs": components["v3_inputs"],
     })
 
 summary = {
