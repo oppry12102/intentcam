@@ -4,6 +4,42 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Refactor — close legacy bubble pipeline + derived `busy` flow (2026-07-16)
+
+Two structural cleanups from the 2026-07-16 architectural review.
+**No behavior change** in the live path; legacy paths were verified
+unreachable before removal. ~440 lines net removed across 9 files.
+
+**Closed**: `runToolUseCycle` (78 lines) and `runRecognitionCycle`
+(0 callers) deleted. `enterAnalyzing()` (orphan), `isBusy()`
+(dead code), the private `analyzing` getter, and `UiState.analyzing`
+field all removed. `UiState.bubbles` + `BUBBLE_MAX` constant +
+`pendingFullRes` field deleted. `MainActivity.IntentBubbles`'s
+`else if (legacyBubbles.isNotEmpty())` branch deleted.
+`findBubble` simplified to cycles-only lookup.
+
+**Added**: `CycleManager.busy: StateFlow<Boolean>` — derived
+via `flatMapLatest` over `_focusedJobId` and the focused job's
+`status` flow. `true` iff focused job is PENDING or IN_FLIGHT.
+`viewModel.busy` re-exposed; `MainActivity.CameraScreen` reads
+`viewModel.busy.collectAsState()` and passes to `ShutterButton`.
+
+**Result**: zero imperative `_state.copy(analyzing = …)` writes;
+single source of truth for "is the camera busy" and "what bubbles
+to render". Commits `35c71a5` (dead code) + `8458906` (state
+pipeline). ARCHITECTURE.md §15.7 + §16 document the new model.
+
+### Dead code — delete `renderIntentBlock` + 50-line ToolUseLoop comment block (2026-07-16)
+
+- `IntentDecl.renderIntentBlock()` (always returned `""`) + the
+  unreachable `__INTENT_BLOCK__` substitution branch in
+  `LlmClient.toolUseSystemPrompt` deleted. `LlmClient.toolUseSystemPrompt`
+  `intents` parameter removed (no callers). `__ACTIONS_BLOCK__`
+  substitution preserved (separate mechanism, still active).
+- `ToolUseLoop.kt` 50+ line comment block documenting the
+  canonical-action injection feature (removed in v3.0 inversion)
+  deleted. The actual `verifiedActions` computation is one line.
+
 ### Changed — scoring redesign (intent-first composite_v2, 2026-07-15)
 
 Replaced the 5-dimension composite_v2 (gutted by the action merge —

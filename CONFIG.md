@@ -117,12 +117,15 @@ Pre-PP-OCRv4 numbers stay in memory as historical reference.
 | `connectTimeout` | 15s | `shared/.../LlmClient.kt:41` | HTTP connect | Standard |
 | `writeTimeout` | 30s | `shared/.../LlmClient.kt:43` | HTTP write | Standard |
 | `readTimeout` / `callTimeout` | 0 (infinite) | `shared/.../LlmClient.kt:42,44` | HTTP read/call | SSE streaming requires infinite; real hangs caught by `TOTAL_TIMEOUT_MS` |
-| `MAX_ROUNDS` | 30 | `shared/.../ToolUseLoop.kt:986` | Per-cycle iteration cap | Allows iterative drill-down; most fixtures converge in 5-10. Tested 15 (2026-07-10): at least one fixture hit cap, 兜底 empty → -0.257 single fixture. Reverted. |
-| `BUBBLE_MAX` | 4 | `shared/.../Models.kt:80` | Bubbles kept in UI | Reasonable history depth |
-| `DEBUG_LOG_MAX` | 40 | `shared/.../Models.kt:82` | Debug log cap | Reasonable debug history |
-| `DEFAULT_TOKEN` | "REPLACE_AT_RUNTIME" | `shared/.../Models.kt:135` | Token placeholder at build time | Real builds need runtime Settings entry or env-var injection (TODO) |
-| `DEFAULT_MODEL` | "MiniMax-M3" | `shared/.../Models.kt:136` | LLM model name | Sandbox default per env; user-overridable in Settings |
-| capture timeout | **3000 ms** | `app/.../AppViewModel.kt:212-220` | How long to wait for the analyzer's next frame | **v1.0 bumped 500ms→3000ms.** Two reasons: (1) Cold start: even with pre-warming (see A.6), CameraX `bindToLifecycle` on first launch takes 200-800ms — `analyze()` doesn't fire at all until binding completes, so first shutter tap needs >500ms headroom. (2) Larger encodes: `MAX_FULL_DIM=4096` JPEG q95 takes ~200-400ms on its own. 3s covers both, with no impact on warm path (typical wait 50-80ms). The CAP log line shows the actual `waited=` value so cold vs warm is visible at a glance. |
+| `MAX_ROUNDS` | 30 | `shared/.../ToolUseLoop.kt` | Per-cycle iteration cap | Allows iterative drill-down; most fixtures converge in 5-10. Tested 15 (2026-07-10): at least one fixture hit cap, 兜底 empty → -0.257 single fixture. Reverted. |
+| `CYCLE_QUEUE_DEPTH` | 8 | `UiState` companion | Max queued+in-flight cycles (shutter dim threshold) | Producer/consumer split (2026-07-16). 8 captures fits the typical user burst without unbounded memory growth. |
+| `CYCLE_CONCURRENCY` | 2 | `UiState` companion | Worker pool size | Caps concurrent Anthropic SSE streams; bounds peak device memory; avoids on-device OCR analyzer contention. |
+| `CYCLES_MAX_TOTAL` | 8 | `UiState` companion | Terminal FIFO cap on the cycles map | Prevents memory growth from long sessions; oldest COMPLETE/ERRORED/SUPERSEDED is evicted. |
+| `llmTimeoutMs` | 90_000 ms | `CycleManager` constructor | Per-cycle soft cap on the LLM call | Generous enough for 2-3-round cycles on slow networks (median ~2-3s/round × 30 rounds); tight enough that a true hang surfaces within ~90s. |
+| `DEBUG_LOG_MAX` | 40 | `UiState` companion | Debug log cap | Reasonable debug history |
+| `DEFAULT_TOKEN` | "REPLACE_AT_RUNTIME" | `LlmConfig.DEFAULT_TOKEN` | Token placeholder at build time | Real builds need runtime Settings entry or env-var injection (TODO) |
+| `DEFAULT_MODEL` | "MiniMax-M3" | `LlmConfig.DEFAULT_MODEL` | LLM model name | Sandbox default per env; user-overridable in Settings |
+| capture timeout | **3000 ms** | `AppViewModel.captureLatestFrame` | How long to wait for the analyzer's next frame | **v1.0 bumped 500ms→3000ms.** Two reasons: (1) Cold start: even with pre-warming (see A.6), CameraX `bindToLifecycle` on first launch takes 200-800ms — `analyze()` doesn't fire at all until binding completes, so first shutter tap needs >500ms headroom. (2) Larger encodes: `MAX_FULL_DIM=4096` JPEG q95 takes ~200-400ms on its own. 3s covers both, with no impact on warm path (typical wait 50-80ms). The CAP log line shows the actual `waited=` value so cold vs warm is visible at a glance. |
 
 ## D. Tool behavior
 
@@ -290,109 +293,6 @@ OFF (user must opt-in once in Settings screen).  `share` and
 `action_scan_to_pay_enabled`,
 `action_redact_id_enabled`.
 
----
-
-## I. IntentVerifier — 10 passes + post-guard (2026-07-11 ~ 2026-07-12)
-
-`shared/.../IntentVerifier.kt` (324 lines).  Runs *post-emit_bubble*
-in `ToolUseLoop`; silently overwrites the bubble's `type` when a
-strong out-of-family signal fires.  **The model's `proposedActions`
-array is NEVER modified** (Phase F invariant: r3 recall is
-monotonic — only the verifier's auto-injection path adds
-actions).
-
-| Pass | source → flip target | Trigger regex | Phase | Notes |
-|---|---|---|---|---|
-| 1 | `location` → `phone` | `MOBILE = 1[3-9]\d{9}` | E (2026-07-11) | Strongest signal; cell on storefronts |
-| 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
-| 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **post-guard option (a) test (2026-07-12)** | Stub-only since F2 reject; rescued image_1359 (027-87875310) when post-guard option (c) couldn't reach `location` source. Single-var fix. |
-| 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
-| 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **post-guard option (a) test (2026-07-12)** | Stub-only since F2 reject; rescued image_1359 (027-87875310) when post-guard option (c) couldn't reach `location` source. Single-var fix. |
-| 1c | `location` → `real_estate_rental` | `REAL_ESTATE` | **F (2026-07-11)** | Location + 房源 keyword |
-| 1d | `location` → `recruit_hiring` | `RECRUIT` | F | Location + 招聘 keyword |
-| 1e | `location` → `id_document` | `ID_DOCUMENT` | F | Location + 证照 keyword |
-| 2 | `info` → `payment_qr` | QR-payment language | E | 收款码 / 付款码 |
-| 3 | `info` → `phone` | MOBILE | E | 售后电话 / 联系电话 prefix |
-| 4 | `info` → `recruit_hiring` | RECRUIT | E | |
-| 5 | `info` → `real_estate_rental` | REAL_ESTATE | E | |
-| 6 | `info` → `id_document` | ID_DOCUMENT | E | |
-| 7 | `real_estate_rental` → `phone` | MOBILE + **!REAL_ESTATE** | **E3 (2026-07-11)** | `!REAL_ESTATE` guard prevents mis-fire on 吉房急售 + 手机号 (image_3285) |
-| 8 | `info` → `warning_safety` | `WARNING` | **G (2026-07-12)** | 请勿 / 禁止 / 警告 / 危险 / 注意 |
-| 9 | `info` → `menu_food` | `MENU` | G | 菜单 / 招牌菜 / 套餐 |
-| 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
-| **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c, 2026-07-12)** | Final safety net for landline + service lines. LANDLINE regex activated here (was stub-only since Phase F2 reject). |
-| 1b' | `location` → `phone` | `LANDLINE` | **post-guard (option a) SHIPPED 2026-07-12** | Promoted from stub. Single-var rescue for image_1359 et al. when LLM emits `location` source + landline corpus. Verified @20 phone_20 0.9081 → **0.9450 (+0.0369 net)**. Post-guard (c) kept as defense-in-depth. |
-| 11 | `info`/`location` → `route_to` | `DIRECTION_ARROW` | **H (2026-07-12)** | New direction_arrow regex: arrows / 方位词 / 距离短语 / 出口-入口+方位. Targets RCTW's largest untapped cluster (895 images, 11.1%). Action reuses `open_in_maps` (Pass 11 maps `route_to` → `open_in_maps`). |
-
-**Regex anchors** (`IntentVerifier.kt` line numbers): `MOBILE`
-43, `LANDLINE` 102, `REAL_ESTATE` 73, `WARNING` 84, `MENU` 85,
-`HOURS` 92, `HOUR_PATTERN` inline, `RECRUIT` / `ID_DOCUMENT` /
-`SERVICE` also at top of file.  **Pass ordering matters**: 1-1e
-run on `location` source first, 2-10 on `info` source, Pass 7
-last on `real_estate_rental` source; post-guard runs AFTER all
-type flips and re-checks the corpus for any phone signal that
-the upstream passes missed.
-
-**Why this stays plumbing-only** (per [[eval-type-guide-D1-rejected-2026-07-11]]):
-the verifier changes `bubble.type` only, never the LLM's text.
-That keeps r2_type lift distinct from r2_text lift — when a
-regression happens, you can tell which pass went wrong from
-which signal moved.  Prompt-side changes (C3 v3 in §K) shift
-r3 instead.
-
----
-
-## J. actionFor() canonical map — 3-way lockstep (2026-07-11)
-
-`IntentVerifier.actionFor(type)` (`IntentVerifier.kt:156-167`)
-returns the canonical action id for a given intent type.  Used
-by `ToolUseLoop` to inject a missing action post-verifier-flip
-(Phase F invariant: never delete, only add).
-
-```kotlin
-fun actionFor(type: String): String? = when (type) {
-    "phone"               -> "dial_number"
-    "real_estate_rental"  -> "share"
-    "recruit_hiring"      -> "share"
-    "id_document"         -> "redact_id"
-    "payment_qr"          -> "scan_to_pay"
-    "location"            -> "open_in_maps"
-    "warning_safety"      -> "share"
-    "menu_food"           -> "share"
-    "hours_schedule"      -> "share"
-    "service_institution" -> "share"
-    "shopping_promo"      -> "share"
-    "route_to"            -> "open_in_maps"
-    else                  -> null   // "info", "solve" — no canonical action
-}
-```
-
-### J.1 ⚠️ 3-register lockstep (Phase F invariant)
-
-When adding a new intent that maps to a canonical action, the
-following THREE sites must be updated in the same commit, or
-the eval scorer's `defaultActionIds` and the verifier's
-auto-inject drift apart:
-
-1. **`app/.../ActionDecl.kt`** `registerDefaultActions()` — add
-   the `ActionDef`
-2. **`shared/.../eval/EvalRunner.kt`** `defaultActionIds` — add
-   the action id to the eval baseline (otherwise r3 baseline
-   reference is wrong)
-3. **`shared/.../IntentVerifier.kt`** `actionFor()` — add the
-   `type → action` entry above (otherwise auto-inject misses
-   and r3 recall drops)
-
-Plus optionally:
-4. **`shared/.../LlmClient.kt`** system prompt — the C3 v3
-   type→action table (§K) so the model emits the right
-   `action_ids` from the start
-
-Drift = silent r3 recall regression on the new intent (eval
-thinks defaultActions doesn't include it; verifier doesn't
-auto-inject it).  Phase F ship verification (`pii_20 @20
-0.8644` + `phone_20 @20 0.9394` history-high) confirmed
-lockstep held across the F → C3 v3 chain.
 
 ---
 
@@ -404,13 +304,20 @@ Replaces C2's soft "默认应填" prompt (rejected 2026-07-10 —
 single-line nudge wasn't enough; see
 [[eval-action-ids-nudge-C2-2026-07-11]]).
 
-The table mirrors §J's `actionFor()` map exactly.  By
+The table mirrored §J's `actionFor()` map exactly.  By
 construction, the prompt table and the verifier injection
-**don't conflict**:
+**didn't conflict** (both shipped 2026-07-11):
 - Prompt table → model emits the right `action_ids` from start
-- Verifier injection → covers cases where the model missed one
-- Net effect: r3 (action recall) is monotonic with intent
+- Verifier injection → covered cases where the model missed one
+- Net effect: r3 (action recall) was monotonic with intent
   coverage
+
+**Historical note (v3.0 inversion, 2026-07-14)**: §K shipped
+alongside the verifier (§I, archived) and the actionFor map
+(§J, archived) — both of which have since been retired.  The
+prompt table is now the **sole** source of truth for the model's
+intent→action guidance; the LLM is authoritative for action
+selection and no plumbing-side injection runs after emit_bubble.
 
 **Ship verification** @20: `pii_20` 0.8644 → **0.8794 (+0.015)**,
 3+ fixtures real-lift, no r2_type regression, D-reject warning
@@ -462,6 +369,47 @@ measurement gain there.
 **Future ground truth MUST use `expected_top_intent_type`.**
 Old field kept for backward compat with RCTW-171 (don't re-tag
 8034 images).  See [[eval-gt-schema-mismatch-2026-07-12]].
+
+---
+
+## M. v3.0 producer/consumer pipeline (2026-07-16)
+
+`CycleManager` (in `app/.../CycleManager.kt`) is the bounded
+producer/consumer pipeline that owns concurrent recognition
+cycles.  Two independent bounds:
+
+| Bound | Value | Where | What |
+|---|---|---|---|
+| `CYCLE_QUEUE_DEPTH` | `8` | `UiState` companion | Max queued+in-flight cycles (shutter dim threshold). Backpressure — `startCycle` rejects when saturated. |
+| `CYCLE_CONCURRENCY` | `2` | `UiState` companion | Worker pool size. Caps concurrent Anthropic SSE streams; bounds peak device memory; avoids OCR contention. |
+| `CYCLES_MAX_TOTAL` | `8` | `UiState` companion | Terminal FIFO cap on the cycles map (oldest COMPLETE/ERRORED/SUPERSEDED evicted). |
+| `llmTimeoutMs` | `90_000` ms | `CycleManager` constructor | Per-cycle soft cap on the LLM call. ERRORED on hit; bubble from last good emit preserved. |
+
+`busy: StateFlow<Boolean>` (also in `CycleManager`) is the
+derived "spinner should show" signal — `true` iff the focused
+job is PENDING or IN_FLIGHT.  Built by `flatMapLatest` over
+`_focusedJobId` and the focused job's `status` flow.  The UI
+reads `viewModel.busy.collectAsState()` instead of a manually-
+managed `UiState.analyzing` field (deleted 2026-07-16).
+
+### M.1 2026-07-16 cleanup
+
+The 2026-07-16 refactor (commits `35c71a5` + `8458906`) closed
+two legacy paths and consolidated state:
+
+1. **`runToolUseCycle` + `runRecognitionCycle` deleted** —
+   legacy single-cycle path reachable only when
+   `pendingCycleId == null` at submit time; production invariant
+   (`handlePendingUserInput` always sets it) made the path
+   unreachable.  `runRecognitionCycle` had zero callers.
+2. **`UiState.analyzing` field deleted** — replaced by the
+   derived `busy` flow.  12 manual `_state.copy(analyzing = …)`
+   writes collapsed to zero; `enterAnalyzing()` + `isBusy()`
+   helpers + the private `analyzing` getter all removed.
+
+Net: **~440 lines removed** across 9 files.  No behavior change
+in the live path; legacy paths were verified unreachable before
+removal.  See `commit 8458906` for the full diff and rationale.
 
 ---
 

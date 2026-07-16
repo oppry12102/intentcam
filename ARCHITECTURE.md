@@ -203,8 +203,7 @@ via a shutter tap, not "wait for scene to settle".
 ```
 User taps shutter:
   captureLatestFrame()
-    armed = true  (CAS — FrameAnalyzer's next frame is captured)
-    state.analyzing = true
+    captureArmed = true  (CAS — FrameAnalyzer's next frame is captured)
     viewModelScope.launch { wait for frame, up to 3000ms }
 
 FrameAnalyzer.analyze() next frame:
@@ -215,8 +214,8 @@ FrameAnalyzer.analyze() next frame:
 
 AppViewModel captures:
   if latestFrame == null → log "[CAP] 3000ms 内没拿到帧（等了 Xms）"
-  else → runRecognitionCycle(frame)
-    toolUseLoop.runCycle(thumb, full, "")
+  else → cycleManager.startCycle(frame)
+    toolUseLoop.runCycle(thumb, full, "", cycleId=job.id)
 ```
 
 ## 4. OCR (端云协同 — endcloud collaboration)
@@ -394,9 +393,21 @@ quadrants up front.
 ```
 
 State writes go through `MutableStateFlow` (thread-safe via CAS).
-Every `analyzing` write is paired with the corresponding
-`analyzing: AtomicBoolean` so the camera analyzer's `isBusy()`
-callback always sees the latest value.
+The "is the camera busy" signal is now a derived flow
+(`CycleManager.busy: StateFlow<Boolean>`) — see §6.1 — replacing
+the legacy manually-managed `UiState.analyzing` field.
+
+### 6.1 CycleManager.busy — derived spinner signal
+
+The camera spinner / ShutterButton a11y hint read
+`viewModel.busy: StateFlow<Boolean>`, which is a flatMapLatest
+chain over `CycleManager._focusedJobId` and the focused job's
+`status` flow.  `true` iff the focused job is PENDING or
+IN_FLIGHT — ERRORED / SUPERSEDED stay false (the per-cycle
+BubbleCard surfaces the "识别超时" affordance via its own
+status flow instead of a global spinner).  Built once via
+`stateIn(scope, SharingStarted.Eagerly, false)`; no manual
+`_state.copy(analyzing = …)` writes anywhere.
 
 ## 7. Bubble model
 
@@ -409,54 +420,64 @@ data class Detail(
 
 data class Bubble(
     val id: String,
-    val type: String,            // 14 intent ids — see §15 / CONFIG §H.1 (precise id from IntentDecl)
-    val title: String,            // user-facing intent, ≤30 chars
+    val cycleId: String,  // owning CycleJob id (Phase B+; defaults to bubble.id for legacy path)
+    val type: String,            // 14 intent ids — see §15 / CONFIG §H.1
+    val intent: String,          // free-form Chinese phrase (≤30 chars), v3.0+
+    val title: String,            // user-facing title (动宾短语)
     val detail: String,           // content description
     val confidence: Float,
-    val imageBytes: ByteArray,   // 4096-px fullRes JPEG for detail view
+    val imageBytes: ByteArray,   // 3200-px thumbnail JPEG (display + detail view source)
     val createdAtMs: Long,
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
     val details: List<Detail> = emptyList(),  // details table rows
-    val actionIds: List<String> = emptyList(),  // Phase A+, 2026-07-10
+    val actions: List<String> = emptyList(),  // post-resolve chip list
     val llmProposedActions: List<String>? = null,  // raw model emit (audit trail)
+    val validatedInputs: Map<String, Boolean> = emptyMap(),  // per-action validation status
+    val pendingInputs: List<String> = emptyList(),  // cross-action missing-input keys
 )
 ```
 
-`Bubble` is FIFO-capped at 4 in `UiState.bubbles`; older bubbles
-evict when a new one arrives. `imageBytes` is the 4096-px fullRes
-JPEG (not the 3200-px thumbnail), so the detail view can show a
-sharper image.
+Bubbles are surfaced via `CycleManager.allJobs: StateFlow<Map<String, CycleJob>>`
+— the live UI iterates this directly.  `imageBytes` is the
+3200-px thumbnail JPEG (same bytes `CycleJob.frame.thumbnail`
+already holds), so the detail view can show a sharp image without
+re-fetching from anywhere.
 
 The `details` list drives the structured table in the DetailScreen
 (kind | label | value columns). Each row is something the LLM
 extracted from the image — text, numbers, brand names, dates, etc.
 The LLM populates these in `emit_bubble`'s `details` input field.
 
-`actionIds` is populated by **either** the model's `action_ids`
-emit (C3 v3 prompt table — see §15.4) or by the verifier's
-additive inject path (`IntentVerifier.actionFor(type)` —
-Phase F invariant: never delete, only add).  This is the
-per-bubble action surface the chip UI renders in the detail
-screen header — see §15 for the full design.
+`actions` is the post-resolve chip list — populated by
+`ActionResolver.suggestIds(bubble)` from the LLM's
+`llmProposedActions` (LLM-proposal branch) intersected with
+applicable intents/families and the user's enabled-action set.
+This is the per-bubble action surface the chip UI renders on the
+BubbleCard.  See §15 for the full design.
 
 ## 8. Cancellation & concurrency
 
 - `viewModelScope` is the only coroutine scope; tearing down the
   ViewModel cancels every in-flight recognition.
-- `analyzing: AtomicBoolean` gates the camera analyzer so the next
-  shutter tap is a no-op while a cycle is in flight.
+- `CycleManager.cancelAll(reason)` cancels every cycle's coroutine
+  on user restart / leave-screen so we don't keep billing for LLM
+  calls whose results would never reach the UI.
+- `captureArmed: AtomicBoolean` CAS-guards the camera analyzer so
+  a rapid double-tap of the shutter is a no-op.
 - The OkHttp `EventSource.cancel()` is invoked from
   `suspendCancellableCoroutine.invokeOnCancellation` so the SSE
-  connection drops the moment the coroutine is cancelled.
-- Per-round timeout (60s) wraps the whole stream; stalled servers
-  surface as a friendly `IllegalStateException("tooluse: 模型在 Nms 内未完成")`.
+  connection drops the moment the cycle's coroutine is cancelled.
+- Per-cycle soft timeout (`CycleManager.llmTimeoutMs = 90_000 ms`)
+  wraps the LLM call; stalled servers surface as `Outcome.Error`
+  → ERRORED cycle status.
 
 | Thread | Where | Why |
 |---|---|---|
 | `Executors.newSingleThreadExecutor` | `FrameAnalyzer.analyze` | CameraX guarantees serial execution; we own the loop on the analyzer thread |
 | `Dispatchers.IO` | `LlmClient.streamToolUse` | OkHttp Sockets I/O + DNS |
-| `viewModelScope` (Main) | `AppViewModel.runToolUseCycle` | UI state writes + Compose recomposition |
+| `viewModelScope` (Main) | `CycleManager.runCycleLoop` (worker pool) | UI state writes + Compose recomposition |
+| `viewModelScope` (Main.immediate) | `CycleManager.startCycle` / `pump` / `cancelAll` | Single-threaded for `pendingQueue` + `runningWorkers` race-free updates |
 | `Main` | Compose recomposition | The whole app is single-Composable-Activity |
 
 ## 9. Tuning
@@ -467,29 +488,30 @@ screen header — see §15 for the full design.
 
 | Knob | Value | Where | Purpose |
 |---|---|---|---|
-| `MAX_DIM` (thumbnail) | `3200` | `FrameAnalyzer.kt:159` | max-dim cap for the LLM-facing image |
-| `QUALITY` (thumbnail) | `90` | `FrameAnalyzer.kt:160` | JPEG quality for the LLM-facing image |
-| `MAX_FULL_DIM` | `4096` | `FrameAnalyzer.kt:176` | cap for the in-memory full-res JPEG |
-| `FULL_QUALITY` | `95` | `FrameAnalyzer.kt:177` | JPEG quality for the in-memory full-res JPEG |
-| `CROP_OUTPUT_MAX_DIM` | `3200` | `ImageOps.kt:70` | max-dim cap on `zoom_in` crops |
-| `DEFAULT_CROP_QUALITY` | `90` | `ImageOps.kt:60` | JPEG quality for crops |
-| `ResolutionSelector` | sensor max 4:3 | `MainActivity.kt:253-292` | v1.0: tells CameraX to deliver full sensor res to ImageAnalysis (was 640×480 default) |
-| `camera pre-warm` | viewmodel init | `AppViewModel.kt:50-57` | v1.0: kicks off `ProcessCameraProvider.getInstance()` during `onCreate` |
-| `MAX_OCR_HINT_LINES` | `30` | `OcrEngine.kt:92` | top-N OCR blocks injected into round-1 user message |
-| `LOW_CONFIDENCE_THRESHOLD` | `0.5` | `OcrEngine.kt:89` | OCR conf < 0.5 → mark `[LOW]` in hint |
+| `MAX_DIM` (thumbnail) | `3200` | `ImagePipeline.kt` | max-dim cap for the LLM-facing image |
+| `QUALITY` (thumbnail) | `90` | `ImagePipeline.kt` | JPEG quality for the LLM-facing image |
+| `MAX_FULL_DIM` | `4096` | `ImagePipeline.kt` | cap for the in-memory full-res JPEG |
+| `FULL_QUALITY` | `95` | `ImagePipeline.kt` | JPEG quality for the in-memory full-res JPEG |
+| `CROP_OUTPUT_MAX_DIM` | `3200` | `ImageOps.kt` | max-dim cap on `zoom_in` crops |
+| `DEFAULT_CROP_QUALITY` | `90` | `ImageOps.kt` | JPEG quality for crops |
+| `ResolutionSelector` | sensor max 4:3 | `MainActivity.kt:596-628` | tells CameraX to deliver full sensor res to ImageAnalysis (was 640×480 default pre-v1.0) |
+| `camera pre-warm` | viewmodel init | `AppViewModel.cameraProviderFuture` | kicks off `ProcessCameraProvider.getInstance()` during onCreate |
+| `MAX_OCR_HINT_LINES` | `30` | `OcrEngine.kt` | top-N OCR blocks injected into round-1 user message |
+| `LOW_CONFIDENCE_THRESHOLD` | `0.5` | `OcrEngine.kt` | OCR conf < 0.5 → mark `[LOW]` in hint |
 | `MAX_ROUNDS` | `30` | `ToolUseLoop.kt` | soft cap; 兜底 Bubble on hit |
-| `TOTAL_TIMEOUT_MS` | `90_000` | `LlmClient.kt:358` | per-round SSE timeout |
-| `MAX_TOKENS` | `2048` | `LlmClient.kt:342` | output token cap per round |
-| `REQUEST_TEMPERATURE` | `0.0` | `LlmClient.kt:336` | locked at 0 for deterministic routing |
-| `capture timeout` | **`3000` ms** | `AppViewModel.kt:212` | v1.0: bumped 500→3000ms for cold-start + sensor-res encode |
-| `BUBBLE_MAX` | `4` | `Models.kt` | FIFO cap on bubble list |
-| `DEBUG_LOG_MAX` | `40` | `Models.kt` | ring-buffer cap on debug log |
-| `extract_text` (v1.1) | text-only OCR | `ToolImplementations.kt:210-330` | v1.1: new tool. Same crop path as `zoom_in` follow-up but no `followUpJpeg` — returns only OCR text. Model picks it for 25-30% of fixtures when the region is already visible in the round-1 thumbnail. |
-| `IntentDecl.registerDefaultIntents()` | **14 ids** | `shared/.../IntentDecl.kt:82-232` | Phase J — what the user wants (intent classification). The 3 v1.0 ids (`info`/`location`/`solve`) + `phone` (Phase A) + 4 PII Phase B (real_estate/recruit/payment_qr/id_document) + 3 OBSERVE Phase G (warning/menu/hours) + `route_to` Phase H + `service_institution` Phase I + `shopping_promo` Phase J. |
-| `ActionDecl.registerDefaultActions()` | **5 defs** | `app/.../ActionDecl.kt:158-442` | what the app can do per-intent. 3 carry `userPrefKey` (SettingsStore consent toggle, OFF default): `dial_number`, `scan_to_pay`, `redact_id`. `scan_to_pay` and `redact_id` are Toast-only by design. `share` is the unified share-text action across 7 OBSERVE/ACT_ON intents (`real_estate_rental`, `recruit_hiring`, `warning_safety`, `menu_food`, `hours_schedule`, `service_institution`, `shopping_promo`) — no `userPrefKey`, default ON, body fires `ACTION_SEND text/plain` share-sheet (capped 600 chars). `open_in_maps` applies to `location` / `route_to` / `service_institution`. |
-| `IntentVerifier` | **10 passes + post-guard** | `shared/.../IntentVerifier.kt` | post-emit_bubble regex flip — `info`/`location` → `phone`/`payment_qr`/`recruit`/`real_estate`/`id_document`/`warning`/`menu`/`hours` based on corpus signal. Phase F invariant: modifies `bubble.type` only, never `bubble.actionIds`. |
-| `actionFor(type)` | **14 type → 5 canonical action maps** | `IntentVerifier.kt:226-259` | Phase F — ToolUseLoop additive inject. **3-register lockstep** when adding a new intent: ActionDecl + EvalRunner.defaultActionIds + actionFor(). Drift = silent r3 regression. `info` and `solve` carry no canonical action (return null). |
-| **3-register lockstep** | invariant | Phase F (2026-07-11) | Adding a new intent requires lockstep edits in 3 files (or 4 if you also add a C3 v3 prompt row). See §15.5 / CONFIG §J.1. |
+| `TOTAL_TIMEOUT_MS` | `90_000` | `LlmClient.kt` | per-round SSE timeout |
+| `MAX_TOKENS` | `2048` | `LlmClient.kt` | output token cap per round |
+| `REQUEST_TEMPERATURE` | `0.0` | `LlmClient.kt` | locked at 0 for deterministic routing |
+| `capture timeout` | `3000` ms | `AppViewModel.captureLatestFrame` | bumped 500→3000ms for cold-start + sensor-res encode |
+| `llmTimeoutMs` | `90_000` ms | `CycleManager.kt` | per-cycle soft cap on the LLM call |
+| `CYCLE_QUEUE_DEPTH` | `8` | `UiState` companion | max queued+in-flight cycles (shutter dim threshold) |
+| `CYCLE_CONCURRENCY` | `2` | `UiState` companion | worker pool size |
+| `CYCLES_MAX_TOTAL` | `8` | `UiState` companion | terminal FIFO cap on the cycles map |
+| `DEBUG_LOG_MAX` | `40` | `UiState` companion | ring-buffer cap on debug log |
+| `extract_text` | text-only OCR | `ToolImplementations.kt` | new tool (v1.1). Same crop path as `zoom_in` follow-up but no `followUpJpeg` — returns only OCR text. Model picks it for 25-30% of fixtures when the region is already visible in the round-1 thumbnail. |
+| `IntentDecl.registerDefaultIntents()` | **14 ids** | `shared/.../IntentDecl.kt` | 3 v1.0 ids (`info`/`location`/`solve`) + `phone` (Phase A) + 4 PII Phase B (real_estate/recruit/payment_qr/id_document) + 3 OBSERVE Phase G (warning/menu/hours) + `route_to` Phase H + `service_institution` Phase I + `shopping_promo` Phase J. |
+| `ActionDecl.registerDefaultActions()` | **5 defs** | `app/.../ActionDecl.kt` | 3 carry `userPrefKey` (SettingsStore consent toggle, OFF default): `dial_number`, `scan_to_pay`, `redact_id`. `scan_to_pay` and `redact_id` are Toast-only by design. `share` is the unified share-text action across 7 OBSERVE/ACT_ON intents — no `userPrefKey`, default ON, body fires `ACTION_SEND text/plain` share-sheet (capped 600 chars). `open_in_maps` applies to `location` / `route_to` / `service_institution`. |
+| **2-register lockstep** | invariant | Phase A+ (2026-07-10) | Adding a new intent requires lockstep edits in 2 files: IntentDecl + ActionDecl. See §15. |
 
 ## 10. Debug overlay
 
@@ -672,60 +694,66 @@ v1.0 layout:
 - Ship C3 v3's `copy_menu` 600-char cap into the eval scorer
   (Phase G action body has it but the LLM isn't advised about it
   in the prompt).
+- Persist `cycles` map to DataStore on `onStop`, rehydrate on cold
+  start.  Currently in-memory only — wiped on process death.
 
-## 15. Intent↔Action framework (2026-07-10 → 2026-07-14)
+## 15. Intent↔Action framework (v3.0 inversion, 2026-07-14)
 
-Added on top of the visual pipeline as a separate classification +
-action layer.  Each `emit_bubble` carries an 11-vocabulary intent
-`type` and a list of canonical `action_ids` the app renders as
-chips.  The LLM picks the action set directly; the v1.2-era
-`IntentVerifier` (13-pass regex post-processor) was **retired in
-Phase E (commit 59c1128, 2026-07-14)** as part of the v3.0
-architectural refactor.  v3.0 trade-off: phone suites lift
-(LLM picks `dial_number` without the verifier crutch) but the
-OBSERVE-family + PII cluster drops because the LLM is less
-reliable at emitting the canonical `copy_*` action.  See
-`release-2026-07-14f.md` and the **archived** §15.4 for the
-retired verifier details.  Planned follow-up: re-introduce the
-type→canonical mapping as a soft system-prompt hint.
+Each `emit_bubble` carries:
 
-### 15.1 Module map
+- **`type`** — one of 14 intent ids (replaces the original
+  3-bucket `info | location | solve` triplet).  Kept for
+  UI accent + eval `r_type` backwards-compat; the LLM is no
+  longer forced to pick a specific id and may emit a free-form
+  `intent` instead.
+- **`intent`** — free-form Chinese phrase (≤30 chars, e.g.
+  "拨打联系电话", "导航去这家店").  The new canonical
+  user-visible discriminator (v3.0+).
+- **`action_ids`** — list of canonical action ids the LLM
+  recommends (e.g. `dial_number` for phone, `share` for share-
+  text intents, `open_in_maps` for navigation).  Renders as
+  tappable chips.
+
+### 15.1 Three-layer architecture
+
+The framework is a thin three-layer boundary; the LLM drives the
+loop, a pure-function orchestrator validates inputs:
 
 ```
-                    ┌─────────────────────────────────────────────┐
-                    │ IntentDecl.kt (shared)                      │
-                    │   registerDefaultIntents() — 11 ids        │
-                    │   family / label / LLM hint / fallback     │
-                    └────────────────┬────────────────────────────┘
-                                     │ IntentDecl.byId(...)
-                                     │
-   User photo  ─►  LLM  ─emit_bubble(type, action_ids)─►       Bubble
-                                              │                ▲
-                                              ▼                │
-                    ┌─────────────────────────────────────────┐  │
-                    │ IntentVerifier.kt — RETIRED 2026-07-14  │  │
-                    │   (Phase E removed; see archived §15.4)  │──┘
-                    └─────────────────────────────────────────┘
-                                     │
-                                     ▼
-                    ┌─────────────────────────────────────────┐
-                    │ ActionDecl.kt (app)                      │
-                    │   registerDefaultActions() — 5 defs     │
-                    │   applicableIntents / applicableFamilies │
-                    │   userPrefKey (consent toggle, OFF def.) │
-                    │   Toast-only for scan_to_pay, redact_id │
-                    └────────────────┬──────────────────────────┘
-                                     │
-                                     ▼
-                              Bubble UI chips
-                              (runAction on tap)
+                  ┌────────────────────────────────────┐
+                  │  1. PROMPT FRAMING                 │
+                  │     ActionOrchestrator             │
+                  │     .frameAvailableActions()       │
+                  │     → spliced into system prompt   │
+                  │       via __ACTIONS_BLOCK__        │
+                  └──────────────┬─────────────────────┘
+                                 │ LLM picks + emits
+                                 ▼
+                  ┌────────────────────────────────────┐
+                  │  2. PER-EMIT VALIDATOR             │
+                  │     ActionOrchestrator             │
+                  │     .validateInputs(bubble)        │
+                  │     → missing per required input   │
+                  │     → bubble.validatedInputs map   │
+                  └──────────────┬─────────────────────┘
+                                 │
+                                 ▼
+                  ┌────────────────────────────────────┐
+                  │  3. FINALIZER                      │
+                  │     ActionOrchestrator             │
+                  │     .shouldFinalize(bubble, round) │
+                  │     → CONTINUE (missing) inject    │
+                  │       input-missing nudge + retry  │
+                  │     → FINALIZE (complete / cap)    │
+                  │       cycle ends with this bubble  │
+                  └────────────────────────────────────┘
 ```
 
-**`shared` vs `app` split is intentional**: `IntentDecl` lives
-in `:shared` because `:shared:eval` imports it; `ActionDecl`
-lives in `:app` because action
-intents (dial / share sheet) are Android-platform-specific
-(Toast, `ACTION_SEND`, `ACTION_DIAL`).
+The orchestrator is a **pure boundary** — no UI types, no
+Android imports, just data classes + simple regex parsers.  Lives
+in `app/.../ActionOrchestrator.kt` because it closes over
+`ActionRegistry` (Android-coupled via `ActionDef.body`'s
+`android.content.Context` param).
 
 ### 15.2 IntentDecl — 14 ids, 2 families
 
@@ -743,13 +771,15 @@ intents (dial / share sheet) are Android-platform-specific
 | `menu_food` | OBSERVE | 菜单: 菜品/套餐/招牌菜/主厨推荐/价格表 |
 | `hours_schedule` | OBSERVE | 营业时间: 营业中/HH:MM-HH:MM/营业时段 |
 | `route_to` | OBSERVE | 导航: 箭头/方位词/步行 N 米/步行 N 分钟/前方/出口/入口 |
+| `service_institution` | OBSERVE | 机构: 医院/学校/政府机关/银行/邮局/法院/派出所/大使馆 |
+| `shopping_promo` | OBSERVE | 促销: 特价/打折/满减/秒杀/亏本/清仓/甩卖/红包/限时/抢购 |
 
-**Family equivalence** (scoring): same family → 1.0;
-cross-family (OBSERVE↔ACT_ON) → 0.5; empty → 0.0.  v1.3's A2
-fix promoted `info ↔ location` 0.5 → 1.0; Phase G extends the
-OBSERVE family with 3 more ids (`warning_safety` / `menu_food`
-/ `hours_schedule`) so they interchange with `info` for full
-credit too.
+**Family equivalence** (eval-side `r_type` grading, 2026-07-15
+formula): exact match 1.0 / same family 0.7 / cross-family 0.3 /
+empty·unknown 0.0.  Same-family collapse means a bubble classified
+as `route_to` scores 0.7 against `location` GT (both OBSERVE),
+not 0.0 — important because the LLM is no longer forced to pick
+a precise id and may emit a free-form `intent` instead.
 
 ### 15.3 ActionDecl — 5 defs, 3 user-consented, 2 Toast-only
 
@@ -758,159 +788,67 @@ data class ActionDef(
     val id: String,
     val label: String,
     val applicableIntents: Set<String>,         // OR-semantics with families
-    val applicableFamilies: Set<IntentFamily>,  // reserved for universal actions
-    val requiresConsent: Boolean,
-    val userPrefKey: String? = null,            // SettingsStore backed
-    val enabledByDefault: Boolean = false,
-    val body: suspend (Bubble) -> Unit
+    val applicableFamilies: Set<IntentFamily>,  // broader filter
+    val requiresConfirmation: Boolean,
+    val userPrefKey: String? = null,            // SettingsStore-backed opt-in
+    val requiredInputs: List<ActionInputSpec>,  // validators per input key
+    val accent: ActionAccent,                   // EXECUTE / DELEGATE / CLARIFY
+    val body: suspend (Application, Bubble, Map<String, String>) -> ActionOutcome,
 )
 ```
 
-| Action id | Applicable to | Consent | Default | Notes |
+| Action id | Applicable to | Confirmation | Default | Notes |
 |---|---|---|---|---|
 | `open_in_maps` | location / route_to / service_institution | no | ON | `geo:0,0?q={title}` |
-| `dial_number` | phone | yes | **OFF** | `ACTION_DIAL` via `PhoneExtractor.firstMatch` |
+| `dial_number` | phone | yes | **OFF** | `ACTION_DIAL` via `PhoneExtractor.firstMatch`; needs `phone_number` input |
 | `scan_to_pay` | payment_qr | yes | **OFF** | **Toast only — never auto-launch payment** |
-| `redact_id` | id_document | yes | **OFF** | **Toast only — real redaction is Phase C** |
-| `share` | real_estate_rental / recruit_hiring / warning_safety / menu_food / hours_schedule / service_institution / shopping_promo | no | ON | `ACTION_SEND text/plain` share-sheet (capped 600 chars) — unified across 7 OBSERVE/ACT_ON intents; chooser title + fallback vary by `bubble.type` |
+| `redact_id` | id_document | yes | **OFF** | **Toast only — real redaction is a follow-up** |
+| `share` | real_estate_rental / recruit_hiring / warning_safety / menu_food / hours_schedule / service_institution / shopping_promo | no | ON | `ACTION_SEND text/plain` share-sheet (capped 600 chars) — unified across 7 intents; needs `text` input |
 
 **Safety contract**: `scan_to_pay` is deliberately Toast-only
 even with consent — the QR could be in a screenshot / phishing
 context; even with consent we route the user to physically scan
 a *new* code, never the one in the photo.  `redact_id` is
-Toast-only in v1 as the safest first ship; real redaction
-(mask middle 6 of 18-digit 身份证) is Phase C.
+Toast-only as the safest first ship; real redaction (mask
+middle 6 of 18-digit 身份证) is a future ship.
 
 **Applicability filter** (`ActionResolver.suggestIds(bubble)`):
 OR-semantics — `intent ∈ applicableIntents || intent.family ∈
 applicableFamilies` matches.  Both empty = applies to nothing
 (misconfiguration guard).
 
-### 15.4 IntentVerifier — 13 passes + Pass 7/12/13 post-guards  *(ARCHIVED 2026-07-14 — file deleted in commit 59c1128)*
+### 15.4 ⚠️ 2-register lockstep
 
-Runs *post-emit_bubble* in `ToolUseLoop`; silently overwrites
-`bubble.type` when a strong out-of-family signal fires.  **The
-model's `proposedActions` array is NEVER modified** (Phase F
-invariant: r3 recall monotonic — only the verifier's
-auto-injection path adds actions).
+When adding a new intent, **TWO sites** must be updated in the
+same commit:
 
-| Pass | source → flip target | Trigger | Phase | Notes |
-|---|---|---|---|---|
-| 1 | `location` → `phone` | `MOBILE = 1[3-9]\d{9}` | E | Strongest signal; cell on storefronts |
-| 1b | `location` → `phone` | `SERVICE = (?:400\|800)[\s-]?\d{3,4}[\s-]?\d{3,4}` | E | Service hotlines |
-| 1b' | `location` → `phone` | `LANDLINE = \b0\d{2,3}[\s-]?\d{7,8}\b` | **(a) test** | Stub-only since F2 reject; promoted 2026-07-12 to rescue image_1359 027-87875310 where LLM emits `location` and post-guard can't reach. Single-var fix. |
-| 1c | `location` → `real_estate_rental` | `REAL_ESTATE` | **F** | Location + 房源 keyword |
-| 1d | `location` → `recruit_hiring` | `RECRUIT` | F | Location + 招聘 keyword |
-| 1e | `location` → `id_document` | `ID_DOCUMENT` | F | Location + 证照 keyword |
-| 2 | `info` → `payment_qr` | QR-payment language | E | 收款码 / 付款码 |
-| 3 | `info` → `phone` | MOBILE | E | 售后电话 / 联系电话 prefix |
-| 4 | `info` → `recruit_hiring` | RECRUIT | E | |
-| 5 | `info` → `real_estate_rental` | REAL_ESTATE | E | |
-| 6 | `info` → `id_document` | ID_DOCUMENT | E | |
-| 7 | `real_estate_rental` → `phone` | MOBILE + **!REAL_ESTATE** | **E3** | `!REAL_ESTATE` guard prevents mis-fire on 吉房急售 + 手机号 |
-| 8 | `info` → `warning_safety` | `WARNING` | **G** | 请勿 / 禁止 / 警告 / 危险 / 注意 |
-| 9 | `info` → `menu_food` | `MENU` | G | 菜单 / 招牌菜 / 套餐 |
-| 10 | `info` → `hours_schedule` | `HOURS \| HOUR_PATTERN` | G | 营业时间 / HH:MM-HH:MM |
-| **post-guard** | `info`/`location` → `phone` | MOBILE \| LANDLINE \| SERVICE | **G (option c)** | Final safety net for landline + service lines |
-| 1b' | `location` → `phone` | `LANDLINE` | **(a) SHIPPED** | Promoted from stub; post-guard (a) single-var test rescued post-guard (c)'s -0.026 phone_20 regression. Verified @20: 0.9081 → **0.9450 (+0.0369 net, 6 lifts / 1 drop bounded)**. Post-guard (c) kept as defense-in-depth. |
-| 11 | `info`/`location` → `route_to` | `DIRECTION_ARROW` | **H** | New direction_arrow regex. Targets RCTW's largest untapped cluster (895 imgs, 11.1%). Action reuses `open_in_maps` (no new ActionDef). |
+1. **`shared/.../IntentDecl.kt`** `registerDefaultIntents()` —
+   add the `IntentDecl` (id, label, family, llmHint)
+2. **`app/.../ActionDecl.kt`** `registerDefaultActions()` —
+   add any `ActionDef`s that apply to this intent (or widen
+   an existing action's `applicableIntents` / `applicableFamilies`)
 
-**Pass ordering** (`IntentVerifier.kt` body): 1-1e run on
-`location` source first, 2-10 on `info` source, Pass 7 last
-on `real_estate_rental` source; post-guard runs AFTER all type
-flips and re-checks the corpus for any phone signal that the
-upstream passes missed.  **Ordering is load-bearing**:
-multi-intent fixtures like "营业场所 禁止吸烟" must resolve to
-`warning_safety` (Pass 8) not `hours_schedule` (Pass 10) — Pass
-8 runs first because it's a stronger direct-safety signal.
+The third site — `IntentVerifier.actionFor()` — was **retired in
+Phase E (commit 59c1128, 2026-07-14)** as part of the v3.0
+architectural refactor.  v3.0 trade-off: phone suites lift
+(LLM picks `dial_number` without the verifier crutch) but the
+OBSERVE-family + PII cluster drops because the LLM is less
+reliable at emitting the canonical `share` action.  See
+`release-2026-07-14f.md` for the full ship notes.
 
-**Why plumbing-only, not prompt-side**: per `eval-type-guide-D1-
-rejected-2026-07-11`, a third attempt at prompt-side verbose type
-descriptions was rejected (composite -0.035); the verifier
-touches `bubble.type` only, never the LLM's text, so r2_type lift
-stays distinct from r2_text lift — when a regression happens,
-you can tell which pass went wrong from which signal moved.
+**Drift = silent chip miss for the new intent**: the bubble
+surfaces without its chip and r_actions_recall drops in the eval.
 
-**`actionFor(type)` map** (IntentVerifier.kt:156-167): the
-canonical type → action id mapping the verifier + ToolUseLoop
-use for additive injection:
-
-```kotlin
-"phone"               -> "dial_number"
-"real_estate_rental"  -> "share"
-"recruit_hiring"      -> "share"
-"id_document"         -> "redact_id"
-"payment_qr"          -> "scan_to_pay"
-"location"            -> "open_in_maps"
-"warning_safety"      -> "share"
-"menu_food"           -> "share"
-"hours_schedule"      -> "share"
-"service_institution" -> "share"
-"shopping_promo"      -> "share"
-"route_to"            -> "open_in_maps"
-// "info", "solve" -> null (no canonical action)
-```
-
-### 15.5 ⚠️ 2-register lockstep (was 3-register pre-v3.0; verifier retired)
-
-When adding a new intent that maps to a canonical action,
-the following TWO sites must be updated **in the same
-commit**, or the eval scorer's `defaultActionIds` and the
-prod `ActionRegistry` drift apart silently (the verifier was
-the third site in the pre-v3.0 era and is no longer in the
-loop):
-
-1. **`app/.../ActionDecl.kt`** `registerDefaultActions()` —
-   add the `ActionDef`
-2. **`shared/.../eval/EvalRunner.kt`** `defaultActionIds` —
-   add the action id to the eval baseline (otherwise r3 baseline
-   reference is wrong)
-3. **`shared/.../IntentVerifier.kt`** `actionFor()` — add the
-   `type → action` entry (otherwise auto-inject misses and r3
-   recall drops)
-
-Plus optionally:
-
-4. **`shared/.../LlmClient.kt`** system prompt — the C3 v3
-   type→action table so the model emits the right
-   `action_ids` from round 1 (see §15.6)
-
-**Drift = silent r3 recall regression on the new intent**:
-eval thinks defaultActions doesn't include it; verifier doesn't
-auto-inject it.  Phase F ship verification
-(`pii_20 @20 = 0.8644` + `phone_20 @20 = 0.9394` history-high)
-confirmed lockstep held across the F → C3 v3 chain.
-
-### 15.6 C3 v3 — type→action table in prompt
-
-`LlmClient.TOOL_USE_SYSTEM` Step 2 paragraph carries an
-explicit type → action mapping table (commit `668ec6f`).
-Replaces C2's soft "默认应填" prompt (rejected 2026-07-10 —
-single-line nudge wasn't enough; see
-`eval-action-ids-nudge-C2-2026-07-11.md`).
-
-The table mirrors §15.4's `actionFor()` map exactly.  By
-construction, the prompt table and the verifier injection
-**don't conflict**:
-- Prompt table → model emits the right `action_ids` from start
-- Verifier injection → covers cases where the model missed one
-- Net effect: r3 (action recall) is monotonic with intent
-  coverage
-
-**Ship verification** @20: `pii_20` 0.8644 → **0.8794 (+0.015)**,
-3+ fixtures real-lift, no r2_type regression.  See
-`eval-c3-v3-ship-2026-07-11.md`.
-
-### 15.7 SettingsStore — 3 consent toggles
+### 15.5 SettingsStore — 3 consent toggles
 
 `app/.../SettingsStore.kt` backs 3 PII consent gates; default
-OFF (user must opt-in once in Settings screen). `share` and
+OFF (user must opt-in once in Settings screen).  `share` and
 `open_in_maps` have no `userPrefKey` → default ON (the
 share-sheet / map picker is its own consent step).  Keys:
 `action_dial_number_enabled`, `action_scan_to_pay_enabled`,
 `action_redact_id_enabled`.
 
-### 15.8 Eval-side wiring
+### 15.6 Eval-side wiring
 
 The eval pipeline (`EvalRunner.kt`) does three things the prod
 side doesn't:
@@ -920,82 +858,157 @@ side doesn't:
    so the new intent-diverse suites (phone_20 / pii_20 / Phase G)
    are scored correctly.  RCTW-171 stays on `expected_type` for
    backward compat (don't re-tag 8034 images).
-2. **Composite formula** — `r2_score` weights `text ∪ type` each
-   0.45 + `action_ids` (r3) 0.10; production doesn't need the
-   r3 component (the chip UI runs the actions).
+2. **Composite formula** — `composite_v2 = 0.40·r_actions_recall
+   + 0.30·r_inputs_complete + 0.15·r_rounds_efficiency +
+   0.10·r_intent_derived + 0.05·r_text`.  Production doesn't
+   need the r_actions / r_inputs components (the chip UI runs
+   the actions).
 3. **Action applicability filter bypass** —
    `EvalRunner.defaultActionIds` returns ALL 5 ids; the prod
    `ActionResolver.suggestIds(bubble)` filters by
    applicableIntents.
+4. **v3 dual-run** — `ScorerV3Result.compute` runs side-by-side
+   with `ScorerV2Result.compute` for `composite_v3 =
+   0.55·r_actions + 0.30·r_text + 0.15·r_inputs` (action-first
+   weights).  Eval JSON dumps both `overall_composite_v2` and
+   `overall_composite_v3`; `composite_v2` remains the regression-
+   gating headline until IntentCam Dev signs off on v3 stability.
 
-### 15.9 Phase ship timeline
+### 15.7 Phase ship timeline
 
 | Phase | Date | Ship | Lift |
 |---|---|---|---|
-| A — phone | 2026-07-10 | IntentDecl.kt + 7 literal `"info"`→FALLBACK_ID | composite phone_20 0.933 (noise) |
-| Step 2-5 | 2026-07-11 | ActionDecl + SettingsStore + chip UI + open_in_maps | @20 0.951 (+0.018 noise) |
-| B — 4 PII | 2026-07-11 | 4 PII intents + 4 actions | pii_20 r3 0.0 (smoke) |
-| C2 — action_ids nudge | 2026-07-11 | single-line "默认应填" | phone r3 0.75→0.85 |
-| D — type-guide verbose | 2026-07-11 | **REJECTED** | phone r3 +0.05 but composite -0.035 |
-| E — verifier (6 rules) | 2026-07-11 | post-emit_bubble flip on 6 intents | pii_20 image_1359 r2_type 0.5→1.0 |
-| E3 — Pass 7 guard | 2026-07-11 | `real_estate_rental + MOBILE + !REAL_ESTATE → phone` | phone_20 +0.012 |
-| F — lockstep | 2026-07-11 | actionFor() + additive inject | phone_20 history-high 0.9394 |
+| A — phone | 2026-07-10 | IntentDecl + 7 literal `"info"`→FALLBACK_ID | composite phone_20 0.933 (noise) |
+| Step 2-5 | 2026-07-10 | ActionDecl + SettingsStore + chip UI + open_in_maps | @20 0.951 (+0.018 noise) |
+| B — 4 PII | 2026-07-11 | 4 PII intents + 4 actions | pii_20 baseline 0.872 |
+| C2 — action_ids prompt nudge | 2026-07-11 | "默认应填 action_ids" in C3 prompt | phone r3 0.75→0.85 |
 | C3 v3 — prompt table | 2026-07-11 | type→action table 6→9 rows | pii_20 +0.015 |
-| G — 3 OBSERVE | 2026-07-12 | warning / menu / hours + verifier Pass 8/9/10 + post-guard | Phase G 15-fixture 0.973 |
+| G — 3 OBSERVE | 2026-07-12 | warning / menu / hours intents + copy actions | Phase G 15-fixture 0.973 |
 | GT schema dual-read | 2026-07-12 | EvalRunner reads expected_top_intent_type | pii_20 +0.0837 cumulative |
-| post-guard option (a) — Pass 1b' | 2026-07-12 | LANDLINE in Pass 1 (was stub) | phone_20 0.9081 → **0.9450 (+0.037)** |
-| H — `route_to` (architecture) | 2026-07-12 | new direction_arrow intent + Verifier Pass 11 + open_in_maps.applicableIntents widens + C3 v3 row 10→11 | direction_arrow_20 v2 0.9850 (+0.0263) |
-| I — `service_institution` | 2026-07-12 | 13th intent OBSERVE (医院 / 学校 / 政府机关) + Pass 12 verifier + 32-keyword regex v2 + C3 v3 row 13 | service_institution_60 0.9664 (post-GT-reclass v2) |
-| J — `shopping_promo` | 2026-07-13 | 14th intent OBSERVE (特价 / 促销 / 满减) + Pass 13 verifier + `copy_promo` action + C3 v3 row 14 | shopping_promo_20 0.918 inaugural → 0.943 post-r3-fix |
-| r3 verifier fix | 2026-07-13 | `actionFor()` injection broadened from type-flip-only to include missing-canonical case (`355c001`) | shopping_promo_20 +0.025; phone_60 r3 0.50 → 0.75 |
-| L — verifier Pass 4b | 2026-07-14 | menu_food \| location + recruit POSTER + ≥1 job-title word → recruit_hiring (avoids over-fire on restaurants with passing 招聘 text) | recruit_hiring_13 → recruit_hiring_11 (after re-add of image_5380 / 4641); suite baseline 0.970 |
-| canonical-action injection robustness | 2026-07-14 | `6456839` — fix canonical injection so type-flip case also adds the new type's canonical | recruit_hiring_13 +0.032 (0.960 → 0.992); real_estate_rental_11 +0.058 (0.923 → 0.981) |
+| H — `route_to` | 2026-07-12 | 12th intent OBSERVE | direction_arrow_20 v2 0.9850 |
+| I — `service_institution` | 2026-07-12 | 13th intent OBSERVE (32-keyword regex v2) | service_institution_60 0.9664 |
+| J — `shopping_promo` | 2026-07-13 | 14th intent OBSERVE + copy_promo action | shopping_promo_20 0.918 |
+| r3 verifier fix | 2026-07-13 | `actionFor()` injection broadened to missing-canonical (`355c001`) | shopping_promo_20 r3 0.35→0.45 |
+| **v3.0 inversion** | 2026-07-14 | `IntentVerifier.kt` DELETED (513 lines); LLM authoritative for type/action; `composite_v2` formula replaces legacy composite; ScorerV3 dual-run ships | phone_20 lifts, OBSERVE/PII clusters drop (planned) |
+| canonical-action injection robustness | 2026-07-14 | `6456839` — verifier injection covers both flip + missing-canonical cases | recruit_hiring +0.032; real_estate +0.058 |
+| Producer/consumer split | 2026-07-16 | `CycleManager` enqueue + worker pool (n=8 queue, m=2 workers) | UX: rapid multi-shot, in-flight cap auto-releases |
+| `busy` derived flow | 2026-07-16 | `CycleManager.busy: StateFlow<Boolean>` replaces manual `UiState.analyzing` writes | zero imperative state sync |
+| Single bubble pipeline | 2026-07-16 | `UiState.bubbles` + `runToolUseCycle` + `pendingFullRes` deleted; `cycles.values.mapNotNull { it.bubble.value }` is the single source | -440 lines net |
+| Verifier Pass 4b | 2026-07-14 | menu_food\|location + recruit POSTER + ≥1 job-title word → recruit_hiring (job-title gate prevents over-fire on restaurant menus with passing 招聘 text) | recruit_hiring_13 → recruit_hiring_11 |
 
-**Why this stays plumbing-only** (per `eval-type-guide-D1-
-rejected-2026-07-11.md`): the verifier changes `bubble.type`
-only, never the LLM's text.  That keeps r2_type lift distinct
-from r2_text lift — when a regression happens, you can tell
-which pass went wrong from which signal moved.  Prompt-side
-changes (C3 v3 in §15.6) shift r3 instead.
+### 15.8 Planned follow-ups
 
-### 15.10 v4 (2026-07-15) — action-first scorer + UI accent
+- **Re-introduce type→canonical as soft system-prompt hint** — the
+  retired verifier's role (steer the LLM toward `dial_number` for
+  phone bubbles) was partially absorbed by the C3 v3 prompt table,
+  but the LLM still misses `share` on OBSERVE bubbles sometimes.
+  A one-line soft hint at the end of the actions block is being
+  tested in `eval-action-first-ship` (not yet shipped).
+- **ScorerV3 canonical switch** — gated on
+  `composite_v2` regression PASS + `composite_v3` week-over-week
+  |Δ| ≤ 0.03 across all production suites, plus manual sign-off.
+  Until then, every eval run prints both numbers; no canonical
+  flip.
 
-The v3.0 inversion (§15 paragraph) was a half-flip: the prompt
-became action-driven (`action_ids` default-required, free-form
-`intent`/`type`), but the scorer still anchored on a 14-bucket
-`r_type` partial-credit grade. The 2026-07-15 `072af4d` action
-merge (six per-intent share actions collapsed into one intent-
-agnostic `share`) empirically confirmed that most intents
-resolve to the same `share` chip — the 14-bucket type boundary
-is fuzzy in a way that doesn't matter to the user's actual
-outcome.
+---
 
-**v4 closes the loop** (plan: `~/.claude/plans/action-first-
-architecture.md`):
+## 16. v3.0 producer/consumer pipeline (2026-07-16)
 
-1. `ScorerV3Result` (`shared/.../eval/ScorerV3.kt`) — new
-   canonical composite weighing action coverage highest:
-   `composite_v3 = 0.55·r_actions + 0.30·r_text + 0.15·r_inputs`.
-   `r_type` drops from the scorer dimension; `Bubble.type` stays
-   as a UI accent input only.
-2. `EvalRunner` (`shared/.../eval/EvalRunner.kt`) — runs v3
-   side-by-side with v2; `check_regression.py` still gates on
-   `composite_v2` until IntentCam Dev signs off on dual-run
-   stability. Phase G_15 smoke (2026-07-15):
-   `composite_v2 = 0.825` vs `composite_v3 = 0.782` (Δ=−0.043).
-3. `MainActivity.bubbleAccentActions` (`app/.../MainActivity.kt`)
-   replaces the type-based accent helper with an actions-driven
-   three-cluster resolver (EXECUTE=pink / DELEGATE=blue /
-   CLARIFY=gray); the legacy `bubbleAccent(type, registry?)` is
-   removed. UI accent now follows the canonical chip surface.
-4. The 14 `IntentDecl` ids above remain registered as UI-input
-   fallbacks + eval-side `r_type` backwards-compat (Step 4 plan
-   §2.3). Adding new ids is **not** the recommended path going
-   forward — adding new canonical actions at `app/.../ActionDecl.kt`
-   is.
+The CycleManager is the producer/consumer pipeline that owns
+concurrent recognition cycles:
 
-Canonical switch (Step 4 of the v4 plan) is **gated** on
-`composite_v2` regression PASS + `composite_v3` week-over-week
-|Δ| ≤ 0.03 across all 11 production suites, plus manual sign-off
-from IntentCam Dev after reviewing the dual-run report. Until
-then, every eval run prints both numbers; no canonical flip.
+```
+                    ┌──────────────────────────────────┐
+                    │       CycleManager               │
+   shutter tap ───► │   startCycle(frame)               │
+   (producer)       │     │                            │
+                    │     ▼                            │
+                    │   pendingQueue (FIFO, n=8)        │
+                    │     │                            │
+                    │     ▼  pump() loop               │
+                    │   workers (m=2 coroutines)       │
+                    │     │  runCycleLoop              │
+                    │     │   ├─ ToolUseLoop.runCycle  │
+                    │     │   ├─ ActionOrchestrator    │
+                    │     │   └─ CycleJob.bubble flow  │
+                    │     ▼                            │
+                    │   allJobs: Map<id, CycleJob>      │
+                    │     │                            │
+                    │     ▼                            │
+                    │   IntentBubbles (live UI)        │
+                    │     iterates allJobs.values      │
+                    └──────────────────────────────────┘
+```
+
+Two independent bounds (`UiState.CYCLE_QUEUE_DEPTH = 8` for
+queued+in-flight, `UiState.CYCLE_CONCURRENCY = 2` for active
+worker pool) cap the pipeline:
+
+- **Backpressure** — when queued+in-flight reaches the queue
+  depth, the shutter dims (`remaining = CYCLE_QUEUE_DEPTH -
+  activeCycleCount`) and `startCycle` rejects further taps.
+- **Concurrency** — at most 2 LLM+OCR pipelines run at once
+  (caps concurrent Anthropic SSE streams; bounds peak device
+  memory; avoids on-device OCR analyzer contention).
+
+### 16.1 CycleJob — per-cycle reactive surface
+
+Each cycle is a `CycleJob` whose fields are `StateFlow`s the UI
+can `collectAsState` independently — updating one job's bubble
+doesn't force other jobs' cards to recompose:
+
+```kotlin
+data class CycleJob(
+    val id: String,                       // UUID
+    val frame: CapturedFrame,             // captured JPEGs
+    val status: MutableStateFlow<JobStatus>,
+    val bubble: MutableStateFlow<Bubble?>,   // null while PENDING/IN_FLIGHT
+    val nRounds: MutableStateFlow<Int>,
+    val validatedInputs: MutableStateFlow<Map<String, Boolean>>,
+    val pendingInputs: MutableStateFlow<List<String>>,
+    val createdAtMs: Long,
+    var coroutine: Job? = null,           // for supersede / cancelAll
+)
+```
+
+`UiState.cycles: Map<String, CycleSnapshot>` mirrors the
+underlying `CycleJob` references (Snapshot fields = `StateFlow`
+refs, not values) so Compose can subscribe per-cycle.
+
+### 16.2 JobStatus state machine
+
+```
+                  startCycle
+        NONE ─────────────────► PENDING  ──── pump() ────► IN_FLIGHT
+                                                                     │
+                       ┌─────────────────────────────────────────────┤
+                       │                                             │
+                       ▼                                             ▼
+                  SUPERSEDED                                   COMPLETE
+              (newer photo taken;                              (cycle done;
+               keeps running but                              bubble ready)
+               demoted in UI)                                     │
+                                                                     │ exception /
+                                                                     │ 90s timeout
+                                                                     ▼
+                                                                 ERRORED
+                                                          (last good bubble +
+                                                           "识别超时" affordance)
+```
+
+The `busy` spinner signal (`CycleManager.busy: StateFlow<Boolean>`)
+is `true` only when focused job is PENDING or IN_FLIGHT.
+ERRORED / SUPERSEDED stay false — the per-cycle BubbleCard
+surfaces the "识别超时" affordance via its own status flow.
+
+### 16.3 Cancellation surface
+
+| Op | Trigger | Effect |
+|---|---|---|
+| `cancelCycle(cycleId, reason)` | User cancels input dialog | Mark SUPERSEDED + cancel coroutine + remove from map |
+| `cancelAll(reason)` | User "重新扫描" / leave screen | Cancel every non-COMPLETE job + clear map |
+| `supersedeCurrent()` | (reserved for future auto-evict) | Demote focused job to SUPERSEDED (keeps running) |
+| `llmTimeoutMs` (90s) | Hung API call | Mark ERRORED + clear slot |
+
+Cancelled jobs' coroutines are stopped so we don't keep billing
+for LLM calls whose results would never reach the UI.
