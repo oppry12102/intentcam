@@ -61,9 +61,7 @@ class ActionOrchestrator(
      *   - "emit_bubble(intent, action_ids, details) 收尾"
      *
      * The exact wording is kept short on purpose — a verbose block
-     * would steal attention from the verbatim-OCR rules above it
-     * (see `IntentDecl.renderIntentBlock`'s docstring for the same
-     * attention-density rationale).
+     * would steal attention from the verbatim-OCR rules above it.
      *
      * Stable across calls for a given registry (the registry is
      * build-once-at-startup), so the result can be cached at the
@@ -169,10 +167,6 @@ class ActionOrchestrator(
      *     `CycleJob.bubble.value` carries the populated fields so
      *     downstream consumers (snapshot persistence, eval) read
      *     them off the bubble directly.
-     *   - **ToolUseLoop.emit_bubble parse branch** — the legacy
-     *     single-cycle path (eval, AppViewModel.runToolUseCycle)
-     *     also gets populated fields without going through
-     *     CycleManager.
      *   - **ScorerV2** — reads `bubble.validatedInputs` directly;
      *     the field becoming populated is what unblocks
      *     `r_inputs_complete` from its 1.0 floor.

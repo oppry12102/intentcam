@@ -520,11 +520,11 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "**必须**调 emit_bubble 收尾——**永远不要因为 OCR 不完美就跳过 emit_bubble**。\n" +
                     "\n"
 
-        /** Build the live tool-use system prompt by splicing the
-         *  dynamic intent + action blocks into [TOOL_USE_SYSTEM] at
-         *  the `__INTENT_BLOCK__` / `__ACTIONS_BLOCK__` placeholders.
+        /** Build the live tool-use system prompt by splicing the dynamic
+         *  actions block into [TOOL_USE_SYSTEM] at the
+         *  `__ACTIONS_BLOCK__` placeholder.
          *
-         *  The placeholders MUST exist verbatim in [TOOL_USE_SYSTEM];
+         *  The placeholder MUST exist verbatim in [TOOL_USE_SYSTEM];
          *  a missing placeholder is treated as a programmer error
          *  (silent drift would let a future prompt edit silently drop
          *  the dynamic block, which defeats the whole point of this
@@ -537,14 +537,11 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  pre-resolved strings, not the Android-only ActionRegistry
          *  type — `app/` passes `actionRegistry.allIds()`.
          */
-        fun toolUseSystemPrompt(intents: IntentRegistry, actionIds: List<String> = emptyList()): String {
-            // [2026-07-14 Phase E — inversion v3.0] Both
-            //  placeholders are now optional.  __INTENT_BLOCK__ is
-            //  not rendered into TOOL_USE_SYSTEM anymore (LLM picks
-            //  `intent` as free-form text); the call still accepts
-            //  the `intents` parameter for API compatibility but
-            //  ignores it.  __ACTIONS_BLOCK__ still drives the
-            //  `actions ∈ {...}` line.
+        fun toolUseSystemPrompt(actionIds: List<String> = emptyList()): String {
+            // [2026-07-14 Phase E — inversion v3.0] __ACTIONS_BLOCK__
+            //  drives the `actions ∈ {...}` line.  The __INTENT_BLOCK__
+            //  placeholder was removed at the same time (LLM picks
+            //  `intent` as free-form text).
             val renderedActions = if (actionIds.isEmpty()) {
                 "actions ∈ {}（暂无动作可选；emit_bubble.action_ids 留空即可）"
             } else {
@@ -553,15 +550,7 @@ class LlmClient(@Volatile var config: LlmConfig) {
             require(TOOL_USE_SYSTEM.contains("__ACTIONS_BLOCK__")) {
                 "TOOL_USE_SYSTEM missing __ACTIONS_BLOCK__ placeholder"
             }
-            // Defensive: if a future prompt edit re-adds the
-            //  __INTENT_BLOCK__ placeholder, replace it with the
-            //  (now empty) intent block.  Don't require() it —
-            //  Phase E intentionally removed it.
-            var prompt = TOOL_USE_SYSTEM.replace("__ACTIONS_BLOCK__", renderedActions)
-            if (prompt.contains("__INTENT_BLOCK__")) {
-                prompt = prompt.replace("__INTENT_BLOCK__", intents.renderIntentBlock())
-            }
-            return prompt
+            return TOOL_USE_SYSTEM.replace("__ACTIONS_BLOCK__", renderedActions)
         }
     }
 }

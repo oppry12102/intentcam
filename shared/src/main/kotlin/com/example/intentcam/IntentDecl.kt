@@ -238,29 +238,6 @@ fun registerDefaultIntents(reg: IntentRegistry) {
     //  is the dual-run scorer replacing the r_type-anchored v2.
 }
 
-/**
- * Render the dynamic intent block that gets spliced into the tool-use
- * system prompt and into the `emit_bubble` tool description.
- *
- * Two callers:
- *   - [LlmClient.toolUseSystemPrompt] (the system prompt's `type ∈ {...}`
- *     enumeration line)
- *   - `emit_bubble` tool description (a brief "info / location / solve"
- *     inline label, via [renderTypeList])
- *
- * Kept as a single line so the default-3-intent case is byte-identical
- * to the pre-2026-07-10 prompt.  A first attempt rendered a 4-line
- * block with one Chinese description per intent; that pulled ~80
- * tokens of attention away from the verbatim-OCR rules below, and
- * fixture-level regressions (rctw_default_15 -0.15 etc.) cut
- * composite by 0.012.  The compact form is what we ship.
- *
- * Per-intent labels (`info` / `location` / `solve` 中文标签) still
- * reach the model via the `emit_bubble` tool description, which
- * [renderTypeList] renders the same way.
- */
-fun IntentRegistry.renderIntentBlock(): String = ""
-
 /** Compact "id（label） / id（label） / ..." form used by tool descriptions. */
 fun IntentRegistry.renderTypeList(): String =
     list().joinToString(" / ") { "${it.id}（${it.label}）" }

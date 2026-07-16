@@ -252,7 +252,7 @@ class ToolUseLoop(
             log("TOOL", "→ 第 $round 轮（messages=${messages.length()}）")
             val response: ToolUseResponse = try {
                 client.streamToolUse(
-                    system = LlmClient.toolUseSystemPrompt(intents, actionIds),
+                    system = LlmClient.toolUseSystemPrompt(actionIds),
                     messages = messages,
                     toolsJson = toolsJson,
                 )
@@ -588,60 +588,6 @@ class ToolUseLoop(
                 //  r_actions_recall (0.40) + r_inputs_complete (0.30)
                 //  instead of the legacy r2_type (0.45).
                 val verifiedType = tb.type
-                // [2026-07-11 Phase F → Phase E] Canonical-action
-                //  injection.  Pre-Phase E: when the verifier flipped
-                //  the type, the new type's canonical action was
-                //  injected (e.g. location→phone flipped → ensure
-                //  dial_number present).  Phase E: the verifier is
-                //  gone, so type-flip injection is gone too.  We
-                //  keep the same-type missing-canonical injection
-                //  path because it's still useful — if the LLM
-                //  emits a coherent bubble but forgets the canonical
-                //  action (e.g. a `phone` bubble without
-                //  `dial_number`), we add it.  Same intent:
-                //  "the LLM picks actions, we only fill obvious gaps".
-                //
-                //  NOTE: With Phase E's free-form type, the
-                //  actionFor(type) table may not match.  We only
-                //  inject when the LLM-emitted type matches a known
-                //  registered intent (returns non-null from the
-                //  table); otherwise we leave the LLM's proposal
-                //  untouched.
-                //
-                //
-                // [2026-07-13] Phase J r3-lift expansion: previously
-                //  scoped to the flip case only ("when the LLM types
-                //  correctly on its own we leave its proposal
-                //  untouched, keeping r3 a real model-behavior
-                //  signal").  But new intents (Phase J `shopping_promo`
-                //  being the first) have no LLM prior for the canonical
-                //  action, so the LLM applies its own heuristic (e.g.
-                //  emit `dial_number` because the sign has a phone
-                //  number) instead of the type→canonical mapping.  The
-                //  r3 signal is preserved at the r2_type level (which
-                //  still measures LLM classification accuracy directly,
-                //  no auto-correction).  New condition: inject when the
-                //  canonical action is NOT already in the LLM's
-                //  proposal — covers both flip and "LLM types right but
-                //  emits wrong action" cases; established actions
-                //  (phone→dial_number, location→open_in_maps) already
-                //  hit the LLM's own emit path so no injection runs.
-                // [2026-07-14 fix → Phase E] Robust canonical-action
-                //  injection.  In Phase E the verifier is gone, so
-                //  type-flip injection is gone too.  What remains:
-                //  we pass the LLM's `proposedActions` through
-                //  verbatim — the LLM is now authoritative for
-                //  action selection.  No injection, no override.
-                //
-                //  Trade-off: if the LLM forgets a canonical action
-                //  (e.g. a `phone` bubble without `dial_number`), the
-                //  bubble surfaces without that chip and r3 drops for
-                //  that fixture.  ScorerV2's r_inputs_complete will
-                //  expose this signal — Phase E's whole point is that
-                //  the LLM is now responsible for action picking, so
-                //  any regression here shows up as a real ScorerV2
-                //  drop rather than being silently patched by a
-                //  regex injection.
                 val verifiedActions: List<String>? =
                     tb.proposedActions?.takeIf { it.isNotEmpty() }
                 val finalBubble = com.example.intentcam.Bubble(
@@ -667,10 +613,6 @@ class ToolUseLoop(
                     // LLM-override branch.  Null when emit_bubble
                     // didn't receive the field (the legacy
                     // applicability path).
-                    // [2026-07-11] Phase F: `verifiedActions` == the
-                    // model's list, plus the corrected type's
-                    // canonical action when the verifier flipped
-                    // type (else identical to tb.proposedActions).
                     llmProposedActions = verifiedActions,
                 )
                 // [2026-07-14 Phase B] Notify the CycleManager that
