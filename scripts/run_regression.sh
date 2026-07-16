@@ -51,8 +51,8 @@ fi
 
 # ── Gradle build (once, unless --no-build) ─────────────────────────
 if [[ "$NO_BUILD" -eq 0 ]]; then
-    echo ">> gradle :shared:evalJar (one-time build)"
-    if ! (cd "$PROJECT_ROOT" && gradle :shared:evalJar --console=plain --no-daemon >"$OUT_DIR/build_${TIMESTAMP}.log" 2>&1); then
+    echo ">> gradle :shared:jar (one-time build)"
+    if ! (cd "$PROJECT_ROOT" && gradle :shared:jar --console=plain --no-daemon >"$OUT_DIR/build_${TIMESTAMP}.log" 2>&1); then
         echo "ERROR: gradle build failed; see $OUT_DIR/build_${TIMESTAMP}.log" >&2
         exit 3
     fi
