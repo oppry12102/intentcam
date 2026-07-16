@@ -24,19 +24,18 @@ fun SettingsScreen(
     onTogglePii: (key: String, enabled: Boolean) -> Unit,
 ) {
     val palette = IntentCamTheme.palette
-    // [2026-07-15 P1 fix] Use rememberSaveable so the user's
-    //  in-progress edits survive process death (e.g. OS kills
-    //  the app while the user is in Settings to copy a token
-    //  from their password manager).  Previous `remember` lost
-    //  everything on Activity recreation; combined with the
-    //  manifest's `configChanges` not covering `uiMode` /
-    //  `density` / system-initiated restart, this was a real
-    //  data-loss path.  No `key` argument because the explicit
-    //  `MutableState` overload requires a stateSaver when one
-    //  is provided; the `rememberSaveable { mutableStateOf(...) }`
-    //  form (no key) infers the right saver automatically and
-    //  still saves across process death because the wrapping
-    //  MutableState IS the SavedStateRegistry entry.
+    // Use rememberSaveable so the user's in-progress edits survive
+    // process death (e.g. OS kills the app while the user is in
+    // Settings to copy a token from their password manager).
+    // Previous `remember` lost everything on Activity recreation;
+    // combined with the manifest's `configChanges` not covering
+    // `uiMode` / `density` / system-initiated restart, this was a
+    // real data-loss path.  No `key` argument because the explicit
+    // `MutableState` overload requires a stateSaver when one is
+    // provided; the `rememberSaveable { mutableStateOf(...) }` form
+    // (no key) infers the right saver automatically and still saves
+    // across process death because the wrapping MutableState IS the
+    // SavedStateRegistry entry.
     var baseUrl by rememberSaveable { mutableStateOf(current.baseUrl) }
     // Token field is intentionally left blank — we never display the active
     // token on screen so it can't be shoulder-surfed.  Leaving it blank (or
@@ -139,14 +138,12 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.labelSmall
             )
 
-            // [2026-07-13] Phase B: PII action opt-in section.
-            //  Mirrors the `requiresConfirmation=true` chips surfaced
-            //  on `dial_number` / `scan_to_pay` / `redact_id` bubbles.
-            //  Default OFF — the
-            //  Settings screen is the only entry point for opting in
-            //  (a single tap on a chip grants it once via
-            //  AppViewModel.confirmAction; this section is for
-            //  permanent per-action consent).
+            // PII action opt-in section.  Mirrors the `requiresConfirmation=true`
+            // chips surfaced on `dial_number` / `scan_to_pay` /
+            // `redact_id` bubbles.  Default OFF — the Settings screen
+            // is the only entry point for opting in (a single tap on
+            // a chip grants it once via AppViewModel.confirmAction;
+            // this section is for permanent per-action consent).
             Spacer(Modifier.height(16.dp))
             HorizontalDivider()
             Text(
@@ -157,13 +154,12 @@ fun SettingsScreen(
                 "默认关闭。开启后，每次使用仍然会弹窗确认。",
                 style = MaterialTheme.typography.bodySmall,
             )
-            // [2026-07-15 UI polish] PII discoverability banner.
-            //  The previous version silently filtered out PII
-            //  actions whose toggle was off — a user on a `phone`
-            //  bubble would see no "拨号" chip and have no idea
-            //  why.  When at least one toggle is off, surface a
-            //  warning above the switch list so the user knows
-            //  there are PII controls here.
+            // PII discoverability banner.  The previous version silently
+            // filtered out PII actions whose toggle was off — a user
+            // on a `phone` bubble would see no "拨号" chip and have
+            // no idea why.  When at least one toggle is off, surface
+            // a warning above the switch list so the user knows there
+            // are PII controls here.
             if (piiPermissions.any { !it.enabled }) {
                 Text(
                     "以下敏感操作当前关闭。开启后，识别结果中才会出现对应的「${piiPermissions.first { !it.enabled }.action.label}」按钮。",

@@ -1,8 +1,8 @@
 package com.example.intentcam
 
 /**
- * [2026-07-14 Phase A — inversion v3.0] Thin boundary checker for the
- * Intent↔Action framework.  LLM is the loop driver; this class only
+ * Thin boundary checker for the Intent↔Action framework.  LLM is
+ * the loop driver; this class only
  * runs at three boundaries:
  *
  *   1. **Before round 1** — [frameAvailableActions] renders the
@@ -156,7 +156,7 @@ class ActionOrchestrator(
         return labels.values.toList()
     }
 
-    /** [2026-07-15] Pure projection: stamp [validateInputs] result
+    /** Pure projection: stamp [validateInputs] result
      *  onto the bubble's data-class fields.  Returns a new bubble
      *  with `validatedInputs` (per-action true/false map) +
      *  `pendingInputs` (cross-action missing-key list, deduped)
@@ -227,19 +227,19 @@ class ActionOrchestrator(
     }
 }
 
-// [2026-07-14] `InputsValidation` and `FinalizeDecision` moved to
+// `InputsValidation` and `FinalizeDecision` moved to
 // `shared/.../ActionArgs.kt` so `ToolUseLoop.runCycle`'s `onEmit`
 // callback can return a `FinalizeDecision` without dragging Android
 // types into `:shared/`.  The class itself stays here because it
 // depends on [ActionRegistry] (Android-coupled via `ActionDef.body`
 // taking `android.content.Context`).
 //
-// [2026-07-15] Added `IntentAlignmentCheck` + `validateIntentAlignment`
-// for the soft intent-validation gate (Decision C).  Kept here as a
-// free top-level fn + sealed class so callers don't have to thread
-// the orchestrator instance through to read intent alignment.
+// Added `IntentAlignmentCheck` + `validateIntentAlignment` for the
+// soft intent-validation gate.  Kept here as a free top-level fn +
+// sealed class so callers don't have to thread the orchestrator
+// instance through to read intent alignment.
 
-// [2026-07-15] Output of [validateIntentAlignment].  Sealed so the
+// Output of [validateIntentAlignment].  Sealed so the
 //  caller (live UI, eval, debug overlay) handles both shapes
 //  exhaustively.  Cross-platform type in `:shared/` for parity with
 //  [InputsValidation] — kept here for now because the alignment
@@ -256,7 +256,7 @@ sealed class IntentAlignmentCheck {
     data class Mismatch(val missingNouns: Set<String>) : IntentAlignmentCheck()
 }
 
-/** [2026-07-15] Per-action primary-noun table for intent alignment.
+/** Per-action primary-noun table for intent alignment.
  *  Used by [validateIntentAlignment] to check that bubble.intent's
  *  free-form Chinese phrase mentions at least one noun associated
  *  with the bubble's chosen action set.  When it doesn't, the LLM
@@ -279,8 +279,8 @@ private fun primaryNounsFor(actionId: String): List<String> = when (actionId) {
     "open_in_maps"   -> listOf("导航", "地图", "位置", "找", "去", "路线", "步行", "开车", "到", "在")
     "scan_to_pay"    -> listOf("支付", "付款", "收款", "扫码", "转账", "扫一扫")
     "redact_id"      -> listOf("证件", "身份证", "驾照", "营业执照", "证照")
-    // [2026-07-15] Unified `share` — union of the six former
-    //  per-intent share actions' nouns (房源/招聘/警示/菜单/营业时间/促销).
+    // Unified `share` — union of the six former per-intent share
+    //  actions' nouns (房源/招聘/警示/菜单/营业时间/促销).
     "share"          -> listOf(
         "房源", "租房", "出租", "二手房", "楼盘", "中介",
         "招聘", "招工", "求职", "兼职", "高薪", "工作", "招聘启事",
@@ -292,7 +292,7 @@ private fun primaryNounsFor(actionId: String): List<String> = when (actionId) {
     else -> emptyList()
 }
 
-/** [2026-07-15] Soft intent-alignment gate.  Returns
+/** Soft intent-alignment gate.  Returns
  *  [IntentAlignmentCheck.Aligned] when [bubble]'s free-form
  *  `intent` text mentions at least one primary noun from any of
  *  the bubble's chosen actions; [IntentAlignmentCheck.Mismatch]

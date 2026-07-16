@@ -63,7 +63,7 @@ data class PendingAction(
     val prompt: String,
 )
 
-/** [2026-07-13] Parked on `UiState.pendingConfirmation` when a
+/** Parked on `UiState.pendingConfirmation` when a
  *  chip-tap lands on an [ActionDef] whose `requiresConfirmation` is
  *  true (currently `dial_number`).  The UI surfaces an AlertDialog
  *  with [prompt] + [detail]; confirm routes back through
@@ -131,7 +131,7 @@ sealed class FinalizeDecision {
     data class CONTINUE(val missing: List<String>) : FinalizeDecision()
 }
 
-/** [2026-07-15] Pure projection: stamp input-validation state onto a
+/** Pure projection: stamp input-validation state onto a
  *  bubble's data-class fields without touching Android types.  Mirrors
  *  [com.example.intentcam.ActionOrchestrator.markValidatedInputs] but
  *  takes the parser-registry as a parameter rather than closing over
@@ -170,8 +170,11 @@ fun projectInputsValidation(
     return validated to pending.values.toList()
 }
 
-/** [2026-07-14 Phase A — inversion v3.0] One declared input that an
- *  [ActionDef] requires before it can fire.  Distinct from
+/** One declared input that an
+ *  [ActionDef] requires before it can fire.  This validation boundary
+ *  keeps the LLM authoritative while the orchestrator checks whether
+ *  selected actions are executable; see
+ *  `docs/adr/2026-07-14-v3-inversion.md`.  Distinct from
  *  [ActionArgSpec] (which is the form rendered at runtime when the
  *  user fills in missing fields):
  *

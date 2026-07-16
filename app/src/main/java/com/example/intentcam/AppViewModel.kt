@@ -24,30 +24,33 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val settings = SettingsStore(app)
     private val client = LlmClient(settings.load())
 
-    /** [2026-07-10] Intent registry — the system prompt's type list
-     *  and the `emit_bubble` tool description both read from this.
-     *  Built first so the tool registry below can consult it.
+    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
+     *  — Intent registry: the system prompt's type list and the
+     *  `emit_bubble` tool description both read from this.  Built
+     *  first so the tool registry below can consult it.
      *
-     *  [2026-07-13] Exposed as a public val so MainActivity can
-     *  resolve [Bubble.type] back into an [IntentDecl] for per-family
-     *  UI accent (location→green / phone+payment_qr→pink / OBSERVE
+     *  Exposed as a public val so MainActivity can resolve
+     *  [Bubble.type] back into an [IntentDecl] for per-family UI
+     *  accent (location→green / phone+payment_qr→pink / OBSERVE
      *  base→blue / ACT_ON base→orange). */
     val intentRegistry = IntentRegistry().also { registerDefaultIntents(it) }
 
-    /** [2026-07-10] Action registry — built alongside the intent
-     *  registry.  Declares which chip actions show up on which
-     *  intent.  Android-only (lives in `app/`) because action bodies
-     *  take `android.content.Context`.  Exposed as a public val so
+    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
+     *  — Action registry: built alongside the intent registry.
+     *  Declares which chip actions show up on which intent.
+     *  Android-only (lives in `app/`) because action bodies take
+     *  `android.content.Context`.  Exposed as a public val so
      *  MainActivity can resolve `bubble.actions` ids back into
      *  displayable [ActionDef]s (label / iconKey) for chip rendering. */
     val actionRegistry = ActionRegistry().also { registerDefaultActions(it) }
 
-    /** [2026-07-10] Action resolver — given a bubble, decides which
-     *  action ids should surface as chips.  Reads the user's
-     *  enabled-actions preference on every cycle (cheap; the Flow is
-     *  just a SharedPreferences lookup).
+    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
+     *  — Action resolver: given a bubble, decides which action ids
+     *  should surface as chips.  Reads the user's enabled-actions
+     *  preference on every cycle (cheap; the Flow is just a
+     *  SharedPreferences lookup).
      *
-     * [2026-07-13] Two-layer gate:
+     *  Two-layer gate:
      *   1. The legacy `enabledActionIds` set (op-out list).
      *   2. Per-action `userPrefKey` toggle from SettingsStore.
      *      An action with a `userPrefKey` is enabled only when the
@@ -77,27 +80,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         },
     )
 
-    /** [2026-07-15] Cycle ERRORED → ErrorBanner.  Pre-existing
-     *  callback (was inlined at the constructor site); extracted
-     *  to a method reference so the new [onCycleComplete] +
-     *  [onPendingUserInput] handlers can sit alongside without
-     *  re-introducing the "cycleManager forward reference"
-     *  compile error. */
+    /** See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+     *  — Cycle ERRORED → ErrorBanner.  Pre-existing callback (was
+     *  inlined at the constructor site); extracted to a method
+     *  reference so the new [onCycleComplete] + [onPendingUserInput]
+     *  handlers can sit alongside without re-introducing the
+     *  "cycleManager forward reference" compile error. */
     private fun handleCycleError(cycleId: String, message: String) {
         if (reportedCycleErrors.add(cycleId)) {
             _state.value = _state.value.copy(
                 error = "识别失败: $message"
             )
         }
-        // [2026-07-15 P0 fix] Clear the spinner if this error
-        //  left no PENDING/IN_FLIGHT cycles behind.  Pre-fix
-        //  used `activeJobCount() == 0`, which includes
-        //  ERRORED — so an all-error session (LLM 529 storm,
-        //  network outage, every cycle timed out) pinned the
-        //  spinner forever because the errored cycles kept
-        //  ERRORED cycles no longer block the spinner from
-        //  clearing.  Also calls `syncCycleCounters` so the
-        //  shutter counter ticks down immediately.
+        // See ADR docs/adr/2026-07-12-shutter-counter-8-cycle-model.md
+        //  — clear the spinner if this error left no PENDING/IN_FLIGHT
+        //  cycles behind.  Pre-fix used `activeJobCount() == 0`,
+        //  which includes ERRORED — so an all-error session (LLM
+        //  529 storm, network outage, every cycle timed out) pinned
+        //  the spinner forever because the errored cycles kept
+        //  ERRORED cycles no longer block the spinner from clearing.
+        //  Also calls `syncCycleCounters` so the shutter counter
+        //  ticks down immediately.
         syncCycleCounters()
         logDebug("CYCLE", "error live cycle ${cycleId.take(8)}: $message")
     }
@@ -120,32 +123,33 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    /** [2026-07-15 P0 fix] Single source of truth for the
-     *  `state.activeCycleCount` field.  Called from every
-     *  cycle transition (startCycle / complete / error /
-     *  cancel / restart) so the shutter counter stays in
-     *  sync without per-status subscriptions on each
+    /** See ADR docs/adr/2026-07-12-shutter-counter-8-cycle-model.md
+     *  — Single source of truth for the `state.activeCycleCount`
+     *  field.  Called from every cycle transition (startCycle /
+     *  complete / error / cancel / restart) so the shutter counter
+     *  stays in sync without per-status subscriptions on each
      *  [com.example.intentcam.CycleSnapshot].
      *
      *  Reads from [com.example.intentcam.CycleManager.inFlightJobCount]
-     *  — PENDING + IN_FLIGHT only — because COMPLETE /
-     *  ERRORED / SUPERSEDED entries must NOT count toward the
-     *  user's "remaining slots" gauge (that's the whole point
-     *  of switching from `cycles.size` to `inFlightJobCount`;
-     *  see [com.example.intentcam.UiState.activeCycleCount]'s
-     *  docstring for the bug it fixes). */
+     *  — PENDING + IN_FLIGHT only — because COMPLETE / ERRORED /
+     *  SUPERSEDED entries must NOT count toward the user's
+     *  "remaining slots" gauge (that's the whole point of switching
+     *  from `cycles.size` to `inFlightJobCount`; see
+     *  [com.example.intentcam.UiState.activeCycleCount]'s docstring
+     *  for the bug it fixes). */
     private fun syncCycleCounters() {
         val inFlight = cycleManager.inFlightJobCount()
         if (_state.value.activeCycleCount == inFlight) return
         _state.value = _state.value.copy(activeCycleCount = inFlight)
     }
 
-    /** [2026-07-15 P0 fix] Live cycle PendingUserInput →
- *  AlertDialog + stash the cycle id for [submitUserInput]'s
- *  resume via [CycleManager.resumeCycle].  The placeholder
- *  bubble itself is already in [cycleManager.allJobs][cycleId]
- *  .bubble.value (set by [CycleManager.runCycleLoop]), so no
- *  duplicate write into a legacy bubbles list is needed. */
+    /** See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+     *  — Live cycle PendingUserInput → AlertDialog + stash the cycle
+     *  id for [submitUserInput]'s resume via [CycleManager.resumeCycle].
+     *  The placeholder bubble itself is already in
+     *  [cycleManager.allJobs][cycleId].bubble.value (set by
+     *  [CycleManager.runCycleLoop]), so no duplicate write into a
+     *  legacy bubbles list is needed. */
     private fun handlePendingUserInput(
         cycleId: String,
         request: UserInputRequest,
@@ -177,33 +181,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         log = ::logDebug,
     )
 
-    /** [2026-07-14 Phase A] Thin orchestrator for action-driven
-     *  input validation.  Constructed after the action registry
-     *  (needs the registered actions to render the system prompt
-     *  block).  Consumed by [CycleManager] for per-emit validation
-     *  + missing-input framing.  In Phase A it sits unused; Phase
-     *  B wires it into the cycle loop. */
+    /** See ADR docs/adr/2026-07-14-v3-inversion.md
+     *  — Thin orchestrator for action-driven input validation.
+     *  Constructed after the action registry (needs the registered
+     *  actions to render the system prompt block).  Consumed by
+     *  [CycleManager] for per-emit validation + missing-input
+     *  framing.  In Phase A it sits unused; Phase B wires it into
+     *  the cycle loop. */
     private val actionOrchestrator = ActionOrchestrator(actions = actionRegistry)
 
-    /** [2026-07-14 Phase B — inversion v3.0; 2026-07-16 producer/
-     *  consumer split] Owns concurrent recognition cycles.  Replaces
-     *  the single-cycle flow that `captureLatestFrame()` used to
-     *  launch directly.  The shutter button is enabled while the
-     *  pipeline has room; tapping it enqueues a new
+    /** See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+     *  — Owns concurrent recognition cycles.  Replaces the
+     *  single-cycle flow that `captureLatestFrame()` used to launch
+     *  directly.  The shutter button is enabled while the pipeline
+     *  has room; tapping it enqueues a new
      *  [com.example.intentcam.CycleJob] (up to
      *  [UiState.CYCLE_QUEUE_DEPTH] = 8 queued+in-flight, processed
-     *  [UiState.CYCLE_CONCURRENCY] = 2 at a time; a full queue
-     *  dims the shutter and rejects the tap).  See CycleManager.kt
-     *  for the full queue+worker lifecycle. */
+     *  [UiState.CYCLE_CONCURRENCY] = 2 at a time; a full queue dims
+     *  the shutter and rejects the tap).  See CycleManager.kt for
+     *  the full queue+worker lifecycle. */
     /**
-     * [2026-07-15] Tracks which cycle ids have already fired
-     * `onCycleError`, so a cycle that hits ERRORED via multiple
-     * paths (LLM error + exception, or timeout + then a
-     * subsequent retry-error) only writes `state.error` once.
-     * ConcurrentHashMap because `onCycleError` is invoked from
-     * CycleManager's coroutine scope, which can be a different
-     * thread than the state-write path.  Bounded by the
-     * `allJobs` map size (cleared on restartScanning).
+     * See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+     *  — tracks which cycle ids have already fired `onCycleError`,
+     *  so a cycle that hits ERRORED via multiple paths (LLM error
+     *  + exception, or timeout + then a subsequent retry-error)
+     *  only writes `state.error` once.  ConcurrentHashMap because
+     *  `onCycleError` is invoked from CycleManager's coroutine
+     *  scope, which can be a different thread than the state-write
+     *  path.  Bounded by the `allJobs` map size (cleared on
+     *  restartScanning).
      */
     private val reportedCycleErrors = ConcurrentHashMap.newKeySet<String>()
 
@@ -223,16 +229,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             gated
         },
         log = ::logDebug,
-        // [2026-07-15] Surface cycle ERRORED events to the global
-        //  ErrorBanner.  Dedup per cycle id so a single failed
-        //  cycle doesn't spam the banner (a cycle can hit the
-        //  callback more than once if the orchestrator's exception
-        //  path fires after a timeout already set ERRORED).
+        // See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+        //  — surface cycle ERRORED events to the global ErrorBanner.
+        //  Dedup per cycle id so a single failed cycle doesn't spam
+        //  the banner (a cycle can hit the callback more than once
+        //  if the orchestrator's exception path fires after a
+        //  timeout already set ERRORED).
         onCycleError = ::handleCycleError,
-        // [2026-07-15 P0 fix] Live cycle completion + pending-input
-        //  handlers are method references — captured here so the
-        //  constructor argument list stays short, and the handlers
-        //  read `cycleManager` lazily (avoids the "variable must be
+        // See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+        //  — live cycle completion + pending-input handlers are
+        //  method references, captured here so the constructor
+        //  argument list stays short, and the handlers read
+        //  `cycleManager` lazily (avoids the "variable must be
         //  initialized" forward-reference the compiler hit when we
         //  tried inlining them as lambdas).
         onCycleComplete = ::handleCycleComplete,
@@ -246,8 +254,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  cycle is PENDING or IN_FLIGHT.  See [CycleManager.busy]. */
     val busy: StateFlow<Boolean> = cycleManager.busy
 
-    /** [2026-07-12] CameraX provider future, kicked off at construction
-     *  time so the service connection is established in parallel with
+    /** See ADR docs/adr/2026-07-10-on-device-sensor-resolution.md
+     *  — CameraX provider future, kicked off at construction time
+     *  so the service connection is established in parallel with
      *  permission grant and UI render.  Consumed by the AndroidView
      *  factory in MainActivity which calls `.get()` on it — by then
      *  the future is usually already done.
@@ -265,10 +274,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }, java.util.concurrent.Executor { it.run() })
         }
 
-    /** [2026-07-14 Phase B] Subscribe to cycleManager.allJobs +
-     *  focusedJobId and mirror them into [UiState.cycles].  Compose
-     *  reads from UiState so this is the only coupling between
-     *  CycleManager and the rest of the app.
+    /** See ADR docs/adr/2026-07-14-v3-inversion.md
+     *  — Subscribe to cycleManager.allJobs + focusedJobId and
+     *  mirror them into [UiState.cycles].  Compose reads from
+     *  UiState so this is the only coupling between CycleManager
+     *  and the rest of the app.
      *
      *  The `analyzing` flag is driven by `cycleManager.busy` (a
      *  derived flow over focused-job status) rather than the
@@ -284,21 +294,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             bubble = job.bubble,
                             nRounds = job.nRounds,
                             capturedAtMs = job.createdAtMs,
-                            // [2026-07-15] Surface pending inputs
-                            //  on the snapshot so consumers reading
-                            //  UiState.cycles (debug overlay, future
-                            //  REST API) see the same flow the live
-                            //  UI reads via CycleJob directly.
+                            // See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+                            //  — surface pending inputs on the snapshot
+                            //  so consumers reading UiState.cycles
+                            //  (debug overlay, future REST API) see the
+                            //  same flow the live UI reads via CycleJob
+                            //  directly.
                             pendingInputs = job.pendingInputs,
-                            // [2026-07-15 P1 fix] Expose the
-                            //  captured frame's thumbnail so the
-                            //  BubbleCard can render its image
-                            //  slot from shutter-tap onward
-                            //  (same bytes as bubble.imageBytes
-                            //  will be once the cycle emits).
-                            //  See CycleSnapshot.thumbnail's
-                            //  docstring for the layout-jump bug
-                            //  this fixes.
+                            // See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+                            //  — expose the captured frame's thumbnail
+                            //  so the BubbleCard can render its image
+                            //  slot from shutter-tap onward (same bytes
+                            //  as bubble.imageBytes will be once the
+                            //  cycle emits).  See CycleSnapshot.thumbnail's
+                            //  docstring for the layout-jump bug this
+                            //  fixes.
                             thumbnail = job.frame.thumbnail,
                         )
                     }
@@ -363,9 +373,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // (via onFrame) and from viewModelScope coroutines concurrently.
     private val debugLogs = ArrayDeque<DebugLogEntry>()
     private val debugLogsLock = Any()
-    // 2026-07-14 C-cleanup: analyzer errors live in a SEPARATE buffer
-    // from `debugLogs` so they survive a `setDebugEnabled(false)` toggle.
-    // The in-app overlay shows this list regardless of the toggle.
+    // Analyzer errors live in a SEPARATE buffer from `debugLogs`
+    // so they survive a `setDebugEnabled(false)` toggle.  The in-app
+    // overlay shows this list regardless of the toggle.
     private val analyzerErrorLog = ArrayDeque<DebugLogEntry>()
     private val analyzerErrorLogLock = Any()
     // Monotonic counter for unique LazyColumn keys.  timestampMs has
@@ -406,10 +416,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * way external callers reach the debug log is through named wrappers
      * that hard-code the tag.
      *
-     * 2026-07-14 C-cleanup: analyzer errors are now ALWAYS recorded
-     * (independent of [UiState.debugEnabled]) so an OOM or exception
-     * inside `FrameAnalyzer.analyze` is still visible after the user
-     * toggled the debug panel off.  Storage stays in a separate
+     * Analyzer errors are now ALWAYS recorded (independent of
+     * [UiState.debugEnabled]) so an OOM or exception inside
+     * `FrameAnalyzer.analyze` is still visible after the user toggled
+     * the debug panel off.  Storage stays in a separate
      * `analyzerErrorLog` buffer that survives the toggle; the
      * in-app overlay shows a separate red-bordered section when
      * non-empty.  `logDebug` (other call sites) is unchanged.
@@ -493,19 +503,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * next frame it produces is the one we use), waits up to 3000 ms for
      * the frame to arrive, then hands it to [CycleManager.startCycle].
      *
-     * [2026-07-14 Phase B — inversion v3.0; 2026-07-16 producer/
-     * consumer split] No longer gates on the legacy `AtomicBoolean
-     * analyzing` re-entrancy flag — every tap enqueues a new
-     * [com.example.intentcam.CycleJob], and CycleManager bounds the
-     * pipeline at [UiState.CYCLE_QUEUE_DEPTH] = 8 (queued+in-flight)
-     * with a [UiState.CYCLE_CONCURRENCY] = 2 worker pool.  When the
-     * queue is full, [CycleManager.startCycle] returns null and the
-     * frame is dropped (the shutter is already dimmed at that point).
+     * See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+     *  — no longer gates on the legacy `AtomicBoolean analyzing`
+     *  re-entrancy flag.  Every tap enqueues a new
+     *  [com.example.intentcam.CycleJob], and CycleManager bounds the
+     *  pipeline at [UiState.CYCLE_QUEUE_DEPTH] = 8 (queued+in-flight)
+     *  with a [UiState.CYCLE_CONCURRENCY] = 2 worker pool.  When the
+     *  queue is full, [CycleManager.startCycle] returns null and the
+     *  frame is dropped (the shutter is already dimmed at that point).
      */
     fun captureLatestFrame() {
-        // [2026-07-15 UI polish] CAS instead of set(true).  Previously,
-        //  a fast double-tap of the shutter would race: the first tap
-        //  set `captureArmed=true` and the second tap saw `latestFrame`
+        // CAS instead of set(true).  Previously, a fast double-tap
+        //  of the shutter would race: the first tap set
+        //  `captureArmed=true` and the second tap saw `latestFrame`
         //  == null still, so the second `viewModelScope.launch`'s
         //  3-second wait loop timed out and the user saw a "3000ms
         //  内没拿到帧" warning.  The atomic `compareAndSet(false,
@@ -523,9 +533,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             try {
                 // Wait for the analyzer to deliver the next frame.
-                // [2026-07-12] raised 500ms→3000ms (cold start + larger
-                //  encodes).  See Phase B preamble in plan file for the
-                //  full rationale.
+                // See ADR docs/adr/2026-07-10-on-device-sensor-resolution.md
+                //  — raised 500ms→3000ms (cold start + larger encodes).
+                //  See Phase B preamble in plan file for the full
+                //  rationale.
                 val deadline = SystemClock.elapsedRealtime() + 3000L
                 val t0 = SystemClock.elapsedRealtime()
                 while (latestFrame == null &&
@@ -553,26 +564,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // coroutine + per-job bubble flow.  We do NOT block
                 // on completion; the user can take more photos in the
                 // meantime.
-                // [2026-07-16 producer/consumer split] startCycle now
-                //  enqueues (returns null iff the queue is full —
-                //  queued+in-flight already at CYCLE_QUEUE_DEPTH).
-                //  The shutter is dimmed at that point, so a null is
-                //  the rare "finger down as the count hit 0" race;
-                //  log it and drop the frame.
+                // See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+                //  — startCycle now enqueues (returns null iff the
+                //  queue is full — queued+in-flight already at
+                //  CYCLE_QUEUE_DEPTH).  The shutter is dimmed at that
+                //  point, so a null is the rare "finger down as the
+                //  count hit 0" race; log it and drop the frame.
                 val job = cycleManager.startCycle(frame)
                 if (job == null) {
                     logDebug("CAP", "队列已满，丢弃本次拍摄（backpressure）")
                     return@launch
                 }
-                // [2026-07-15 P0 fix] Tick the shutter counter
-                //  down immediately on successful startCycle.
-                //  Without this, the counter stays at the
-                //  pre-tap value for the duration of the frame-
-                //  wait + LLM-call (typically <100ms for the
-                //  counter to feel responsive), which makes
-                //  rapid double-taps look like the button didn't
-                //  register.  Now the count drops the instant
-                //  the cycle enters IN_FLIGHT.
+                // See ADR docs/adr/2026-07-12-shutter-counter-8-cycle-model.md
+                //  — tick the shutter counter down immediately on
+                //  successful startCycle.  Without this, the counter
+                //  stays at the pre-tap value for the duration of the
+                //  frame-wait + LLM-call (typically <100ms for the
+                //  counter to feel responsive), which makes rapid
+                //  double-taps look like the button didn't register.
+                //  Now the count drops the instant the cycle enters
+                //  IN_FLIGHT.
                 syncCycleCounters()
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -616,10 +627,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 "live resume REJECTED for $pendingId " +
                     "(stale or terminal); clearing dialog without firing LLM"
             )
-            // [2026-07-15 P0 fix] Sync the shutter counter on
-            //  the rejection path — the cycle we just tried to
-            //  resume is terminal, so inFlight dropped and the
-            //  counter should tick up.
+            // See ADR docs/adr/2026-07-12-shutter-counter-8-cycle-model.md
+            //  — sync the shutter counter on the rejection path:
+            //  the cycle we just tried to resume is terminal, so
+            //  inFlight dropped and the counter should tick up.
             syncCycleCounters()
         } else {
             logDebug("INPUT", "live resume ACCEPTED for $pendingId")
@@ -634,12 +645,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** User cancelled the [UiState.userInputRequest].  Drops the
      *  placeholder bubble and returns to scanning.
      *
-     *  [2026-07-15 P0 fix] When the input request came from a
-     *  live CycleManager cycle, also cancel the parked cycle via
-     *  [CycleManager.cancelCycle] so it doesn't stay in IN_FLIGHT
-     *  forever (which would keep its slot in CYCLES_MAX_TOTAL,
-     *  render a stuck InFlightCard spinner, and consume an active
-     *  cap count). */
+     *  See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md
+     *  — when the input request came from a live CycleManager cycle,
+     *  also cancel the parked cycle via [CycleManager.cancelCycle] so
+     *  it doesn't stay in IN_FLIGHT forever (which would keep its slot
+     *  in CYCLES_MAX_TOTAL, render a stuck InFlightCard spinner, and
+     *  consume an active cap count). */
     fun cancelUserInput() {
         val pendingId = pendingCycleId
         pendingCycleId = null
@@ -650,11 +661,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (pendingId != null) {
             cycleManager.cancelCycle(pendingId, "user cancelled input")
         }
-        // [2026-07-15 P0 fix] Sync the shutter counter on
-        //  cancel — cancelCycle removed the parked cycle from
-        //  the map, so inFlight dropped and the counter should
-        //  tick up immediately.  Without this the counter stays
-        //  stale until the next state mutation fires.
+        // See ADR docs/adr/2026-07-12-shutter-counter-8-cycle-model.md
+        //  — sync the shutter counter on cancel.  cancelCycle removed
+        //  the parked cycle from the map, so inFlight dropped and the
+        //  counter should tick up immediately.  Without this the
+        //  counter stays stale until the next state mutation fires.
         syncCycleCounters()
         if (request != null) logDebug("INPUT", "已取消 via=${request.toolName}")
     }
@@ -693,10 +704,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    // NOTE: `runCycleWithPrePickedTool` removed 2026-07-10
-    // — was a stub for the deferred action_chips feature.
-    // `runAction` (below) is the re-introduced version, now backed by
-    // the ActionRegistry (intent-action framework step 5+6, 2026-07-10).
+    // NOTE: `runCycleWithPrePickedTool` was a stub for the deferred
+    // action_chips feature and has been removed.  `runAction` (below)
+    // is the re-introduced version, now backed by the ActionRegistry
+    // (intent-action framework step 5+6).
 
     /**
      * User tapped an action chip on a bubble.  Looks up the
@@ -704,11 +715,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * dispatches the resulting [ActionOutcome] (startActivity for
      * outbound Intents, Toast for in-app feedback).
      *
-     * [2026-07-13] Honors `requiresConfirmation`: actions tagged
-     * for it (currently only `dial_number`) park a `pendingConfirmation`
-     * in [UiState] instead of running the body immediately; the
-     * MainActivity renders an AlertDialog; [confirmAction] /
-     * [cancelConfirmation] drive the resolution.
+     * See ADR docs/adr/2026-07-10-intent-action-framework.md
+     *  — honors `requiresConfirmation`: actions tagged for it
+     *  (currently only `dial_number`) park a `pendingConfirmation`
+     *  in [UiState] instead of running the body immediately; the
+     *  MainActivity renders an AlertDialog; [confirmAction] /
+     *  [cancelConfirmation] drive the resolution.
      *
      * No-ops silently when the action id is unknown (defensive — a
      * stale bubble might reference an action that was removed) or
@@ -779,7 +791,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             it.bubble.value?.takeIf { b -> b.id == id }
         }
 
-    /** [2026-07-15] Pre-compute the args map the body wants.
+    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
+     *  — pre-compute the args map the body wants.
      *
      *  Walks every chip action on [bubble], runs each registered
      *  [ActionInputSpec.parser] against the bubble's text surface,
@@ -965,26 +978,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         syncCycleCounters()
     }
 
-    /** [2026-07-15 UI polish] Clear the surfaced error banner without
-     *  restarting scanning.  Used by MainActivity's `ErrorBanner`
-     *  dismiss button so the user can clear a transient failure
-     *  (529 storm, network blip) without losing their in-flight
-     *  cycle list.  `restartScanning()` is the nuclear option; this
-     *  is the polite "I saw it, hide it now" tap. */
+    /** Clear the surfaced error banner without restarting scanning.
+     *  Used by MainActivity's `ErrorBanner` dismiss button so the user
+     *  can clear a transient failure (529 storm, network blip)
+     *  without losing their in-flight cycle list.  `restartScanning()`
+     *  is the nuclear option; this is the polite "I saw it, hide it
+     *  now" tap. */
     fun clearError() {
         if (_state.value.error == null) return
         _state.value = _state.value.copy(error = null)
     }
 
-    /** [2026-07-15 P0 fix] Surface an error message via the
-     *  in-app ErrorBanner.  Companion to [clearError]; used by
-     *  `MainActivity.CameraPreview`'s CameraX bind failure path
-     *  (previously a silent empty catch swallowed all bind
-     *  exceptions — see MainActivity.kt:566-567).  The banner
-     *  shows the message until the user dismisses it; the
-     *  camera preview stays dead until the user restarts the
-     *  app (since a half-bound CameraX provider can't be
-     *  recovered at runtime). */
+    /** Surface an error message via the in-app ErrorBanner.  Companion
+     *  to [clearError]; used by `MainActivity.CameraPreview`'s CameraX
+     *  bind failure path (previously a silent empty catch swallowed
+     *  all bind exceptions — see MainActivity.kt:566-567).  The banner
+     *  shows the message until the user dismisses it; the camera
+     *  preview stays dead until the user restarts the app (since a
+     *  half-bound CameraX provider can't be recovered at runtime). */
     fun setError(message: String) {
         if (_state.value.error == message) return
         _state.value = _state.value.copy(error = message)
@@ -999,22 +1010,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun saveConfig(newConfig: LlmConfig) {
-        // [2026-07-16 P3 fix] Drop the `ifBlank { bakedDefaultToken }`
-        //  fallback for the token.  The Settings UI already
-        //  resolves a blank input to `current.authToken` (see
-        //  SettingsScreen.kt: `effectiveToken = if (token.isBlank())
-        //  current.authToken else token`), so by the time
-        //  `newConfig.authToken` reaches the VM it is the user's
-        //  resolved intent — keep it as-is.  Previous VM-side
-        //  fallback silently rewrote a user-overridden token to
-        //  the baked default when the user cleared the field and
-        //  hit 保存, contradicting the UI's "留空 = 保留当前"
-        //  label and surprising the user when the next launch
-        //  cold-starts with the baked token.
-        //  baseUrl + model keep their fallbacks because those
-        //  fields have no equivalent UI-side resolution and a
-        //  blank value there genuinely means "I don't care, use
-        //  the default".
+        // Drop the `ifBlank { bakedDefaultToken }` fallback for the token.
+//  The Settings UI already resolves a blank input to
+//  `current.authToken` (see SettingsScreen.kt: `effectiveToken =
+//  if (token.isBlank()) current.authToken else token`), so by the
+//  time `newConfig.authToken` reaches the VM it is the user's
+//  resolved intent — keep it as-is.  Previous VM-side fallback
+//  silently rewrote a user-overridden token to the baked default
+//  when the user cleared the field and hit 保存, contradicting the
+//  UI's "留空 = 保留当前" label and surprising the user when the
+//  next launch cold-starts with the baked token.
+//  baseUrl + model keep their fallbacks because those fields have
+//  no equivalent UI-side resolution and a blank value there
+//  genuinely means "I don't care, use the default".
         val cfg = newConfig.copy(
             baseUrl = newConfig.baseUrl.ifBlank { LlmConfig.DEFAULT_BASE_URL },
             model = newConfig.model.ifBlank { LlmConfig.DEFAULT_MODEL }
@@ -1029,7 +1037,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         client.config = settings.load()
     }
 
-    // ───── [2026-07-13] Phase B: PII action permission toggles ─────
+    // ───── PII action permission toggles ─────
+// See ADR docs/adr/2026-07-10-intent-action-framework.md
 
     /**
      * Snapshot of the current userPrefKey grants for every
@@ -1044,11 +1053,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  updates already, so this is consistent with the rest of the
      *  Settings layer's "you call me again, I re-read" pattern).
      */
-    /** [2026-07-15 UI polish] Snapshot of the current userPrefKey
-     *  grants for every PII-tagged action, paired with the
-     *  [ActionDef] so the Settings screen can render the action's
-     *  user-facing label (not the internal `userPrefKey` string)
-     *  and the consent-gate explanation.
+    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
+     *  — Snapshot of the current userPrefKey grants for every
+     *  PII-tagged action, paired with the [ActionDef] so the Settings
+     *  screen can render the action's user-facing label (not the
+     *  internal `userPrefKey` string) and the consent-gate explanation.
      *
      *  Previously returned `Map<String, Boolean>` keyed by
      *  userPrefKey.  The Settings screen then had to reverse-look-up

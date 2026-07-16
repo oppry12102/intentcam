@@ -15,17 +15,16 @@ private val DarkColors = darkColorScheme(
 )
 
 /**
- * [2026-07-15 UI polish] Drop the `isSystemInDarkTheme()` branch.
- * The previous version declared a `LightColors` scheme that was
- * the same Material colorScheme as dark but with different
- * primary/secondary hex values — but the Theme refactor (commit
- * 10) painted the entire app with `IntentCamPalette`, which is
- * dark-only.  A `lightTheme` branch would have produced a
- * black-text-on-white-bubble UI in light mode, so the branch
- * was effectively dead.  Force `DarkColors` always; the
- * `darkTheme` parameter is kept for API compatibility but no
- * longer drives the color scheme.  A real light-mode pass will
- * need to fill `LightPalette` first.
+ * Drop the `isSystemInDarkTheme()` branch.  The previous version
+ * declared a `LightColors` scheme that was the same Material
+ * colorScheme as dark but with different primary/secondary hex
+ * values — but the Theme refactor painted the entire app with
+ * `IntentCamPalette`, which is dark-only.  A `lightTheme` branch
+ * would have produced a black-text-on-white-bubble UI in light
+ * mode, so the branch was effectively dead.  Force `DarkColors`
+ * always; the `darkTheme` parameter is kept for API compatibility
+ * but no longer drives the color scheme.  A real light-mode pass
+ * will need to fill `LightPalette` first.
  */
 @Composable
 fun IntentCamTheme(

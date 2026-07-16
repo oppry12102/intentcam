@@ -60,7 +60,7 @@ data class Detail(
  */
 data class Bubble(
     val id: String,
-    /** [2026-07-14 Phase B — inversion v3.0] Owning cycle job's id
+    /** Owning cycle job's id
      *  (UUID from [com.example.intentcam.CycleManager.startCycle]).
      *  Defaults to the bubble's own [id] for the legacy single-cycle
      *  path (eval, ad-hoc emit_bubble outside CycleManager).  Lets
@@ -73,12 +73,12 @@ data class Bubble(
      *  When [intent] is unset (Phase A-D), downstream UI / eval
      *  fall back to this string. */
     val type: String,             // "info" | "location" | "solve" | ... (legacy 14-bucket)
-    /** [2026-07-14 Phase A — inversion v3.0] Free-form Chinese phrase
-     *  describing what the user wants to do with this bubble (≤30
-     *  chars, e.g. "拨打联系电话", "导航去这家店").  Replaces the
-     *  hardcoded [type] enumeration starting in Phase E.  Defaults
-     *  to [type] for backwards compatibility through Phase A-D —
-     *  every existing call site keeps working unchanged. */
+    /** Free-form Chinese phrase describing what the user wants to do
+     *  with this bubble (≤30 chars, e.g. "拨打联系电话", "导航去这家店").
+     *  The LLM supplies this authoritative intent; [type] remains the
+     *  legacy classification used for compatibility.  Defaults to [type]
+     *  so older call sites keep working.  See
+     *  `docs/adr/2026-07-14-v3-inversion.md`. */
     val intent: String = type,
     val title: String,             // intent (动宾短语)
     val detail: String,            // content description (was 'detail' in tool)
@@ -88,17 +88,9 @@ data class Bubble(
     val toolName: String? = null,
     val needsUserInput: Boolean = false,
     val details: List<Detail> = emptyList(),
-    // [2026-07-10] Action ids; empty until AppViewModel resolves
-    //  them against ActionRegistry + SettingsStore preference.
     val actions: List<String> = emptyList(),
-    // [2026-07-13] Raw LLM-emitted action_ids (when the prompt's
-    //  emit_bubble schema carries them).  Drives the LLM-override
-    //  branch of ActionResolver.  Null = no override (legacy
-    //  applicability filter).  Kept distinct from `actions` (the
-    //  post-resolve chip list) so debug payloads can tell which
-    //  path produced the final set.
     val llmProposedActions: List<String>? = null,
-    /** [2026-07-14 Phase A — inversion v3.0] Per-action validation
+    /** Per-action validation
      *  status.  Key = action id, value = true when every required
      *  input for that action was satisfied by the bubble's surface
      *  text (per [com.example.intentcam.ActionInputSpec.parser]),
@@ -107,7 +99,7 @@ data class Bubble(
      *  requiredInputs registered → all actions are implicitly
      *  "validated").  Drives the live-UI chip state in Phase C. */
     val validatedInputs: Map<String, Boolean> = emptyMap(),
-    /** [2026-07-14 Phase A] Cross-action aggregate of missing input
+    /** Cross-action aggregate of missing input
      *  keys (deduplicated, ordered by first appearance across
      *  [actions]).  Empty when every action's requiredInputs are
      *  satisfied.  Drives the orchestrator's missing-input framing
@@ -147,7 +139,7 @@ data class UiState(
      *  exclusive with [userInputRequest] in practice (the user can
      *  only interact with one dialog at a time). */
     val pendingAction: PendingAction? = null,
-    /** [2026-07-13] Non-null while a chip tap has parked an
+    /** Non-null while a chip tap has parked an
      *  AlertDialog confirmation (currently only `dial_number`
      *  sets this; the dialog asks the user to confirm before
      *  launching the dialer).  The UI shows a Compose AlertDialog;
@@ -158,7 +150,7 @@ data class UiState(
      *  yes/no gate, an args form is a fields-to-fill gate, mixing
      *  them would compose badly. */
     val pendingConfirmation: PendingConfirmation? = null,
-    /** [2026-07-14 Phase B — inversion v3.0] Live in-flight cycles
+    /** Live in-flight cycles
      *  keyed by [com.example.intentcam.CycleJob.id].  Each entry's
      *  [CycleSnapshot] exposes the cycle's current bubble + status
      *  as `StateFlow`s so the live UI can `collectAsState` per
@@ -167,108 +159,42 @@ data class UiState(
      *  single source of truth for rendered bubbles — the live
      *  UI iterates `state.cycles` directly. */
     val cycles: Map<String, CycleSnapshot> = emptyMap(),
-    /** [2026-07-15 P0 fix] Count of cycles whose status is
-     *  [JobStatus.PENDING] or [JobStatus.IN_FLIGHT].  Drives the
-     *  shutter button's "还可以拍 N 张" counter via
-     *  `CYCLE_QUEUE_DEPTH - activeCycleCount`.  Updated by
-     *  [com.example.intentcam.AppViewModel.syncCycleCounters] on
-     *  every cycle transition (startCycle / complete / error /
-     *  cancel / restart).
+    /** Number of cycles in [JobStatus.PENDING] or [JobStatus.IN_FLIGHT].
+     *  Drives shutter availability via
+     *  `CYCLE_QUEUE_DEPTH - activeCycleCount` and is synchronized on
+     *  every cycle transition.
      *
-     *  Why a separate field instead of computing from `cycles`:
-     *  `cycles` contains COMPLETE / ERRORED / SUPERSEDED entries
-     *  too, and recomposition would require per-cycle status
-     *  subscriptions to track status changes (the cycles map's
-     *  *structure* doesn't change when a status flips).  A plain
-     *  Int in UiState recomposes on every state copy and lets the
-     *  ShutterButton read with zero ceremony.
-     *
-     *  Bug this fixes: pre-fix the counter was
-     *  `CYCLES_MAX_TOTAL - cycles.size` (total).  After 8
-     *  captures the counter stayed at 0 even after every cycle
-     *  COMPLETE'd, because COMPLETE entries never leave the map
-     *  (the bubble UI keeps referencing them).  The user had to
-     *  tap "重新扫描" to release the shutter.  With this field
-     *  tracking active count, the counter increments back to 8
-     *  as cycles complete and "重新扫描" is only needed for
-     *  the explicit "clean slate" intent (clearing bubbles,
-     *  dismissing error banners). */
+     *  This is stored separately because [cycles] also retains terminal
+     *  jobs, while status changes do not alter the map structure.  Keeping
+     *  the derived count in [UiState] guarantees recomposition when a cycle
+     *  starts or finishes. */
     val activeCycleCount: Int = 0,
 ) {
     companion object {
         /** Max entries kept in [debugLogs] before the oldest is evicted. */
         const val DEBUG_LOG_MAX = 40
-        /** [2026-07-16 producer/consumer split] Backpressure
-         *  depth: the max number of cycles that may be **queued
-         *  or in-flight** at once (status PENDING + IN_FLIGHT).
-         *  This is `n` in the producer-consumer model — it bounds
-         *  the shutter, not the worker pool.  When queued+in-flight
-         *  reaches this count, the shutter button dims (`remaining
-         *  = CYCLE_QUEUE_DEPTH - activeCycleCount` hits 0) and a
-         *  further tap is rejected by [CycleManager.startCycle].
-         *
-         *  COMPLETE / ERRORED / SUPERSEDED cycles do NOT count
-         *  toward this cap — a cycle finishing frees a slot
-         *  immediately (the "释放出一个" semantics).  So the user
-         *  can keep up to 8 photos waiting-or-processing; results
-         *  that already landed as bubbles don't consume capture
-         *  budget.
-         *
-         *  Replaces the old `CYCLE_MAX_CONCURRENT` (which conflated
-         *  queue depth with true concurrency — both were 8, so 8
-         *  LLM+OCR pipelines ran at once).  True concurrency is now
-         *  the separate, much smaller [CYCLE_CONCURRENCY]. */
+        /** Maximum number of queued or in-flight cycles.  Terminal cycles
+         *  do not consume this capture budget; completing a cycle frees a
+         *  shutter slot immediately.  Queue depth is intentionally distinct
+         *  from [CYCLE_CONCURRENCY].  See
+         *  `docs/adr/2026-07-16-producer-consumer-pipeline.md`. */
         const val CYCLE_QUEUE_DEPTH = 8
 
-        /** [2026-07-16 producer/consumer split] Worker-pool size:
-         *  the max number of cycles actually **processing** (OCR +
-         *  LLM) at the same instant.  This is `m` in the
-         *  producer-consumer model.  [CycleManager] runs a `pump()`
-         *  loop that keeps at most this many `runCycleLoop`
-         *  coroutines live; the rest of a burst waits in the
-         *  pending FIFO queue (status PENDING) until a worker frees.
-         *
-         *  Set to 2 (vs the queue depth of 8) deliberately:
-         *   - caps concurrent Anthropic SSE streams → fewer 529
-         *     "overload" errors (the historical eval-contamination
-         *     culprit) and gentler on rate limits;
-         *   - bounds peak device memory/CPU (each in-flight cycle
-         *     holds a 4096px fullRes + does bitmap decode + OCR);
-         *   - avoids on-device OCR analyzer contention.
-         *  The user still perceives no slowdown — a single cycle's
-         *  latency is unchanged; results just stream out in capture
-         *  order 2-at-a-time instead of all-8-at-once. */
+        /** Maximum number of cycles that process OCR and LLM work at once.
+         *  A small worker pool bounds API load and peak device resources
+         *  while [CYCLE_QUEUE_DEPTH] absorbs capture bursts.  See
+         *  `docs/adr/2026-07-16-producer-consumer-pipeline.md`. */
         const val CYCLE_CONCURRENCY = 2
 
-        /** [2026-07-15 UI polish] Hard cap on the total number
-         *  of cycles kept in the [cycles] map (any status —
-         *  PENDING, IN_FLIGHT, COMPLETE, ERRORED, SUPERSEDED).
-         *  Distinct from [CYCLE_QUEUE_DEPTH] which only counts
-         *  queued+IN_FLIGHT — the user can have 8 COMPLETE
-         *  bubbles on screen with 0 currently processing.
-         *
-         *  When a new cycle is added and the map would exceed
-         *  this count, the oldest **terminal** entry (COMPLETE /
-         *  ERRORED / SUPERSEDED) is evicted first (FIFO) so a
-         *  still-queued or in-flight cycle is never dropped out
-         *  from under the user.  Live cycles are already bounded
-         *  by [CYCLE_QUEUE_DEPTH], so a terminal entry always
-         *  exists to evict when size exceeds this cap.
-         *
-         *  8 = enough scrollback to find an earlier result in
-         *  a multi-photo session, low enough that decodeScaled's
-         *  400px thumbnail + the in-memory Bubble bytes don't
-         *  blow the heap.  The shutter displays the
-         *  (CYCLES_MAX_TOTAL - cycles.size) "remaining slots"
-         *  count so the user has a hard answer to "how many
-         *  more can I take before restart?"  Persisted bubble
-         *  history is a separate concern (TODO: onStop → DataStore
-         *  → onCreate rehydrate), tracked outside this constant. */
+        /** Maximum number of cycle snapshots retained for bubble history.
+         *  On overflow, [CycleManager] evicts the oldest terminal entry and
+         *  never drops a queued or in-flight cycle.  See
+         *  `docs/adr/2026-07-16-producer-consumer-pipeline.md`. */
         const val CYCLES_MAX_TOTAL = 8
     }
 }
 
-/** [2026-07-14 Phase B — inversion v3.0] One cycle job's reactive
+/** One cycle job's reactive
  *  surface, surfaced to Compose via [UiState.cycles].  Carries
  *  `StateFlow` references (not values) so the UI can `collectAsState`
  *  per cycle independently — updating one job's bubble does not
@@ -289,33 +215,16 @@ data class CycleSnapshot(
     val bubble: kotlinx.coroutines.flow.StateFlow<Bubble?>,
     val nRounds: kotlinx.coroutines.flow.StateFlow<Int>,
     val capturedAtMs: Long,
-    // [2026-07-15] Cross-action missing-input list, mirrored from
-    //  CycleJob.pendingInputs so downstream consumers (debug overlay,
-    //  snapshot persistence, future API surface) read it from the
-    //  snapshot instead of reaching back into the Android-only
-    //  CycleJob.  Empty when validation is Complete.
     val pendingInputs: kotlinx.coroutines.flow.StateFlow<List<String>>,
-    /** [2026-07-15 P1 fix] The captured frame's thumbnail JPEG
-     *  bytes — the same bytes that land on the bubble's
-     *  [Bubble.imageBytes] when the cycle emits.  Exposed here
-     *  so the live UI can render the BubbleCard's thumbnail
-     *  slot IMMEDIATELY when the user taps the shutter, instead
-     *  of waiting for the first `emit_bubble` round.  Pre-fix
-     *  the UI showed a separate, smaller `InFlightCard` while
-     *  `bubble == null`, then swapped to the full BubbleCard
-     *  shape when the bubble arrived — visible layout jump
-     *  every cycle.  With this field, BubbleCard decodes once
-     *  from `thumbnail` and stays the same shape end-to-end;
-     *  only title / detail / actions / confidence slot change
-     *  as the bubble fills in.
-     *
-     *  Memory cost: cycle.frame.thumbnail is already in memory
-     *  (CycleJob holds it).  We're just exposing a reference,
-     *  not copying. */
+    /** Captured frame's thumbnail JPEG, shared with the eventual
+     *  [Bubble.imageBytes].  The live UI can render the final card shape
+     *  immediately while [bubble] is still null, then fill in recognition
+     *  fields without a layout swap.  This exposes the bytes already held
+     *  by the cycle rather than copying them. */
     val thumbnail: ByteArray,
 )
 
-/** [2026-07-14 Phase B] One cycle job's lifecycle status.  See
+/** One cycle job's lifecycle status.  See
  *  [com.example.intentcam.CycleManager] for the transition rules.
  *  `SUPERSEDED` is the only soft state — a superseded job keeps
  *  running in the background and may eventually reach COMPLETE,

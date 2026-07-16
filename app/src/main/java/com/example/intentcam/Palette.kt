@@ -4,7 +4,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * [2026-07-15 UI polish] Semantic color palette for IntentCam.
+ * Semantic color palette for IntentCam.
  *
  * Replaces ~27 hardcoded `Color(0xFFxxxxxx)` literals scattered
  * across MainActivity.kt with named slots in one place.  Each

@@ -1,8 +1,8 @@
 package com.example.intentcam
 
 /**
- * [2026-07-14 Phase C — inversion v3.0] Visual state of one action
- * chip on a bubble card.  Drives both the chip's color / decoration
+ * Visual state of one action chip on a bubble card.  Drives both
+ * the chip's color / decoration
  * and whether the chip is tappable:
  *
  *  - [Validated] — every required input for this action was

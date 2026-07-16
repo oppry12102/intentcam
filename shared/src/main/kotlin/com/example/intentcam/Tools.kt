@@ -119,7 +119,7 @@ data class ToolResult(
      *  context.  Kept raw (not base64) since the orchestrator
      *  base64-encodes it itself. */
     val followUpJpeg: ByteArray? = null,
-    /** [2026-07-13] When `emit_bubble` accepts an `action_ids: List<String>`
+    /** When `emit_bubble` accepts an `action_ids: List<String>`
      *  field from the model, populated here so the orchestrator can
      *  persist it onto [Bubble.llmProposedActions].  Drives the
      *  LLM-override branch of [com.example.intentcam.ActionResolver]:

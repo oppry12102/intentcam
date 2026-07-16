@@ -6,9 +6,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * [2026-07-15 scoring redesign] Intent-first composite scorer.  This
- * is now the SOLE score — the legacy `0.45·r1 + 0.45·r2 + 0.10·r3`
- * composite has been retired (see EvalRunner).
+ * Intent-first composite scorer.  This is now the SOLE score — the
+ * legacy `0.45·r1 + 0.45·r2 + 0.10·r3` composite has been retired
+ * (see EvalRunner).
  *
  * ## Formula
  * ```
@@ -169,7 +169,7 @@ data class ScorerV2Result(
             bubble.title.isNotBlank() || bubble.detail.isNotBlank() ||
                 bubble.details.any { it.value.isNotBlank() }
 
-        /** [2026-07-15] Per-input satisfaction check used by
+        /** Per-input satisfaction check used by
          *  [computeInputsComplete].  Mirrors the production
          *  [com.example.intentcam.InputParsers] regex set so
          *  eval and prod agree on "is this input present in
@@ -202,7 +202,7 @@ data class ScorerV2Result(
             else -> false
         }
 
-        /** [2026-07-15] Walk scene.expected_inputs, check each
+        /** Walk scene.expected_inputs, check each
          *  entry against the bubble's text surface via
          *  [inputSatisfied].  Returns the fraction satisfied
          *  (0.0..1.0).  Empty expected_inputs → 1.0 (no

@@ -451,17 +451,11 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "**请先相信 crop OCR 的字符**：它是高保真重扫，比 round-1 OCR 更可靠。crop OCR 的字符**直接 verbatim 引用**到 emit_bubble（[LOW] 行也 verbatim 引用——[LOW] 只是 OCR 引擎 confidence 低，字符本身仍然是你能直接用的 verbatim 字符；标记 \"[LOW]\" 让用户在 UI 看到这一行 OCR 不太确定）。\n" +
                     "\n" +
                     "### Step 4: emit_bubble\n" +
-                    // [2026-07-14 Phase E — inversion v3.0] emit_bubble
-                    //  schema drops the `type` enum.  The LLM now picks
-                    //  a free-form `intent` Chinese phrase (≤30 字) and
-                    //  an `action_ids` subset — no more 14-bucket
-                    //  classification.  `type` stays as an optional
-                    //  legacy field (defaults to FALLBACK_ID = "info")
-                    //  for backwards compat with v=2 GT fixtures.
+                    // `emit_bubble` uses a free-form Chinese `intent` and
+                    // an `action_ids` subset.  The optional `type` field is
+                    // retained only for legacy fixture compatibility.  See
+                    // `docs/adr/2026-07-14-v3-inversion.md`.
                     "看清楚内容 + 理解意图后，调 emit_bubble(content, intent, type?, confidence, details?, action_ids?) 总结。\n" +
-                    // __INTENT_BLOCK__ placeholder — Phase E leaves it
-                    //  empty (no more 14-id type enum to inject; intent
-                    //  is free-form text).
                     "\n" +
                     "__ACTIONS_BLOCK__\n" +
                     "\n" +
@@ -538,10 +532,6 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  type — `app/` passes `actionRegistry.allIds()`.
          */
         fun toolUseSystemPrompt(actionIds: List<String> = emptyList()): String {
-            // [2026-07-14 Phase E — inversion v3.0] __ACTIONS_BLOCK__
-            //  drives the `actions ∈ {...}` line.  The __INTENT_BLOCK__
-            //  placeholder was removed at the same time (LLM picks
-            //  `intent` as free-form text).
             val renderedActions = if (actionIds.isEmpty()) {
                 "actions ∈ {}（暂无动作可选；emit_bubble.action_ids 留空即可）"
             } else {

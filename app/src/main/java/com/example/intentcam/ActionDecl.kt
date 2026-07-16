@@ -102,8 +102,8 @@ data class ActionDef(
      *  "follow the family" — adding a new in-OBSERVE intent
      *  automatically lights it up. */
     val applicableFamilies: Set<IntentFamily> = emptySet(),
-    /** [2026-07-14 Phase A — inversion v3.0] Inputs this action
-     *  needs to fire.  Each spec's [ActionInputSpec.parser] pulls
+    /** Inputs this action needs to fire.  Each spec's
+     *  [ActionInputSpec.parser] pulls
      *  the value out of the bubble's text surface
      *  (title + detail + details[].value); null = missing.  The
      *  orchestrator (`ActionOrchestrator.validateInputs`) drives
@@ -112,8 +112,8 @@ data class ActionDef(
      *  always fireable as soon as the user taps it (e.g. the
      *  Toast-only stubs `scan_to_pay` / `redact_id`). */
     val requiredInputs: List<ActionInputSpec> = emptyList(),
-    /** [2026-07-14 Phase A] Display priority when multiple chips
-     *  show on the same bubble.  Higher = more prominent.
+    /** Display priority when multiple chips show on the same bubble.
+     *  Higher = more prominent.
      *  Negative = "show last" pattern (e.g. the always-on
      *  `copy_structured` default uses `Int.MIN_VALUE` to land at
      *  the end).  Default `0`. */
@@ -135,8 +135,8 @@ data class ActionDef(
      *  [ActionOutcome.LaunchAndroidIntent] makes MainActivity
      *  `startActivity` with the given Intent. */
     val body: suspend (ctx: Context, bubble: Bubble, args: Map<String, String>) -> ActionOutcome,
-    /** [2026-07-15 UI polish] Accent cluster this action belongs to,
-     *  drives [bubbleAccentActions] in MainActivity.  Was previously
+    /** Accent cluster this action belongs to, drives
+     *  [bubbleAccentActions] in MainActivity.  Was previously
      *  a side-table of two `Set<String>`s in MainActivity.kt
      *  (EXECUTE_IDS / DELEGATE_IDS); promoting the data onto
      *  [ActionDef] means a new PII action only needs to set
@@ -147,8 +147,8 @@ data class ActionDef(
     val accent: AccentCluster = AccentCluster.DELEGATE,
 )
 
-/** [2026-07-15] Three accent clusters the bubble card uses to
- *  color its left dot / IntentChip / confidence percentage:
+/** Three accent clusters the bubble card uses to color its left
+ *  dot / IntentChip / confidence percentage:
  *
  *  - [EXECUTE]  — pink; consent-gated chip.  dials a number,
  *    pays a QR, masks an ID.  Visually the highest-leverage
@@ -203,8 +203,8 @@ fun registerDefaultActions(reg: ActionRegistry) {
             parser = InputParsers.locationQuery,
         )),
         body = { _, bubble, args ->
-            // [2026-07-15] Prefer the orchestrator-parsed `query`
-            //  from `args` when present (orchestrator-driven path:
+            // Prefer the orchestrator-parsed `query` from `args` when present
+            //  (orchestrator-driven path:
             //  parser already validated the value against bubble's
             //  text surface).  Fall back to inline extraction when
             //  args is empty (legacy path: user tapped a chip
@@ -222,13 +222,12 @@ fun registerDefaultActions(reg: ActionRegistry) {
             ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             ActionOutcome.LaunchAndroidIntent(intent)
         },
-        // [2026-07-15] DELEGATE cluster: opens a system maps app
-        //  with no in-app side effect; the OS chooser is the
-        //  consent step.
+        // DELEGATE cluster: opens a system maps app with no in-app side
+        //  effect; the OS chooser is the consent step.
         accent = AccentCluster.DELEGATE,
     ))
-    // [2026-07-13] Second real outbound action: dial a phone number
-    //  extracted from a `phone` bubble.  Strictly consent-gated:
+    // Second real outbound action: dial a phone number extracted
+    //  from a `phone` bubble.  Strictly consent-gated:
     //   - requiresConfirmation=true → chip-tap pops a Compose
     //     AlertDialog before the body's ACTION_DIAL fires (handled
     //     by AppViewModel when def.requiresConfirmation is true; the
@@ -264,10 +263,10 @@ fun registerDefaultActions(reg: ActionRegistry) {
             //  prefixes; strip those.  Returns null on no match —
             //  the action then surfaces a Toast instead of firing
             //  a bogus Intent.
-            // [2026-07-15] Prefer the orchestrator-parsed
-            //  `phone_number` from `args` (validated path); fall
-            //  back to inline PhoneExtractor (user-form path or
-            //  legacy chip-tap before orchestrator gate).
+            // Prefer the orchestrator-parsed `phone_number` from `args`
+            //  (validated path); fall back to inline PhoneExtractor
+            //  (user-form path or legacy chip-tap before orchestrator
+            //  gate).
             val number = args["phone_number"] ?: PhoneExtractor.firstMatch(bubble)
             val outcome: ActionOutcome =
                 number?.let {
@@ -280,14 +279,13 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 } ?: ActionOutcome.ShowUiFeedback("未发现可拨打的号码")
             outcome
         },
-        // [2026-07-15] EXECUTE cluster: dials a phone number —
-        //  consent-gated side effect.  The AlertDialog before
-        //  dispatching is the "pause" that justifies the pink accent.
+        // EXECUTE cluster: dials a phone number — consent-gated side
+        //  effect.  The AlertDialog before dispatching is the "pause"
+        //  that justifies the pink accent.
         accent = AccentCluster.EXECUTE,
     ))
-    // [2026-07-13] Phase B: PII-sensitive stub actions (scan_to_pay
-    //  / redact_id).  Both share the same consent + default-off
-    //  gating as `dial_number`:
+    // PII-sensitive stub actions (scan_to_pay / redact_id).  Both
+    //  share the same consent + default-off gating as `dial_number`:
     //   - requiresConfirmation=true (chip-tap parks AlertDialog)
     //   - userPrefKey="action_<id>_enabled" (SettingsStore backs the
     //     toggle; the Settings screen surfaces the switches)
@@ -298,7 +296,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "扫码支付",
         iconKey = "wallet",
         applicableIntents = setOf("payment_qr"),
-        // [2026-07-14 Phase A] Toast-only body — no parser needed.
+        // Toast-only body — no parser needed.
         // The requiredInputs list is empty; the action is always
         // fireable, but the body itself surfaces a guidance Toast
         // instead of launching a payment app (see body comment for
@@ -306,7 +304,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         requiresConfirmation = true,
         userPrefKey = "action_scan_to_pay_enabled",
         body = { _, _, _ ->
-            // [2026-07-13] CRITICAL: NEVER auto-launch a payment app.
+            // CRITICAL: NEVER auto-launch a payment app.
             //  The QR could be presented in a screenshot / phishing
             //  context where auto-pay = money lost.  Even after the
             //  user confirms via the AlertDialog, we open the user's
@@ -321,7 +319,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 "请在相机/支付 App 里手动扫描二维码。不要直接扫描截图里的码。"
             )
         },
-        // [2026-07-15] EXECUTE cluster: payment-side-effect.
+        // EXECUTE cluster: payment-side-effect.
         accent = AccentCluster.EXECUTE,
     ))
     reg.register(ActionDef(
@@ -329,20 +327,20 @@ fun registerDefaultActions(reg: ActionRegistry) {
         label = "遮挡证件号",
         iconKey = "lock",
         applicableIntents = setOf("id_document"),
-        // [2026-07-14 Phase A] Toast-only body.  The id_document
-        // bubble's text surface IS the input the user would care
-        // about (身份证号 etc.), but the conservative-v1 body just
-        // shows a guidance Toast — no real parser is wired because
-        // we never write the value to a real sink yet.
+        // Toast-only body.  The id_document bubble's text surface
+        // IS the input the user would care about (身份证号 etc.),
+        // but the conservative-v1 body just shows a guidance Toast
+        // — no real parser is wired because we never write the value
+        // to a real sink yet.
         requiresConfirmation = true,
         userPrefKey = "action_redact_id_enabled",
         body = { _, bubble, _ ->
-            // [2026-07-13] Conservative v1: copy the FULL text to
-            //  clipboard (so the user can re-paste into a trusted
-            //  form), but mark the bubble as "ID seen, do not share
-            //  the screenshot" via Toast.  Future Phase C will copy a
-            //  redacted version (mask middle 6 digits of 身份证)
-            //  — Phase B ships the simplest safe thing first.
+            // Conservative v1: copy the FULL text to clipboard (so
+            //  the user can re-paste into a trusted form), but mark
+            //  the bubble as "ID seen, do not share the screenshot"
+            //  via Toast.  Future Phase C will copy a redacted version
+            //  (mask middle 6 digits of 身份证) — Phase B ships the
+            //  simplest safe thing first.
             val text = bubble.detail.ifBlank { bubble.title }
             // No clipboard write yet — Toast only until Phase C
             // bundles a proper redactor + clipboard plumbing.  The
@@ -353,13 +351,13 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 "识别到证件类图片。建议手打,不要截图分享。文本: ${text.take(40)}…"
             )
         },
-        // [2026-07-15] EXECUTE cluster: PII redaction — even the
-        //  Toast-only v1 is a "this is ID-bearing content" signal
-        //  worth visually flagging.
+        // EXECUTE cluster: PII redaction — even the Toast-only v1 is
+        //  a "this is ID-bearing content" signal worth visually
+        //  flagging.
         accent = AccentCluster.EXECUTE,
     ))
-    // [2026-07-15] Unified `share` action — collapses the six former
-    //  per-intent share-text actions (copy_listing / save_posting /
+    // Unified `share` action — collapses the six former per-intent
+    //  share-text actions (copy_listing / save_posting /
     //  copy_warning / copy_menu / copy_hours / copy_promo) into one.
     //  Every one did the same thing: fire an ACTION_SEND text/plain
     //  chooser pre-loaded with the bubble's title + detail.  They
@@ -405,9 +403,9 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 "shopping_promo" -> "分享促销" to "促销信息"
                 else -> "分享" to "内容"
             }
-            // [2026-07-15] Prefer the orchestrator-parsed `text` from
-            //  `args` (validated path); fall back to inline build for
-            //  a legacy chip-tap before the orchestrator gate ran.
+            // Prefer the orchestrator-parsed `text` from `args` (validated
+            //  path); fall back to inline build for a legacy chip-tap
+            //  before the orchestrator gate ran.
             val payload = (args["text"] ?: buildString {
                 append(bubble.title.takeIf { it.isNotBlank() } ?: fallbackTitle)
                 append('\n')
@@ -420,9 +418,9 @@ fun registerDefaultActions(reg: ActionRegistry) {
             }
             ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, chooserTitle))
         },
-        // [2026-07-15] DELEGATE cluster: the OS share-sheet target
-        //  picker is the consent step; the text payload is already
-        //  visible to the user.
+        // DELEGATE cluster: the OS share-sheet target picker is the
+        //  consent step; the text payload is already visible to the
+        //  user.
         accent = AccentCluster.DELEGATE,
     ))
 }
@@ -431,7 +429,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
  *  Pure function; lives alongside [ActionDef.body] so the extraction
  *  regex + priority order stay co-located with the only caller.
  *
- *  [2026-07-13] Initial version for the dial_number action.  Order
+ *  Initial version for the dial_number action.  Order
  *  matters: mobile (1xxxxxxxxxx) wins over landline (0xxxxxxxxxxx
  *  or xxx-xxxxxxxx), which wins over 400/800 service lines.  This
  *  matches what a Chinese user tapping "dial" would expect — the
@@ -442,7 +440,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
  *  Side-effect-free; safe to call from any context (it's a suspend-
  *  ready regex on a string).
  *
- *  [2026-07-14 Phase A — inversion v3.0] Now also exported as
+ *  Now also exported as
  *  [InputParsers.phoneNumber] so [ActionDef.requiredInputs] can
  *  declare `phone_number` as a parser without reaching into a
  *  private object.  Same logic, just a function reference.
@@ -476,8 +474,8 @@ internal object PhoneExtractor {
     }
 }
 
-/** [2026-07-14 Phase A — inversion v3.0] Reusable parsers for the
- *  common [ActionInputSpec] inputs.  Each function returns the parsed
+/** Reusable parsers for the common [ActionInputSpec] inputs.
+ *  Each function returns the parsed
  *  value or `null` when the input cannot be derived from the bubble
  *  (the orchestrator treats null as "missing input" → ghost chip or
  *  "ask the LLM to explore more").  Side-effect-free.

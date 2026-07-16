@@ -3,7 +3,7 @@ package com.example.intentcam.eval
 import com.example.intentcam.Bubble
 
 /**
- * [2026-07-15 v4 — action-first scorer] Companion scorer that runs
+ * Action-first scorer (v4).  Companion scorer that runs
  * side-by-side with [ScorerV2Result] during the dual-run window.
  *
  * ## Formula
@@ -23,9 +23,8 @@ import com.example.intentcam.Bubble
  * (which chip fires).
  *
  * `r_type` is dropped from the canonical dimension and demoted to a
- * UI accent input ([2026-07-15 v4 plan §2.3]). `r_actions` moves
- * from 0.20 to **0.55** to become the headline signal — it's the
- * user-can-act score.
+ * UI accent input. `r_actions` moves from 0.20 to **0.55** to become
+ * the headline signal — it's the user-can-act score.
  *
  * - **r_actions (0.55)** — Jaccard `|∩|/|∪|` of expected vs actual
  *   action ids. Same logic as [ScorerV2Result]; promoted to the

@@ -320,19 +320,17 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
     // ── 4. emit_bubble ───────────────────────────────────────────
     // End the cycle with a structured final answer.  Schema fields:
     //   - content:        what you see in the image (after any zoom_ins)
-    //   - intent:         [2026-07-14 Phase E — inversion v3.0]
-    //                     free-form Chinese phrase (≤30 chars)
+    //   - intent:         authoritative free-form Chinese phrase (≤30 chars)
     //                     describing what the user wants to do with
-    //                     this bubble.  REPLACES the 14-bucket `type`
-    //                     classification — the LLM now describes
-    //                     intent in its own words instead of picking
-    //                     from a closed enum.
+    //                     this bubble.  `type` remains a compatibility
+    //                     field; see
+    //                     `docs/adr/2026-07-14-v3-inversion.md`.
     //   - type:           [Phase E] Optional legacy field.  Defaults
     //                     to FALLBACK_ID ("info") when omitted.
     //                     Kept so older eval fixtures can still score;
     //                     the scorer reads it for backwards compat
     //                     but the orchestrator no longer uses it.
-    //   - action_ids:     [2026-07-13] which [ActionDef]s should
+    //   - action_ids:     which [ActionDef]s should
     //                     light up as chips on this bubble.  In Phase
     //                     E the LLM picks them WITHOUT the legacy
     //                     type→canonical-action table — the
@@ -376,12 +374,9 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                     })
                     put("type", JSONObject().apply {
                         put("type", "string")
-                        // [2026-07-14 Phase E] Drop the enum constraint.
-                        //  type is now free-form; the orchestrator
-                        //  doesn't use it for action routing anymore
-                        //  (action_ids from the LLM is the source of
-                        //  truth).  Kept as a string field for legacy
-                        //  eval scoring (r2_type still reads it).
+                        // `type` is free-form because `action_ids` is the
+                        // authoritative action-routing signal.  The field
+                        // remains available for legacy eval scoring.
                         put("description", "意图大类（可选；自由文本；缺省 info）")
                     })
                     put("details", JSONObject().apply {
@@ -427,7 +422,7 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                         put("type", "number")
                         put("description", "置信度 0.0~1.0")
                     })
-                    // [2026-07-13] action_ids optional.  No enum here:
+                    // action_ids is optional.  No enum here:
                     // the registered ids are spliced into the system
                     // prompt (the `actions ∈ {...}` block).  A stricter
                     // schema with `enum` would duplicate that list and
@@ -464,7 +459,7 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                         )
                     }
                 }
-                // [2026-07-13] Parse action_ids.  Reserved parser
+                // Parse action_ids.  The parser
                 // doesn't strictly enforce id existence — that's the
                 // resolver's job (ActionResolver.suggestIds does
                 // mapNotNull on the registry); we just hand the raw

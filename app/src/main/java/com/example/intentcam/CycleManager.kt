@@ -19,49 +19,29 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * [2026-07-14 Phase B — inversion v3.0; 2026-07-16 producer/consumer
- * split] Owns concurrent recognition cycles as a classic
- * **producer → bounded queue → worker pool → output** pipeline.
+ * Owns concurrent recognition cycles as a classic
+ * producer → bounded queue → worker pool → output pipeline.
  *
- * The shutter (producer) never blocks: each tap calls [startCycle],
- * which enqueues a [CycleJob] (status PENDING) into a pending FIFO
- * queue.  A [pump] loop drains that queue into at most
- * [UiState.CYCLE_CONCURRENCY] (= 2) concurrent worker coroutines —
- * the rest of a rapid burst waits its turn as PENDING.  As each
- * worker finishes it decrements the running count and re-pumps, so
- * queued cycles start in capture order, 2-at-a-time.
+ * Design rationale + alternatives considered: see
+ * [docs/adr/2026-07-16-producer-consumer-pipeline.md].
  *
- * Two independent bounds (the whole point of the split):
- *   - **Queue depth** [UiState.CYCLE_QUEUE_DEPTH] (= 8, `n`):
- *     max queued+in-flight.  Backpressure — when reached,
- *     [startCycle] rejects (returns null) and the shutter is
- *     already dimmed (`remaining = CYCLE_QUEUE_DEPTH -
- *     activeCycleCount`).  COMPLETE/ERRORED/SUPERSEDED don't count,
- *     so a finished cycle frees a slot immediately.
- *   - **Concurrency** [UiState.CYCLE_CONCURRENCY] (= 2, `m`):
- *     max cycles actually running OCR+LLM at once.  Keeps
- *     concurrent Anthropic SSE streams low (fewer 529 storms),
- *     bounds device memory/CPU, avoids OCR contention.
- *
- * There is no longer a "supersede oldest on overflow + cancel its
- * LLM call" path — overflow is prevented by backpressure, so
- * in-flight work is never thrown away mid-stream (no wasted API
- * tokens).  Cancellation now only happens on explicit user intent
- * ([cancelCycle], [cancelAll] via restart / leave-screen).
+ * Two independent bounds:
+ *   - **Queue depth** [UiState.CYCLE_QUEUE_DEPTH] (= 8): max
+ *     queued+in-flight.  Backpressure — when reached, [startCycle]
+ *     returns null and the shutter dims.
+ *   - **Concurrency** [UiState.CYCLE_CONCURRENCY] (= 2): max
+ *     cycles actually running OCR+LLM at once.
  *
  * Status flow:
- *   - [startCycle] → new CycleJob (PENDING), enqueued, [pump]
+ *   - [startCycle] → PENDING, enqueued, [pump]
  *   - worker picks it up → IN_FLIGHT, runCycle on ToolUseLoop
- *   - every [CycleProgress] → CycleJob.applyProgress + refreshValidation
- *   - cycle returns Outcome.Bubble → status = COMPLETE, worker re-pumps
- *   - exception / 529 storm / timeout → status = ERRORED, worker re-pumps
+ *   - [CycleProgress] → CycleJob.applyProgress + refreshValidation
+ *   - Outcome.Bubble → COMPLETE, worker re-pumps
+ *   - exception / 529 / timeout → ERRORED, worker re-pumps
  *
  * Public surface:
  *   - [startCycle] — enqueue a new job (nullable: null == rejected, queue full)
- *   - [focusedJobId] — most-recent job's id, drives the live UI's
- *     "current capture" indicator
- *   - [allJobs] — every job keyed by id; the UI iterates this to
- *     render cards
+ *   - [focusedJobId] / [allJobs] / [busy] — driven by CycleManager state
  */
 class CycleManager(
     private val scope: CoroutineScope,
@@ -72,47 +52,36 @@ class CycleManager(
     private val enabledIds: suspend () -> Set<String>,
     private val log: (tag: String, msg: String) -> Unit = { _, _ -> },
     /**
-     * [2026-07-15] Callback fired every time a cycle
-     * transitions to ERRORED (timeout / LLM error /
-     * exception).  AppViewModel uses this to surface a
-     * global `ErrorBanner` so the user gets a system-level
-     * signal beyond the per-cycle InFlightCard "识别超时"
-     * branch — the user might not be looking at the bubble
-     * list when a cycle dies, and the banner is the only
-     * thing pinned to the top of the screen.  Pair with
-     * [reportedCycleErrors] (Set) on the caller side for
-     * dedup so a cycle that emits multiple error events
-     * only shows the banner once. */
+     * Callback fired when a cycle transitions to ERRORED
+     * (timeout / LLM error / exception).  AppViewModel surfaces
+     * a global ErrorBanner so the user gets a system-level
+     * signal even when not looking at the bubble list.  The
+     * caller dedups via its own [reportedCycleErrors] set so a
+     * cycle emitting multiple error events only shows the
+     * banner once. */
     private val onCycleError: (cycleId: String, message: String) -> Unit = { _, _ -> },
     /**
-     * [2026-07-15 P0 fix] Callback fired when a cycle reaches
-     *  its terminal COMPLETE state via [ToolUseLoop.Outcome.Bubble].
-     *  AppViewModel uses this to clear the busy signal — the
-     *  pre-existing flow only flipped `analyzing` on the legacy
-     *  single-cycle path, so live-UI cycles left the TopOverlay
-     *  "识别中…" spinner stuck after completion. */
+     * Callback fired when a cycle reaches its terminal COMPLETE
+     * state via [ToolUseLoop.Outcome.Bubble].  AppViewModel uses
+     * this to sync the shutter counter (`syncCycleCounters`); the
+     * busy spinner is now derived from [busy], no imperative
+     * flip needed. */
     private val onCycleComplete: (cycleId: String, bubble: Bubble) -> Unit = { _, _ -> },
     /**
-     * [2026-07-15 P0 fix] Callback fired when a cycle returns
-     *  [ToolUseLoop.Outcome.PendingUserInput].  AppViewModel
-     *  surfaces this as the user-input AlertDialog and stashes
-     *  the originating frame's full-resolution JPEG so
-     *  [com.example.intentcam.AppViewModel.submitUserInput] can
-     *  resume via [resumeCycle].  The placeholder Bubble is
-     *  also written into `job.bubble.value` so the live UI
-     *  renders it as a BubbleCard (the live card list reads
-     *  `state.cycles`, so the placeholder has to land in the
-     *  per-job flow to be visible). */
+     * Callback fired when a cycle returns
+     * [ToolUseLoop.Outcome.PendingUserInput].  AppViewModel
+     * surfaces this as the user-input AlertDialog and routes
+     * follow-up text back to the originating CycleJob via
+     * [resumeCycle].  The placeholder Bubble is written into
+     * `job.bubble.value` so the live UI renders it as a
+     * BubbleCard. */
     private val onPendingUserInput: (cycleId: String, request: UserInputRequest, placeholder: Bubble) -> Unit = { _, _, _ -> },
     /**
-     * [2026-07-15] Per-cycle wall-clock cap on the LLM call.
-     * Default 90s — generous enough for 2-3-round cycles on
-     * slow networks (median ~2-3s per round) but tight enough
-     * that a true API hang surfaces within ~90s and the
-     * InFlightCard flips to its "识别超时" branch instead of
-     * pinning the cycle in IN_FLIGHT forever.  Configurable
-     * for tests (a 100ms cap lets you exercise the timeout
-     * branch in <1s). */
+     * Per-cycle wall-clock cap on the LLM call.  90s is generous
+     * enough for 2-3-round cycles on slow networks but tight
+     * enough that a true API hang surfaces within ~90s and the
+     * InFlightCard flips to its "识别超时" branch.  Configurable
+     * for tests (100ms exercises the timeout branch in <1s). */
     private val llmTimeoutMs: Long = 90_000L,
 ) {
     private val _allJobs = MutableStateFlow<Map<String, CycleJob>>(emptyMap())
@@ -194,15 +163,15 @@ class CycleManager(
         // structural-equality diffing relies on it.
         val updated = LinkedHashMap<String, CycleJob>(_allJobs.value)
         updated[job.id] = job
-        // [2026-07-16] Total map cap (CYCLES_MAX_TOTAL=8) bounds
-        //  memory + scrollback history.  Evict the oldest **terminal**
-        //  cycle (COMPLETE / ERRORED / SUPERSEDED) first so a still-
-        //  queued or in-flight cycle is never dropped out from under
-        //  the user.  Live cycles are already bounded by the
-        //  backpressure check above (≤ CYCLE_QUEUE_DEPTH = the cap),
-        //  so whenever size exceeds the cap at least one terminal
-        //  entry exists to evict.  No coroutine.cancel() needed —
-        //  terminal cycles have no live coroutine.
+        // Cap the total map at CYCLES_MAX_TOTAL=8 (bounds memory +
+        //  scrollback history).  Evict the oldest terminal cycle
+        //  (COMPLETE / ERRORED / SUPERSEDED) first so a still-
+        //  queued or in-flight cycle is never dropped out from
+        //  under the user.  Live cycles are bounded by the
+        //  backpressure check above (≤ CYCLE_QUEUE_DEPTH = the
+        //  cap), so whenever size exceeds the cap at least one
+        //  terminal entry exists to evict.
+        //  See ADR docs/adr/2026-07-16-producer-consumer-pipeline.md.
         while (updated.size > UiState.CYCLES_MAX_TOTAL) {
             val toDrop = updated.values
                 .filter {
@@ -299,28 +268,21 @@ class CycleManager(
     /** Drive one cycle: mark IN_FLIGHT, call runCycle with the
      *  job's id + an onProgress callback that mirrors
      *  CycleProgress back into the job's MutableStateFlows.
-     *  Errors transition to ERRORED; cancellation does NOT (the
-     *  job's coroutine continues in the background per
-     *  startCycle's lifecycle).
+     *  Errors transition to ERRORED.
      *
-     *  [2026-07-15] Wrapped the LLM call in
-     *  [withTimeoutOrNull] (default 90s) so a hung API call can't
-     *  pin a cycle in IN_FLIGHT forever — the user reported
-     *  "second photo completes, first one stays gray with
-     *  识别中... spinning indefinitely" when the API was slow.
-     *  90s is ~6-12× the median cycle (2-3 rounds × 2-3s per
-     *  round) — generous enough not to false-positive on a
-     *  legitimately long image, tight enough that a true hang
-     *  surfaces within a minute-and-a-half.  On timeout the
-     *  cycle is marked ERRORED; any partial bubble that was
-     *  emitted via onProgress before the timeout is preserved
-     *  in `job.bubble` so the InFlightCard's ERRORED branch
-     *  ("识别超时, 请再拍一张") takes over from the bubble-card
-     *  branch on the next state read.
+     *  LLM call is wrapped in [withTimeoutOrNull] (90s default,
+     *  configurable via [llmTimeoutMs]) so a hung API doesn't pin
+     *  a cycle in IN_FLIGHT forever.  On timeout the cycle is
+     *  marked ERRORED; any partial bubble emitted via onProgress
+     *  is preserved in `job.bubble` for the InFlightCard's
+     *  ERRORED branch ("识别超时, 请再拍一张").
      *
-     * [2026-07-15 P0 fix] `userText` parameter (default "") —
-     *  empty on the initial [startCycle] invocation, populated
-     *  with the user's submitted follow-up text on a [resumeCycle]
+     *  `userText` parameter is empty on the initial [startCycle]
+     *  invocation, populated with the user's follow-up text on a
+     *  [resumeCycle] re-invocation.  Re-using the same
+     *  `runCycleLoop` for both paths keeps the timeout /
+     *  cancellation / per-emit validation / progress-mirroring
+     *  logic in a single place.
      *  re-invocation.  Re-using the same `runCycleLoop` for both
      *  initial + resumed paths keeps the timeout / cancellation /
      *  per-emit validation / progress-mirroring logic in a single
@@ -337,28 +299,21 @@ class CycleManager(
                         userText = userText,
                         actionIds = actionRegistry.allIds(),
                         cycleId = job.id,
-                        // [2026-07-15] Wire the orchestrator's per-emit
-                        //  gate.  After every successful `emit_bubble`
-                        //  parse inside ToolUseLoop, this closure fires
-                        //  with the post-resolve bubble (LLM proposal ∩
-                        //  applicability ∩ enabled set).  When the
-                        //  orchestrator returns CONTINUE, ToolUseLoop
-                        //  injects a missing-input nudge and re-loops
-                        //  (capped at 3 retries); when it returns
-                        //  FINALIZE, the cycle ends with the current
-                        //  bubble.  maxRounds=4 matches the orchestrator
-                        //  default — 1 round for emit + 2-3 rounds for
-                        //  the LLM to fill missing inputs.
+                        // Per-emit gate: after every successful
+                        //  emit_bubble parse, the orchestrator's
+                        //  shouldFinalize() returns CONTINUE (missing
+                        //  inputs → inject missing-input nudge + retry
+                        //  up to 3 times) or FINALIZE (cycle ends with
+                        //  current bubble).  maxRounds=4 matches
+                        //  orchestrator default — 1 emit + 2-3 fills.
                         onEmit = { bubble, round ->
                             orchestrator.shouldFinalize(bubble, round, maxRounds = 4)
                         },
-                        // [2026-07-15] Stamp validation state onto the
-                        //  final bubble before the cycle returns.  This
-                        //  populates `bubble.validatedInputs` and
-                        //  `bubble.pendingInputs` (the data-class fields,
-                        //  separate from CycleJob's reactive flows which
-                        //  are kept in sync by [CycleJob.refreshValidation]
-                        //  + this callback's pre-return projection).
+                        // Project validation state onto the bubble's
+                        //  data-class fields (validatedInputs +
+                        //  pendingInputs).  CycleJob's reactive flows
+                        //  are kept in sync separately via
+                        //  CycleJob.refreshValidation().
                         markValidated = { bubble -> orchestrator.markValidatedInputs(bubble) },
                         onProgress = { progress ->
                             job.applyProgress(progress)
@@ -375,13 +330,14 @@ class CycleManager(
                             }
                             job.bubble.value = withActions
                             job.refreshValidation(orchestrator)
-                            // [2026-07-15] Soft intent-alignment check.
-                            //  Logs a breadcrumb when bubble.intent doesn't
-                            //  mention any primary noun from the bubble's
-                            //  chosen action set — useful when investigating
-                            //  "model picked right action, wrote wrong intent"
-                            //  regressions.  Warn-only; doesn't fail the
-                            //  cycle (intent is display-only per Decision C).
+                            // Soft intent-alignment check.  Logs a
+                            //  breadcrumb when bubble.intent doesn't
+                            //  mention any primary noun from the
+                            //  chosen action set — useful for
+                            //  investigating "model picked right
+                            //  action, wrote wrong intent"
+                            //  regressions.  Warn-only; doesn't fail
+                            //  the cycle.
                             when (val a = validateIntentAlignment(withActions)) {
                                 is IntentAlignmentCheck.Mismatch -> log(
                                     "INTENT_WARN",
@@ -434,24 +390,18 @@ class CycleManager(
                     log("CYCLE", "complete ${job.id} bubble=${outcome.bubble.id}")
                 }
                 is ToolUseLoop.Outcome.PendingUserInput -> {
-                    // [2026-07-15 P0 fix] The model needs free-form
-                    //  input to continue.  Previously this branch
-                    //  only logged — the user could never enter
-                    //  follow-up text because AppViewModel's
-                    //  userInputRequest was never set.  Now:
-                    //   1. Normalize the placeholder's cycleId so
-                    //      it always matches the owning CycleJob
-                    //      (defensive — ToolUseLoop.buildPlaceholder
-                    //      already does this since 2026-07-15 but
-                    //      we don't want a future regression there
-                    //      to silently break resume routing).
-                    //   2. Write the placeholder into `job.bubble`
-                    //      so the live UI renders it as a BubbleCard.
-                    //      IntentBubbles reads `state.cycles`, so the
-                    //      per-job flow is the only way to make the
-                    //      placeholder visible in the live card list.
-                    //   3. Fire the callback so AppViewModel can
-                    //      surface the AlertDialog + stash fullRes.
+                    // The model needs free-form input to continue.
+                    //  1. Normalize placeholder.cycleId so it always
+                    //     matches the owning CycleJob (defensive —
+                    //     ToolUseLoop.buildPlaceholder already does
+                    //     this but a future regression there shouldn't
+                    //     silently break resume routing).
+                    //  2. Write the placeholder into `job.bubble`
+                    //     so the live UI renders it as a BubbleCard.
+                    //     IntentBubbles reads state.cycles, so the
+                    //     per-job flow is the only path to visibility.
+                    //  3. Fire the callback so AppViewModel can
+                    //     surface the AlertDialog.
                     val placeholder = outcome.placeholder.copy(cycleId = job.id)
                     job.bubble.value = placeholder
                     onPendingUserInput(job.id, outcome.request, placeholder)
@@ -477,37 +427,25 @@ class CycleManager(
         }
     }
 
-    /** [2026-07-15 P0 fix] Resume a cycle that returned
-     *  [ToolUseLoop.Outcome.PendingUserInput] after the user
-     *  submitted follow-up text.  Looks up the job by [cycleId]
-     *  and re-launches [runCycleLoop] with the submitted
-     *  `userText`.  Returns `true` if the resume was accepted,
-     *  `false` if the cycle is no longer in a state where it can
-     *  be resumed (not found, already terminal, or stale — the
-     *  stale-job case should not silently fall back to the legacy
-     *  single-cycle path; see AppViewModel.submitUserInput).
+    /** Resume a cycle that returned [ToolUseLoop.Outcome.PendingUserInput]
+     *  after the user submitted follow-up text.  Looks up the job
+     *  by [cycleId] and re-launches [runCycleLoop] with the
+     *  submitted `userText`.  Returns `true` if the resume was
+     *  accepted, `false` if the cycle is no longer in a state where
+     *  it can be resumed (not found or already terminal — the caller
+     *  should clear the userInputRequest dialog without firing
+     *  another LLM call).
+     *
+     *  Pre-launch side-effects: clear `job.bubble.value` (so the live
+     *  UI flips back to InFlightCard spinner during the resumed
+     *  call) and reset `validatedInputs` + `pendingInputs` +
+     *  `nRounds` so chip states recompute from scratch.
      *
      *  The previous-coroutine invariant: [runCycleLoop] returns
      *  synchronously after firing the PendingUserInput callback,
      *  so by the time [resumeCycle] is called the old `job.coroutine`
      *  handle is already completed.  We replace it with the new
-     *  handle so supersede / cancelAll can kill the resumed call
-     *  if the user dismisses the dialog and immediately takes a
-     *  new photo.
-     *
-     *  [2026-07-15] Side-effects before launching the new call:
-     *   - `job.bubble.value = null` — clears the parked
-     *     placeholder so the live UI flips back to an InFlightCard
-     *     spinner while the resumed LLM call runs.  Without this
-     *     the card would keep showing the "需要补充信息" BubbleCard
-     *     until the resumed call emits a new bubble.
-     *   - Reset `validatedInputs` + `pendingInputs` + `nRounds` so
-     *     the live chip states (`Spinner` → `Validated`) recompute
-     *     from scratch against the resumed bubble.
-     *
-     *  Returns `false` (resume rejected) if the cycle is missing
-     *  or already terminal — the caller should clear the
-     *  userInputRequest dialog without firing another LLM call. */
+     *  handle so supersede / cancelAll can kill the resumed call. */
     fun resumeCycle(cycleId: String, userText: String): Boolean {
         val job = _allJobs.value[cycleId] ?: run {
             log("CYCLE", "resume REJECTED $cycleId: not in allJobs")
@@ -534,14 +472,13 @@ class CycleManager(
         job.validatedInputs.value = emptyMap()
         job.pendingInputs.value = emptyList()
         job.nRounds.value = 0
-        // [2026-07-16] Route the resume through the same worker-pool
-        //  accounting as a fresh cycle ([launchWorker] handles the
-        //  runningWorkers slot + re-pump on completion).  A resume is
-        //  user-initiated and runs immediately rather than re-queuing
-        //  at the tail — it may briefly make concurrency = m+1 if 2
-        //  workers are already busy, which is an acceptable trade for
-        //  interactive responsiveness (the parked cycle already freed
-        //  its slot when it returned PendingUserInput).
+        // Route the resume through the same worker-pool accounting
+        //  as a fresh cycle ([launchWorker] handles the runningWorkers
+        //  slot + re-pump on completion).  Resumes are user-initiated
+        //  and run immediately rather than re-queuing at the tail —
+        //  may briefly make concurrency = m+1 if 2 workers are busy,
+        //  acceptable trade for interactive responsiveness (the
+        //  parked cycle already freed its slot on PendingUserInput).
         launchWorker(job, userText = userText)
         log(
             "CYCLE",
@@ -550,16 +487,13 @@ class CycleManager(
         return true
     }
 
-    /** [2026-07-15 P0 fix] Discard a pending-input cycle when the
-     *  user cancels the user-input dialog.  Without this, a
-     *  cancelled input request would leave the cycle parked in
-     *  IN_FLIGHT forever (consuming a slot in CYCLES_MAX_TOTAL +
-     *  keeping the InFlightCard "识别中..." spinner stuck).
-     *  Marks the job SUPERSEDED + cancels its coroutine (if any)
-     *  and removes it from [allJobs] — the standard eviction
-     *  path used by [startCycle] when a new capture supersedes
-     *  an older one.  Idempotent on missing / already-terminal
-     *  cycle ids. */
+    /** Discard a pending-input cycle when the user cancels the
+     *  user-input dialog.  Marks the job SUPERSEDED + cancels its
+     *  coroutine (if any) and removes it from [allJobs].  Without
+     *  this, a cancelled input request would leave the cycle
+     *  parked in IN_FLIGHT forever (consuming a slot + keeping
+     *  the InFlightCard "识别中..." spinner stuck).  Idempotent
+     *  on missing / already-terminal cycle ids. */
     fun cancelCycle(cycleId: String, reason: String) {
         val job = _allJobs.value[cycleId] ?: return
         if (job.status.value == JobStatus.COMPLETE ||
@@ -581,33 +515,29 @@ class CycleManager(
         it.value.status.value != JobStatus.COMPLETE
     }
 
-    /** [2026-07-15 P0 fix] Count of cycles whose status is
-     *  [JobStatus.PENDING] or [JobStatus.IN_FLIGHT] — the
-     *  user-facing "in flight" gauge that drives the shutter
-     *  counter (CYCLE_MAX_CONCURRENT - inFlightJobCount() =
-     *  "remaining slots").  Distinct from [activeJobCount] which
-     *  also includes [JobStatus.ERRORED] and
-     *  [JobStatus.SUPERSEDED]: those are terminal and should
-     *  not gate the shutter.
+    /** Count of cycles whose status is [JobStatus.PENDING] or
+     *  [JobStatus.IN_FLIGHT] — the user-facing "in flight" gauge
+     *  that drives the shutter counter (`CYCLE_QUEUE_DEPTH -
+     *  inFlightJobCount()` = "remaining slots").  Distinct from
+     *  [activeJobCount] which also counts ERRORED + SUPERSEDED:
+     *  those are terminal and should not gate the shutter.
      *
-     *  Used by [com.example.intentcam.AppViewModel.syncCycleCounters]
-     *  to populate [com.example.intentcam.UiState.activeCycleCount]
-     *  on every cycle transition.  Cheap O(n) over the cycles
-     *  map (n <= 8 in practice due to CYCLES_MAX_TOTAL). */
+     *  Used by AppViewModel.syncCycleCounters to populate
+     *  UiState.activeCycleCount.  Cheap O(n) over the cycles
+     *  map (n <= CYCLES_MAX_TOTAL in practice). */
     fun inFlightJobCount(): Int = _allJobs.value.values.count {
         it.status.value == JobStatus.IN_FLIGHT ||
             it.status.value == JobStatus.PENDING
     }
 
-    /** [2026-07-15 P0 fix] Discard every cycle currently in
-     *  [allJobs] and clear the map.  Each non-COMPLETE job is
-     *  marked SUPERSEDED and its [Job.coroutine] cancelled so the
-     *  in-flight LLM HTTP request aborts (otherwise a 90-second
-     *  `llmTimeoutMs` budget would bill for a discarded result).
-     *  Wired into [com.example.intentcam.AppViewModel.restartScanning]
-     *  so tapping "重新扫描" actually stops whatever the camera was
-     *  doing — the previous version left cycles running in the
-     *  background, wasting API quota.
+    /** Discard every cycle currently in [allJobs] and clear the map.
+     *  Each non-COMPLETE job is marked SUPERSEDED and its
+     *  [Job.coroutine] cancelled so the in-flight LLM HTTP request
+     *  aborts (otherwise a 90-second `llmTimeoutMs` budget would
+     *  bill for a discarded result).  Wired into
+     *  AppViewModel.restartScanning so tapping "重新扫描" actually
+     *  stops whatever the camera was doing.
+     *
      *  Called from the main thread; safe because it only mutates
      *  StateFlows and calls `Job.cancel()` (which is thread-safe). */
     fun cancelAll(reason: String = "user restart") {

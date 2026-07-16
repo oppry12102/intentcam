@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
 /**
- * [2026-07-14 Phase B — inversion v3.0] One in-flight recognition
- * cycle.  Owns the [CapturedFrame] being processed plus the
+ * One in-flight recognition cycle.  Owns the [CapturedFrame]
+ * being processed plus the
  * reactive state (status / bubble / validatedInputs / nRounds)
  * that the live UI reads via [MutableStateFlow].  Created by
  * [CycleManager.startCycle]; never constructed directly by
@@ -48,8 +48,8 @@ class CycleJob internal constructor(
     val nRounds: MutableStateFlow<Int> = MutableStateFlow(0),
     val createdAtMs: Long = System.currentTimeMillis(),
     /**
-     * [2026-07-15] Handle to the [kotlinx.coroutines.launch]-ed
-     * coroutine driving this cycle's LLM call.  Set by
+     * Handle to the [kotlinx.coroutines.launch]-ed coroutine driving
+     * this cycle's LLM call.  Set by
      * [CycleManager.startCycle] right after `scope.launch` so a
      * later supersede can call `coroutine.cancel()` and actually
      * stop the in-flight HTTP request — the previous behavior

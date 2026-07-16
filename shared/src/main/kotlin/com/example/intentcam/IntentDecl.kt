@@ -98,27 +98,15 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "解决问题：翻译 / 公式 / 解题",
         family = IntentFamily.ACT_ON,
     ))
-    // [2026-07-13] `phone`: text-rich image whose primary actionable
-    //  content is a phone number (cell / landline / 400-line).  ACT_ON
-    //  because the user's goal is to dial, not merely observe — pairs
-    //  with the `dial_number` ActionDef declared in app/ActionDecl.kt
-    //  (consent-gated).  Detection regex lives in `scan_intents.py` +
-    //  any future Cloud-OCR product hint (e.g. "phone_intent_hint"
-    //  detector).
+    // Extended intents and their action mappings follow the framework's
+    // two-register lockstep policy.  See
+    // `docs/adr/2026-07-10-intent-action-framework.md`.
     reg.register(IntentDecl(
         id = "phone",
         label = "电话",
         llmHint = "拨号：手机号 / 座机 / 400电话 / 服务热线",
         family = IntentFamily.ACT_ON,
     ))
-    // [2026-07-13] Phase B: PII-sensitive intents (consolidated).
-    //  All four below ship with their corresponding ActionDef under
-    //  `requiresConfirmation=true` + `userPrefKey=...` gating, so the
-    //  chip + consent flow from `dial_number` is reused verbatim.
-    //  Lives here (not in a separate `registerPiiIntents`) to keep
-    //  the single-registry invariant ("one bag of intents, one bag
-    //  of actions") enforced at runtime.
-
     reg.register(IntentDecl(
         id = "real_estate_rental",
         label = "租房",
@@ -148,19 +136,6 @@ fun registerDefaultIntents(reg: IntentRegistry) {
     // the existing `info` family already serves the model's
     // `type=info` classification for these fixtures.
 
-    // [2026-07-12] Phase G — high-value single-purpose observe intents.
-    //  All three are OBSERVE (read-and-keep) rather than ACT_ON: the
-    //  user wants to UNDERSTAND / preserve the content (warning text,
-    //  menu items, business hours), not trigger an outbound side-effect.
-    //  Actions are copy-to-clipboard-style (verbatim text retention,
-    //  share-sheet handed off to the user) so the consumption UX is
-    //  uniform across the three.
-    //
-    //  Source data: `scan_intents.py` top-20 candidates
-    //  (profiling/INTENT_TOP20_CANDIDATES.md):
-    //    - warning_safety   (#6, 509 hits / 6.3%)
-    //    - menu_food        (#9, 308 hits / 3.8%)
-    //    - hours_schedule   (#12, 140 hits / 1.7%)
     reg.register(IntentDecl(
         id = "warning_safety",
         label = "警示",
@@ -179,63 +154,24 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         llmHint = "营业时间：营业中 / HH:MM-HH:MM / 营业时段 / 周一至周日",
         family = IntentFamily.OBSERVE,
     ))
-    // [2026-07-12] Phase H: `route_to` — directions / wayfinding
-    //  signal on a sign or in OCR text.  895 RCTW images in the
-    //  `direction_arrow` cluster (#2 after location), the largest
-    //  untapped group in the corpus.  Maps to the existing
-    //  `open_in_maps` action (open InMaps via geo: URI) so no new
-    //  ActionDef is needed — only `open_in_maps.applicableIntents`
-    //  widens to include this id (single line edit, lockstep-safe).
-    //  Family OBSERVE: user wants to know how to GET to a place /
-    //  follow the arrow / walk the route; not pure-dial or
-    //  pure-locate.  The `location` family-equivalence (1.0 vs
-    //  `info`) still applies: a sign with both directions + landmark
-    //  name should interchangeably score against `info` or
-    //  `route_to` (Phase F invariant).
     reg.register(IntentDecl(
         id = "route_to",
         label = "导航",
         llmHint = "导航：箭头 / 方位词 / 步行 N 米 / 步行 N 分钟 / 前方/出口/入口 标记",
         family = IntentFamily.OBSERVE,
     ))
-    // [2026-07-12] Phase I — `service_institution`: public-service
-    //  institution sign (医院 / 学校 / 政府机关 / 银行 / 邮局 / 法院 /
-    //  派出所 etc.).  Target cluster = 514 images / 6.4% of RCTW corpus
-    //  (rank #5 in `scan_intents.py`).  Family OBSERVE — user wants
-    //  to identify / locate the institution, not dial or purchase.
-    //  Maps to the existing `open_in_maps` action (geo: URI is the
-    //  same surface as `location`/`route_to`); the unified `share`
-    //  action widens too so institution signs carrying 营业时间 still
-    //  get the share-sheet chip.  Single canonical action = `open_in_maps`
-    //  (primary need); verifier injects if LLM missed it.
     reg.register(IntentDecl(
         id = "service_institution",
         label = "机构",
         llmHint = "公共机构：医院 / 学校 / 政府机关 / 银行 / 邮局 / 法院 / 派出所 / 大使馆",
         family = IntentFamily.OBSERVE,
     ))
-    // [2026-07-13] Phase J — `shopping_promo`: deals / discounts / sales
-    //  sign.  Target cluster = 351 images / 4.4% of RCTW corpus
-    //  (rank #7 in `scan_intents.py` — highest un-shipped after
-    //  price/date_time).  Family OBSERVE — user wants the deal text
-    //  to share or remember, not a purchase flow.  Maps to the
-    //  unified `share` action (share-sheet text export).  Real-estate 转让 is
-    //  excluded by verifier `!REAL_ESTATE` guard (mirrors Phase E3)
-    //  to avoid mis-fire on 二手房急售.
     reg.register(IntentDecl(
         id = "shopping_promo",
         label = "促销",
         llmHint = "促销：特价 / 打折 / 满减 / 秒杀 / 亏本 / 清仓 / 甩卖 / 红包 / 限时 / 抢购",
         family = IntentFamily.OBSERVE,
     ))
-    // [2026-07-13] End of phase-ship timeline.  See ARCHITECTURE.md
-    //  §15 + ~/.claude/plans/action-first-architecture.md for the
-    //  v3.0→v4 thesis: the 14 IntentDecl ids above are now UI-input
-    //  fallbacks (visual accent derivation + eval backwards-compat
-    //  via r_type), not classification targets.  The canonical user-
-    //  visible discriminator is [com.example.intentcam.Bubble.actions]
-    //  (the 5 action ids), and [com.example.intentcam.eval.ScorerV3Result]
-    //  is the dual-run scorer replacing the r_type-anchored v2.
 }
 
 /** Compact "id（label） / id（label） / ..." form used by tool descriptions. */

@@ -38,33 +38,33 @@ import java.io.File
 internal class EvalRunner(private val config: EvalConfig) {
 
     private val client = LlmClient(evalLlmConfig)
-    // [2026-07-10] Intent registry built before tools so the emit_bubble
+    // Intent registry built before tools so the emit_bubble
     //  schema enum and the system prompt's type list see the same set
     //  of ids the orchestrator fallbacks point at.  The same registry
     //  also drives the A2 family-based type scoring below.
     private val intentRegistry = IntentRegistry()
         .also { registerDefaultIntents(it) }
     private val registry = ToolRegistry().also { it.registerDefaultTools(intentRegistry) }
-    // [2026-07-13] The model can only emit `action_ids` that are
-    //  enumerated in the system prompt's `actions ⊆ {...}` block.
-    //  Mirror the Android app's default registry by id so the eval
-    //  cycle sees the same action-id vocabulary as prod.  A registry
-    //  type isn't needed here — we score the bubble's raw proposal
+    // The model can only emit `action_ids` that are enumerated in the
+    //  system prompt's `actions ⊆ {...}` block.  Mirror the Android
+    //  app's default registry by id so the eval cycle sees the same
+    //  action-id vocabulary as prod.  A registry type isn't needed
+    //  here — we score the bubble's raw proposal
     //  (`llmProposedActions`) directly against the ground truth, not
     //  the resolver-filtered `actions` list, so a disabled / future
     //  action change doesn't silently move the recall number.
     //  Keep in lockstep with `registerDefaultActions` in `app/`.
     private val defaultActionIds = listOf(
         "open_in_maps",   // location → maps
-        "dial_number",    // [2026-07-13] phone → system dialer (Phase A)
-        "scan_to_pay",    // [2026-07-13] payment_qr → guidance Toast (Phase B)
-        "redact_id",      // [2026-07-13] id_document → guidance Toast (Phase B)
-        "share",          // [2026-07-15] unified share-text action (was
+        "dial_number",    // phone → system dialer
+        "scan_to_pay",    // payment_qr → guidance Toast
+        "redact_id",      // id_document → guidance Toast
+        "share",          // unified share-text action (was
                           //   copy_listing/save_posting/copy_warning/
                           //   copy_menu/copy_hours/copy_promo)
     )
 
-    /** [2026-07-15] Eval-side parser-mirror registry.  Used by the
+    /** Eval-side parser-mirror registry.  Used by the
      *  [markValidated] callback passed to ToolUseLoop.runCycle so
      *  eval-side ScorerV2 sees populated `validatedInputs` /
      *  `pendingInputs` fields (parity with prod's
@@ -123,12 +123,11 @@ internal class EvalRunner(private val config: EvalConfig) {
          *  over-credit on trivial 1-2 char matches). */
         const val CHAR_OVERLAP_THRESHOLD = 0.67
     }
-    // Phase 2b debug (2026-07-12): forward ToolUseLoop logs to stderr
-    // when --debug-fixtures is set, otherwise stay silent like before.
+    // Phase 2b debug: forward ToolUseLoop logs to stderr when
+    // --debug-fixtures is set, otherwise stay silent like before.
     // The orchestrator's log callback runs in a hot loop so we don't
     // want unconditional stderr — only emit for the fixtures we care
-    // about (currently the empty-bubble underperformers from the 4096
-    // retest: rctw_01/03/10/18).
+    // about.
     private val debugFixtures: Set<String> = config.debugFixtures
     private val currentSceneId = AtomicReference<String?>(null)
     private val orchestrator = ToolUseLoop(
@@ -162,10 +161,10 @@ internal class EvalRunner(private val config: EvalConfig) {
             System.err.println("ERROR: ground truth ${config.groundTruth} has empty 'scenes' array.")
             return 1
         }
-        // Phase 2b (2026-07-12): --fixtures restricts the run to a
-        // curated id set, preserving GT order so jsonOut is
-        // comparable to the 20-fixture baselines.  When the user
-        // passes --fixtures together with --limit, --fixtures wins.
+        // --fixtures restricts the run to a curated id set,
+        // preserving GT order so jsonOut is comparable to the
+        // 20-fixture baselines.  When the user passes --fixtures
+        // together with --limit, --fixtures wins.
         val filtered = if (config.fixtures.isNotEmpty()) {
             val wanted = config.fixtures
             sceneList.filter { it.optString("id", "?") in wanted }
@@ -186,7 +185,7 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("Loaded $limit real-photo fixtures from ${config.groundTruth.name}")
         println(
             "FrameAnalyzer simulation: --resize ${config.resize} --quality ${config.quality}  " +
-                "image-strategy=1-only (matches prod since 2026-07-06)"
+                "image-strategy=1-only"
         )
 
         val perCategory = mutableMapOf<String, MutableList<Double>>()
@@ -206,16 +205,11 @@ internal class EvalRunner(private val config: EvalConfig) {
 
             // Build a CapturedFrame that mirrors what FrameAnalyzer
             // produces on-device: 1 thumbnail + 1 fullRes (1-only
-            // image strategy, default since 2026-07-06).  The
-            // ImageIO-based thumbnail/crop impls (installed by
-            // EvalMain) are the JVM equivalent of BitmapFactory +
-            // BitmapRegionDecoder.  Thumbnail sizing comes from
-            // --resize/--quality.
+            // image strategy).  The ImageIO-based thumbnail/crop
+            // impls (installed by EvalMain) are the JVM equivalent
+            // of BitmapFactory + BitmapRegionDecoder.  Thumbnail
+            // sizing comes from --resize/--quality.
             val rawBytes = imgPath.readBytes()
-            // TEST 2026-07-12: mirror MAX_FULL_DIM 2048→4096
-            // (matches FrameAnalyzer.kt:167 retest).  2026-07-14:
-            // hardcoded literal replaced with `ImagePipeline`
-            // shared constant — see shared/.../ImagePipeline.kt.
             val fullRes = encodeThumbnail(
                 rawBytes,
                 maxDim = ImagePipeline.MAX_FULL_DIM,
@@ -240,21 +234,20 @@ internal class EvalRunner(private val config: EvalConfig) {
                     fullRes = frame.fullRes,
                     userText = "",
                     cropOcrCap = config.cropOcrCap,
-                    // [2026-07-13] Splice the registered action-id
-                    //  vocabulary into the system prompt.  Empty
-                    //  list = no LLM-proposal branch (legacy
-                    //  applicability filter).
+                    // Splice the registered action-id vocabulary
+                    //  into the system prompt.  Empty list = no
+                    //  LLM-proposal branch (legacy applicability
+                    //  filter).
                     actionIds = defaultActionIds,
-                    // [2026-07-15] Stamp validation state on the
-                    //  bubble using shared-side parser mirrors.
-                    //  Prod uses ActionOrchestrator.markValidatedInputs
-                    //  (which closes over the Android-only
-                    //  ActionRegistry); eval can't reach that
-                    //  registry, so it walks the same parser
-                    //  definitions via [InputsValidator].  Kept
-                    //  lightweight — the regex chain runs once
-                    //  per cycle on the bubble's already-parsed
-                    //  text surface.
+                    // Stamp validation state on the bubble using
+                    //  shared-side parser mirrors.  Prod uses
+                    //  ActionOrchestrator.markValidatedInputs (which
+                    //  closes over the Android-only ActionRegistry);
+                    //  eval can't reach that registry, so it walks
+                    //  the same parser definitions via
+                    //  [InputsValidator].  Kept lightweight — the
+                    //  regex chain runs once per cycle on the
+                    //  bubble's already-parsed text surface.
                     markValidated = { bubble ->
                         val specs = defaultRequiredInputs()
                         val (validated, pending) = projectInputsValidation(bubble, specs)
@@ -268,11 +261,11 @@ internal class EvalRunner(private val config: EvalConfig) {
 
             val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
                 ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-            // [2026-07-15 scoring redesign] composite_v2 is the sole
-            //  score (legacy 0.45·r1+0.45·r2+0.10·r3 retired).  r_text +
-            //  r_type are computed here (the latter needs the populated
-            //  intentRegistry); r_actions (Jaccard) + r_inputs inside
-            //  ScorerV2.
+            // composite_v2 is the sole score (legacy
+            //  0.45·r1+0.45·r2+0.10·r3 retired).  r_text + r_type
+            //  are computed here (the latter needs the populated
+            //  intentRegistry); r_actions (Jaccard) + r_inputs
+            //  inside ScorerV2.
             val textScore = scoreRound2Text(outcome, scene)
             val typeScore = scoreRound2Type(outcome, scene)
             val scorerV2 = com.example.intentcam.eval.ScorerV2Result.compute(
@@ -281,13 +274,11 @@ internal class EvalRunner(private val config: EvalConfig) {
                 textScore = textScore,
                 typeScore = typeScore,
             )
-            // [2026-07-15 v4 — action-first scorer, dual-run] companion
-            //  ScorerV3 runs side-by-side.  Reuses ScorerV2's already-
-            //  computed r_text/r_actions/r_inputs (no double evaluation).
-            //  Until IntentCam Dev signs off on the dual-run report,
+            // Companion ScorerV3 runs side-by-side.  Reuses
+            //  ScorerV2's already-computed r_text/r_actions/r_inputs
+            //  (no double evaluation).  Until dual-run sign-off,
             //  composite_v2 remains the regression-gating headline;
-            //  composite_v3 is purely informational here.  See
-            //  ~/.claude/plans/action-first-architecture.md §3 Step 1.
+            //  composite_v3 is purely informational here.
             val scorerV3 = com.example.intentcam.eval.ScorerV3Result.compute(
                 bubble = bubble,
                 scene = scene,
@@ -319,9 +310,8 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "v2_text" to scorerV2.text,
                 "v2_actions" to scorerV2.actions,
                 "v2_inputs" to scorerV2.inputs,
-                // [2026-07-15 v4] dual-run side-channel; composite_v3
-                //  is purely informational here until IntentCam Dev
-                //  signs off on the dual-run report.
+                // dual-run side-channel; composite_v3 is purely
+                // informational here until dual-run sign-off.
                 "composite_v3" to scorerV3.composite,
                 "v3_actions" to scorerV3.actions,
                 "v3_text" to scorerV3.text,
@@ -354,9 +344,8 @@ internal class EvalRunner(private val config: EvalConfig) {
         if (results.isNotEmpty()) {
             val overallV2 = results.map { it["composite_v2"] as Double }.average()
             println("average composite_v2: ${"%.3f".format(overallV2)}")
-            // [2026-07-15 v4] dual-run side-channel — informational only
-            //  until IntentCam Dev signs off on the dual-run report.
-            //  See ~/.claude/plans/action-first-architecture.md §3 Step 1.
+            // dual-run side-channel — informational only until
+            // dual-run sign-off.
             val overallV3 = results.map { it["composite_v3"] as Double }.average()
             println("average composite_v3: ${"%.3f".format(overallV3)}")
             val avgType = results.map { it["v2_type"] as Double }.average()
@@ -402,10 +391,10 @@ internal class EvalRunner(private val config: EvalConfig) {
         categoryAvgs: Map<String, Double>,
     ) {
         val root = JSONObject()
-        // version 2 = post-2026-07-15 scoring redesign (composite_v2
+        // version 2 = post-scoring-redesign JSON shape (composite_v2
         //  sole score; legacy composite / r1 / r2_type / r3 removed).
         root.put("version", 2)
-        root.put("description", "Kotlin eval results — calls real ToolUseLoop + LlmClient (post-2026-07-06 refactor)")
+        root.put("description", "Kotlin eval results — calls real ToolUseLoop + LlmClient")
         root.put("ground_truth", config.groundTruth.name)
         root.put("img_dir", config.imgDir.path)
         root.put("limit", config.limit)
@@ -417,11 +406,11 @@ internal class EvalRunner(private val config: EvalConfig) {
             results.map { it["composite_v2"] as Double }.average()
         } else 0.0
         root.put("overall_composite_v2", overallV2)
-        // [2026-07-15 v4] dual-run side-channel.  Until IntentCam Dev
-        //  signs off on the v4 plan's regression-stability gate
-        //  (composite_v2 PASS + composite_v3 |Δ| ≤ 0.03 week-over-week),
-        //  overall_composite_v3 is purely informational.  After sign-off,
-        //  `check_regression.py` flips its read target to this field.
+        // Dual-run side-channel.  Until dual-run sign-off on the
+        //  regression-stability gate (composite_v2 PASS + composite_v3
+        //  |Δ| ≤ 0.03 week-over-week), overall_composite_v3 is purely
+        //  informational.  After sign-off, `check_regression.py`
+        //  flips its read target to this field.
         val overallV3 = if (results.isNotEmpty()) {
             results.map { it["composite_v3"] as Double }.average()
         } else 0.0
@@ -437,7 +426,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 results.map { it["v2_actions"] as Double }.average())
             root.put("overall_v2_inputs",
                 results.map { it["v2_inputs"] as Double }.average())
-            // [2026-07-15 v4] v3 component aggregates
+            // v3 component aggregates
             root.put("overall_v3_actions",
                 results.map { it["v3_actions"] as Double }.average())
             root.put("overall_v3_text",
@@ -469,10 +458,8 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("v2_text", r["v2_text"] as Double)
             o.put("v2_actions", r["v2_actions"] as Double)
             o.put("v2_inputs", r["v2_inputs"] as Double)
-            // [2026-07-15 v4] dual-run side-channel — informational only
-            //  during the dual-run window; canonical switch gated on
-            //  IntentCam Dev sign-off (see ~/.claude/plans/action-first-
-            //  architecture.md §3 Step 4).
+            // Dual-run side-channel — informational only during
+            // the dual-run window; canonical switch gated on sign-off.
             o.put("composite_v3", r["composite_v3"] as Double)
             o.put("v3_actions", r["v3_actions"] as Double)
             o.put("v3_text", r["v3_text"] as Double)

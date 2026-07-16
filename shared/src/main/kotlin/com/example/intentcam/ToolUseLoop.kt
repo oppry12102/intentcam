@@ -72,7 +72,7 @@ class ToolUseLoop(
      *   of crop OCR runs to perform across the whole cycle (0 =
      *   unlimited, prod default).  Round-1 OCR pre-pass is always
      *   counted separately and is unaffected.
-     * @param actionIds [2026-07-13] registered `ActionDef` ids the
+     * @param actionIds registered `ActionDef` ids the
      *   model can propose in `emit_bubble.action_ids`.  Spliced into
      *   the system prompt (the `actions ⊆ {...}` line).  Empty list
      *   = no LLM-proposal branch in [com.example.intentcam.ActionResolver];
@@ -86,7 +86,7 @@ class ToolUseLoop(
         userText: String,
         cropOcrCap: Int = 0,
         actionIds: List<String> = emptyList(),
-        /** [2026-07-14 Phase B — inversion v3.0] Stable id of the
+        /** Stable id of the
          *  owning cycle job (set by [com.example.intentcam.CycleManager]
          *  via [CycleProgress.cycleId]).  Defaults to "default" for
          *  the legacy single-cycle caller (eval, single-shot
@@ -96,7 +96,7 @@ class ToolUseLoop(
          *  originating CycleJob even when multiple jobs run
          *  concurrently. */
         cycleId: String = "default",
-        /** [2026-07-14 Phase B] Per-emit progress callback.  Fires
+        /** Per-emit progress callback.  Fires
          *  every time the cycle produces a finalized (post-verifier)
          *  bubble — at minimum once per cycle when [Outcome.Bubble]
          *  is returned, plus on every successful `emit_bubble` parse
@@ -112,7 +112,7 @@ class ToolUseLoop(
          *  suspend boundary lets us call without a separate
          *  launch-per-emit. */
         onProgress: suspend (CycleProgress) -> Unit = {},
-        /** [2026-07-15] Optional gate called after each successful
+        /** Optional gate called after each successful
          *  `emit_bubble` parse, BEFORE the cycle returns.  When the
          *  callback returns [FinalizeDecision.CONTINUE], the loop
          *  injects a missing-input nudge into the next user message
@@ -127,7 +127,7 @@ class ToolUseLoop(
          *  closing over the orchestrator.  Default null preserves
          *  the legacy single-shot emit behavior for eval + tests. */
         onEmit: ((bubble: com.example.intentcam.Bubble, round: Int) -> FinalizeDecision)? = null,
-        /** [2026-07-15] Optional projection called once on the final
+        /** Optional projection called once on the final
          *  bubble before it returns in [Outcome.Bubble].  Lets the
          *  caller stamp `validatedInputs` / `pendingInputs` onto
          *  the bubble's data-class fields using whatever
@@ -179,8 +179,9 @@ class ToolUseLoop(
         // the leading field on every branch so the user can grep it.
         // Useful for sanity-checking the on-device pipeline: e.g.
         // ocr_hit=false with fullRes at 87KB strongly suggests the
-        // ImageAnalysis buffer is too small for OCR to read anything
-        // (cf. [2026-07-12] ResolutionSelector fix).  Also dumps
+        // full-resolution ImageAnalysis buffer is unexpectedly small.
+        // See `docs/adr/2026-07-10-on-device-sensor-resolution.md`
+        // for the resolution contract.  It also dumps
         // confidence stats (avg / min / max) so a partial-OCR run
         // (most blocks skipped because confidence < threshold) is
         // visible in the overlay instead of silently halving the
@@ -226,7 +227,7 @@ class ToolUseLoop(
         // bound wall-time; if the retry also truncates we fall through
         // to the empty-bubble path and the caller scores it as-is.
         var maxTokensRetries = 0
-        // [2026-07-15] Input-missing nudge loop.  After each
+        // Input-missing nudge loop.  After each
         //  emit_bubble parse, [onEmit] (the orchestrator's gate) is
         //  consulted: CONTINUE → inject missing-input hint + re-loop.
         //  Capped at [INPUT_MISSING_MAX_RETRIES] (3) per fixture to
@@ -396,7 +397,7 @@ class ToolUseLoop(
                             jpeg = thumbnail,
                             toolName = def.name,
                             detail = toolResult.toolSummary,
-                            // [2026-07-15 P0 fix] Stamp the owning
+                            // Stamp the owning
                             //  cycle's id onto the placeholder so
                             //  AppViewModel can route the user's
                             //  follow-up text back to the correct
@@ -573,20 +574,11 @@ class ToolUseLoop(
 
             if (anyFinalBubble != null) {
                 val tb = anyFinalBubble
-                // [2026-07-14 Phase E — inversion v3.0] IntentVerifier
-                //  is RETIRED.  The LLM's emit_bubble.type is now
-                //  authoritative (no silent override) and the LLM's
-                //  action_ids list is the source of truth for chip
-                //  selection.  The ActionOrchestrator (live in CycleManager)
-                //  validates each action's requiredInputs against the
-                //  bubble surface, populating bubble.validatedInputs
-                //  for the chip-state mapper.  See:
-                //    - ActionOrchestrator.kt (frame / validate / finalize)
-                //    - ChipStateMapper.kt (resolved ChipState per chip)
-                //    - Plan: ~/.claude/plans/frolicking-riding-lobster.md
-                //  Verified by ScorerV2 (Phase D) which weights
-                //  r_actions_recall (0.40) + r_inputs_complete (0.30)
-                //  instead of the legacy r2_type (0.45).
+                // The LLM's `emit_bubble.type` and `action_ids` are
+                // authoritative.  ActionOrchestrator only validates each
+                // action's required inputs and projects chip state; it does
+                // not rewrite the model's intent or action selection.  See
+                // `docs/adr/2026-07-14-v3-inversion.md`.
                 val verifiedType = tb.type
                 val verifiedActions: List<String>? =
                     tb.proposedActions?.takeIf { it.isNotEmpty() }
@@ -607,7 +599,7 @@ class ToolUseLoop(
                     // emit the rows — the r2_text plateau's
                     // companion symptom.
                     details = tb.details,
-                    // [2026-07-13] Persist the model's explicit
+                    // Persist the model's explicit
                     // action_ids choice onto the bubble so
                     // AppViewModel's resolver can use it as the
                     // LLM-override branch.  Null when emit_bubble
@@ -615,7 +607,7 @@ class ToolUseLoop(
                     // applicability path).
                     llmProposedActions = verifiedActions,
                 )
-                // [2026-07-14 Phase B] Notify the CycleManager that
+                // Notify the CycleManager that
                 // this cycle has a finalized bubble.  `isTerminal =
                 // true` because the cycle returns Outcome.Bubble
                 // immediately after this callback.  CycleManager
@@ -627,7 +619,7 @@ class ToolUseLoop(
                     bubble = finalBubble,
                     isTerminal = true,
                 ))
-                // [2026-07-15] Input-missing gate.  When the caller
+                // Input-missing gate.  When the caller
                 //  wires [onEmit] (typically
                 //  [com.example.intentcam.ActionOrchestrator.shouldFinalize]
                 //  via [com.example.intentcam.CycleManager]), this
@@ -655,7 +647,7 @@ class ToolUseLoop(
                 if (gate is FinalizeDecision.FINALIZE) {
                     log("TOOL_FINALIZE", "round $round reason=${gate.reason}")
                 }
-                // [2026-07-15] Stamp validation state onto the bubble
+                // Stamp validation state onto the bubble
                 //  before returning.  Wraps the bubble in a copy()
                 //  so the data-class fields reflect the orchestrator's
                 //  (or eval-side helper's) view.  Null = no-op
@@ -688,7 +680,7 @@ class ToolUseLoop(
             createdAtMs = System.currentTimeMillis(),
             toolName = chosenToolName,
         )
-        // [2026-07-15] Apply markValidated to the 兜底 bubble too so
+        // Apply markValidated to the 兜底 bubble too so
         //  eval/prod see consistent validation state regardless of
         //  whether the cycle hit the round cap or emitted normally.
         val stampedFallback = markValidated?.invoke(fallbackBubble) ?: fallbackBubble
@@ -699,7 +691,7 @@ class ToolUseLoop(
         jpeg: ByteArray,
         toolName: String,
         detail: String,
-        // [2026-07-15 P0 fix] Cycle id stamped onto the placeholder's
+        // Cycle id stamped onto the placeholder's
         //  Bubble.cycleId so AppViewModel can route the user's
         //  follow-up text back to the originating CycleJob when
         //  multiple cycles run concurrently.  Defaults to the
@@ -712,10 +704,6 @@ class ToolUseLoop(
         cycleId = cycleId,
         type = IntentRegistry.FALLBACK_ID,
         title = "需要补充信息",
-        // [2026-07-13] Drop the "via $toolName" fallback — that string
-        //  was a debug breadcrumb leaking the model's tool-routing
-        //  onto the user-facing bubble.  Title alone (above) already
-        //  communicates the placeholder state.
         detail = detail,
         confidence = 0.5f,
         imageBytes = jpeg,
@@ -813,7 +801,7 @@ class ToolUseLoop(
          *  -0.257.  Tighter cap = not safe.  Reverted. */
         const val MAX_ROUNDS = 30
 
-        /** [2026-07-15] Cap on input-missing nudge rounds per cycle.
+        /** Cap on input-missing nudge rounds per cycle.
          *  After this many retries the bubble ships as-is with
          *  `pendingInputs` populated (ghost chips render in UI).
          *  3 chosen to match the empirical "1 round emit + 1-2
@@ -830,7 +818,7 @@ class ToolUseLoop(
 }
 
 /**
- * [2026-07-14 Phase B — inversion v3.0] One progress event from
+ * One progress event from
  * [ToolUseLoop.runCycle].  Fired on every successful `emit_bubble`
  * parse inside the loop (so partial bubbles reach the live UI
  * before the cycle's terminal round) and once more on the final
