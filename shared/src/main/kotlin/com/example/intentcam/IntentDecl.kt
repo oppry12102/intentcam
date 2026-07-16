@@ -19,6 +19,24 @@ data class IntentDecl(
     val label: String,               // UI label: "信息" / "定位" / ...
     val llmHint: String,             // Chinese single-line description baked into system prompt
     val family: IntentFamily,        // eval equivalence group
+    /**
+     * Soft canonical action hint — the chip id the LLM should default
+     * to in `emit_bubble.action_ids` when the bubble's type matches this
+     * intent. Surfaced in the system prompt as `__INTENT_HINTS_BLOCK__`
+     * by [LlmClient.toolUseSystemPrompt] when an [IntentRegistry] is
+     * supplied. **`null` = no hint** (the generic intents `info` /
+     * `location` / `solve` deliberately stay unhinted — they don't
+     * own a canonical chip surface).
+     *
+     * "Soft" means the LLM may omit / override the hint when the
+     * image contradicts it (e.g. a phone scene with no readable number
+     * → omit `dial_number`). The scorer downstream still scores
+     * whatever the LLM emits. See
+     * `docs/adr/2026-07-14-v3-inversion.md` §72-75 (planned follow-up
+     * shipped 2026-07-16) for the inversion's "soft system-prompt
+     * hint" prescription that motivates this field.
+     */
+    val canonicalAction: String? = null,
 )
 
 /**
@@ -106,30 +124,35 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         label = "电话",
         llmHint = "拨号：手机号 / 座机 / 400电话 / 服务热线",
         family = IntentFamily.ACT_ON,
+        canonicalAction = "dial_number",
     ))
     reg.register(IntentDecl(
         id = "real_estate_rental",
         label = "租房",
         llmHint = "房地产：出租 / 出售 / 二手房 / 楼盘 / 户型 / 平米 / 急售 / 吉房 / 中介 / 物业",
         family = IntentFamily.ACT_ON,
+        canonicalAction = "share",
     ))
     reg.register(IntentDecl(
         id = "recruit_hiring",
         label = "招聘",
         llmHint = "招聘：招工 / 求职 / 兼职 / 高薪",
         family = IntentFamily.ACT_ON,
+        canonicalAction = "share",
     ))
     reg.register(IntentDecl(
         id = "payment_qr",
         label = "支付",
         llmHint = "支付：扫一扫 / 收款码 / 付款码 / 转账",
         family = IntentFamily.ACT_ON,
+        canonicalAction = "scan_to_pay",
     ))
     reg.register(IntentDecl(
         id = "id_document",
         label = "证件",
         llmHint = "证件：身份证 / 营业执照 / 车牌",
         family = IntentFamily.ACT_ON,
+        canonicalAction = "redact_id",
     ))
     // `love_dating` is intentionally omitted: a dating-app-ad is just
     // an info bubble (read it for context).  No PII action ships —
@@ -141,36 +164,42 @@ fun registerDefaultIntents(reg: IntentRegistry) {
         label = "警示",
         llmHint = "警示：请勿 / 禁止 / 警告 / 危险 / 注意（高风险/合规标识）",
         family = IntentFamily.OBSERVE,
+        canonicalAction = "share",
     ))
     reg.register(IntentDecl(
         id = "menu_food",
         label = "菜单",
         llmHint = "菜单：菜品 / 套餐 / 招牌菜 / 主厨推荐 / 价格表",
         family = IntentFamily.OBSERVE,
+        canonicalAction = "share",
     ))
     reg.register(IntentDecl(
         id = "hours_schedule",
         label = "营业",
         llmHint = "营业时间：营业中 / HH:MM-HH:MM / 营业时段 / 周一至周日",
         family = IntentFamily.OBSERVE,
+        canonicalAction = "share",
     ))
     reg.register(IntentDecl(
         id = "route_to",
         label = "导航",
         llmHint = "导航：箭头 / 方位词 / 步行 N 米 / 步行 N 分钟 / 前方/出口/入口 标记",
         family = IntentFamily.OBSERVE,
+        canonicalAction = "open_in_maps",
     ))
     reg.register(IntentDecl(
         id = "service_institution",
         label = "机构",
         llmHint = "公共机构：医院 / 学校 / 政府机关 / 银行 / 邮局 / 法院 / 派出所 / 大使馆",
         family = IntentFamily.OBSERVE,
+        canonicalAction = "open_in_maps",
     ))
     reg.register(IntentDecl(
         id = "shopping_promo",
         label = "促销",
         llmHint = "促销：特价 / 打折 / 满减 / 秒杀 / 亏本 / 清仓 / 甩卖 / 红包 / 限时 / 抢购",
         family = IntentFamily.OBSERVE,
+        canonicalAction = "share",
     ))
 }
 

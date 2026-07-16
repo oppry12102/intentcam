@@ -4,6 +4,86 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Added — soft-verifier hint via `IntentDecl.canonicalAction` (2026-07-17)
+
+The v3.0 inversion (commit `59c1128` / 2026-07-14) deliberately removed
+the `IntentVerifier.kt` 13-pass regex post-processor that hard-injected
+canonical actions into the LLM's response before scoring. The deletion
+was correct (verifier was carrying 20-40% of OBSERVE-family fixtures
+by overriding the LLM's chip selection — i.e. it was a crutch that
+hid real signal). But the inversion's ADR §72-75 named a planned
+follow-up: *"re-introduce the canonical mapping as a **soft
+system-prompt hint** once LLM behavior stabilizes on the v3 inversion."*
+
+This commit ships the follow-up as a **structured per-intent soft hint
+block** in the system prompt — visible to the LLM at classification
+time, NOT a post-LLM rewrite. The hint says "default chip" not
+"required chip"; the LLM can omit / override when the image
+contradicts the default.
+
+**Wiring**:
+- `shared/.../IntentDecl.kt` — new `canonicalAction: String? = null`
+  field on `IntentDecl`. `null` = no hint (the generic intents `info`
+  / `location` / `solve` deliberately stay unhinted). 11 of the 14
+  default intents ship a non-null mapping:
+  `phone → dial_number`, `route_to / service_institution → open_in_maps`,
+  `real_estate_rental / recruit_hiring / warning_safety / menu_food /
+  hours_schedule / shopping_promo → share`, `payment_qr → scan_to_pay`,
+  `id_document → redact_id`.
+- `shared/.../LlmClient.kt` — `toolUseSystemPrompt()` grew an optional
+  `intentRegistry: IntentRegistry? = null` parameter. When supplied
+  (both prod and eval now do), the function renders a new
+  `## 软提示:intent → 默认 action(soft,可 override)` block at a new
+  `__INTENT_HINTS_BLOCK__` placeholder, grouped by chip id so the LLM
+  sees one line per chip ("招聘 / 房源 / 警示 / 菜单 / 营业 / 促销 →
+  **share**") rather than 14 lines per intent. Same
+  `require(... contains placeholder)` guard pattern already used for
+  `__ACTIONS_BLOCK__`.
+- `shared/.../ToolUseLoop.kt:256` — passes `intentRegistry = intents`
+  (the `private val intents: IntentRegistry` already injected at line
+  29). No other change to the tool loop. The `verifiedActions` one-liner
+  at line 583 stays as a pure pass-through to `tb.proposedActions` —
+  the soft hint does NOT add a verifier rewrite.
+- `shared/.../eval/EvalRunner.kt` — needs no code change. Its existing
+  `ToolUseLoop(intents = intentRegistry, ...)` wiring at line 120-123
+  threads the registry through automatically, so eval mirrors prod's
+  prompt exactly (dual-run scores reflect what users actually see).
+
+**NOT ship** (deliberate, see plan
+`~/.claude/plans/sorted-meandering-pond.md`):
+- Per-image dynamic hint ("classify image first, then hint") — that
+  would be a verifier in disguise. Static per-intent mapping is the
+  lever the data is asking for.
+- Re-introducing `IntentVerifier.kt` — explicitly rejected. v3
+  inversion ADR §30-37 calls this out.
+
+**Verified** (`summary_20260716_231731`, `commit_message_eaa9d29`-area,
+full 11-suite regression): 11/11 v2 PASS, 0 errors, exit 0. Per-suite
+v3 lift on the OBSERVE-family suites the soft hint was targeted at:
+
+| suite | v3_actions baseline → now | Δ |
+|---|---:|---:|
+| **recruit_hiring_11** | 0.4545 → **0.5758** | **+0.121** |
+| **real_estate_rental_11** | 0.5083 → **0.5667** | **+0.058** |
+| **service_institution_60** | 0.4838 → **0.5075** | +0.024 |
+| phone_20 / phone_60 / pii_20 / pii20_60 | unchanged within ±0.01 | — |
+
+Phone suites show no meaningful lift — **by design**: phone_20 fixtures
+are predominantly mixed-content (restaurant + phone, school ad +
+phone, real_estate billboard + phone) where the LLM does NOT classify
+the type as `phone`, so the per-intent hint never triggers. Per-intent
+soft hint is not the right lever for those; a content-based hint
+(e.g. "if OCR sees a phone-number-shaped string, emit `dial_number`")
+would be the next iteration if those fixtures matter — but that's a
+verifier in disguise and is explicitly out of scope.
+
+Net v2 composite Δ +0.005 across 11 suites (8 up, 2 flat, 1 down
+within ±0.022) — soft hint introduces no regression and provides a
+clean lift on the OBSERVE-family suites it was targeted at.
+
+`profiling/baselines.json` v3 baseline updated to the 3-run mean
+(165400 + 193517 + 231731) capturing the lift.
+
 ### Changed — eval dual-run plumbing (v3 ship-side) + APK v3.1 (2026-07-16)
 
 The v4 action-first composite (`2026-07-15-v4-action-first-composite.md`)

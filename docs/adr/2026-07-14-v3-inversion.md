@@ -70,9 +70,17 @@ authoritative for both `type` and `action_ids`:
   legacy composite path).
 - Regression diagnosis cleaner: r2_type moves with r2_text (both
   driven by the LLM).
-- Planned follow-up: re-introduce the canonical mapping as a
-  soft system-prompt hint once LLM behavior stabilizes on the
-  v3 inversion.
+- **Planned follow-up SHIPPED 2026-07-17**: re-introduce the canonical
+  mapping as a soft system-prompt hint — see
+  `IntentDecl.canonicalAction` + `LlmClient.__INTENT_HINTS_BLOCK__`.
+  Verified lift on OBSERVE-family suites (recruit_hiring_11 v3_actions
+  +0.121, real_estate_rental_11 +0.058) with no regression on phone /
+  PII suites. Phone suites stay unchanged because their fixtures are
+  mixed-content where the LLM does not classify the type as `phone` —
+  per-intent hint doesn't fire. A content-based hint
+  (OCR-detected phone-number → emit `dial_number`) is a future
+  iteration; explicitly out of scope for this soft hint because it
+  would be a verifier in disguise.
 
 ## Migration
 

@@ -459,6 +459,8 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "\n" +
                     "__ACTIONS_BLOCK__\n" +
                     "\n" +
+                    "__INTENT_HINTS_BLOCK__\n" +
+                    "\n" +
                     "## 工具 1: zoom_in —— 看清细节 + 自动 OCR\n" +
                     "**新行为（Phase 2a）**：每次 zoom_in 的裁剪结果**自动附带 OCR hint**，所以你不需要再为看清裁剪区域再调 read_text——zoom_in 已经给你了高保真 OCR 字符。\n" +
                     "参数：x, y, w, h 是归一化坐标 ∈ [0, 1]；x/y 是左上角，w/h 是宽高。" +
@@ -515,10 +517,11 @@ class LlmClient(@Volatile var config: LlmConfig) {
                     "\n"
 
         /** Build the live tool-use system prompt by splicing the dynamic
-         *  actions block into [TOOL_USE_SYSTEM] at the
-         *  `__ACTIONS_BLOCK__` placeholder.
+         *  actions block + soft intent-hints block into [TOOL_USE_SYSTEM]
+         *  at the `__ACTIONS_BLOCK__` / `__INTENT_HINTS_BLOCK__`
+         *  placeholders.
          *
-         *  The placeholder MUST exist verbatim in [TOOL_USE_SYSTEM];
+         *  The placeholders MUST exist verbatim in [TOOL_USE_SYSTEM];
          *  a missing placeholder is treated as a programmer error
          *  (silent drift would let a future prompt edit silently drop
          *  the dynamic block, which defeats the whole point of this
@@ -527,20 +530,65 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  [actionIds] is the registered `ActionDef` id list (empty
          *  list = no actions block; rendered as a one-line "no
          *  actions" note so the model can leave `action_ids` blank).
+         *
+         *  [intentRegistry] is the optional [IntentRegistry] whose
+         *  non-null [IntentDecl.canonicalAction] entries surface as
+         *  the `## 软提示` block — the soft-verifier hint. `null`
+         *  (default) emits a no-op hint block so backward-compat
+         *  callers (tests, ad-hoc scripts) get an unchanged prompt
+         *  shape. The prod call site (`ToolUseLoop`) and the eval
+         *  call site (`EvalRunner`) both pass the live registry so
+         *  eval scores what users actually see.
+         *
          *  Lives in `shared/` so the call site (ToolUseLoop) hands
          *  pre-resolved strings, not the Android-only ActionRegistry
          *  type — `app/` passes `actionRegistry.allIds()`.
          */
-        fun toolUseSystemPrompt(actionIds: List<String> = emptyList()): String {
+        fun toolUseSystemPrompt(
+            actionIds: List<String> = emptyList(),
+            intentRegistry: IntentRegistry? = null,
+        ): String {
             val renderedActions = if (actionIds.isEmpty()) {
                 "actions ∈ {}（暂无动作可选；emit_bubble.action_ids 留空即可）"
             } else {
                 "actions ∈ {${actionIds.joinToString(", ")}}。"
             }
+            // Render the soft intent-hints block. Group non-null
+            //  canonicalAction entries by chip id so the LLM sees
+            //  one line per chip (e.g. "招聘 / 房源 / 警示 / ... →
+            //  share") rather than one line per intent — keeps the
+            //  block compact and easier to scan during classification.
+            val renderedHints = if (intentRegistry == null) {
+                "(no intent hints registered — caller passed null registry)"
+            } else {
+                val byAction: Map<String, List<IntentDecl>> =
+                    intentRegistry.list()
+                        .filter { it.canonicalAction != null }
+                        .groupBy({ it.canonicalAction!! }, { it })
+                if (byAction.isEmpty()) {
+                    "(no intents have canonicalAction set — soft hints inactive)"
+                } else {
+                    buildString {
+                        append("## 软提示:intent → 默认 action（soft，可 override）\n")
+                        append("emit_bubble.type 命中以下 intent 时，action_ids 默认应包含对应 chip：\n")
+                        // Sort by chip id for deterministic rendering.
+                        for ((action, intents) in byAction.toSortedMap()) {
+                            val labels = intents.joinToString(" / ") { it.label }
+                            append("  • $labels → **$action**\n")
+                        }
+                        append("LLM 可 omit / override（e.g. 电话号码看不清 → 留空 dial_number）。\n")
+                    }
+                }
+            }
             require(TOOL_USE_SYSTEM.contains("__ACTIONS_BLOCK__")) {
                 "TOOL_USE_SYSTEM missing __ACTIONS_BLOCK__ placeholder"
             }
-            return TOOL_USE_SYSTEM.replace("__ACTIONS_BLOCK__", renderedActions)
+            require(TOOL_USE_SYSTEM.contains("__INTENT_HINTS_BLOCK__")) {
+                "TOOL_USE_SYSTEM missing __INTENT_HINTS_BLOCK__ placeholder"
+            }
+            return TOOL_USE_SYSTEM
+                .replace("__ACTIONS_BLOCK__", renderedActions)
+                .replace("__INTENT_HINTS_BLOCK__", renderedHints)
         }
     }
 }

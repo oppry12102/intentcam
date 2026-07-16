@@ -253,7 +253,10 @@ class ToolUseLoop(
             log("TOOL", "→ 第 $round 轮（messages=${messages.length()}）")
             val response: ToolUseResponse = try {
                 client.streamToolUse(
-                    system = LlmClient.toolUseSystemPrompt(actionIds),
+                    system = LlmClient.toolUseSystemPrompt(
+                        actionIds = actionIds,
+                        intentRegistry = intents,
+                    ),
                     messages = messages,
                     toolsJson = toolsJson,
                 )
