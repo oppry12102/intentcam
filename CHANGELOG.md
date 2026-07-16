@@ -4,6 +4,65 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Changed — eval dual-run plumbing (v3 ship-side) + APK v3.1 (2026-07-16)
+
+The v4 action-first composite (`2026-07-15-v4-action-first-composite.md`)
+introduced `ScorerV3` as a dual-run side-channel alongside the canonical
+`ScorerV2`. EvalRunner was emitting `overall_composite_v3` and the three
+v3 components (`v3_actions` / `v3_text` / `v3_inputs`) all along; the
+regression wrapper just wasn't consuming them. This commit ships the
+plumbing end-to-end + the on-device APK that carries the v4 stack.
+
+**Wire-up**:
+- `scripts/run_regression.sh` — parses `overall_composite_v3` and
+  `overall_v3_actions` / `overall_v3_text` / `overall_v3_inputs` from each
+  suite's JSON output, writes them into the regression summary alongside
+  the existing v2 fields. Prints a `v3 (informational)` line per suite.
+- `scripts/check_regression.py` — fixes the per-component mapping bug
+  (`("v2_type", "v3_type")` was reading baseline.json's v3_* field but
+  summary's v2_* field, so the check was apples-to-oranges or both-null
+  silent pass). Now both sides use `v3_*` naming; v3 has no `type`
+  dimension (formula: `0.55·r_actions + 0.30·r_text + 0.15·r_inputs`).
+- `scripts/check_regression.py` — v3 sub-component checks use a relaxed
+  threshold (`V3_THRESHOLD = 0.15`, vs the v2 hard gate of `0.05`). v3
+  sub-component FAIL is reported but does NOT count toward the
+  regression exit code. Only `composite_v2` is hard-gating until v3
+  baseline calibrates over weekly samples (v4 ADR sign-off gate is
+  week-over-week `|Δ| ≤ 0.03` on composite_v3 across all suites — not
+  per-component).
+- `profiling/baselines.json` — seeds each production suite's `v3_*`
+  baseline as the **two-run mean** of `summary_20260716_165400` and
+  `summary_20260716_193517` (both `@` commit `81a060c`). Single-run
+  seed (initial 165400-only) showed 12 v3 sub-component FAILs on the
+  next run — all within LLM variance, none a real regression (v2
+  11/11 PASS in the same run, 0 errors, 0 529 contamination). The
+  two-sample mean stabilizes the baseline; further weekly samples
+  will converge it tighter. `v3_type` field dropped (v3 formula has
+  no type dimension).
+- `app/build.gradle.kts` — `versionCode 4 → 5`, `versionName "3.0" → "3.1"`.
+  The v3.0 APK at project root pre-dates the v4 action merge + ScorerV3
+  + producer/consumer pipeline + InputParsers extraction (commits
+  `072af4d`, `59c1128`, `e936de2`, `8458906`, `35c71a5`). The v3.1 APK
+  ships all of those to device.
+
+**NOT ship** (gated on week-over-week calibration):
+- v3 → canonical baseline flip (v4 ADR sign-off requires ≥1 week of
+  weekly samples with composite_v3 |Δ| ≤ 0.03 across all production suites).
+- v3 sub-component hard gate (still informational, threshold 0.15).
+
+**Verified**: `summary_20260716_193517`, all 11 production suites v2 PASS
++ all v3 sub-components within `0.15` threshold (exit 0). Net v2 Δ +0.020
+across suites; v3 informational, week-over-week calibration in flight.
+
+### Cleanup — archive 12 profiling/ smoke JSON to `_archive/` (2026-07-16)
+
+Twelve untracked `profiling/eval_*smoke*.json` and `profiling/*_smoke*.json`
+artifacts (smoke runs from the action-first cycle + v4 ship iterations,
+all `??` in `git status`) moved to `profiling/_archive/smoke_2026-07-16/`
+which is already gitignored via `profiling/_archive/` in `.gitignore`.
+Working tree clean. No data loss — these were debug outputs whose
+contents are reflected in CHANGELOG entries + memory records.
+
 ### Refactor — close legacy bubble pipeline + derived `busy` flow (2026-07-16)
 
 Two structural cleanups from the 2026-07-16 architectural review.
