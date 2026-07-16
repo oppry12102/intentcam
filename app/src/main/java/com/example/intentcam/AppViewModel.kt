@@ -95,33 +95,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         //  ERRORED — so an all-error session (LLM 529 storm,
         //  network outage, every cycle timed out) pinned the
         //  spinner forever because the errored cycles kept
-        //  `activeJobCount` > 0.  Switched to `inFlightJobCount
-        //  () == 0` which only counts PENDING + IN_FLIGHT, so
         //  ERRORED cycles no longer block the spinner from
         //  clearing.  Also calls `syncCycleCounters` so the
         //  shutter counter ticks down immediately.
-        if (cycleManager.inFlightJobCount() == 0) {
-            _state.value = _state.value.copy(analyzing = false)
-        }
         syncCycleCounters()
         logDebug("CYCLE", "error live cycle ${cycleId.take(8)}: $message")
     }
 
-    /** [2026-07-15 P0 fix] Live cycle COMPLETE → clear the
-     *  TopOverlay's stuck "识别中..." spinner.  Pre-existing
-     *  bug: the legacy `runToolUseCycle` already wrote
-     *  `analyzing = false` in its outcome branches; the live
-     *  CycleManager path didn't, so the indicator stayed on
-     *  after a photo finished.  Guarded by
-     *  `inFlightJobCount() == 0` so a simultaneous in-flight
-     *  cycle (rapid double-tap) keeps it lit.  Also calls
-     *  [syncCycleCounters] so the shutter counter ticks up
-     *  immediately when this is the last in-flight cycle. */
+    /** Live cycle COMPLETE handler.  Syncs the shutter counter and
+     *  mirrors the bubble's detail into `state.scene` so the
+     *  TopOverlay text stays in sync with the live-UI bubble card.
+     *  The `busy` spinner signal is now a derived flow over
+     *  [cycleManager.busy] (PENDING + IN_FLIGHT only) so it
+     *  auto-flips without an imperative write here. */
     private fun handleCycleComplete(cycleId: String, bubble: Bubble) {
-        if (cycleManager.inFlightJobCount() == 0) {
-            _state.value = _state.value.copy(analyzing = false)
-        }
         syncCycleCounters()
+        // Take the same `.take(80)` cap so a long LLM-generated
+        //  detail doesn't blow up the overlay layout.
+        _state.value = _state.value.copy(scene = bubble.detail.take(80))
         logDebug(
             "CYCLE",
             "complete live cycle ${cycleId.take(8)} " +
@@ -150,27 +141,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** [2026-07-15 P0 fix] Live cycle PendingUserInput →
-     *  AlertDialog + stash full-res for [submitUserInput]'s
-     *  resume.  Mirrors the legacy single-cycle path at
-     *  AppViewModel.kt:626-639 so the two sources of input
-     *  requests look identical to the UI.  Critically: also
-     *  writes `pendingCycleId` so [submitUserInput] knows to
-     *  call [CycleManager.resumeCycle] instead of starting a
-     *  fresh legacy cycle that would orphan the live one. */
+ *  AlertDialog + stash the cycle id for [submitUserInput]'s
+ *  resume via [CycleManager.resumeCycle].  The placeholder
+ *  bubble itself is already in [cycleManager.allJobs][cycleId]
+ *  .bubble.value (set by [CycleManager.runCycleLoop]), so no
+ *  duplicate write into a legacy bubbles list is needed. */
     private fun handlePendingUserInput(
         cycleId: String,
         request: UserInputRequest,
-        placeholder: Bubble,
+        @Suppress("UNUSED_PARAMETER") placeholder: Bubble,
     ) {
-        val job = cycleManager.allJobs.value[cycleId]
-        pendingFullRes = job?.frame?.fullRes ?: placeholder.imageBytes
         pendingCycleId = cycleId
-        val merged = (_state.value.bubbles + placeholder)
-            .takeLast(UiState.BUBBLE_MAX)
         _state.value = _state.value.copy(
             scene = request.prompt,
-            bubbles = merged,
-            analyzing = false,
             userInputRequest = request,
         )
         logDebug(
@@ -202,14 +185,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  B wires it into the cycle loop. */
     private val actionOrchestrator = ActionOrchestrator(actions = actionRegistry)
 
-    /** [2026-07-14 Phase B — inversion v3.0] Owns concurrent
-     *  recognition cycles.  Replaces the single-cycle flow that
-     *  `captureLatestFrame()` used to launch directly.  The
-     *  shutter button is now always enabled; tapping it just
-     *  spawns a new [com.example.intentcam.CycleJob] (up to
-     *  [UiState.CYCLE_MAX_CONCURRENT] = 2 in flight, oldest
-     *  superseded when the cap is hit).  See CycleManager.kt
-     *  for the full lifecycle. */
+    /** [2026-07-14 Phase B — inversion v3.0; 2026-07-16 producer/
+     *  consumer split] Owns concurrent recognition cycles.  Replaces
+     *  the single-cycle flow that `captureLatestFrame()` used to
+     *  launch directly.  The shutter button is enabled while the
+     *  pipeline has room; tapping it enqueues a new
+     *  [com.example.intentcam.CycleJob] (up to
+     *  [UiState.CYCLE_QUEUE_DEPTH] = 8 queued+in-flight, processed
+     *  [UiState.CYCLE_CONCURRENCY] = 2 at a time; a full queue
+     *  dims the shutter and rejects the tap).  See CycleManager.kt
+     *  for the full queue+worker lifecycle. */
     /**
      * [2026-07-15] Tracks which cycle ids have already fired
      * `onCycleError`, so a cycle that hits ERRORED via multiple
@@ -257,6 +242,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    /** Derived "spinner should show" signal.  True iff the focused
+     *  cycle is PENDING or IN_FLIGHT.  See [CycleManager.busy]. */
+    val busy: StateFlow<Boolean> = cycleManager.busy
+
     /** [2026-07-12] CameraX provider future, kicked off at construction
      *  time so the service connection is established in parallel with
      *  permission grant and UI render.  Consumed by the AndroidView
@@ -279,14 +268,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** [2026-07-14 Phase B] Subscribe to cycleManager.allJobs +
      *  focusedJobId and mirror them into [UiState.cycles].  Compose
      *  reads from UiState so this is the only coupling between
-     *  CycleManager and the rest of the app.  The legacy
-     *  [UiState.bubbles] field is also updated (derived from the
-     *  focused job's bubble) so Phase A/C features that read
-     *  `bubbles` keep working without rewriting every call site.
+     *  CycleManager and the rest of the app.
      *
-     *  The `analyzing` flag is now driven by
-     *  `cycleManager.hasFocusedJob()` rather than the legacy
-     *  AtomicBoolean — see [captureLatestFrame] / [runToolUseCycle]. */
+     *  The `analyzing` flag is driven by `cycleManager.busy` (a
+     *  derived flow over focused-job status) rather than the
+     *  legacy manually-managed field. */
     init {
         viewModelScope.launch {
             cycleManager.allJobs.collect { jobs ->
@@ -321,15 +307,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Bus flag for "a recognition cycle is currently running".
-     *  [2026-07-14 Phase B] Now a derived read of
-     *  [cycleManager.hasFocusedJob] — the AtomicBoolean legacy
-     *  field has been removed; the only authoritative source for
-     *  "is the camera busy" is the focused job's status.  Kept
-     *  as a `val` (not a `var`) so call sites can't write to it. */
-    private val analyzing: Boolean
-        get() = cycleManager.hasFocusedJob()
-
     init {
         // Restore the persisted debug-overlay preference.  Defer the state
         // write to viewModelScope so it never happens during the first
@@ -363,20 +340,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      */
     @Volatile private var latestFrame: CapturedFrame? = null
 
-    // Full-res crop source for the single in-flight needs-input placeholder.
-    // Kept out of the bubble history (bubbles carry only display thumbnails)
-    // so a 4-bubble history stays small; consumed on submitUserInput, cleared
-    // on cancel. See the Bubble.imageBytes doc and submitUserInput.
-    private var pendingFullRes: ByteArray? = null
-
-    // [2026-07-15 P0 fix] Cycle id of the live-UI cycle that
-    //  returned PendingUserInput, paired with [pendingFullRes]
-    //  above.  Lets `submitUserInput` route the follow-up text
-    //  back to the originating CycleJob via
-    //  `cycleManager.resumeCycle(id, text)` instead of the legacy
-    //  `runToolUseCycle(frame, ...)` fallback.  Cleared together
-    //  with [pendingFullRes] on submit, cancel, restart, and
-    //  any reset path that invalidates cycles.
+    // Cycle id of the live-UI cycle that returned PendingUserInput.
+    //  Lets `submitUserInput` route the follow-up text back to the
+    //  originating CycleJob via `cycleManager.resumeCycle(id, text)`.
+    //  Cleared on submit, cancel, restart, and any reset path that
+    //  invalidates cycles.
     private var pendingCycleId: String? = null
 
     /**
@@ -405,16 +373,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // (very common in a tight tool-use loop) would crash the panel with
     // "Key X was already used".
     private val debugLogSeq = AtomicLong(0)
-
-    fun isBusy(): Boolean {
-        if (analyzing) return true
-        // When the user is looking at a bubble's detail view, the camera
-        // pipeline must stay quiet so the displayed image doesn't go stale.
-        // SelectedBubble and phase are kept in sync by [selectBubble] /
-        // [clearBubbleSelection], so checking phase alone is enough.
-        if (_state.value.phase != Phase.SCANNING) return true
-        return false
-    }
 
     /**
      * Toggle the on-screen debug overlay.  When OFF, the log buffer is
@@ -535,15 +493,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      * next frame it produces is the one we use), waits up to 3000 ms for
      * the frame to arrive, then hands it to [CycleManager.startCycle].
      *
-     * [2026-07-14 Phase B — inversion v3.0] No longer gates on the
-     * legacy `AtomicBoolean analyzing` re-entrancy flag — every tap
-     * spawns a new [com.example.intentcam.CycleJob], and CycleManager
-     * caps concurrency at [UiState.CYCLE_MAX_CONCURRENT] = 2 (oldest
-     * non-COMPLETE job is dropped when a 3rd tap arrives).  The
-     * shutter button in [MainActivity] now derives its `enabled`
-     * state from `cycleManager.hasFocusedJob()` so the button is
-     * **always** tappable; the gating that used to block rapid taps
-     * now lives at the CycleManager cap.
+     * [2026-07-14 Phase B — inversion v3.0; 2026-07-16 producer/
+     * consumer split] No longer gates on the legacy `AtomicBoolean
+     * analyzing` re-entrancy flag — every tap enqueues a new
+     * [com.example.intentcam.CycleJob], and CycleManager bounds the
+     * pipeline at [UiState.CYCLE_QUEUE_DEPTH] = 8 (queued+in-flight)
+     * with a [UiState.CYCLE_CONCURRENCY] = 2 worker pool.  When the
+     * queue is full, [CycleManager.startCycle] returns null and the
+     * frame is dropped (the shutter is already dimmed at that point).
      */
     fun captureLatestFrame() {
         // [2026-07-15 UI polish] CAS instead of set(true).  Previously,
@@ -563,7 +520,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             logDebug("CAP", "第二次 shutter tap 忽略（captureArmed 已被上一拍占用）")
             return
         }
-        enterAnalyzing()
         viewModelScope.launch {
             try {
                 // Wait for the analyzer to deliver the next frame.
@@ -597,7 +553,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // coroutine + per-job bubble flow.  We do NOT block
                 // on completion; the user can take more photos in the
                 // meantime.
-                cycleManager.startCycle(frame)
+                // [2026-07-16 producer/consumer split] startCycle now
+                //  enqueues (returns null iff the queue is full —
+                //  queued+in-flight already at CYCLE_QUEUE_DEPTH).
+                //  The shutter is dimmed at that point, so a null is
+                //  the rare "finger down as the count hit 0" race;
+                //  log it and drop the frame.
+                val job = cycleManager.startCycle(frame)
+                if (job == null) {
+                    logDebug("CAP", "队列已满，丢弃本次拍摄（backpressure）")
+                    return@launch
+                }
                 // [2026-07-15 P0 fix] Tick the shutter counter
                 //  down immediately on successful startCycle.
                 //  Without this, the counter stays at the
@@ -613,148 +579,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 logDebug("FATAL", formatThrowable(e))
                 _state.value = _state.value.copy(error = e.message)
             } finally {
-                // [2026-07-15 P0 fix] Switched from
-                //  `activeJobCount()` to `inFlightJobCount()` so
-                //  ERRORED cycles no longer keep the spinner
-                //  lit after the user cancels mid-cycle.  Also
-                //  fixed in handleCycleError above — this site
-                //  covers the "frame never arrived" path
-                //  (captureArmed fired but the analyzer didn't
-                //  produce a frame within 3s).
-                if (cycleManager.inFlightJobCount() == 0) {
-                    _state.value = _state.value.copy(analyzing = false)
-                }
+                // Covers the "frame never arrived" path (captureArmed
+                // fired but the analyzer didn't produce a frame
+                // within 3s).  The `busy` derived flow handles the
+                // spinner — we just need to keep the shutter counter
+                // in sync.
                 syncCycleCounters()
             }
         }
     }
 
-    /**
-     * Flip the shared UI state into the "analyzing" mode.  Called from
-     * every entry point that kicks off recognition (shutter tap,
-     * text-input submit, internal cycle restart).  Centralized so the
-     * three call sites don't drift on which fields they set.
-     */
-    private fun enterAnalyzing() {
-        _state.value = _state.value.copy(analyzing = true, error = null)
-    }
-
-    /**
-     * One-shot recognition cycle: delegates to [ToolUseLoop], which
-     * drives a multi-round tool-use conversation with the model and
-     * returns a final bubble (or a user-input placeholder).
-     */
-    private suspend fun runRecognitionCycle(frame: CapturedFrame) {
-        // [captureLatestFrame] already flipped into analyzing mode; no
-        // re-set needed.  Keep the entry point as a separate function
-        // so submitUserInput can also reach runToolUseCycle without
-        // going through the shutter-button frame-wait.
-        runToolUseCycle(frame, userText = "")
-    }
-
-    /** Multi-round tool-use path.  Emits a bubble, sets a placeholder,
-     *  or surfaces an error in [UiState]. */
-    private suspend fun runToolUseCycle(frame: CapturedFrame, userText: String) {
-        logDebug(
-            "TOOL",
-            "→ runCycle (thumb=${frame.thumbnail.size / 1024}KB " +
-                "full=${frame.fullRes.size / 1024}KB " +
-                "userText='${userText.take(40)}')"
-        )
-        val outcome = withContext(Dispatchers.IO) {
-            toolUseLoop.runCycle(
-                thumbnail = frame.thumbnail,
-                fullRes = frame.fullRes,
-                userText = userText,
-                // [2026-07-13] Splice the registered ActionDef ids
-                // into the system prompt so emit_bubble.action_ids
-                // can fire.  All ids registered in the ActionRegistry
-                // are eligible (the resolver still filters by
-                // enabledIds at render time, so a disabled action
-                // never reaches the chip UI).
-                actionIds = actionRegistry.allIds(),
-            )
-        }
-        when (outcome) {
-            is ToolUseLoop.Outcome.Bubble -> {
-                // [2026-07-10] Resolve action ids on the bubble before
-                //  stashing it.  The resolver consults
-                //  IntentRegistry (for "which intent is this bubble")
-                //  and SettingsStore (for "which actions the user has
-                //  disabled").  Returns ids in declaration order; the
-                //  UI looks each one up in ActionRegistry to render
-                //  chips.
-                val withActions = outcome.bubble.copy(
-                    actions = actionResolver.suggestIds(outcome.bubble)
-                )
-                val merged = (_state.value.bubbles + withActions).takeLast(UiState.BUBBLE_MAX)
-                _state.value = _state.value.copy(
-                    scene = withActions.detail.take(80),
-                    bubbles = merged,
-                    analyzing = false,
-                )
-                logDebug(
-                    "FINAL",
-                    "type=${withActions.type} intent=${withActions.title} " +
-                        "via=${withActions.toolName ?: "?"} " +
-                        "actions=${withActions.actions.size}"
-                )
-            }
-            is ToolUseLoop.Outcome.PendingUserInput -> {
-                // The placeholder bubble only carries the display thumbnail
-                // (see Bubble.imageBytes). The full-res original — needed as
-                // the crop source if the resumed cycle calls zoom_in — is
-                // stashed here in a single transient field rather than in the
-                // bubble history. Invariant: at most one placeholder is
-                // pending at a time (analyzing lock + blocking text input),
-                // so a single field is sufficient.
-                pendingFullRes = frame.fullRes
-                // [2026-07-15 P0 fix] Defensive: clear any stale
-                //  live-cycleId from a prior resume attempt.  The
-                //  legacy path doesn't use it (resumes via
-                //  runToolUseCycle), so leaving it set would only
-                //  confuse a future state inspection.
-                pendingCycleId = null
-                val merged = (_state.value.bubbles + outcome.placeholder).takeLast(UiState.BUBBLE_MAX)
-                _state.value = _state.value.copy(
-                    scene = outcome.request.prompt,
-                    bubbles = merged,
-                    analyzing = false,
-                    userInputRequest = outcome.request,
-                )
-                logDebug("INPUT", "需要补充 via=${outcome.request.toolName}")
-            }
-            is ToolUseLoop.Outcome.Error -> {
-                _state.value = _state.value.copy(
-                    analyzing = false,
-                    error = outcome.message,
-                )
-                logDebug("FINAL_ERR", outcome.message)
-            }
-        }
-    }
-
     /** User submitted text for the [UiState.userInputRequest].  Resumes
-     *  the recognition cycle by re-running [ToolUseLoop.runCycle] with
+     *  the live cycle by re-running [CycleManager.resumeCycle] with
      *  the new text. */
     fun submitUserInput(text: String) {
-        // [2026-07-15 P0 fix] Capture the exact cycle id paired
-        //  with the parked placeholder before we touch any state.
-        //  Earlier versions only matched on `bubbles.lastOrNull
-        //  { it.needsUserInput }`, which works for the legacy
-        //  single-cycle path but would conflate placeholders if
-        //  multiple live cycles ever produced them concurrently.
-        //  [pendingCycleId] is non-null iff the input request came
-        //  from the live CycleManager path; null means it came
-        //  from the legacy single-cycle path (eval, or the rare
-        //  legacy direct-tool call).
         val pendingId = pendingCycleId
-        val placeholder = _state.value.bubbles.lastOrNull { it.needsUserInput }
-        val jpeg = placeholder?.imageBytes
-        if (jpeg == null) {
-            // No placeholder — defensive cleanup, dismiss dialog.
-            pendingCycleId = null
-            pendingFullRes = null
+        if (pendingId == null) {
+            // No parked placeholder — defensive cleanup, dismiss dialog.
             _state.value = _state.value.copy(userInputRequest = null)
             return
         }
@@ -763,72 +604,30 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // the same cycle.  CycleManager.resumeCycle's own
         // rejection-on-terminal-status check is the second line
         // of defense.
+        pendingCycleId = null
         _state.value = _state.value.copy(
-            analyzing = true,
             userInputRequest = null,
             error = null,
         )
-        // Remove the placeholder from the bubbles list (the live
-        // UI's per-job bubble is also cleared by
-        // CycleManager.resumeCycle).  Keep `pendingFullRes` until
-        // the legacy path's `CapturedFrame` construction reads it
-        // — the live path doesn't need it (CycleJob.frame is the
-        // authoritative source).
-        val withoutPlaceholder = _state.value.bubbles.filterNot {
-            it.id == placeholder.id
-        }
-        _state.value = _state.value.copy(bubbles = withoutPlaceholder)
-        if (pendingId != null) {
-            // Live-UI path: route the resume through CycleManager
-            // so the same CycleJob's bubble/status flows carry the
-            // new emissions.  resumeCycle() returns false if the
-            // cycle is no longer resumable (already terminal /
-            // superseded / evicted) — in that case we DO NOT fall
-            // back to the legacy path, because that would create
-            // a phantom bubble that doesn't correspond to any
-            // CycleJob in the cycles map.  Clear the leftover
-            // bookkeeping + log + bail.
-            pendingCycleId = null
-            // Live-UI resume: CycleJob owns the original
-            //  full-res frame internally, so we don't need to
-            //  reconstruct a CapturedFrame here.  We DO need to
-            //  clear `pendingFullRes` so it doesn't leak into a
-            //  future legacy-path call (defensive — the field
-            //  is only read by [submitUserInput] / [runToolUseCycle]).
-            pendingFullRes = null
-            val accepted = cycleManager.resumeCycle(pendingId, text)
-            if (!accepted) {
-                logDebug(
-                    "INPUT",
-                    "live resume REJECTED for $pendingId " +
-                        "(stale or terminal); clearing dialog without firing LLM"
-                )
-                if (cycleManager.inFlightJobCount() == 0) {
-                    _state.value = _state.value.copy(analyzing = false)
-                }
-                // [2026-07-15 P0 fix] Sync the shutter counter on
-                //  the rejection path — the cycle we just tried to
-                //  resume is terminal, so inFlight dropped and the
-                //  counter should tick up.
-                syncCycleCounters()
-            } else {
-                logDebug("INPUT", "live resume ACCEPTED for $pendingId")
-                // Accepted path: resumeCycle flipped the job back
-                // to IN_FLIGHT (it's about to call runCycleLoop
-                // again).  Sync so the counter ticks down the
-                // moment the resume is acknowledged.
-                syncCycleCounters()
-            }
-            return
-        }
-        // Legacy path: reconstruct a CapturedFrame from the
-        // thumbnail + stashed full-res and call runToolUseCycle
-        // directly (same as before).
-        viewModelScope.launch {
-            val fullRes = pendingFullRes ?: jpeg
-            pendingFullRes = null
-            val frame = CapturedFrame(thumbnail = jpeg, fullRes = fullRes)
-            runToolUseCycle(frame, userText = text)
+        val accepted = cycleManager.resumeCycle(pendingId, text)
+        if (!accepted) {
+            logDebug(
+                "INPUT",
+                "live resume REJECTED for $pendingId " +
+                    "(stale or terminal); clearing dialog without firing LLM"
+            )
+            // [2026-07-15 P0 fix] Sync the shutter counter on
+            //  the rejection path — the cycle we just tried to
+            //  resume is terminal, so inFlight dropped and the
+            //  counter should tick up.
+            syncCycleCounters()
+        } else {
+            logDebug("INPUT", "live resume ACCEPTED for $pendingId")
+            // Accepted path: resumeCycle flipped the job back
+            // to IN_FLIGHT (it's about to call runCycleLoop
+            // again).  Sync so the counter ticks down the
+            // moment the resume is acknowledged.
+            syncCycleCounters()
         }
     }
 
@@ -844,15 +643,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun cancelUserInput() {
         val pendingId = pendingCycleId
         pendingCycleId = null
-        pendingFullRes = null
-        val placeholder = _state.value.bubbles.lastOrNull { it.needsUserInput }
         val request = _state.value.userInputRequest
         _state.value = _state.value.copy(
             userInputRequest = null,
-            analyzing = false,
-            bubbles = if (placeholder != null) {
-                _state.value.bubbles.filterNot { it.id == placeholder.id }
-            } else _state.value.bubbles,
         )
         if (pendingId != null) {
             cycleManager.cancelCycle(pendingId, "user cancelled input")
@@ -977,24 +770,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Find a bubble by id across both the legacy `bubbles` list AND
-     * the live-UI `cycles` map.  Used by [runAction] / [confirmAction]
-     * / [submitActionArgs] to look up a bubble for an action chip tap.
-     *
-     * [2026-07-15 UI polish] Previous version only searched
-     * `_state.value.bubbles`; under CycleManager (Phase B+ live UI)
-     * a fresh cycle's bubble lives in
-     * `_state.value.cycles[cycleId].bubble.value` and is NOT mirrored
-     * into `bubbles` (which is a separate legacy-only queue).  The
-     * result: tapping a chip on a just-recognized phone bubble would
-     * log "bubble 不在历史中" and silently no-op.  Searching the
-     * cycles map too is the minimal-risk fix — no data shape change,
-     * the legacy path still resolves `bubbles` first, eval still goes
-     * through `bubbles` because it doesn't use CycleManager.
+     * Find a bubble by id across the live-UI `cycles` map.  Used by
+     * [runAction] / [confirmAction] / [submitActionArgs] to look up
+     * a bubble for an action chip tap.
      */
     private fun findBubble(id: String): Bubble? =
-        _state.value.bubbles.firstOrNull { it.id == id }
-            ?: _state.value.cycles.values.firstNotNullOfOrNull { it.bubble.value }
+        _state.value.cycles.values.firstNotNullOfOrNull {
+            it.bubble.value?.takeIf { b -> b.id == id }
+        }
 
     /** [2026-07-15] Pre-compute the args map the body wants.
      *
@@ -1156,43 +939,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** User explicitly tapped "重新扫描" — full reset including bubble history. */
+    /** User explicitly tapped "重新扫描" — full reset including cycle history. */
     fun restartScanning() {
         latestFrame = null
-        // [2026-07-15] Clear the per-cycle error dedup set so future
-        //  cycles with new ids can re-report ERRORED.  Bounded by
-        //  the concurrent cycle count, so the set is small; clear
-        //  here rather than per-insert to keep the hot path O(1).
+        // Clear the per-cycle error dedup set so future cycles with
+        // new ids can re-report ERRORED.  Bounded by the concurrent
+        // cycle count, so the set is small.
         reportedCycleErrors.clear()
-        // [2026-07-15 P0 fix] Cancel every in-flight cycle so we
-        //  don't keep billing for LLM calls whose results would
-        //  never reach the UI.  Previous version cleared the
-        //  bubbles list but left CycleManager.allJobs untouched —
-        //  cycles continued running in the background until their
-        //  90s `llmTimeoutMs` expired.  Also clears the pending-
-        //  input bookkeeping so a subsequent input submit doesn't
-        //  try to resume a now-defunct cycle.
+        // Cancel every in-flight cycle so we don't keep billing for
+        // LLM calls whose results would never reach the UI.  Also
+        // clears the pending-input bookkeeping so a subsequent input
+        // submit doesn't try to resume a now-defunct cycle.
         cycleManager.cancelAll("user restart")
         pendingCycleId = null
-        pendingFullRes = null
-        // [2026-07-15 P0 fix] Explicitly clear `analyzing`.
-        //  cancelAll nukes the cycles map synchronously, but
-        //  `analyzing` is a manually-managed UiState field —
-        //  without an explicit flip here the spinner would
-        //  stay lit until the next state mutation fires (e.g.
-        //  an unrelated bubble completion).  Also call
-        //  syncCycleCounters() so `activeCycleCount` drops to
-        //  0 and the shutter counter immediately reads 8 — the
-        //  post-fix behavior the user expects after a
-        //  "重新扫描" (the button being ready to use again is
-        //  the visible signal the reset succeeded).
+        // Cancel-all nukes the cycles map synchronously, but the
+        // scene-text + selectedBubble + error fields on UiState are
+        // manually-managed — clear them so the shutter counter
+        // immediately reads 8 and the top overlay resets.
         _state.value = _state.value.copy(
             phase = Phase.SCANNING,
-            bubbles = emptyList(),
             selectedBubble = null,
             scene = "",
             error = null,
-            analyzing = false,
         )
         syncCycleCounters()
     }
@@ -1231,9 +999,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun saveConfig(newConfig: LlmConfig) {
+        // [2026-07-16 P3 fix] Drop the `ifBlank { bakedDefaultToken }`
+        //  fallback for the token.  The Settings UI already
+        //  resolves a blank input to `current.authToken` (see
+        //  SettingsScreen.kt: `effectiveToken = if (token.isBlank())
+        //  current.authToken else token`), so by the time
+        //  `newConfig.authToken` reaches the VM it is the user's
+        //  resolved intent — keep it as-is.  Previous VM-side
+        //  fallback silently rewrote a user-overridden token to
+        //  the baked default when the user cleared the field and
+        //  hit 保存, contradicting the UI's "留空 = 保留当前"
+        //  label and surprising the user when the next launch
+        //  cold-starts with the baked token.
+        //  baseUrl + model keep their fallbacks because those
+        //  fields have no equivalent UI-side resolution and a
+        //  blank value there genuinely means "I don't care, use
+        //  the default".
         val cfg = newConfig.copy(
             baseUrl = newConfig.baseUrl.ifBlank { LlmConfig.DEFAULT_BASE_URL },
-            authToken = newConfig.authToken.ifBlank { bakedDefaultToken },
             model = newConfig.model.ifBlank { LlmConfig.DEFAULT_MODEL }
         )
         settings.save(cfg)

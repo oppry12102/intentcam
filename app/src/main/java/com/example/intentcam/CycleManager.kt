@@ -8,47 +8,60 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * [2026-07-14 Phase B — inversion v3.0] Owns concurrent
- * recognition cycles.  Replaces the legacy single-cycle flow inside
- * [AppViewModel.captureLatestFrame] where an [java.util.concurrent.atomic.AtomicBoolean]
- * (`analyzing`) gated the shutter button — under CycleManager the
- * shutter is **never** blocked, every tap spawns a new [CycleJob],
- * and old jobs continue in the background until they reach
- * COMPLETE / ERRORED.
+ * [2026-07-14 Phase B — inversion v3.0; 2026-07-16 producer/consumer
+ * split] Owns concurrent recognition cycles as a classic
+ * **producer → bounded queue → worker pool → output** pipeline.
  *
- * Concurrency cap is [UiState.CYCLE_MAX_CONCURRENT] = 2: when a 3rd
- * job arrives while 2 are still active, the oldest non-COMPLETE
- * job is marked SUPERSEDED and dropped from [allJobs] (its
- * coroutine keeps running so the LLM round isn't wasted, but its
- * bubble never reaches the UI).  Cap = 2 chosen to (a) match the
- * mental model of "user taps shutter while one photo is mid-cycle"
- * and (b) bound LLM API request rate on real networks.
+ * The shutter (producer) never blocks: each tap calls [startCycle],
+ * which enqueues a [CycleJob] (status PENDING) into a pending FIFO
+ * queue.  A [pump] loop drains that queue into at most
+ * [UiState.CYCLE_CONCURRENCY] (= 2) concurrent worker coroutines —
+ * the rest of a rapid burst waits its turn as PENDING.  As each
+ * worker finishes it decrements the running count and re-pumps, so
+ * queued cycles start in capture order, 2-at-a-time.
+ *
+ * Two independent bounds (the whole point of the split):
+ *   - **Queue depth** [UiState.CYCLE_QUEUE_DEPTH] (= 8, `n`):
+ *     max queued+in-flight.  Backpressure — when reached,
+ *     [startCycle] rejects (returns null) and the shutter is
+ *     already dimmed (`remaining = CYCLE_QUEUE_DEPTH -
+ *     activeCycleCount`).  COMPLETE/ERRORED/SUPERSEDED don't count,
+ *     so a finished cycle frees a slot immediately.
+ *   - **Concurrency** [UiState.CYCLE_CONCURRENCY] (= 2, `m`):
+ *     max cycles actually running OCR+LLM at once.  Keeps
+ *     concurrent Anthropic SSE streams low (fewer 529 storms),
+ *     bounds device memory/CPU, avoids OCR contention.
+ *
+ * There is no longer a "supersede oldest on overflow + cancel its
+ * LLM call" path — overflow is prevented by backpressure, so
+ * in-flight work is never thrown away mid-stream (no wasted API
+ * tokens).  Cancellation now only happens on explicit user intent
+ * ([cancelCycle], [cancelAll] via restart / leave-screen).
  *
  * Status flow:
- *   - [startCycle] → new CycleJob (PENDING), launches coroutine
- *   - coroutine → IN_FLIGHT, runCycle on ToolUseLoop
+ *   - [startCycle] → new CycleJob (PENDING), enqueued, [pump]
+ *   - worker picks it up → IN_FLIGHT, runCycle on ToolUseLoop
  *   - every [CycleProgress] → CycleJob.applyProgress + refreshValidation
- *   - cycle returns Outcome.Bubble → status = COMPLETE
- *   - new cycle arrives → oldest non-COMPLETE marked SUPERSEDED
- *   - exception / 529 storm → status = ERRORED
+ *   - cycle returns Outcome.Bubble → status = COMPLETE, worker re-pumps
+ *   - exception / 529 storm / timeout → status = ERRORED, worker re-pumps
  *
  * Public surface:
- *   - [startCycle] — spawn a new job
- *   - [supersedeCurrent] — explicitly mark the most-recently-focused
- *     non-COMPLETE job as SUPERSEDED (rarely called directly;
- *     startCycle does it implicitly when cap is hit)
+ *   - [startCycle] — enqueue a new job (nullable: null == rejected, queue full)
  *   - [focusedJobId] — most-recent job's id, drives the live UI's
  *     "current capture" indicator
- *   - [allJobs] — every active job keyed by id; the UI iterates
- *     this to render cards
- *
- * Total ~110 lines.  The actual ToolUseLoop call is one
- * [ToolUseLoop.runCycle] invocation; everything else is bookkeeping.
+ *   - [allJobs] — every job keyed by id; the UI iterates this to
+ *     render cards
  */
 class CycleManager(
     private val scope: CoroutineScope,
@@ -74,11 +87,10 @@ class CycleManager(
     /**
      * [2026-07-15 P0 fix] Callback fired when a cycle reaches
      *  its terminal COMPLETE state via [ToolUseLoop.Outcome.Bubble].
-     *  AppViewModel uses this to clear `state.analyzing` — the
-     *  pre-existing flow only cleared `analyzing` on the legacy
+     *  AppViewModel uses this to clear the busy signal — the
+     *  pre-existing flow only flipped `analyzing` on the legacy
      *  single-cycle path, so live-UI cycles left the TopOverlay
-     *  "识别中…" spinner stuck after completion.  Pair with the
-     *  legacy `enterAnalyzing()` so the two paths now balance. */
+     *  "识别中…" spinner stuck after completion. */
     private val onCycleComplete: (cycleId: String, bubble: Bubble) -> Unit = { _, _ -> },
     /**
      * [2026-07-15 P0 fix] Callback fired when a cycle returns
@@ -89,8 +101,8 @@ class CycleManager(
      *  resume via [resumeCycle].  The placeholder Bubble is
      *  also written into `job.bubble.value` so the live UI
      *  renders it as a BubbleCard (the live card list reads
-     *  `state.cycles`, not `state.bubbles`, so the placeholder
-     *  has to land in the per-job flow to be visible). */
+     *  `state.cycles`, so the placeholder has to land in the
+     *  per-job flow to be visible). */
     private val onPendingUserInput: (cycleId: String, request: UserInputRequest, placeholder: Bubble) -> Unit = { _, _, _ -> },
     /**
      * [2026-07-15] Per-cycle wall-clock cap on the LLM call.
@@ -109,79 +121,97 @@ class CycleManager(
     private val _focusedJobId = MutableStateFlow<String?>(null)
     val focusedJobId: StateFlow<String?> = _focusedJobId.asStateFlow()
 
-    /** Spawn a new cycle for [frame].  Returns the job handle
-     *  synchronously; the actual LLM work happens on [scope].  If
-     *  [UiState.CYCLE_MAX_CONCURRENT] is already saturated, the
-     *  oldest non-COMPLETE job is dropped from [allJobs] (marked
-     *  SUPERSEDED, its coroutine continues in the background). */
-    fun startCycle(frame: CapturedFrame): CycleJob {
+    /** Derived "spinner should show" signal.  True iff the focused
+     *  job exists and is in PENDING or IN_FLIGHT (the two statuses
+     *  where recognition work is actively happening).  ERRORED and
+     *  SUPERSEDED are terminal and stay false here — the UI gets
+     *  the per-cycle "识别超时, 请再拍一张" affordance via the
+     *  BubbleCard's status flow instead of a global spinner.
+     *
+     *  Built by `flatMapLatest` over [_focusedJobId] and the focused
+     *  job's [CycleJob.status] flow so a status flip re-emits without
+     *  needing the cycle map's structure to change (a status mutation
+     *  alone wouldn't update `allJobs`, so a flat `combine` would miss
+     *  the transition).
+     *
+     *  Scope is the constructor-injected `scope` (typically
+     *  viewModelScope) so the flow lives for the lifetime of the
+     *  ViewModel and is automatically cancelled on clear. */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val busy: StateFlow<Boolean> = _focusedJobId
+        .flatMapLatest { focusedId ->
+            if (focusedId == null) flowOf(false)
+            else _allJobs
+                .map { it[focusedId] }
+                .filterNotNull()
+                .flatMapLatest { job -> job.status }
+                .map { it == JobStatus.PENDING || it == JobStatus.IN_FLIGHT }
+                .distinctUntilChanged()
+        }
+        .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, false)
+
+    /** Pending FIFO queue of job ids waiting for a worker slot.
+     *  Only ever touched on [scope]'s dispatcher (Main.immediate),
+     *  so a plain ArrayDeque is safe — [startCycle], [pump], and the
+     *  worker `finally` blocks all run single-threaded there. */
+    private val pendingQueue = ArrayDeque<String>()
+
+    /** Number of worker coroutines currently running [runCycleLoop].
+     *  Gated by [UiState.CYCLE_CONCURRENCY].  Same single-thread
+     *  invariant as [pendingQueue]. */
+    private var runningWorkers = 0
+
+    /** Enqueue a new cycle for [frame].  Returns the [CycleJob]
+     *  handle synchronously, or **null** if the queue is full
+     *  (queued+in-flight already at [UiState.CYCLE_QUEUE_DEPTH]) —
+     *  the shutter is dimmed at that point, so a null return is the
+     *  defensive backstop for a tap that raced the gate.  The actual
+     *  LLM work is deferred: the job sits PENDING in [pendingQueue]
+     *  until [pump] hands it to one of the [UiState.CYCLE_CONCURRENCY]
+     *  workers. */
+    fun startCycle(frame: CapturedFrame): CycleJob? {
+        // Backpressure: reject when queued + in-flight is saturated.
+        //  COMPLETE / ERRORED / SUPERSEDED cycles do NOT count — a
+        //  finished cycle frees a capture slot immediately.  This
+        //  mirrors the shutter's `remaining = CYCLE_QUEUE_DEPTH -
+        //  activeCycleCount` gate; startCycle enforcing it too means
+        //  a tap that races the gate (finger down as the count hits
+        //  0) can't overflow the pipeline.
+        val liveCount = _allJobs.value.values.count {
+            it.status.value == JobStatus.PENDING ||
+                it.status.value == JobStatus.IN_FLIGHT
+        }
+        if (liveCount >= UiState.CYCLE_QUEUE_DEPTH) {
+            log("CYCLE", "rejected: queue full ($liveCount/${UiState.CYCLE_QUEUE_DEPTH})")
+            return null
+        }
+
         val job = CycleJob(frame = frame)
         _focusedJobId.value = job.id
 
-        // Insert + enforce concurrency cap.  Use a copy-and-replace
-        // pattern so collectors always see an immutable map
-        // snapshot — Compose's recomposition relies on this for
-        // structural-equality diffing.
+        // Insert + enforce the total map cap.  Copy-and-replace so
+        // collectors always see an immutable snapshot — Compose's
+        // structural-equality diffing relies on it.
         val updated = LinkedHashMap<String, CycleJob>(_allJobs.value)
         updated[job.id] = job
-        // [2026-07-15 bug fix] Cap on ACTIVE (non-COMPLETE) cycles,
-        //  not total map size.  Previous version compared
-        //  `updated.size > CYCLE_MAX_CONCURRENT` — but COMPLETE
-        //  cycles never get evicted from the map (the LLM work is
-        //  done but the job stays for the bubble-card UI to
-        //  reference).  After 2 cycles complete, the map held 2
-        //  COMPLETE entries; a 3rd tap added a 3rd entry (size=3
-        //  > cap=2), the "drop oldest non-COMPLETE" filter
-        //  returned the just-added cycle (the only non-COMPLETE),
-        //  and the new cycle was immediately SUPERSEDED before
-        //  the user saw any progress bar.  User reported: "tap
-        //  识别 twice, both finish, tap again — no response, debug
-        //  shows it's still processing the original 2".
-        //
-        //  New check counts only non-COMPLETE cycles, which is
-        //  the actual concurrency cap (the comment: "user taps
-        //  shutter while one photo is mid-cycle").  2 COMPLETE +
-        //  1 new IN_FLIGHT → activeCount=1, well under the cap.
-        var activeCount = updated.values.count { it.status.value != JobStatus.COMPLETE }
-        while (activeCount > UiState.CYCLE_MAX_CONCURRENT) {
-            val toDrop = updated.values
-                .filter { it.status.value != JobStatus.COMPLETE }
-                .minByOrNull { it.createdAtMs }
-            if (toDrop == null) break  // shouldn't happen — activeCount > 0
-            toDrop.status.value = JobStatus.SUPERSEDED
-            // [2026-07-15] Actually cancel the LLM coroutine
-            //  instead of leaving it to run to completion.  The
-            //  previous behavior (mark SUPERSEDED + leave the
-            //  coroutine) meant every "rapid capture" cycle was
-            //  billed for an LLM call whose result would never
-            //  reach the user — the cycle was dropped from
-            //  allJobs so the bubble has no UI to render into.
-            //  With cancel() the OkHttp request gets
-            //  CancellationException, the LLM API call aborts
-            //  mid-stream, and the API quota is preserved.
-            toDrop.coroutine?.cancel()
-            updated.remove(toDrop.id)
-            activeCount--
-            log("CYCLE", "superseded+cancelled ${toDrop.id} (cap=${UiState.CYCLE_MAX_CONCURRENT})")
-        }
-
-        // [2026-07-15] Total cap enforcement (CYCLES_MAX_TOTAL=8).
-        //  Distinct from the IN_FLIGHT cap above — this one
-        //  bounds the *visible* count of cycles (any status) on
-        //  the camera screen, regardless of how many are
-        //  actively processing.  Shutter button is disabled when
-        //  we hit this cap, so the eviction path is defensive
-        //  (any future bypass of the button gate is still
-        //  safe).  Eviction is FIFO by createdAtMs; if the
-        //  evicted entry is IN_FLIGHT, its coroutine is
-        //  cancelled so we don't bill for a discarded LLM
-        //  call.  Same cancellation pattern as the
-        //  cap-2-IN_FLIGHT branch above.
+        // [2026-07-16] Total map cap (CYCLES_MAX_TOTAL=8) bounds
+        //  memory + scrollback history.  Evict the oldest **terminal**
+        //  cycle (COMPLETE / ERRORED / SUPERSEDED) first so a still-
+        //  queued or in-flight cycle is never dropped out from under
+        //  the user.  Live cycles are already bounded by the
+        //  backpressure check above (≤ CYCLE_QUEUE_DEPTH = the cap),
+        //  so whenever size exceeds the cap at least one terminal
+        //  entry exists to evict.  No coroutine.cancel() needed —
+        //  terminal cycles have no live coroutine.
         while (updated.size > UiState.CYCLES_MAX_TOTAL) {
-            val toDrop = updated.values.minByOrNull { it.createdAtMs }
-                ?: break
-            toDrop.status.value = JobStatus.SUPERSEDED
-            toDrop.coroutine?.cancel()
+            val toDrop = updated.values
+                .filter {
+                    it.status.value == JobStatus.COMPLETE ||
+                        it.status.value == JobStatus.ERRORED ||
+                        it.status.value == JobStatus.SUPERSEDED
+                }
+                .minByOrNull { it.createdAtMs }
+                ?: break  // no terminal entry — leave the map as-is
             updated.remove(toDrop.id)
             log(
                 "CYCLE",
@@ -191,16 +221,54 @@ class CycleManager(
         }
         _allJobs.value = updated
 
-        // [2026-07-15] Capture the launch handle so a later
-        //  supersede can cancel() it (see cap-enforcement above).
-        //  Without this, a SUPERSEDED cycle's coroutine would
-        //  keep running to completion — see CycleJob.coroutine's
-        //  docstring.
-        val launchHandle = scope.launch {
-            runCycleLoop(job)
-        }
-        job.coroutine = launchHandle
+        // Enqueue for a worker instead of launching directly.  pump()
+        // starts it iff a worker slot is free; otherwise it waits
+        // PENDING until an earlier cycle finishes and re-pumps.
+        pendingQueue.addLast(job.id)
+        log("CYCLE", "enqueued ${job.id} (queued+inflight=${liveCount + 1}, workers=$runningWorkers)")
+        pump()
         return job
+    }
+
+    /** Drain [pendingQueue] into worker coroutines while a slot is
+     *  free.  Called from [startCycle] (new work arrived) and from
+     *  every worker's `finally` (a slot freed).  Single-threaded on
+     *  [scope]'s dispatcher, so the [runningWorkers] check-and-launch
+     *  is race-free. */
+    private fun pump() {
+        while (runningWorkers < UiState.CYCLE_CONCURRENCY && pendingQueue.isNotEmpty()) {
+            val id = pendingQueue.removeFirst()
+            val job = _allJobs.value[id] ?: continue  // evicted while queued
+            // Skip if it was cancelled/superseded before a worker
+            // could pick it up (cancelCycle removes from the queue,
+            // but guard defensively).
+            if (job.status.value != JobStatus.PENDING) continue
+            launchWorker(job, userText = "")
+        }
+    }
+
+    /** Launch one worker coroutine for [job], accounting for the
+     *  [runningWorkers] slot and re-pumping when it finishes (success,
+     *  error, or cancellation — `finally` always runs).  Used by
+     *  [pump] for queued jobs and by [resumeCycle] for a
+     *  pending-input continuation.
+     *
+     *  `CoroutineStart.LAZY` + install-handle-then-start so
+     *  `job.coroutine` is set BEFORE the body can suspend — otherwise
+     *  a concurrent [cancelCycle] / [cancelAll] could miss the handle
+     *  (the same race the pre-split resumeCycle guarded against). */
+    private fun launchWorker(job: CycleJob, userText: String) {
+        runningWorkers++
+        val handle = scope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
+            try {
+                runCycleLoop(job, userText = userText)
+            } finally {
+                runningWorkers--
+                pump()
+            }
+        }
+        job.coroutine = handle
+        handle.start()
     }
 
     /** Mark the currently-focused job (if any non-COMPLETE) as
@@ -358,13 +426,10 @@ class CycleManager(
                     // onProgress.  Mark COMPLETE for the UI to
                     // optionally badge "done".
                     job.status.value = JobStatus.COMPLETE
-                    // [2026-07-15 P0 fix] Fire the completion
-                    //  callback so AppViewModel can clear
-                    //  `state.analyzing`.  Pre-existing bug: the
-                    //  TopOverlay's "识别中…" spinner was stuck on
-                    //  after a live-UI cycle finished because the
-                    //  legacy `analyzing` flip was wired only to
-                    //  the single-cycle path.
+                    // Fire the completion callback so AppViewModel
+                    //  can sync the shutter counter.  The busy
+                    //  signal is now a derived flow — no
+                    //  imperative flip needed here.
                     onCycleComplete(job.id, outcome.bubble)
                     log("CYCLE", "complete ${job.id} bubble=${outcome.bubble.id}")
                 }
@@ -382,11 +447,9 @@ class CycleManager(
                     //      to silently break resume routing).
                     //   2. Write the placeholder into `job.bubble`
                     //      so the live UI renders it as a BubbleCard.
-                    //      IntentBubbles reads `state.cycles` (not
-                    //      `state.bubbles`) when cycles is non-empty,
-                    //      so the per-job flow is the only way to
-                    //      make the placeholder visible in the live
-                    //      card list.
+                    //      IntentBubbles reads `state.cycles`, so the
+                    //      per-job flow is the only way to make the
+                    //      placeholder visible in the live card list.
                     //   3. Fire the callback so AppViewModel can
                     //      surface the AlertDialog + stash fullRes.
                     val placeholder = outcome.placeholder.copy(cycleId = job.id)
@@ -471,16 +534,15 @@ class CycleManager(
         job.validatedInputs.value = emptyMap()
         job.pendingInputs.value = emptyList()
         job.nRounds.value = 0
-        // Launch the resumed call.  CoroutineStart.LAZY so we can
-        // install the handle into `job.coroutine` BEFORE execution
-        // begins — without LAZY, `scope.launch` may start running
-        // synchronously up to the first suspension point, racing
-        // against the supersede path's `job.coroutine?.cancel()`.
-        val handle = scope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
-            runCycleLoop(job, userText = userText)
-        }
-        job.coroutine = handle
-        handle.start()
+        // [2026-07-16] Route the resume through the same worker-pool
+        //  accounting as a fresh cycle ([launchWorker] handles the
+        //  runningWorkers slot + re-pump on completion).  A resume is
+        //  user-initiated and runs immediately rather than re-queuing
+        //  at the tail — it may briefly make concurrency = m+1 if 2
+        //  workers are already busy, which is an acceptable trade for
+        //  interactive responsiveness (the parked cycle already freed
+        //  its slot when it returned PendingUserInput).
+        launchWorker(job, userText = userText)
         log(
             "CYCLE",
             "resume $cycleId userText='${userText.take(40)}' (size=${userText.length})"
@@ -505,6 +567,9 @@ class CycleManager(
         ) return
         job.status.value = JobStatus.SUPERSEDED
         job.coroutine?.cancel()
+        // Drop it from the pending queue too (it may never have been
+        // picked up by a worker).  Harmless no-op if not queued.
+        pendingQueue.remove(cycleId)
         val updated = LinkedHashMap(_allJobs.value)
         updated.remove(cycleId)
         _allJobs.value = updated
@@ -541,8 +606,8 @@ class CycleManager(
      *  `llmTimeoutMs` budget would bill for a discarded result).
      *  Wired into [com.example.intentcam.AppViewModel.restartScanning]
      *  so tapping "重新扫描" actually stops whatever the camera was
-     *  doing — the previous version cleared `UiState.bubbles` but
-     *  left cycles running in the background, wasting API quota.
+     *  doing — the previous version left cycles running in the
+     *  background, wasting API quota.
      *  Called from the main thread; safe because it only mutates
      *  StateFlows and calls `Job.cancel()` (which is thread-safe). */
     fun cancelAll(reason: String = "user restart") {
@@ -553,6 +618,15 @@ class CycleManager(
                 job.coroutine?.cancel()
             }
         }
+        // Drain the pending queue.  Do NOT touch runningWorkers:
+        // only launched workers ever incremented it, and each
+        // cancelled worker's own `finally` decrements it back (and
+        // re-pumps into the now-empty queue — a no-op).  PENDING
+        // jobs still in the queue were never launched, so they
+        // never contributed to the count; clearing the queue is
+        // enough to stop them.  Resetting the count here would race
+        // the finally blocks and drive it negative.
+        pendingQueue.clear()
         _allJobs.value = emptyMap()
         _focusedJobId.value = null
         log("CYCLE", "cancelled all (${jobs.size}) reason=$reason")

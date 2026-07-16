@@ -120,10 +120,6 @@ data class Bubble(
 data class UiState(
     val phase: Phase = Phase.NEED_PERMISSION,
     val scene: String = "",
-    /** A network request is in flight (LLM call). */
-    val analyzing: Boolean = false,
-    /** FIFO queue of bubbles; oldest evicted when length exceeds [BUBBLE_MAX]. */
-    val bubbles: List<Bubble> = emptyList(),
     val selectedBubble: Bubble? = null,
     val error: String? = null,
     /** When true, the recognition process streams onto a translucent
@@ -167,17 +163,14 @@ data class UiState(
      *  [CycleSnapshot] exposes the cycle's current bubble + status
      *  as `StateFlow`s so the live UI can `collectAsState` per
      *  cycle without re-rendering the whole list on every emit.
-     *  Empty in the legacy single-cycle path; populated only when
-     *  [com.example.intentcam.CycleManager] is in use (Phase B+).
-     *  Legacy code paths that read [bubbles] still work — the
-     *  bubble list is now derived as `cycles.values.mapNotNull
-     *  { it.bubble.value }` so the FIFO cap (BUBBLE_MAX) keeps
-     *  its semantics. */
+     *  Populated by [com.example.intentcam.CycleManager].  The
+     *  single source of truth for rendered bubbles — the live
+     *  UI iterates `state.cycles` directly. */
     val cycles: Map<String, CycleSnapshot> = emptyMap(),
     /** [2026-07-15 P0 fix] Count of cycles whose status is
      *  [JobStatus.PENDING] or [JobStatus.IN_FLIGHT].  Drives the
      *  shutter button's "还可以拍 N 张" counter via
-     *  `CYCLE_MAX_CONCURRENT - activeCycleCount`.  Updated by
+     *  `CYCLE_QUEUE_DEPTH - activeCycleCount`.  Updated by
      *  [com.example.intentcam.AppViewModel.syncCycleCounters] on
      *  every cycle transition (startCycle / complete / error /
      *  cancel / restart).
@@ -203,71 +196,64 @@ data class UiState(
     val activeCycleCount: Int = 0,
 ) {
     companion object {
-        /** [2026-07-15] Hard cap on the legacy [bubbles] FIFO queue.
-         *  When a new bubble arrives and we're already at this count,
-         *  the oldest is dropped.
-         *
-         *  History: was 4 in Phase A; bumped to 8 in the v3.0 polish
-         *  batch because users taking a long photo session wanted to
-         *  scroll back further than 4 entries to find an earlier
-         *  result.  Note: this cap is for the **legacy** single-cycle
-         *  path ([bubbles]); the live-UI path uses the [cycles] map
-         *  whose cap is [CYCLE_MAX_CONCURRENT] (= 2 concurrent
-         *  IN_FLIGHT cycles, not a "saved bubbles" cap).  The two
-         *  caps serve different purposes — see CycleManager.kt for
-         *  the live-UI cap logic.
-         *
-         *  [Future work] Persistence: this is in-memory only and is
-         *  wiped on process death.  A follow-up will write
-         *  [bubbles] to disk on `onStop` and rehydrate on cold
-         *  start, bumping the cap further (or moving it to a
-         *  queryable window) once storage cost is bounded.  Until
-         *  then 8 is the sweet spot — enough history to scroll
-         *  back, not so much that a long session OOMs. */
-        const val BUBBLE_MAX = 8
         /** Max entries kept in [debugLogs] before the oldest is evicted. */
         const val DEBUG_LOG_MAX = 40
-        /** [2026-07-14 Phase B → v3.0 polish] Hard cap on
-         *  *active* (PENDING + IN_FLIGHT) cycles the CycleManager
-         *  will keep alive concurrently.  Beyond this count the
-         *  oldest active job is dropped from the UI map (its
-         *  coroutine is cancelled so the LLM API call doesn't
-         *  bill for a discarded result).
+        /** [2026-07-16 producer/consumer split] Backpressure
+         *  depth: the max number of cycles that may be **queued
+         *  or in-flight** at once (status PENDING + IN_FLIGHT).
+         *  This is `n` in the producer-consumer model — it bounds
+         *  the shutter, not the worker pool.  When queued+in-flight
+         *  reaches this count, the shutter button dims (`remaining
+         *  = CYCLE_QUEUE_DEPTH - activeCycleCount` hits 0) and a
+         *  further tap is rejected by [CycleManager.startCycle].
          *
-         *  History: was 2 in Phase B (the "one focused + one
-         *  buffered" rapid-2-photo use case).  Bumped to 8 in
-         *  the v3.0 UI polish batch to match the user-facing
-         *  "还可以拍 8 张" shutter counter — a user wanting
-         *  exactly 8 captures per session shouldn't be limited
-         *  by the backend's "2 in flight" cap, and the cycle's
-         *  90s timeout (see CycleManager.llmTimeoutMs) makes
-         *  8-concurrent manageable.
+         *  COMPLETE / ERRORED / SUPERSEDED cycles do NOT count
+         *  toward this cap — a cycle finishing frees a slot
+         *  immediately (the "释放出一个" semantics).  So the user
+         *  can keep up to 8 photos waiting-or-processing; results
+         *  that already landed as bubbles don't consume capture
+         *  budget.
          *
-         *  Note: COMPLETE cycles don't count toward this cap.
-         *  When a cycle finishes, the active count drops by 1
-         *  automatically (its status transitions to COMPLETE),
-         *  freeing a slot for the next shutter tap.  This is
-         *  the "释放出一个" semantics the user asked for — the
-         *  shutter counter decrements as cycles complete, not
-         *  just as new ones are added. */
-        const val CYCLE_MAX_CONCURRENT = 8
+         *  Replaces the old `CYCLE_MAX_CONCURRENT` (which conflated
+         *  queue depth with true concurrency — both were 8, so 8
+         *  LLM+OCR pipelines ran at once).  True concurrency is now
+         *  the separate, much smaller [CYCLE_CONCURRENCY]. */
+        const val CYCLE_QUEUE_DEPTH = 8
+
+        /** [2026-07-16 producer/consumer split] Worker-pool size:
+         *  the max number of cycles actually **processing** (OCR +
+         *  LLM) at the same instant.  This is `m` in the
+         *  producer-consumer model.  [CycleManager] runs a `pump()`
+         *  loop that keeps at most this many `runCycleLoop`
+         *  coroutines live; the rest of a burst waits in the
+         *  pending FIFO queue (status PENDING) until a worker frees.
+         *
+         *  Set to 2 (vs the queue depth of 8) deliberately:
+         *   - caps concurrent Anthropic SSE streams → fewer 529
+         *     "overload" errors (the historical eval-contamination
+         *     culprit) and gentler on rate limits;
+         *   - bounds peak device memory/CPU (each in-flight cycle
+         *     holds a 4096px fullRes + does bitmap decode + OCR);
+         *   - avoids on-device OCR analyzer contention.
+         *  The user still perceives no slowdown — a single cycle's
+         *  latency is unchanged; results just stream out in capture
+         *  order 2-at-a-time instead of all-8-at-once. */
+        const val CYCLE_CONCURRENCY = 2
 
         /** [2026-07-15 UI polish] Hard cap on the total number
          *  of cycles kept in the [cycles] map (any status —
          *  PENDING, IN_FLIGHT, COMPLETE, ERRORED, SUPERSEDED).
-         *  Distinct from [CYCLE_MAX_CONCURRENT] which only counts
-         *  IN_FLIGHT cycles — the user can have 8 COMPLETE
+         *  Distinct from [CYCLE_QUEUE_DEPTH] which only counts
+         *  queued+IN_FLIGHT — the user can have 8 COMPLETE
          *  bubbles on screen with 0 currently processing.
          *
          *  When a new cycle is added and the map would exceed
-         *  this count, the oldest entry is evicted (FIFO); if
-         *  that entry is IN_FLIGHT, its coroutine is also
-         *  cancelled so the LLM API call doesn't bill for a
-         *  result that will never reach the user.  In normal
-         *  usage the shutter button is disabled when
-         *  cycles.size hits this cap, so the eviction path is
-         *  defensive — but the safety net is important if a
-         *  future code path bypasses the button gate.
+         *  this count, the oldest **terminal** entry (COMPLETE /
+         *  ERRORED / SUPERSEDED) is evicted first (FIFO) so a
+         *  still-queued or in-flight cycle is never dropped out
+         *  from under the user.  Live cycles are already bounded
+         *  by [CYCLE_QUEUE_DEPTH], so a terminal entry always
+         *  exists to evict when size exceeds this cap.
          *
          *  8 = enough scrollback to find an earlier result in
          *  a multi-photo session, low enough that decodeScaled's
@@ -335,8 +321,12 @@ data class CycleSnapshot(
  *  running in the background and may eventually reach COMPLETE,
  *  but the user has already moved on to a newer cycle. */
 enum class JobStatus {
-    /** Newly registered in [com.example.intentcam.CycleManager.allJobs];
-     *  ToolUseLoop has not started round 1 yet. */
+    /** Registered in [com.example.intentcam.CycleManager.allJobs]
+     *  and **waiting in the pending FIFO queue** for a free worker
+     *  slot ([UiState.CYCLE_CONCURRENCY]).  ToolUseLoop has not
+     *  started round 1 yet.  The live UI renders this as a
+     *  "排队中…" placeholder card (distinct from IN_FLIGHT's
+     *  "识别中…" spinner). */
     PENDING,
     /** Round 1 (or later) in flight. */
     IN_FLIGHT,

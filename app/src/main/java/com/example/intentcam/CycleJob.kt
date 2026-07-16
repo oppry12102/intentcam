@@ -57,12 +57,10 @@ class CycleJob internal constructor(
      * coroutine running in the background, wasting API quota
      * for cycles whose result would never reach the user.
      *
-     * Nullable because the legacy single-cycle path
-     * (ToolUseLoop.runCycle called directly from
-     * AppViewModel.runToolUseCycle) constructs a CycleJob
-     * without going through CycleManager.startCycle; for those
-     * jobs there's no handle to cancel.  In the live-UI path
-     * (Phase B+), the field is always non-null. */
+     * Nullable because eval tests can construct a CycleJob
+     * directly without going through CycleManager.startCycle;
+     * for those jobs there's no handle to cancel.  In the
+     * live-UI path, the field is always non-null. */
     var coroutine: Job? = null,
 ) {
     /**
