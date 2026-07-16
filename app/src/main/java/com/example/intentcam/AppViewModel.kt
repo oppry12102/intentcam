@@ -741,15 +741,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         logDebug("ACTION", "tap ${def.id} for bubble='${bubble.title.take(40)}'")
         if (def.requiresConfirmation) {
             // Park a confirmation; MainActivity renders an AlertDialog.
-            // Detail uses the same PhoneExtractor the body uses so the
-            // user sees exactly what number will be handed to the
-            // dialer — no surprise.
+            // Detail uses the same shared InputParsers.phoneNumber the
+            // body uses so the user sees exactly what number will be
+            // handed to the dialer — no surprise.
             val pending = PendingConfirmation(
                 actionId = def.id,
                 bubbleId = bubbleId,
                 prompt = "确认拨打?",
                 detail = "即将在系统拨号器中拨打 " +
-                    (PhoneExtractor.firstMatch(bubble) ?: "未知号码"),
+                    (com.example.intentcam.InputParsers.phoneNumber(bubble) ?: "未知号码"),
             )
             _state.value = _state.value.copy(pendingConfirmation = pending)
             logDebug("ACTION", "request confirm via=${def.id} prompt=${pending.detail}")

@@ -75,14 +75,10 @@ data class ScorerV2Result(
     val composite: Double,
 ) {
     companion object {
-        /** Phone-number regexes — duplicate of
-         *  [com.example.intentcam.PhoneExtractor] (lives in app/ so
-         *  can't be imported).  Kept in sync by hand; the canonical
-         *  copy is the eval-side one for fixtures without an
-         *  `action_<id>_enabled` pref. */
-        private val MOBILE_REGEX = Regex("""1[3-9]\d{9}""")
-        private val SERVICE_REGEX = Regex("""(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}""")
-        private val LANDLINE_REGEX = Regex("""\b0?\d{3,4}[\s-]?\d{7,8}\b""")
+        // Phone regexes live in `com.example.intentcam.InputParsers`
+        // (single source of truth shared with prod + EvalRunner).
+        // No local copies.  See ADR
+        // docs/adr/2026-07-16-input-parsers-drift-risk.md.
 
         /**
          * @param textScore r_text — verbatim OCR fidelity, computed by
@@ -151,16 +147,8 @@ data class ScorerV2Result(
          *  to set [computeInputsComplete]'s per-input satisfaction
          *  once Phase D's GT migration populates expected_inputs.
          *  Mirrors [com.example.intentcam.PhoneExtractor.firstMatch]. */
-        internal fun bubbleHasPhoneNumber(bubble: Bubble): Boolean {
-            val corpus = buildString {
-                append(bubble.title).append('\n')
-                append(bubble.detail).append('\n')
-                bubble.details.forEach { d -> append(d.value).append('\n') }
-            }
-            return MOBILE_REGEX.containsMatchIn(corpus) ||
-                SERVICE_REGEX.containsMatchIn(corpus) ||
-                LANDLINE_REGEX.containsMatchIn(corpus)
-        }
+        internal fun bubbleHasPhoneNumber(bubble: Bubble): Boolean =
+            com.example.intentcam.InputParsers.phoneNumber(bubble) != null
 
         /** Convenience: did this bubble carry any non-blank text
          *  (title/detail/detail-rows)?  Mirrors the `textContent`

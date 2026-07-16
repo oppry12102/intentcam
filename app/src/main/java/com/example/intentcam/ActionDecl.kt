@@ -200,7 +200,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         requiredInputs = listOf(ActionInputSpec(
             key = "query",
             label = "地点或地址",
-            parser = InputParsers.locationQuery,
+            parser = { b -> com.example.intentcam.InputParsers.locationQuery(b) },
         )),
         body = { _, bubble, args ->
             // Prefer the orchestrator-parsed `query` from `args` when present
@@ -249,7 +249,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         requiredInputs = listOf(ActionInputSpec(
             key = "phone_number",
             label = "手机号",
-            parser = InputParsers.phoneNumber,
+            parser = { b -> com.example.intentcam.InputParsers.phoneNumber(b) },
         )),
         requiresConfirmation = true,
         userPrefKey = "action_dial_number_enabled",
@@ -264,10 +264,10 @@ fun registerDefaultActions(reg: ActionRegistry) {
             //  the action then surfaces a Toast instead of firing
             //  a bogus Intent.
             // Prefer the orchestrator-parsed `phone_number` from `args`
-            //  (validated path); fall back to inline PhoneExtractor
-            //  (user-form path or legacy chip-tap before orchestrator
-            //  gate).
-            val number = args["phone_number"] ?: PhoneExtractor.firstMatch(bubble)
+            //  (validated path); fall back to InputParsers.phoneNumber
+            //  (shared/) for the user-form path or legacy chip-tap
+            //  before the orchestrator gate ran.
+            val number = args["phone_number"] ?: com.example.intentcam.InputParsers.phoneNumber(bubble)
             val outcome: ActionOutcome =
                 number?.let {
                     ActionOutcome.LaunchAndroidIntent(
@@ -387,7 +387,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         requiredInputs = listOf(ActionInputSpec(
             key = "text",
             label = "正文",
-            parser = InputParsers.textContent,
+            parser = { b -> com.example.intentcam.InputParsers.textContent(b) },
         )),
         body = { _, bubble, args ->
             // Chooser title + text-empty fallback vary by intent; the
@@ -440,86 +440,21 @@ fun registerDefaultActions(reg: ActionRegistry) {
  *  Side-effect-free; safe to call from any context (it's a suspend-
  *  ready regex on a string).
  *
- *  Now also exported as
- *  [InputParsers.phoneNumber] so [ActionDef.requiredInputs] can
- *  declare `phone_number` as a parser without reaching into a
- *  private object.  Same logic, just a function reference.
+ *  Now also exported as [com.example.intentcam.InputParsers.phoneNumber]
+ *  in `shared/` so [ActionDef.requiredInputs] can declare
+ *  `phone_number` as a parser without reaching into a private
+ *  object.  Same logic, single source of truth — see
+ *  [docs/adr/2026-07-16-input-parsers-drift-risk.md](../docs/adr/2026-07-16-input-parsers-drift-risk.md)
+ *  for the migration that lifted this out of `app/`.
  */
-internal object PhoneExtractor {
-    // Mobile: 1[3-9] + 9 digits (covers all 3 Chinese carriers incl.
-    // 14x/15x/16x/17x/18x/19x series).
-    private val mobile = Regex("""1[3-9]\d{9}""")
-    // 400 / 800 service line.  Format: 400/800 + (3-4 digits) + (3-4
-    // digits), possibly hyphenated.
-    private val service = Regex("""(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}""")
-    // Landline: area code 3-4 digits + 7-8 digits, possibly hyphenated,
-    // optionally leading 0 (sometimes present, sometimes not — sign
-    // posters are inconsistent).
-    private val landline = Regex("""\b0?\d{3,4}[\s-]?\d{7,8}\b""")
-
-    fun firstMatch(bubble: Bubble): String? {
-        // Concatenate all surfaces the model produced into one search
-        // corpus.  Title gets a slight boost (the model often puts the
-        // number there) by being first.
-        val corpus = buildString {
-            append(bubble.title).append('\n')
-            append(bubble.detail).append('\n')
-            bubble.details.forEach { d -> append(d.value).append('\n') }
-        }
-        // Order matters — first match wins on each call.
-        mobile.find(corpus)?.value?.let { return it }
-        service.find(corpus)?.value?.let { return it.replace(Regex("""[\s-]"""), "-") }
-        landline.find(corpus)?.value?.let { return it.replace(Regex("""[\s-]"""), "") }
-        return null
-    }
-}
 
 /** Reusable parsers for the common [ActionInputSpec] inputs.
- *  Each function returns the parsed
- *  value or `null` when the input cannot be derived from the bubble
- *  (the orchestrator treats null as "missing input" → ghost chip or
- *  "ask the LLM to explore more").  Side-effect-free.
- *
- *  Lives in `app/` (alongside [PhoneExtractor]) because it touches
- *  no Android types but is conceptually co-located with the action
- *  registry.  `shared/ActionOrchestrator` only consumes the function
- *  references via `ActionInputSpec.parser` — no direct dependency on
- *  this object.
- */
-internal object InputParsers {
-    /** Reuse [PhoneExtractor]'s regex chain (mobile → 400/800 →
-     *  landline).  Returns the parsed number as a string (digits +
-     *  hyphens where the format has separators), or null when no
-     *  plausible number appears in title/detail/details[].value. */
-    val phoneNumber: (Bubble) -> String? = { bubble -> PhoneExtractor.firstMatch(bubble) }
-
-    /** For `open_in_maps` (and any future location-aware action).
-     *  Maps app accepts free-form queries, so we don't need to
-     *  validate as a strict address — anything non-blank from the
-     *  bubble's title or detail works.  Prefers title (the model
-     *  often puts the storefront name / address there). */
-    val locationQuery: (Bubble) -> String? = { bubble ->
-        bubble.title.takeIf { it.isNotBlank() }
-            ?: bubble.detail.takeIf { it.isNotBlank() }?.take(40)
-            ?: bubble.details.firstOrNull { it.value.isNotBlank() }?.value
-    }
-
-    /** For all `copy_*` text-share actions.  Concatenates title +
-     *  detail so the share-sheet payload matches what the existing
-     *  bodies build inline today.  Returns null only when the
-     *  bubble is empty (no title, no detail, no detail rows) —
-     *  extremely rare since every recognized bubble has at least
-     *  a title or detail string. */
-    val textContent: (Bubble) -> String? = { bubble ->
-        buildString {
-            append(bubble.title.takeIf { it.isNotBlank() } ?: "")
-            if (isNotEmpty() && bubble.detail.isNotBlank()) append('\n')
-            append(bubble.detail)
-        }.takeIf { it.isNotBlank() }
-    }
-}
-
-/**
+ *  Lives in [com.example.intentcam.InputParsers] (shared/) so
+ *  the eval pipeline can score `r_inputs_complete` against the
+ *  same logic prod uses.  This file's [registerDefaultActions]
+ *  declares the parser references via lambdas wrapping the
+ *  shared functions (preserves the `(Bubble) -> String?`
+ *  ActionInputSpec signature).
  * Decides which actions should surface on a given bubble, given the
  * intent + the user's currently-enabled set.
  *

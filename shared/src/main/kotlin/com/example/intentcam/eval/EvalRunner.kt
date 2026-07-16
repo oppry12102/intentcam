@@ -80,42 +80,29 @@ internal class EvalRunner(private val config: EvalConfig) {
      *  Returned as `Map<actionId, List<ActionInputSpec>>` so it
      *  feeds directly into [projectInputsValidation]. */
     private fun defaultRequiredInputs(): Map<String, List<ActionInputSpec>> {
-        val textParser: (Bubble) -> String? = { b ->
-            if (b.title.isNotBlank() || b.detail.isNotBlank()) "present" else null
-        }
-        val locationParser: (Bubble) -> String? = { b ->
-            if (b.title.isNotBlank() || b.detail.isNotBlank() ||
-                b.details.any { it.value.isNotBlank() }
-            ) "present" else null
-        }
-        val phoneParser: (Bubble) -> String? = { b ->
-            val corpus = buildString {
-                append(b.title).append('\n')
-                append(b.detail).append('\n')
-                b.details.forEach { d -> append(d.value).append('\n') }
-            }
-            // Match the prod regex chain: mobile → service → landline.
-            if (MOBILE_REGEX.containsMatchIn(corpus)) "present"
-            else if (SERVICE_REGEX.containsMatchIn(corpus)) "present"
-            else if (LANDLINE_REGEX.containsMatchIn(corpus)) "present"
-            else null
-        }
+        // Use the shared InputParsers from `:shared/` (single source
+        // of truth for prod + eval).  See ADR
+        // docs/adr/2026-07-16-input-parsers-drift-risk.md.
         return mapOf(
-            "dial_number"   to listOf(ActionInputSpec("phone_number", "手机号", phoneParser)),
-            "open_in_maps"  to listOf(ActionInputSpec("query",        "地点或地址", locationParser)),
-            "share"         to listOf(ActionInputSpec("text",         "正文", textParser)),
+            "dial_number"   to listOf(ActionInputSpec(
+                "phone_number", "手机号",
+                { b -> if (com.example.intentcam.InputParsers.phoneNumber(b) != null) "present" else null }
+            )),
+            "open_in_maps"  to listOf(ActionInputSpec(
+                "query", "地点或地址",
+                { b -> if (com.example.intentcam.InputParsers.locationQuery(b) != null) "present" else null }
+            )),
+            "share"         to listOf(ActionInputSpec(
+                "text", "正文",
+                { b -> if (com.example.intentcam.InputParsers.textContent(b) != null) "present" else null }
+            )),
             // scan_to_pay / redact_id have no requiredInputs.
         )
     }
 
     private companion object {
-        // Eval-side phone regex mirrors — kept here (not in ScorerV2)
-        //  because ToolUseLoop's markValidated callback runs before
-        //  ScorerV2.compute is called and needs the same set.  Same
-        //  regex strings as ScorerV2.kt:119-121; sync by hand.
-        private val MOBILE_REGEX = Regex("""1[3-9]\d{9}""")
-        private val SERVICE_REGEX = Regex("""(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}""")
-        private val LANDLINE_REGEX = Regex("""\b0?\d{3,4}[\s-]?\d{7,8}\b""")
+        // Phone regex constants live in `com.example.intentcam.InputParsers`
+        // (single source of truth shared with prod).  No local copies.
 
         /** Char-overlap threshold for [hybridMatch]'s secondary
          *  fallback.  Matches Python aligned4's `_hybrid_match` ≥0.67
