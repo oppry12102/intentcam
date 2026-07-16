@@ -1,9 +1,14 @@
 # 2026-07-16 — InputParsers drift risk (phone regex duplicated 3 places)
 
 ## Status
-Accepted. Risk documented; mitigation pending. Supersedes the
-implicit "eval mirrors prod" invariant that held when the eval
-could share `app/` code.
+Accepted. **Mitigation complete + verified.** Migration in
+commit `e936de2` extracted `shared/.../InputParsers.kt` and
+deleted all 3 duplicates; RCTW-20 regression confirmed
+`composite_v2 = 0.906`, `v2_inputs = 1.000` across 20/20
+fixtures (no drift from pre-migration baseline).  Drift
+impossible going forward — prod `ActionOrchestrator` and
+eval `ScorerV2` both read the same `InputParsers.MOBILE_REGEX`
+/ `phoneNumber` etc.
 
 ## Context
 
