@@ -337,23 +337,6 @@ class CycleManager(
                             //  (nudge retry in progress) vs COMPLETE.
                             job.applyProgress(progress)
                             job.refreshValidation(orchestrator)
-                            // Soft intent-alignment check.  Logs a
-                            //  breadcrumb when bubble.intent doesn't
-                            //  mention any primary noun from the
-                            //  chosen action set — useful for
-                            //  investigating "model picked right
-                            //  action, wrote wrong intent"
-                            //  regressions.  Warn-only; doesn't fail
-                            //  the cycle.
-                            when (val a = validateIntentAlignment(progress.bubble)) {
-                                is IntentAlignmentCheck.Mismatch -> log(
-                                    "INTENT_WARN",
-                                    "cycle ${job.id} round=${progress.round} " +
-                                        "intent='${progress.bubble.intent.take(40)}' " +
-                                        "missing=${a.missingNouns.take(5)}"
-                                )
-                                IntentAlignmentCheck.Aligned -> { /* no-op */ }
-                            }
                             log(
                                 "CYCLE",
                                 "progress ${job.id} round=${progress.round} " +

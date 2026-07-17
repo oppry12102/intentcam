@@ -1,66 +1,48 @@
 package com.example.intentcam.eval
 
 import com.example.intentcam.Bubble
+import org.json.JSONObject
 
 /**
- * Action-first scorer (v4).  Companion scorer that runs
- * side-by-side with [ScorerV2Result] during the dual-run window.
+ * Action-first canonical scorer (the sole scorer after the 2026-07-17
+ * intent-taxonomy retirement). Actions are the user's real need; intent
+ * is free-form UX glue the LLM summarizes, NOT a scored dimension.
  *
  * ## Formula
  * ```
- * composite_v3 = 0.55 · r_actions
- *             + 0.30 · r_text
- *             + 0.15 · r_inputs
+ * composite = 0.55 · r_actions   (recall)
+ *           + 0.30 · r_text      (verbatim OCR fidelity)
+ *           + 0.15 · r_inputs    (expected_inputs satisfaction)
  * ```
  *
- * ## Why this formula
+ * - **r_actions (0.55)** — RECALL `|expected ∩ actual| / |expected|` of
+ *   expected action ids against the VISIBLE chip set (`Bubble.actions`
+ *   = LLM proposals + content-rescue; falls back to raw
+ *   `llmProposedActions` for legacy bubbles). Recall (not Jaccard) so
+ *   add-only rescue credits hits without penalizing over-fire. Empty
+ *   expected → 1.0 (un-annotated floor); null bubble + nonempty → 0.0.
+ * - **r_text (0.30)** — verbatim OCR fidelity, computed by
+ *   `EvalRunner.scoreRound2Text` and passed in.
+ * - **r_inputs (0.15)** — fraction of `scene.expected_inputs`
+ *   satisfiable from the bubble's text surface via the prod
+ *   [com.example.intentcam.InputParsers] (single source of truth).
  *
- * The Phase J + commit `072af4d` (2026-07-15) action merge collapsed
- * six per-intent share-text actions into one intent-agnostic `share`
- * — that empirically confirmed: most intents resolve to the same
- * `share` chip, so the LLM's classification can stay fuzzy at the
- * 14-id boundary without compromising the user's actual outcome
- * (which chip fires).
+ * ## Why no r_type
  *
- * `r_type` is dropped from the canonical dimension and demoted to a
- * UI accent input. `r_actions` moves from 0.20 to **0.55** to become
- * the headline signal — it's the user-can-act score.
- *
- * - **r_actions (0.55)** — Jaccard `|∩|/|∪|` of expected vs actual
- *   action ids. Same logic as [ScorerV2Result]; promoted to the
- *   dominant weight. Empty expected → 1.0 (un-annotated floor).
- * - **r_text (0.30)** — verbatim OCR fidelity. Reused from
- *   [ScorerV2Result] inputs (no re-computation).
- * - **r_inputs (0.15)** — fraction of `expected_inputs` satisfiable
- *   from the bubble's text surface. Reused from [ScorerV2Result].
- *
- * ## Why `r_intent_hint` was dropped (Step 2 sign-off, 2026-07-15)
- *
- * The original v4 plan proposed a fourth dimension `r_intent_hint`
- * graded against GT `expected_intent_hint`. Audit revealed: GT has
- * no reliable per-fixture "user want" annotation — RCTW XMLs
- * carry bbox + text only, not user intent. `what_is_pictured` is
- * the wrong semantic axis (image content, not user goal). With
- * GT null, ScorerV3's `r_intent_hint` collapsed to a 0.5 floor
- * (LLM present + GT null) for every fixture — inception noise,
- * not signal. Action-axis weight lifted to 0.55 to absorb the
- * released 10%. See plan `~/.claude/plans/action-first-architecture.md`
- * §2.2 for the full reasoning.
- *
- * ## Canonical switch
- *
- * `ScorerV2Result` remains the regression-gating scorer (read by
- * `scripts/check_regression.py`) until IntentCam Dev signs off on
- * the dual-run report. `ScorerV3Result` runs in parallel — every
- * suite emits both numbers; no canonical switch until
- * composite_v2 PASS + composite_v3 |Δ| ≤ 0.03 week-over-week.
+ * The 2026-07-17 architecture retirement dropped the registered intent
+ * taxonomy: intent is the LLM's free-form summary (`Bubble.intent`),
+ * not a classified/scored enum. Scoring intent classification (the old
+ * `r_type`, 0.35 weight in the retired ScorerV2) measured the wrong
+ * axis — the user's outcome is which chips fire, not which bucket the
+ * LLM named. r_actions (recall) IS the user-can-act signal.
  *
  * ## Reuse vs duplication
  *
- * `r_actions` and `r_inputs` logic are inherited from
- * [ScorerV2Result] — same Jaccard / same inputSatisfied dispatch.
- * No duplication; this class delegates to ScorerV2 for the shared
- * computation paths via the cached scores we hand in.
+ * `r_inputs` validation logic mirrors the production
+ * [com.example.intentcam.ActionOrchestrator.validateInputs] (~15 lines)
+ * because that orchestrator lives in `app/` (Android-coupled via
+ * ActionRegistry's body lambdas) and eval can't import it. The regex
+ * set itself is shared — both call [com.example.intentcam.InputParsers].
  */
 data class ScorerV3Result(
     val actions: Double,
@@ -71,42 +53,20 @@ data class ScorerV3Result(
     companion object {
         /**
          * @param bubble LLM-emitted bubble (may be null on error).
-         *   Field-specific data is currently unused (ScorerV3 only
-         *   reads action-ids via [bubble.llmProposedActions] /
-         *   [bubble.actions] inside [ScorerV2Result]). Kept for
-         *   forward-compat if a future v4 axis needs `bubble.title`
-         *   or detail text.
-         * @param scene  GT fixture JSON. Reads `expected_actions`
-         *   and `expected_inputs` — both already populated across
-         *   the 11 production suites by
-         *   `scripts/migrate_gt_v2_to_v3.py` (commit `072af4d`).
-         * @param textScore r_text — verbatim OCR fidelity, computed
-         *   by `EvalRunner.scoreRound2Text`. Reused as-is from the
-         *   parallel ScorerV2 call site (no double evaluation).
-         * @param inputsScore r_inputs — fraction of expected_inputs
-         *   satisfiable, computed inside [ScorerV2Result.compute].
-         *   Reused as-is (no double evaluation).
-         * @param actionsScore r_actions — Jaccard overlap, computed
-         *   inside [ScorerV2Result.compute]. Reused as-is.
-         *
-         * The unused `bubble` + unused `scene` parameters are kept
-         * so the call-site signature matches ScorerV2's
-         * `compute(bubble, scene, textScore, typeScore)` for
-         * diff-readability — ScorerV2 reads `bubble` itself,
-         * ScorerV3 reads it only via the cached scores already
-         * computed by ScorerV2.
+         * @param scene  GT fixture JSON. Reads `expected_actions` +
+         *   `expected_inputs` (populated across the 11 production
+         *   suites by `scripts/migrate_gt_v2_to_v3.py`).
+         * @param textScore r_text — verbatim OCR fidelity, computed by
+         *   `EvalRunner.scoreRound2Text`.
          */
-        @Suppress("UNUSED_PARAMETER")
         fun compute(
             bubble: Bubble?,
-            scene: org.json.JSONObject,
+            scene: JSONObject,
             textScore: Double,
-            inputsScore: Double,
-            actionsScore: Double,
         ): ScorerV3Result {
             val text = textScore.coerceIn(0.0, 1.0)
-            val inputs = inputsScore.coerceIn(0.0, 1.0)
-            val actions = actionsScore.coerceIn(0.0, 1.0)
+            val actions = computeActions(bubble, scene)
+            val inputs = computeInputsComplete(bubble, scene)
 
             val composite = 0.55 * actions +
                 0.30 * text +
@@ -118,14 +78,95 @@ data class ScorerV3Result(
                 composite = composite.coerceIn(0.0, 1.0),
             )
         }
+
+        /** Recall of expected action ids against the VISIBLE chip set:
+         *  `|expected ∩ actual| / |expected|`.  Of the chips the user
+         *  was supposed to see, how many did they actually see?
+         *
+         *  `actual` = the visible set (`Bubble.actions` once the
+         *  orchestrator / eval mirror has folded LLM proposals +
+         *  content-rescue into it; falls back to raw
+         *  `llmProposedActions` for legacy bubbles).  RECALL (not
+         *  Jaccard): content rescue is add-only, so a rescue chip
+         *  matching expected must CREDIT and a rescue over-fire must
+         *  NOT dilute (Jaccard fought the add-only design).  Trade-off:
+         *  recall no longer penalizes LLM over-emission; r_text/r_inputs
+         *  carry the precision signal.
+         *
+         *  Empty expected → 1.0; null bubble + nonempty → 0.0. */
+        private fun computeActions(bubble: Bubble?, scene: JSONObject): Double {
+            val expectedArr = scene.optJSONArray("expected_actions") ?: return 1.0
+            val expected = mutableSetOf<String>()
+            for (i in 0 until expectedArr.length()) {
+                expected.add(expectedArr.getString(i))
+            }
+            if (expected.isEmpty()) return 1.0
+            val bubble0 = bubble ?: return 0.0
+            val actual: Set<String> = when {
+                bubble0.actions.isNotEmpty() -> bubble0.actions.toSet()
+                !bubble0.llmProposedActions.isNullOrEmpty() ->
+                    bubble0.llmProposedActions.toSet()
+                else -> emptySet()
+            }
+            val hits = expected.intersect(actual).size
+            return hits.toDouble() / expected.size
+        }
+
+        /** Convenience: did this bubble carry a phone number?  Used by
+         *  [inputSatisfied] for the `phone_number` key.  Mirrors
+         *  [com.example.intentcam.InputParsers.phoneNumber]. */
+        internal fun bubbleHasPhoneNumber(bubble: Bubble): Boolean =
+            com.example.intentcam.InputParsers.phoneNumber(bubble) != null
+
+        /** Per-input satisfaction check.  Dispatches each input key to
+         *  the SAME parser prod uses ([com.example.intentcam.InputParsers])
+         *  so eval and prod agree — single source of truth per the
+         *  input-parsers-drift-risk ADR.  Mapping mirrors
+         *  `ACTION_REQUIRED_INPUTS` in `scripts/migrate_gt_v2_to_v3.py`. */
+        private fun inputSatisfied(
+            bubble: Bubble,
+            @Suppress("UNUSED_PARAMETER") actionId: String,
+            key: String,
+        ): Boolean = when {
+            key == "phone_number" -> bubbleHasPhoneNumber(bubble)
+            key == "query" ->
+                com.example.intentcam.InputParsers.locationQuery(bubble) != null
+            key == "text" ->
+                com.example.intentcam.InputParsers.textContent(bubble) != null
+            else -> false
+        }
+
+        /** Walk scene.expected_inputs, check each entry against the
+         *  bubble's text surface via [inputSatisfied].  Empty → 1.0;
+         *  null bubble + nonempty → 0.0. */
+        private fun computeInputsComplete(bubble: Bubble?, scene: JSONObject): Double {
+            val arr = scene.optJSONArray("expected_inputs") ?: return 1.0
+            if (arr.length() == 0) return 1.0
+            val b = bubble ?: return 0.0
+            var satisfied = 0
+            for (i in 0 until arr.length()) {
+                val entry = arr.optJSONObject(i) ?: continue
+                val actionId = entry.optString("action")
+                val key = entry.optString("key")
+                if (inputSatisfied(b, actionId, key)) satisfied++
+            }
+            return satisfied.toDouble() / arr.length()
+        }
     }
 }
 
-/** Helper: format the per-fixture ScorerV3 numbers into a
- *  human-readable per-fixture line for [EvalRunner]'s console
- *  output. Mirrors [ScorerV2Result.format]. */
+/** Helper: extract all detail values from a bubble as a single corpus
+ *  string (debug/diagnostic use). */
+internal fun Bubble.corpus(): String = buildString {
+    append(title).append('\n')
+    append(detail).append('\n')
+    details.forEach { d -> append(d.value).append('\n') }
+}
+
+/** Helper: format the per-fixture numbers into a human-readable line
+ *  for [EvalRunner]'s console output. */
 internal fun ScorerV3Result.format(): String =
-    "v3_actions=${"%.2f".format(actions)} " +
-        "v3_text=${"%.2f".format(text)} " +
-        "v3_inputs=${"%.2f".format(inputs)} " +
-        "composite_v3=${"%.2f".format(composite)}"
+    "actions=${"%.2f".format(actions)} " +
+        "text=${"%.2f".format(text)} " +
+        "inputs=${"%.2f".format(inputs)} " +
+        "composite=${"%.2f".format(composite)}"

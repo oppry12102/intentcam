@@ -94,11 +94,11 @@ data class ToolResult(
     /** Synthesized bubble fields, populated when [finalBubble] is true
      *  OR when the tool wants the UI to show a placeholder.
      *
-     *  Default = the registered IntentRegistry's fallback id (which is
-     *  `"info"` for the default registry).  Kept as a string (not a
-     *  registry handle) so [ToolResult] stays a pure data class with
-     *  no dependency on IntentCam wiring. */
-    val type: String = IntentRegistry.FALLBACK_ID,
+     *  Default = [DEFAULT_BUBBLE_TYPE] (`"info"`).  Kept as a string
+     *  so [ToolResult] stays a pure data class with no dependency on
+     *  IntentCam wiring.  Free-form after the intent-taxonomy
+     *  retirement — not a registered enum. */
+    val type: String = DEFAULT_BUBBLE_TYPE,
     val title: String = "",
     val detail: String = "",
     val confidence: Float = 0.7f,

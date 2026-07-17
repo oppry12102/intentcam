@@ -25,19 +25,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val client = LlmClient(settings.load())
 
     /** See ADR docs/adr/2026-07-10-intent-action-framework.md
-     *  — Intent registry: the system prompt's type list and the
-     *  `emit_bubble` tool description both read from this.  Built
-     *  first so the tool registry below can consult it.
-     *
-     *  Exposed as a public val so MainActivity can resolve
-     *  [Bubble.type] back into an [IntentDecl] for per-family UI
-     *  accent (location→green / phone+payment_qr→pink / OBSERVE
-     *  base→blue / ACT_ON base→orange). */
-    val intentRegistry = IntentRegistry().also { registerDefaultIntents(it) }
-
-    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
-     *  — Action registry: built alongside the intent registry.
-     *  Declares which chip actions show up on which intent.
+     *  — Action registry.  Declares the chip actions that can light up
      *  Android-only (lives in `app/`) because action bodies take
      *  `android.content.Context`.  Exposed as a public val so
      *  MainActivity can resolve `bubble.actions` ids back into
@@ -64,7 +52,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *      they stay disabled. */
     private val actionResolver = ActionResolver(
         actions = actionRegistry,
-        intents = intentRegistry,
         enabledIds = {
             val base = settings.loadEnabledActions() ?: actionRegistry.allIds().toSet()
             // Apply userPrefKey gates: remove any action whose
@@ -171,13 +158,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  and reused for every recognition cycle.  Adding tools requires
      *  re-registering here. */
     private val toolRegistry = ToolRegistry().also {
-        it.registerDefaultTools(intentRegistry)
+        it.registerDefaultTools()
     }
 
     private val toolUseLoop = ToolUseLoop(
         client = client,
         registry = toolRegistry,
-        intents = intentRegistry,
         log = ::logDebug,
     )
 

@@ -147,36 +147,28 @@ for cfg in suites:
     elapsed = time.time() - t0
     print(f"   gradle exit={proc.returncode}, elapsed={elapsed:.1f}s")
 
-    # Parse composite_v2 from JSON output. composite_v2 is the sole
-    # canonical score (legacy composite retired 2026-07-15). No stdout
-    # fallback to a legacy score — a build that doesn't emit
-    # overall_composite_v2 is an incompatible schema and should surface
-    # as NaN rather than silently substituting a different number.
-    composite_v2 = None
+    # Parse composite_v3 from JSON output. composite_v3 (action-first:
+    # 0.55·r_actions(recall) + 0.30·r_text + 0.15·r_inputs) is the sole
+    # canonical score after the 2026-07-17 intent-taxonomy retirement
+    # (ScorerV2 / r_type / v2_* fields removed). No stdout fallback —
+    # a build that doesn't emit overall_composite_v3 is an
+    # incompatible schema and surfaces as NaN.
     composite_v3 = None
     err_count = 0
-    # Per-component averages (EvalRunner writes them as `overall_v2_*` /
-    # `overall_v3_*` + `overall_composite_v3`). Missing keys → None;
-    # check_regression.py handles None gracefully. v3 has no `type`
-    # dimension (formula dropped it: 0.55·r_actions + 0.30·r_text +
-    # 0.15·r_inputs), so we only parse the three v3 components.
+    # Per-component averages (EvalRunner writes `overall_v3_*` +
+    # `overall_composite_v3`). Missing keys → None; check_regression.py
+    # handles None gracefully.
     components = {
-        "v2_type": None, "v2_text": None, "v2_actions": None, "v2_inputs": None,
         "v3_composite": None, "v3_actions": None, "v3_text": None, "v3_inputs": None,
     }
     if os.path.exists(json_out):
         try:
             j = json.load(open(json_out))
-            composite_v2 = j.get("overall_composite_v2")
             composite_v3 = j.get("overall_composite_v3")
             err_count = sum(1 for f in j.get("fixtures", []) if "Error" in str(f.get("raw_content", "")))
             if composite_v3 is not None:
                 components["v3_composite"] = float(composite_v3)
             for src_key, dst_key in (
-                ("overall_v2_type", "v2_type"),
-                ("overall_v2_text", "v2_text"),
-                ("overall_v2_actions", "v2_actions"),
-                ("overall_v2_inputs", "v2_inputs"),
                 ("overall_v3_actions", "v3_actions"),
                 ("overall_v3_text", "v3_text"),
                 ("overall_v3_inputs", "v3_inputs"),
@@ -187,29 +179,21 @@ for cfg in suites:
         except Exception as e:
             print(f"   WARN: could not parse {json_out}: {e}", file=sys.stderr)
 
-    if composite_v2 is None:
-        print(f"   WARN: no overall_composite_v2 found (incompatible schema?) — gradle stdout tail:")
+    if composite_v3 is None:
+        print(f"   WARN: no overall_composite_v3 found (incompatible schema?) — gradle stdout tail:")
         print(proc.stdout[-800:])
-        composite_v2 = float("nan")
+        composite_v3 = float("nan")
 
-    # Threshold check uses composite_v2 against the canonical baseline.
-    composite = composite_v2
+    # Threshold check uses composite_v3 (action-first canonical score:
+    # 0.55·r_actions(recall) + 0.30·r_text + 0.15·r_inputs) against the
+    # baseline.  r_type / ScorerV2 / v2_* fields retired 2026-07-17.
+    composite = composite_v3
     delta = composite - cfg["baseline"]
     flagged = abs(delta) >= threshold
     status = "FAIL" if flagged else "PASS"
-    print(f"   composite_v2={composite:.3f}  baseline={cfg['baseline']:.3f}  Δ={delta:+.3f}  → {status}")
-    if components["v2_type"] is not None:
-        print(f"   v2_components: type={components['v2_type']:.3f} "
-              f"text={components['v2_text']:.3f} "
-              f"actions={components['v2_actions']:.3f} "
-              f"inputs={components['v2_inputs']:.3f}")
-    # [2026-07-16] Dual-run side-channel: emit composite_v3 alongside
-    #  composite_v2. check_regression.py threshold-checks v3 components
-    #  against cfg["v3_*"] baselines; until those are filled in
-    #  baselines.json, per-component v3 checks are skipped (None).
-    if components["v3_composite"] is not None:
-        print(f"   v3 (informational): composite={components['v3_composite']:.3f} "
-              f"actions={components['v3_actions']:.3f} "
+    print(f"   composite_v3={composite:.3f}  baseline={cfg['baseline']:.3f}  Δ={delta:+.3f}  → {status}")
+    if components["v3_actions"] is not None:
+        print(f"   v3_components: actions={components['v3_actions']:.3f} "
               f"text={components['v3_text']:.3f} "
               f"inputs={components['v3_inputs']:.3f}")
     if err_count:
@@ -218,17 +202,13 @@ for cfg in suites:
     results.append({
         "name": name,
         "baseline": cfg["baseline"],
-        "composite_v2": composite,
+        "composite": composite,
         "delta": round(delta, 4),
         "status": status,
         "elapsed_sec": round(elapsed, 1),
         "errors": err_count,
         "json_out": os.path.relpath(json_out, project_root),
         "gradle_exit": proc.returncode,
-        "v2_type": components["v2_type"],
-        "v2_text": components["v2_text"],
-        "v2_actions": components["v2_actions"],
-        "v2_inputs": components["v2_inputs"],
         "v3_composite": components["v3_composite"],
         "v3_actions": components["v3_actions"],
         "v3_text": components["v3_text"],

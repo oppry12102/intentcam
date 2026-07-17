@@ -23,7 +23,7 @@ import org.json.JSONObject
  * just looks at the image, zooms for detail, and emits a bubble.
  * Less ceremony, more of the LLM's real capability on the table.
  */
-fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
+fun ToolRegistry.registerDefaultTools() {
 
     // ── 1. zoom_in ───────────────────────────────────────────────
     // Detail-on-demand.  The LLM asks for a sub-region of whatever
@@ -325,11 +325,11 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
     //                     this bubble.  `type` remains a compatibility
     //                     field; see
     //                     `docs/adr/2026-07-14-v3-inversion.md`.
-    //   - type:           [Phase E] Optional legacy field.  Defaults
-    //                     to FALLBACK_ID ("info") when omitted.
-    //                     Kept so older eval fixtures can still score;
-    //                     the scorer reads it for backwards compat
-    //                     but the orchestrator no longer uses it.
+    //   - type:           Optional free-form label (defaults to
+    //                     DEFAULT_BUBBLE_TYPE "info" when omitted).
+    //                     NOT a registered enum after the 2026-07-17
+    //                     intent-taxonomy retirement; kept only as an
+    //                     optional debug/log label.
     //   - action_ids:     which [ActionDef]s should
     //                     light up as chips on this bubble.  In Phase
     //                     E the LLM picks them WITHOUT the legacy
@@ -438,7 +438,7 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                 })
                 // `type` is intentionally NOT required: the system
                 // prompt + tool description both tell the model it may
-                // omit `type` (defaults to "info" / FALLBACK_ID), and
+                // omit `type` (defaults to "info" / DEFAULT_BUBBLE_TYPE), and
                 // the body below falls back when absent.  Marking it
                 // required would make a strict tool-use validator
                 // reject an omit-`type` emit_bubble the prompt explicitly
@@ -489,13 +489,12 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                 ToolResult(
                     toolSummary = "emit_bubble 收尾（${details.size} 条 detail）",
                     finalBubble = true,
-                    // Schema enum is the source of truth — this is just
-                    // a defensive fallback for malformed input.  The
-                    // registered IntentRegistry's fallback id takes over
-                    // for both the absent-key default AND the blank-string
-                    // downgrade so the two stay in lockstep.
-                    type = input.optString("type", IntentRegistry.FALLBACK_ID)
-                        .ifBlank { IntentRegistry.FALLBACK_ID },
+                    // Free-form optional label (DEFAULT_BUBBLE_TYPE
+                    // "info" when absent or blank). Not a registered
+                    // enum — see the 2026-07-17 intent-taxonomy
+                    // retirement.
+                    type = input.optString("type", DEFAULT_BUBBLE_TYPE)
+                        .ifBlank { DEFAULT_BUBBLE_TYPE },
                     title = input.optString("intent", "").ifBlank { "查看图片细节" },
                     detail = input.optString("content", ""),
                     confidence = input.optDouble("confidence", 0.7).toFloat().coerceIn(0f, 1f),

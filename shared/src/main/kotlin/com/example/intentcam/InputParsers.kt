@@ -154,9 +154,9 @@ object InputParsers {
      * Conservative on purpose: a false negative costs one missed
      * `redact_id` rescue; a false positive forces a privacy-irrelevant
      * chip on a bubble the LLM intentionally omitted (e.g. a clinic
-     * sign mentioning "ID" in passing). The intent-alignment gate in
-     * [validateIntentAlignment] soft-warns but doesn't gate, so the
-     * LLM can still override at the next round.
+     * sign mentioning "ID" in passing). Rescue is add-only and the
+     * LLM's `action_ids` stays authoritative, so a spurious rescue
+     * chip doesn't block the LLM's chosen chips.
      */
     fun idDocument(bubble: Bubble): String? {
         val corpus = buildString {

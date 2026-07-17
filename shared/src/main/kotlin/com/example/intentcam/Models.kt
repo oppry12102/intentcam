@@ -1,5 +1,12 @@
 package com.example.intentcam
 
+/** Default free-form `type` label for a [Bubble] when the LLM omits
+ *  the optional `type` field (or a fallback/placeholder bubble is
+ *  synthesized).  After the 2026-07-17 intent-taxonomy retirement
+ *  `type` is NOT a registered enum — this is just the conventional
+ *  placeholder string ("info"). */
+const val DEFAULT_BUBBLE_TYPE = "info"
+
 /**
  * One row in the detail-view table.  Each detail is something the
  * LLM extracted from the image (text, number, object, color, etc.)
@@ -28,10 +35,11 @@ data class Detail(
  * Two-stage recognition result:
  *  - [content]  : 1-2 sentence overall image description
  *  - [title]    : the user's inferred intent (动宾短语, ≤30 chars)
- *  - [type]     : precise intent id from the registered IntentDecl set
- *                 (e.g. "phone" / "payment_qr" / "warning_safety" /
- *                 "route_to" / ...).  Used by the UI for accent color
- *                 and by the resolver for action-chip suggestion.
+ *  - [type]     : optional free-form label (default "info"); NOT a
+ *                 registered enum after the 2026-07-17 intent-taxonomy
+ *                 retirement.  Kept for debug/log only — [intent] is
+ *                 the authoritative free-form summary, [actions] drive
+ *                 chips.
  *  - [details]  : structured items for the detail-view table; can
  *                 be empty if the LLM chose not to extract any
  *  - [confidence] : 0.0..1.0
@@ -52,11 +60,10 @@ data class Detail(
  *
  * [llmProposedActions] (2026-07-13) — when non-null, this is the raw
  * action_ids list the model emitted in `emit_bubble`.  The resolver
- * intersects this with the user's enabled set instead of the
- * applicability filter, so the model can opt in/out of suggestions
- * per-cycle.  Stays null when the prompt hasn't asked for it (the
- * "no override" path falls through to applicableIntents /
- * applicableFamilies as before).
+ * intersects this with the user's enabled set, so the model is
+ * authoritative on which chips to show.  Null when the model omitted
+ * action_ids (rare after the "默认应填" prompt nudge) — then no chips
+ * render except content-rescue additions.
  */
 data class Bubble(
     val id: String,
@@ -67,12 +74,12 @@ data class Bubble(
      *  the live UI route per-bubble taps back to the right cycle
      *  when 2+ jobs are concurrent (Phase C). */
     val cycleId: String = id,
-    /** Legacy field: 14-id intent classification (Phase A-K).
-     *  Kept as a `@Deprecated` alias for one release cycle after
-     *  Phase E ships — see [intent] for the new free-form summary.
-     *  When [intent] is unset (Phase A-D), downstream UI / eval
-     *  fall back to this string. */
-    val type: String,             // "info" | "location" | "solve" | ... (legacy 14-bucket)
+    /** Free-form intent label the LLM may emit alongside [intent]
+     *  (optional, defaults to [DEFAULT_BUBBLE_TYPE] = "info").  After
+     *  the 2026-07-17 intent-taxonomy retirement this is NOT a
+     *  registered/scored enum — just an optional label for logs /
+     *  debug.  [intent] is the authoritative free-form summary. */
+    val type: String = DEFAULT_BUBBLE_TYPE,
     /** Free-form Chinese phrase describing what the user wants to do
      *  with this bubble (≤30 chars, e.g. "拨打联系电话", "导航去这家店").
      *  The LLM supplies this authoritative intent; [type] remains the

@@ -26,7 +26,6 @@ import org.json.JSONObject
 class ToolUseLoop(
     private val client: LlmClient,
     private val registry: ToolRegistry,
-    private val intents: IntentRegistry,
     private val log: (tag: String, msg: String) -> Unit = { _, _ -> },
 ) {
 
@@ -270,7 +269,6 @@ class ToolUseLoop(
                 client.streamToolUse(
                     system = LlmClient.toolUseSystemPrompt(
                         actionIds = actionIds,
-                        intentRegistry = intents,
                     ),
                     messages = messages,
                     toolsJson = toolsJson,
@@ -295,7 +293,7 @@ class ToolUseLoop(
                     Outcome.Bubble(
                         com.example.intentcam.Bubble(
                             id = "bubble-${System.currentTimeMillis()}",
-                            type = IntentRegistry.FALLBACK_ID,
+                            type = DEFAULT_BUBBLE_TYPE,
                             title = partial.text.take(40).ifBlank { "未识别" },
                             detail = partial.text.take(200).ifBlank { "（识别超时，已用部分结果）" },
                             // Lower than the normal 0.7 so the UI knows
@@ -716,7 +714,7 @@ class ToolUseLoop(
         val finalText = lastRound?.text.orEmpty()
         val fallbackBubble = com.example.intentcam.Bubble(
             id = "bubble-${System.currentTimeMillis()}",
-            type = IntentRegistry.FALLBACK_ID,
+            type = DEFAULT_BUBBLE_TYPE,
             title = finalText.take(40).ifBlank { "未识别" },
             detail = finalText.take(200).ifBlank { "（模型未给出内容描述）" },
             confidence = 0.5f,
@@ -750,7 +748,7 @@ class ToolUseLoop(
     ): com.example.intentcam.Bubble = com.example.intentcam.Bubble(
         id = "bubble-${System.currentTimeMillis()}",
         cycleId = cycleId,
-        type = IntentRegistry.FALLBACK_ID,
+        type = DEFAULT_BUBBLE_TYPE,
         title = "需要补充信息",
         detail = detail,
         confidence = 0.5f,

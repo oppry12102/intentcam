@@ -51,28 +51,13 @@ def main() -> int:
     print(f"   source: {target.name}")
     print(f"   threshold: |Δ| ≥ {threshold}")
     print()
-    # [2026-07-15 redesign] Per-component check.  Each suite in
-    #  baselines.json can carry `v3_composite` / `v3_text` /
-    #  `v3_actions` / `v3_inputs` baselines (null until re-measured
-    #  post-redesign).  We threshold-check ONLY when both the baseline
-    #  AND the measured value are present; missing either → skip.
-    #
-    #  [2026-07-16 dual-run wire-up] The previous mapping
-    #   ("v2_type", "v3_type") etc. was a bug: it read baseline.json's
-    #   v3_* field but summary's v2_* field, so the check was comparing
-    #   apples to oranges (or just both null and silently passing).
-    #   Now both sides use v3_* naming; v3 has no `type` dimension
-    #   (formula dropped it: 0.55·r_actions + 0.30·r_text + 0.15·r_inputs).
-    #
-    #  [2026-07-16 v3 threshold] v3 baseline is still in weekly
-    #   calibration (2-sample mean so far). v3 actions weight (0.55)
-    #   amplifies LLM variance — single-run noise regularly hits
-    #   ±0.10 on v3_actions. The v4 ADR sign-off gate is
-    #   week-over-week |Δ| ≤ 0.03 on composite_v3 across all suites;
-    #   until that gate passes, per-component v3 checks use a relaxed
-    #   threshold (V3_THRESHOLD = 0.15) and FAIL is reported but does
-    #   NOT count toward the regression exit code. Only composite_v2
-    #   is hard-gating until v3 sign-off.
+    # [2026-07-17 intent-taxonomy retirement] composite_v3 (action-first:
+    #  0.55·r_actions(recall) + 0.30·r_text + 0.15·r_inputs) is now the
+    #  SOLE canonical score — ScorerV2 / r_type / v2_* fields are gone.
+    #  The main gate (s['status'] / s['delta'], threshold 0.05) IS
+    #  composite_v3.  The per-component loop below is informational:
+    #  v3_actions/text/inputs sub-drift at a relaxed threshold
+    #  (V3_THRESHOLD = 0.15), reported but not counted toward exit.
     V3_THRESHOLD = 0.15
     header = f"{'suite':<24} {'baseline':>9} {'now':>9} {'Δ':>8} {'status':>7}  {'errors':>6}  {'sec':>6}"
     print(header)
@@ -90,8 +75,13 @@ def main() -> int:
         delta = s["delta"]
         status = s["status"]
         marker = "⚠️" if status == "FAIL" else "✓"
+        # `composite` is the canonical score in summaries written after
+        # the 2026-07-17 intent-taxonomy retirement; older summaries
+        # stored it as `composite_v2`.  Fall back so the checker still
+        # reads legacy summaries.
+        composite = s.get("composite", s.get("composite_v2"))
         print(
-            f"{s['name']:<24} {s['baseline']:>9.4f} {s['composite_v2']:>9.4f} "
+            f"{s['name']:<24} {s['baseline']:>9.4f} {composite:>9.4f} "
             f"{delta:>+8.4f} {marker} {status:<5}  {s.get('errors', 0):>6}  "
             f"{s.get('elapsed_sec', 0):>6.1f}"
         )
@@ -102,7 +92,7 @@ def main() -> int:
         # the v2 threshold (0.05). FAIL is reported but does NOT
         # count toward the regression exit code.
         bl = baseline_by_name.get(s["name"], {})
-        for comp_label in ("v3_composite", "v3_actions", "v3_text", "v3_inputs"):
+        for comp_label in ("v3_actions", "v3_text", "v3_inputs"):
             bl_val = bl.get(comp_label)
             now_val = s.get(comp_label)
             if bl_val is None or now_val is None:

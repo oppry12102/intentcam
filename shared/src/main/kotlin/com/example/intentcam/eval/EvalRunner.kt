@@ -4,13 +4,10 @@ import com.example.intentcam.ActionInputSpec
 import com.example.intentcam.Bubble
 import com.example.intentcam.CapturedFrame
 import com.example.intentcam.ImagePipeline
-import com.example.intentcam.IntentFamily
-import com.example.intentcam.IntentRegistry
 import com.example.intentcam.LlmClient
 import com.example.intentcam.ToolRegistry
 import com.example.intentcam.ToolUseLoop
 import com.example.intentcam.encodeThumbnail
-import com.example.intentcam.registerDefaultIntents
 import com.example.intentcam.registerDefaultTools
 import com.example.intentcam.projectInputsValidation
 import kotlinx.coroutines.runBlocking
@@ -38,13 +35,11 @@ import java.io.File
 internal class EvalRunner(private val config: EvalConfig) {
 
     private val client = LlmClient(evalLlmConfig)
-    // Intent registry built before tools so the emit_bubble
-    //  schema enum and the system prompt's type list see the same set
-    //  of ids the orchestrator fallbacks point at.  The same registry
-    //  also drives the A2 family-based type scoring below.
-    private val intentRegistry = IntentRegistry()
-        .also { registerDefaultIntents(it) }
-    private val registry = ToolRegistry().also { it.registerDefaultTools(intentRegistry) }
+    // Tool registry built without an intent registry — the intent
+    //  taxonomy was retired 2026-07-17 (intent is the LLM's free-form
+    //  summary, not a registered/scored enum). emit_bubble's action_ids
+    //  is the sole action-routing signal.
+    private val registry = ToolRegistry().also { it.registerDefaultTools() }
     // The model can only emit `action_ids` that are enumerated in the
     //  system prompt's `actions ⊆ {...}` block.  Mirror the Android
     //  app's default registry by id so the eval cycle sees the same
@@ -144,7 +139,6 @@ internal class EvalRunner(private val config: EvalConfig) {
     private val orchestrator = ToolUseLoop(
         client = client,
         registry = registry,
-        intents = intentRegistry,
         log = { tag, msg ->
             if (currentSceneId.get()?.let { it in debugFixtures } == true) {
                 System.err.println("[${currentSceneId.get()}][$tag] $msg")
@@ -296,30 +290,16 @@ internal class EvalRunner(private val config: EvalConfig) {
 
             val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
                 ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-            // composite_v2 is the sole score (legacy
-            //  0.45·r1+0.45·r2+0.10·r3 retired).  r_text + r_type
-            //  are computed here (the latter needs the populated
-            //  intentRegistry); r_actions (Jaccard) + r_inputs
-            //  inside ScorerV2.
+            // Action-first canonical score (ScorerV3 is the sole scorer
+            //  after the 2026-07-17 intent-taxonomy retirement):
+            //  0.55·r_actions(recall) + 0.30·r_text + 0.15·r_inputs.
+            //  No r_type — intent is free-form, not scored. r_text is
+            //  computed here; r_actions + r_inputs inside ScorerV3.
             val textScore = scoreRound2Text(outcome, scene)
-            val typeScore = scoreRound2Type(outcome, scene)
-            val scorerV2 = com.example.intentcam.eval.ScorerV2Result.compute(
+            val scorer = com.example.intentcam.eval.ScorerV3Result.compute(
                 bubble = bubble,
                 scene = scene,
                 textScore = textScore,
-                typeScore = typeScore,
-            )
-            // Companion ScorerV3 runs side-by-side.  Reuses
-            //  ScorerV2's already-computed r_text/r_actions/r_inputs
-            //  (no double evaluation).  Until dual-run sign-off,
-            //  composite_v2 remains the regression-gating headline;
-            //  composite_v3 is purely informational here.
-            val scorerV3 = com.example.intentcam.eval.ScorerV3Result.compute(
-                bubble = bubble,
-                scene = scene,
-                textScore = scorerV2.text,
-                inputsScore = scorerV2.inputs,
-                actionsScore = scorerV2.actions,
             )
             // Diagnostic side-metrics (do NOT feed composite) — stashed
             //  so post-hoc analysis can re-inspect text/action gaps
@@ -340,17 +320,10 @@ internal class EvalRunner(private val config: EvalConfig) {
             results.add(mapOf(
                 "id" to sceneId,
                 "category" to category,
-                "composite_v2" to scorerV2.composite,
-                "v2_type" to scorerV2.type,
-                "v2_text" to scorerV2.text,
-                "v2_actions" to scorerV2.actions,
-                "v2_inputs" to scorerV2.inputs,
-                // dual-run side-channel; composite_v3 is purely
-                // informational here until dual-run sign-off.
-                "composite_v3" to scorerV3.composite,
-                "v3_actions" to scorerV3.actions,
-                "v3_text" to scorerV3.text,
-                "v3_inputs" to scorerV3.inputs,
+                "composite_v3" to scorer.composite,
+                "v3_actions" to scorer.actions,
+                "v3_text" to scorer.text,
+                "v3_inputs" to scorer.inputs,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
@@ -358,17 +331,14 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "emitted_action_ids" to emittedActions,
                 "expected_actions" to expectedActions,
             ))
-            perCategory.getOrPut(category) { mutableListOf() }.add(scorerV2.composite)
+            perCategory.getOrPut(category) { mutableListOf() }.add(scorer.composite)
 
             if (i < 5 || i == useScenes.size - 1 || (i + 1) % 10 == 0) {
                 println(
                     "  [${i + 1}/${useScenes.size}] ${sceneId.padEnd(30)} " +
                         "cat=${category.padEnd(15)} " +
-                        "v2[ t=${"%.2f".format(scorerV2.type)} tx=${"%.2f".format(scorerV2.text)} " +
-                        "a=${"%.2f".format(scorerV2.actions)} i=${"%.2f".format(scorerV2.inputs)} " +
-                        "c=${"%.2f".format(scorerV2.composite)} ] " +
-                        "v3[ a=${"%.2f".format(scorerV3.actions)} " +
-                        "c=${"%.2f".format(scorerV3.composite)} ]"
+                        "v3[ a=${"%.2f".format(scorer.actions)} tx=${"%.2f".format(scorer.text)} " +
+                        "i=${"%.2f".format(scorer.inputs)} c=${"%.2f".format(scorer.composite)} ]"
                 )
             }
         }
@@ -377,20 +347,8 @@ internal class EvalRunner(private val config: EvalConfig) {
         println("=".repeat(60))
         println("fixtures: ${results.size}")
         if (results.isNotEmpty()) {
-            val overallV2 = results.map { it["composite_v2"] as Double }.average()
-            println("average composite_v2: ${"%.3f".format(overallV2)}")
-            // dual-run side-channel — informational only until
-            // dual-run sign-off.
             val overallV3 = results.map { it["composite_v3"] as Double }.average()
             println("average composite_v3: ${"%.3f".format(overallV3)}")
-            val avgType = results.map { it["v2_type"] as Double }.average()
-            val avgText = results.map { it["v2_text"] as Double }.average()
-            val avgActions = results.map { it["v2_actions"] as Double }.average()
-            val avgInputs = results.map { it["v2_inputs"] as Double }.average()
-            println(
-                "v2 components: type=${"%.3f".format(avgType)} text=${"%.3f".format(avgText)} " +
-                    "actions=${"%.3f".format(avgActions)} inputs=${"%.3f".format(avgInputs)}"
-            )
             val avgV3Actions = results.map { it["v3_actions"] as Double }.average()
             val avgV3Text = results.map { it["v3_text"] as Double }.average()
             val avgV3Inputs = results.map { it["v3_inputs"] as Double }.average()
@@ -426,26 +384,17 @@ internal class EvalRunner(private val config: EvalConfig) {
         categoryAvgs: Map<String, Double>,
     ) {
         val root = JSONObject()
-        // version 2 = post-scoring-redesign JSON shape (composite_v2
-        //  sole score; legacy composite / r1 / r2_type / r3 removed).
-        root.put("version", 2)
+        // version 3 = post-2026-07-17 action-first shape (composite_v3
+        //  sole score; r_type/ScorerV2/v2_* fields removed).
+        root.put("version", 3)
         root.put("description", "Kotlin eval results — calls real ToolUseLoop + LlmClient")
         root.put("ground_truth", config.groundTruth.name)
         root.put("img_dir", config.imgDir.path)
         root.put("limit", config.limit)
         root.put("resize", config.resize)
         root.put("quality", config.quality)
-        // composite_v2 is the canonical score.  run_regression.sh /
-        //  check_regression.py compare against overall_composite_v2.
-        val overallV2 = if (results.isNotEmpty()) {
-            results.map { it["composite_v2"] as Double }.average()
-        } else 0.0
-        root.put("overall_composite_v2", overallV2)
-        // Dual-run side-channel.  Until dual-run sign-off on the
-        //  regression-stability gate (composite_v2 PASS + composite_v3
-        //  |Δ| ≤ 0.03 week-over-week), overall_composite_v3 is purely
-        //  informational.  After sign-off, `check_regression.py`
-        //  flips its read target to this field.
+        // composite_v3 is the canonical action-first score.  run_regression.sh /
+        //  check_regression.py compare against overall_composite_v3.
         val overallV3 = if (results.isNotEmpty()) {
             results.map { it["composite_v3"] as Double }.average()
         } else 0.0
@@ -453,15 +402,6 @@ internal class EvalRunner(private val config: EvalConfig) {
         // Per-component averages (top-level keys for the baseline
         //  checkers' per-component threshold checks).
         if (results.isNotEmpty()) {
-            root.put("overall_v2_type",
-                results.map { it["v2_type"] as Double }.average())
-            root.put("overall_v2_text",
-                results.map { it["v2_text"] as Double }.average())
-            root.put("overall_v2_actions",
-                results.map { it["v2_actions"] as Double }.average())
-            root.put("overall_v2_inputs",
-                results.map { it["v2_inputs"] as Double }.average())
-            // v3 component aggregates
             root.put("overall_v3_actions",
                 results.map { it["v3_actions"] as Double }.average())
             root.put("overall_v3_text",
@@ -469,10 +409,6 @@ internal class EvalRunner(private val config: EvalConfig) {
             root.put("overall_v3_inputs",
                 results.map { it["v3_inputs"] as Double }.average())
         } else {
-            root.put("overall_v2_type", 0.0)
-            root.put("overall_v2_text", 0.0)
-            root.put("overall_v2_actions", 0.0)
-            root.put("overall_v2_inputs", 0.0)
             root.put("overall_v3_actions", 0.0)
             root.put("overall_v3_text", 0.0)
             root.put("overall_v3_inputs", 0.0)
@@ -488,13 +424,6 @@ internal class EvalRunner(private val config: EvalConfig) {
             val o = JSONObject()
             o.put("id", r["id"])
             o.put("category", r["category"])
-            o.put("composite_v2", r["composite_v2"] as Double)
-            o.put("v2_type", r["v2_type"] as Double)
-            o.put("v2_text", r["v2_text"] as Double)
-            o.put("v2_actions", r["v2_actions"] as Double)
-            o.put("v2_inputs", r["v2_inputs"] as Double)
-            // Dual-run side-channel — informational only during
-            // the dual-run window; canonical switch gated on sign-off.
             o.put("composite_v3", r["composite_v3"] as Double)
             o.put("v3_actions", r["v3_actions"] as Double)
             o.put("v3_text", r["v3_text"] as Double)
@@ -571,54 +500,6 @@ internal class EvalRunner(private val config: EvalConfig) {
         }
         if (denom == 0) textScore = 1.0
         return textScore
-    }
-
-    /** r_type — graded intent-type correctness against `bubble.type`:
-     *  exact registered match 1.0 / same registered family 0.7 /
-     *  both registered but wrong family 0.3 / empty·unknown 0.0.
-     *  Dual-reads expected `expected_type` → `expected_top_intent_type`;
-     *  family lookup via the populated [intentRegistry].  Extracted +
-     *  regraded from the former `scoreRound2` type half when the
-     *  legacy composite was retired (2026-07-15); replaces the old
-     *  tautological `r_intent_derived`. */
-    private fun scoreRound2Type(
-        outcome: ToolUseLoop.Outcome,
-        scene: JSONObject,
-    ): Double {
-        val bubble = (outcome as? ToolUseLoop.Outcome.Bubble)?.bubble
-            ?: (outcome as? ToolUseLoop.Outcome.PendingUserInput)?.placeholder
-        val type = bubble?.type
-        // Schema dual-read: v3 suites author `expected_top_intent_type`;
-        //  RCTW keeps the old `expected_type`.  Reading both keeps
-        //  backward-compat.  Missing both → FALLBACK_ID ("info").
-        val expectedType = scene.optString(
-            "expected_type",
-            scene.optString("expected_top_intent_type", IntentRegistry.FALLBACK_ID),
-        )
-        val observeFamily = intentRegistry.idsInFamily(IntentFamily.OBSERVE)
-        val actFamily = intentRegistry.idsInFamily(IntentFamily.ACT_ON)
-        val registeredIds = observeFamily + actFamily
-        // `type` is `String?`.  Treat null and "" alike as "no intent
-        //  emitted" → 0.0.
-        val nonBlankType = type?.takeIf { it.isNotBlank() } ?: ""
-        fun familyOf(id: String): IntentFamily? = when {
-            id.isBlank() -> null
-            id in observeFamily -> IntentFamily.OBSERVE
-            id in actFamily -> IntentFamily.ACT_ON
-            else -> null
-        }
-        // Strict unknown handling: exact-match credit only when the
-        //  emitted type is actually registered — guards against an
-        //  unregistered string accidentally matching an unregistered
-        //  expected value.
-        return when {
-            nonBlankType.isEmpty() -> 0.0
-            nonBlankType == expectedType && nonBlankType in registeredIds -> 1.0
-            familyOf(nonBlankType) != null &&
-                familyOf(nonBlankType) == familyOf(expectedType) -> 0.7
-            nonBlankType in registeredIds -> 0.3
-            else -> 0.0
-        }
     }
 
     /**

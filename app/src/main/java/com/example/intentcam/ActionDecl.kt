@@ -71,12 +71,13 @@ sealed class ActionOutcome {
  * The IDs are plumbed through the orchestrator; MainActivity resolves
  * them into `ActionDef`s at render time.
  *
- * **Intent applicability** (2026-07-13):
- * [applicableIntents] is the explicit list of intent ids the action
- * applies to (e.g. `setOf("location")` for `open_in_maps`).  Defaults
- * to empty (= the action applies to nothing).  The resolver matches
- * when `bubble.type ∈ applicableIntents`; the LLM's explicit
- * `action_ids` proposal bypasses this filter entirely.
+ * **Action-first routing** (2026-07-17 retirement):
+ * The registered intent taxonomy was retired — intent is the LLM's
+ * free-form summary (`Bubble.intent`), not a routing key.  The LLM's
+ * `action_ids` proposal is the sole signal for which chips render
+ * ([ActionResolver.suggestIds] trusts it directly); content-rescue
+ * adds structured misses (phone / id / payment-QR) add-only.  No
+ * `applicableIntents` filter remains.
  */
 data class ActionDef(
     /** Unique id, e.g. "open_in_maps".  Stored in
@@ -89,10 +90,6 @@ data class ActionDef(
      *  IconRegistry (planned).  Currently unused by the chips UI; the
      *  label alone is enough to be tappable. */
     val iconKey: String,
-    /** Ids of intents this action applies to.  Empty = applies to
-     *  none (no chips render unless the LLM explicitly proposes the
-     *  action via `action_ids`, which bypasses this filter). */
-    val applicableIntents: Set<String> = emptySet(),
     /** Inputs this action needs to fire.  Each spec's
      *  [ActionInputSpec.parser] pulls
      *  the value out of the bubble's text surface
@@ -152,8 +149,7 @@ data class ActionDef(
  */
 enum class AccentCluster { EXECUTE, DELEGATE, CLARIFY }
 
-/** Mutable bag of [ActionDef]s, build-once at app start.  Mirrors
- *  the shape of `IntentRegistry`. */
+/** Mutable bag of [ActionDef]s, build-once at app start. */
 class ActionRegistry {
     private val byId = linkedMapOf<String, ActionDef>()
 
@@ -172,10 +168,11 @@ class ActionRegistry {
  *  one more `ActionDef` here.  No orchestrator / eval / settings
  *  change needed.
  *
- *  **2026-07-13** `applicableIntents` is the per-intent filter;
- *  `registerDefaultActions` keeps explicit per-intent lists (each
- *  action targets a specific intent).  The LLM's `action_ids`
- *  proposal bypasses applicability entirely. */
+ *  **2026-07-17** The per-intent `applicableIntents` filter was
+ *  retired with the intent taxonomy; the LLM's `action_ids` proposal
+ *  is the sole routing signal.  Each `ActionDef` below now declares
+ *  only its inputs / accent / body, not which intents it applies to.
+ */
 fun registerDefaultActions(reg: ActionRegistry) {
     // First real outbound action: open a location bubble in maps.
     // Android Intent geo:0,0?q=… opens the user's default maps app
@@ -185,7 +182,6 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "open_in_maps",
         label = "在地图中打开",
         iconKey = "map",
-        applicableIntents = setOf("location", "route_to", "service_institution"),
         requiredInputs = listOf(ActionInputSpec(
             key = "query",
             label = "地点或地址",
@@ -260,7 +256,6 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "dial_number",
         label = "拨号",
         iconKey = "phone",
-        applicableIntents = setOf("phone"),
         requiredInputs = listOf(ActionInputSpec(
             key = "phone_number",
             label = "手机号",
@@ -310,7 +305,6 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "scan_to_pay",
         label = "扫码支付",
         iconKey = "wallet",
-        applicableIntents = setOf("payment_qr"),
         // Toast-only body — no parser needed.
         // The requiredInputs list is empty; the action is always
         // fireable, but the body itself surfaces a guidance Toast
@@ -341,7 +335,6 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "redact_id",
         label = "遮挡证件号",
         iconKey = "lock",
-        applicableIntents = setOf("id_document"),
         // Toast-only body.  The id_document bubble's text surface
         // IS the input the user would care about (身份证号 etc.),
         // but the conservative-v1 body just shows a guidance Toast
@@ -390,15 +383,6 @@ fun registerDefaultActions(reg: ActionRegistry) {
         id = "share",
         label = "分享文本",
         iconKey = "clipboard",
-        applicableIntents = setOf(
-            "real_estate_rental",
-            "recruit_hiring",
-            "warning_safety",
-            "menu_food",
-            "hours_schedule",
-            "service_institution",
-            "shopping_promo",
-        ),
         requiredInputs = listOf(ActionInputSpec(
             key = "text",
             label = "正文",
@@ -478,13 +462,11 @@ fun registerDefaultActions(reg: ActionRegistry) {
  * — and `Bubble` lives in `shared/` and can't hold Android types.
  *
  * Filtering rules, in order:
- *   1. The bubble's intent must be registered (defensive — guards
- *      against the LLM emitting an unknown id).
- *   2. The action's [ActionDef.applicableIntents] includes the
- *      bubble's intent.  Empty = the action applies to nothing
- *      (misconfigured).  (The LLM-proposal path bypasses this
- *      filter — it trusts `action_ids`.)
- *   3. The action must be in the user's enabled set (driven by
+ *   1. The LLM's `action_ids` proposal is the sole routing signal
+ *      (the intent taxonomy + `applicableIntents` filter were retired
+ *      2026-07-17).  Unknown ids are dropped (defensive against LLM
+ *      hallucination).
+ *   2. The action must be in the user's enabled set (driven by
  *      `SettingsStore.enabledActionIds`).  When the prefs entry is
  *      absent we treat the action as enabled — the source of truth
  *      for "enabled by default" is whoever builds the `enabledIds`
@@ -501,28 +483,25 @@ fun registerDefaultActions(reg: ActionRegistry) {
  */
 class ActionResolver(
     private val actions: ActionRegistry,
-    private val intents: IntentRegistry,
     private val enabledIds: suspend () -> Set<String>,
 ) {
 
     /** Bubble → list of action ids that should render as chips on
-     *  that bubble.  Empty when the bubble's intent is unknown or
-     *  every matching action has been disabled. */
+     *  that bubble.  Action-first: trust the LLM's `action_ids`
+     *  proposal (whitelisted by id, then intersected with the user's
+     *  enabled set).  No intent-based applicability filter — the
+     *  registered intent taxonomy was retired 2026-07-17, so intent
+     *  is free-form UX glue, not a routing key.  When the LLM omits
+     *  `action_ids`, no chips render except content-rescue additions
+     *  (added downstream by [com.example.intentcam.ActionOrchestrator]). */
     suspend fun suggestIds(bubble: Bubble): List<String> {
-        val intent = intents.get(bubble.type) ?: return emptyList()
         val enabled = enabledIds()
-        // LLM-proposed narrow path: trust the model.  Empty list =
-        // model didn't propose anything → fall back to applicability.
-        val llmProposed = bubble.llmProposedActions
-        val candidates: List<ActionDef> = if (llmProposed != null) {
-            // Whitelist by id first; defensive against the LLM
-            // hallucinating an unknown action id (the prompt's enum
-            // usually catches this, but JSON parsers can be lenient).
-            llmProposed.mapNotNull { actions.get(it) }
-        } else {
-            actions.list().filter { def -> intent.id in def.applicableIntents }
-        }
-        return candidates
+        val llmProposed = bubble.llmProposedActions ?: return emptyList()
+        // Whitelist by id; defensive against the LLM hallucinating an
+        // unknown action id (the prompt's enum usually catches this,
+        // but JSON parsers can be lenient).
+        return llmProposed
+            .mapNotNull { actions.get(it) }
             .map { it.id }
             .filter { it in enabled }
     }

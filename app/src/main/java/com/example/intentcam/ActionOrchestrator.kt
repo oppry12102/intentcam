@@ -171,10 +171,10 @@ class ActionOrchestrator(
      * content cue supports a chip the LLM didn't pick.
      *
      * Designed to recover mixed-content fixtures where the LLM
-     * correctly classifies the type (e.g. `location`) but misses
-     * that the image also contains a phone number / id document /
-     * payment QR. Per-intent [soft hint][com.example.intentcam.IntentDecl.canonicalAction]
-     * doesn't help those because the type isn't the rescue target.
+     * misses that the image also contains a phone number / id
+     * document / payment QR. After the 2026-07-17 intent-taxonomy
+     * retirement there's no type-keyed soft hint; content-rescue is
+     * the add-only safety net for these structured signals.
      *
      * **Rules** (each is independent — multiple can fire on one bubble):
      *   - `dial_number` rescue — `InputParsers.phoneNumber(bubble) != null`
@@ -259,108 +259,6 @@ class ActionOrchestrator(
 }
 
 // `InputsValidation` and `FinalizeDecision` moved to
-// `shared/.../ActionArgs.kt` so `ToolUseLoop.runCycle`'s `onEmit`
-// callback can return a `FinalizeDecision` without dragging Android
-// types into `:shared/`.  The class itself stays here because it
-// depends on [ActionRegistry] (Android-coupled via `ActionDef.body`
-// taking `android.content.Context`).
-//
-// Added `IntentAlignmentCheck` + `validateIntentAlignment` for the
-// soft intent-validation gate.  Kept here as a free top-level fn +
-// sealed class so callers don't have to thread the orchestrator
-// instance through to read intent alignment.
-
-// Output of [validateIntentAlignment].  Sealed so the
-//  caller (live UI, eval, debug overlay) handles both shapes
-//  exhaustively.  Cross-platform type in `:shared/` for parity with
-//  [InputsValidation] — kept here for now because the alignment
-//  helper itself depends on the Android-coupled [ActionRegistry].
-//  Move to shared/ if a future decoupling pulls action-noun tables
-//  into a cross-platform data file.
-sealed class IntentAlignmentCheck {
-    /** bubble.intent mentions at least one primary noun for at least
-     *  one of the bubble's chosen actions.  Healthy state. */
-    object Aligned : IntentAlignmentCheck()
-    /** bubble.intent doesn't mention any primary noun from any chosen
-     *  action.  Soft warning — the orchestrator still ships the
-     *  bubble; the caller decides whether to surface a UI hint. */
-    data class Mismatch(val missingNouns: Set<String>) : IntentAlignmentCheck()
-}
-
-/** Per-action primary-noun table for intent alignment.
- *  Used by [validateIntentAlignment] to check that bubble.intent's
- *  free-form Chinese phrase mentions at least one noun associated
- *  with the bubble's chosen action set.  When it doesn't, the LLM
- *  probably drifted from the action it picked — e.g. chose
- *  `dial_number` but wrote "我想看营业时间" as the intent.  That's
- *  not necessarily wrong (the chip still works), but it's worth
- *  surfacing as a debug hint.
- *
- *  Kept as a function rather than a static table so the map lives
- *  next to [ActionOrchestrator] and stays in sync with the
- *  [ActionRegistry] it queries.  Empty map → no alignment check
- *  possible (caller falls back to `Aligned`).
- *
- *  Nouns are the most common short tokens a Chinese user would use
- *  to describe the action's purpose.  Order in the list is
- *  irrelevant — any single hit counts as Aligned.  Compiled at
- *  call time so adding a new action means adding one entry below. */
-private fun primaryNounsFor(actionId: String): List<String> = when (actionId) {
-    "dial_number"    -> listOf("拨打", "电话", "手机号", "联系", "拨号")
-    "open_in_maps"   -> listOf("导航", "地图", "位置", "找", "去", "路线", "步行", "开车", "到", "在")
-    "scan_to_pay"    -> listOf("支付", "付款", "收款", "扫码", "转账", "扫一扫")
-    "redact_id"      -> listOf("证件", "身份证", "驾照", "营业执照", "证照")
-    // Unified `share` — union of the six former per-intent share
-    //  actions' nouns (房源/招聘/警示/菜单/营业时间/促销).
-    "share"          -> listOf(
-        "房源", "租房", "出租", "二手房", "楼盘", "中介",
-        "招聘", "招工", "求职", "兼职", "高薪", "工作", "招聘启事",
-        "警告", "警示", "危险", "禁止", "请勿", "注意",
-        "菜单", "菜品", "招牌菜", "套餐", "价格",
-        "营业时间", "营业", "开放", "关门", "开门",
-        "促销", "特价", "折扣", "满减", "优惠", "活动",
-    )
-    else -> emptyList()
-}
-
-/** Soft intent-alignment gate.  Returns
- *  [IntentAlignmentCheck.Aligned] when [bubble]'s free-form
- *  `intent` text mentions at least one primary noun from any of
- *  the bubble's chosen actions; [IntentAlignmentCheck.Mismatch]
- *  with the set of nouns that the intent should have mentioned.
- *
- *  Empty `bubble.actions` (legacy emit_bubble that didn't emit
- *  `action_ids`) → Aligned by default.  Action with no entry in
- *  [primaryNounsFor] → that action's noun set is empty, doesn't
- *  count as either Aligned or Mismatch (skipped).  When every
- *  chosen action has an empty noun set, the bubble gets
- *  Aligned (can't disagree on nothing).
- *
- *  Wired by [CycleManager] to log a `INTENT_WARN` debug line —
- *  not a failure, just a breadcrumb for the next regression
- *  investigation.  Eval-side ScorerV2 reads the warn flag for
- *  `r_intent_derived` breakdown. */
-fun validateIntentAlignment(bubble: Bubble): IntentAlignmentCheck {
-    if (bubble.actions.isEmpty()) return IntentAlignmentCheck.Aligned
-    val intentText = bubble.intent.takeIf { it.isNotBlank() } ?: bubble.title
-    if (intentText.isBlank()) return IntentAlignmentCheck.Aligned
-    // Collect noun sets across the bubble's chosen actions; if
-    // ANY action's set has a hit, we're Aligned (don't penalize
-    // multi-action bubbles for partial coverage).
-    val missing = LinkedHashSet<String>()
-    var aligned = false
-    bubble.actions.forEach { actionId ->
-        val nouns = primaryNounsFor(actionId)
-        if (nouns.isEmpty()) return@forEach
-        val hit = nouns.any { intentText.contains(it) }
-        if (hit) aligned = true else missing.addAll(nouns)
-    }
-    return if (aligned || missing.isEmpty()) {
-        IntentAlignmentCheck.Aligned
-    } else {
-        IntentAlignmentCheck.Mismatch(missingNouns = missing)
-    }
-}
 // `shared/.../ActionArgs.kt` so `ToolUseLoop.runCycle`'s `onEmit`
 // callback can return a `FinalizeDecision` without dragging Android
 // types into `:shared/`.  The class itself stays here because it
