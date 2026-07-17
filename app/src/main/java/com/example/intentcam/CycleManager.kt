@@ -299,6 +299,18 @@ class CycleManager(
                         userText = userText,
                         actionIds = actionRegistry.allIds(),
                         cycleId = job.id,
+                        // Fold the model's action_ids into Bubble.actions
+                        //  (LLM pick ∩ enabled) BEFORE markValidated +
+                        //  the gate run, so shouldFinalize sees a
+                        //  populated action set and can detect missing
+                        //  inputs (unblocks the v3 nudge loop).  Runs
+                        //  once per emit; cheap single suspend call to
+                        //  SettingsStore via the enabledIds closure.
+                        resolveActions = { bubble ->
+                            val resolved = actionResolver.suggestIds(bubble)
+                            if (resolved.toSet() == bubble.actions.toSet()) bubble
+                            else bubble.copy(actions = resolved)
+                        },
                         // Per-emit gate: after every successful
                         //  emit_bubble parse, the orchestrator's
                         //  shouldFinalize() returns CONTINUE (missing
@@ -310,25 +322,20 @@ class CycleManager(
                             orchestrator.shouldFinalize(bubble, round, maxRounds = 4)
                         },
                         // Project validation state onto the bubble's
-                        //  data-class fields (validatedInputs +
-                        //  pendingInputs).  CycleJob's reactive flows
-                        //  are kept in sync separately via
-                        //  CycleJob.refreshValidation().
+                        //  data-class fields (rescue + validatedInputs
+                        //  + pendingInputs).  Runs on the already-
+                        //  resolved bubble so rescue sees the LLM's
+                        //  chosen chips and only adds what's missing.
+                        //  CycleJob's reactive flows are kept in sync
+                        //  separately via CycleJob.refreshValidation().
                         markValidated = { bubble -> orchestrator.markValidatedInputs(bubble) },
                         onProgress = { progress ->
+                            // progress.bubble is already resolved +
+                            //  stamped (rescue + validatedInputs) by
+                            //  ToolUseLoop before this fires, so just
+                            //  apply it.  isTerminal drives IN_FLIGHT
+                            //  (nudge retry in progress) vs COMPLETE.
                             job.applyProgress(progress)
-                            // Resolve actions on every partial emit so
-                            // the live UI sees chips as soon as the LLM
-                            // settles on a proposed set.  Cheap (single
-                            // suspend call to SettingsStore via
-                            // enabledIds closure).
-                            val resolved = actionResolver.suggestIds(progress.bubble)
-                            val withActions = if (resolved.toSet() == progress.bubble.actions.toSet()) {
-                                progress.bubble
-                            } else {
-                                progress.bubble.copy(actions = resolved)
-                            }
-                            job.bubble.value = withActions
                             job.refreshValidation(orchestrator)
                             // Soft intent-alignment check.  Logs a
                             //  breadcrumb when bubble.intent doesn't
@@ -338,11 +345,11 @@ class CycleManager(
                             //  action, wrote wrong intent"
                             //  regressions.  Warn-only; doesn't fail
                             //  the cycle.
-                            when (val a = validateIntentAlignment(withActions)) {
+                            when (val a = validateIntentAlignment(progress.bubble)) {
                                 is IntentAlignmentCheck.Mismatch -> log(
                                     "INTENT_WARN",
                                     "cycle ${job.id} round=${progress.round} " +
-                                        "intent='${withActions.intent.take(40)}' " +
+                                        "intent='${progress.bubble.intent.take(40)}' " +
                                         "missing=${a.missingNouns.take(5)}"
                                 )
                                 IntentAlignmentCheck.Aligned -> { /* no-op */ }
@@ -351,7 +358,7 @@ class CycleManager(
                                 "CYCLE",
                                 "progress ${job.id} round=${progress.round} " +
                                     "terminal=${progress.isTerminal} " +
-                                    "actions=${withActions.actions.size} " +
+                                    "actions=${progress.bubble.actions.size} " +
                                     "missing=${job.pendingInputs.value.size}"
                             )
                         },
@@ -378,9 +385,17 @@ class CycleManager(
             }
             when (outcome) {
                 is ToolUseLoop.Outcome.Bubble -> {
-                    // Bubble is already in job.bubble via the final
-                    // onProgress.  Mark COMPLETE for the UI to
-                    // optionally badge "done".
+                    // The stamped bubble (rescue + populated
+                    //  validatedInputs) is returned here.  onProgress
+                    //  already pushed it to job.bubble for the normal
+                    //  emit path, but the MAX_ROUNDS fallback returns
+                    //  without firing onProgress — write it back
+                    //  unconditionally so BOTH paths display the
+                    //  final stamped bubble (Ghost/Validated chip
+                    //  state + rescue chips).  Without this the
+                    //  fallback bubble never reached the UI and the
+                    //  stamped validatedInputs were discarded.
+                    job.bubble.value = outcome.bubble
                     job.status.value = JobStatus.COMPLETE
                     // Fire the completion callback so AppViewModel
                     //  can sync the shutter counter.  The busy

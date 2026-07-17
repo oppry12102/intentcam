@@ -136,6 +136,21 @@ class ToolUseLoop(
          *  eval wires a pure-shared helper (no Android dep).  Default
          *  null leaves the fields empty (legacy behavior). */
         markValidated: ((bubble: com.example.intentcam.Bubble) -> com.example.intentcam.Bubble)? = null,
+        /** Optional resolver called once per emit to fold the
+         *  model's `action_ids` ([com.example.intentcam.Bubble.llmProposedActions])
+         *  into [com.example.intentcam.Bubble.actions] (LLM pick ∩
+         *  caller-enabled set) BEFORE [markValidated] + [onEmit] run.
+         *  Prod wires [com.example.intentcam.ActionResolver.suggestIds];
+         *  eval leaves it null (no ActionRegistry).  Default null
+         *  passes the raw finalBubble through.
+         *
+         *  Moving resolution ahead of the gate is what unblocks the
+         *  missing-input nudge loop — [onEmit] / shouldFinalize needs
+         *  a populated `Bubble.actions` to detect missing inputs;
+         *  without it, [ActionOrchestrator.validateInputs] short-
+         *  circuits to `Complete` on the empty-actions finalBubble
+         *  and the nudge never fires. */
+        resolveActions: (suspend (bubble: com.example.intentcam.Bubble) -> com.example.intentcam.Bubble)? = null,
     ): Outcome {
         val config = client.config
         val maxRounds = MAX_ROUNDS
@@ -616,27 +631,48 @@ class ToolUseLoop(
                 // immediately after this callback.  CycleManager
                 // pushes the bubble into its CycleJob.bubble
                 // StateFlow; the live UI (Phase C) will render it.
-                onProgress.invoke(CycleProgress(
-                    cycleId = cycleId,
-                    round = round,
-                    bubble = finalBubble,
-                    isTerminal = true,
-                ))
+                // Resolve the model's proposed action_ids into
+                //  Bubble.actions (LLM pick ∩ enabled set) and stamp
+                //  validation state (rescue + validatedInputs) BEFORE
+                //  the gate, so [onEmit] / shouldFinalize sees the
+                //  same enriched bubble the live UI renders.  This
+                //  fixes the v3 action-first cycle's dead-gate bug:
+                //  previously the gate ran on `finalBubble` (empty
+                //  `.actions`), so [ActionOrchestrator.validateInputs]
+                //  short-circuited to Complete and the missing-input
+                //  nudge never fired.  `resolveActions` is null in
+                //  eval (no ActionRegistry); the raw finalBubble
+                //  flows through and the eval-side markValidated
+                //  mirror handles rescue.
+                val resolved = resolveActions?.invoke(finalBubble) ?: finalBubble
+                val stamped = markValidated?.invoke(resolved) ?: resolved
                 // Input-missing gate.  When the caller
                 //  wires [onEmit] (typically
                 //  [com.example.intentcam.ActionOrchestrator.shouldFinalize]
                 //  via [com.example.intentcam.CycleManager]), this
-                //  fires AFTER the bubble is finalized.  CONTINUE →
-                //  inject a missing-input nudge + re-enter the for-
-                //  round loop (capped at [INPUT_MISSING_MAX_RETRIES]).
-                //  The bubble isn't returned to the caller yet — the
-                //  next round's emit_bubble will overwrite it.  When
-                //  onEmit is null (legacy / eval), this branch is
-                //  skipped and the cycle ends here.
-                val gate = onEmit?.invoke(finalBubble, round)
+                //  fires AFTER the bubble is resolved + validated.
+                //  CONTINUE → inject a missing-input nudge + re-enter
+                //  the for-round loop (capped at
+                //  [INPUT_MISSING_MAX_RETRIES]).  The bubble isn't
+                //  returned to the caller yet — the next round's
+                //  emit_bubble will overwrite it.  When onEmit is
+                //  null (legacy / eval), this branch is skipped and
+                //  the cycle ends here.
+                val gate = onEmit?.invoke(stamped, round)
                 if (gate is FinalizeDecision.CONTINUE &&
                     inputMissingRetries < INPUT_MISSING_MAX_RETRIES
                 ) {
+                    // Surface the partial bubble as IN_FLIGHT (not
+                    //  COMPLETE) — the cycle is still asking the
+                    //  model to fill missing inputs.  isTerminal=
+                    //  false keeps [CycleJob.applyProgress] from
+                    //  flipping the job to COMPLETE mid-retry.
+                    onProgress.invoke(CycleProgress(
+                        cycleId = cycleId,
+                        round = round,
+                        bubble = stamped,
+                        isTerminal = false,
+                    ))
                     inputMissingRetries++
                     log(
                         "TOOL_NUDGE",
@@ -650,12 +686,17 @@ class ToolUseLoop(
                 if (gate is FinalizeDecision.FINALIZE) {
                     log("TOOL_FINALIZE", "round $round reason=${gate.reason}")
                 }
-                // Stamp validation state onto the bubble
-                //  before returning.  Wraps the bubble in a copy()
-                //  so the data-class fields reflect the orchestrator's
-                //  (or eval-side helper's) view.  Null = no-op
-                //  (legacy callers keep empty fields).
-                val stamped = markValidated?.invoke(finalBubble) ?: finalBubble
+                // Terminal emit (FINALIZE, no gate, or CONTINUE
+                //  capped at [INPUT_MISSING_MAX_RETRIES]).  Push the
+                //  stamped bubble to the UI as COMPLETE — it carries
+                //  rescue chips + populated validatedInputs so the
+                //  live UI renders Ghost/Validated chip state.
+                onProgress.invoke(CycleProgress(
+                    cycleId = cycleId,
+                    round = round,
+                    bubble = stamped,
+                    isTerminal = true,
+                ))
                 return Outcome.Bubble(stamped, firstToolName = chosenToolName)
             }
             if (anyNeedsInput && pendingUserInput != null) {
@@ -683,10 +724,14 @@ class ToolUseLoop(
             createdAtMs = System.currentTimeMillis(),
             toolName = chosenToolName,
         )
-        // Apply markValidated to the 兜底 bubble too so
-        //  eval/prod see consistent validation state regardless of
-        //  whether the cycle hit the round cap or emitted normally.
-        val stampedFallback = markValidated?.invoke(fallbackBubble) ?: fallbackBubble
+        // Apply resolveActions + markValidated to the 兜底 bubble
+        //  too so eval/prod see consistent validation state
+        //  regardless of whether the cycle hit the round cap or
+        //  emitted normally.  The fallback has no llmProposedActions,
+        //  so resolveActions (when wired) falls back to the
+        //  applicability path.
+        val resolvedFallback = resolveActions?.invoke(fallbackBubble) ?: fallbackBubble
+        val stampedFallback = markValidated?.invoke(resolvedFallback) ?: resolvedFallback
         return Outcome.Bubble(stampedFallback, firstToolName = chosenToolName)
     }
 
