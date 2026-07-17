@@ -1,0 +1,813 @@
+{
+  "version": 5,
+  "description": "action-first suite — action=dial_number (built from RCTW-171 via build_action_suites.py)",
+  "rctw_root": "/home/oppry/RCTW-171",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "scenes": [
+    {
+      "id": "image_3725",
+      "file": "image_3725.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "尚学教育热线：2378100 一中店",
+        "提升市民素质创建文明",
+        "尚学教育",
+        "兴隆书社",
+        "郴州市",
+        "###"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2729",
+      "file": "image_2729.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "火警电话119",
+        "灭火器无需倒放",
+        "只需要三下",
+        "拔下销子",
+        "拉下软管",
+        "按下压把"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2561",
+      "file": "image_2561.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "国网仙桃供电公司干河供电营业所",
+        "电费咨询热线：3288395",
+        "STATE GRID",
+        "STATE",
+        "国家电网",
+        "###"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_7376",
+      "file": "image_7376.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "洪山区卓刀泉108号凯乐桂园A座写字楼S-1-11（虎泉地铁站B出口）",
+        "武昌区中山路193号附10号（农村商业银行对面）凤凰山公交车站#",
+        "武昌区临江大道59号武昌房地产交易大厦1楼27号窗口",
+        "洪山区文秀街9号（丽岛紫园小区斜对面）3楼5号窗口",
+        "客服热线：027-85511588",
+        "olic bicycle"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2699",
+      "file": "image_2699.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "15342898366",
+        "腊月二十九至初三休息",
+        "婴幼儿SPA水育乐园",
+        "上午九点至晚上六点",
+        "要求三心爱心责任",
+        "妈妈我要克打古球"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_5476",
+      "file": "image_5476.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话 13886977163",
+        "平价专业值得信赖",
+        "財源八方涌進",
+        "让您###",
+        "流行窗帘",
+        "一零八款"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_7296",
+      "file": "image_7296.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "地址：复州花园华菊园28栋二单元一楼（实验二小旁）",
+        "电话：13407228298",
+        "如家托管中心",
+        "作业辅导",
+        "周末培优",
+        "###"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_3408",
+      "file": "image_3408.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "（步行街校区）步行中街靠东桥第一个天桥处",
+        "地址:（车站校区）皇朝家居5楼跆拳道馆内",
+        "13507225885",
+        "15871883584",
+        "国标舞学校",
+        "全省名校"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_6614",
+      "file": "image_6614.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "外送电话：18361952146",
+        "山东饺子馆",
+        "正宗"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_5404",
+      "file": "image_5404.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "18986923555",
+        "一帆风顺年年",
+        "门面转让"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_5601",
+      "file": "image_5601.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "联系电话：13147158477",
+        "洗碗工勤杂工配菜",
+        "服务员（兼职）",
+        "二楼有座",
+        "###",
+        "招聘"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_896",
+      "file": "image_896.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：13429995259",
+        "18608669885",
+        "专业汽车钣金油漆",
+        "BENTLEY",
+        "Audi",
+        "BMW"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_6679",
+      "file": "image_6679.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "报警电话:13871101013",
+        "江夏分局藏龙岛派出所",
+        "JIANOXIAQU",
+        "湖北经济学院保卫处",
+        "81973779",
+        "视频监控区"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_629",
+      "file": "image_629.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：15073595138",
+        "副食店",
+        "快亦佳",
+        "打印社",
+        "###",
+        "华清"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_3235",
+      "file": "image_3235.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：633339173",
+        "夜色九龙"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2010",
+      "file": "image_2010.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "13063738012",
+        "厂家直销",
+        "阳光瓦",
+        "###"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2175",
+      "file": "image_2175.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "ADD:光谷关山大道与雄楚大道交汇处",
+        "VIP热线",
+        "8767"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2696",
+      "file": "image_2696.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：18995988846",
+        "专注5岁-成人英语培训",
+        "地址：德政园中心花坛",
+        "复州花园北门第一排",
+        "丝笛萧主题专业连锁",
+        "仙桃市育才幼儿园小"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_4110",
+      "file": "image_4110.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "HONG TA DA DAO ER DUAN",
+        "招商电话：15882703983",
+        "专业户外整体推广运营商",
+        "广告招商中。。。",
+        "红塔大道二段",
+        "城区公交站台"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_4656",
+      "file": "image_4656.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "联系电话13385274036",
+        "电话:13177498511",
+        "承接：不锈钢楼梯扶手防盗网",
+        "电话:135974",
+        "荣兴塑钢铝合金装#",
+        "##小麦苞谷"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_399",
+      "file": "image_399.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：18202780005",
+        "湖北汉城彩篷装饰",
+        "宏盛书店",
+        "###"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_7782",
+      "file": "image_7782.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "咨询热线：18062405869",
+        "梁山头商业街",
+        "修复中心",
+        "B203",
+        "技术授权"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_7398",
+      "file": "image_7398.jpg",
+      "expected_actions": [
+        "dial_number",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "13862192783",
+        "63370242",
+        "出租脚手架"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_7144",
+      "file": "image_7144.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "班，限女性、年龄40-50",
+        "联系电话：68777163",
+        "或是朋友在家待业或是退",
+        "休，帮忙介绍到本店来上",
+        "左右，本地户口有服装销",
+        "哪位朋友家里有亲戚"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_7995",
+      "file": "image_7995.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "别TM唧唧歪歪的，没那么复杂",
+        "人生何必复杂",
+        "喜欢什么。",
+        "讨厌什么。",
+        "想被理解。",
+        "想见面。"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_6515",
+      "file": "image_6515.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "特产超市",
+        "手机上号",
+        "空中充值",
+        "行李寄存",
+        "公用电话",
+        "###"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_2704",
+      "file": "image_2704.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：18080552127",
+        "本店7号放假，13号",
+        "开门营业，祝亲爱的芝",
+        "蔓佳人们新年快乐。"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_3371",
+      "file": "image_3371.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "mokoo",
+        "矿物质水",
+        "手足护理",
+        "韩速护肤",
+        "中华神皂",
+        "加多宝"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_6386",
+      "file": "image_6386.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "移动电源充电宝",
+        "工厂直营店",
+        "A093",
+        "手机贴膜",
+        "蓝牙耳机",
+        "蓝牙音箱"
+      ],
+      "category": "phone"
+    },
+    {
+      "id": "image_6912",
+      "file": "image_6912.jpg",
+      "expected_actions": [
+        "dial_number"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        }
+      ],
+      "expected_description_keywords": [
+        "配送电话:13871327318",
+        "水·果超市",
+        "水果超市",
+        "兼营",
+        "冷饮",
+        "干果"
+      ],
+      "category": "phone"
+    }
+  ]
+}

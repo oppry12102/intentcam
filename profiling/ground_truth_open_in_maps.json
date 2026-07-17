@@ -1,0 +1,716 @@
+{
+  "version": 5,
+  "description": "action-first suite — action=open_in_maps (built from RCTW-171 via build_action_suites.py)",
+  "rctw_root": "/home/oppry/RCTW-171",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "scenes": [
+    {
+      "id": "image_5263",
+      "file": "image_5263.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "武汉市青山区和平大道与新村路",
+        "15623811220",
+        "诚信出租，拎包入住！",
+        "无中介费，家电齐全",
+        "So Young",
+        "TEL.027"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_7558",
+      "file": "image_7558.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "scream",
+        "电话：###",
+        "联动全城",
+        "就近服务",
+        "1527",
+        "###"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_450",
+      "file": "image_450.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "弯道减速",
+        "###",
+        "减速",
+        "弯道"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_3625",
+      "file": "image_3625.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "承建“碧水源”校区A、B、C、D栋工程",
+        "湖南郴州金瓯建筑有限公司",
+        "文明施工树企业形象",
+        "科学管理创精品工程",
+        "涂料店",
+        "###"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_2420",
+      "file": "image_2420.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "创城目标靠大家实现",
+        "美好生活靠我们创",
+        "保护电力施人人有",
+        "城西加油站宣",
+        "81836",
+        "专业洗车"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_3698",
+      "file": "image_3698.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "南湖驾校欢迎您",
+        "#湖驾#欢迎#",
+        "南湖驾校",
+        "90附1",
+        "90附2",
+        "C1C2"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_6476",
+      "file": "image_6476.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "Chongren Rd",
+        "Jinghan Ave",
+        "Qiaokou Rd",
+        "武汉市广播电视大学",
+        "Yanhe Ave",
+        "武汉市成人教育学院"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_629",
+      "file": "image_629.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "电话：15073595138",
+        "副食店",
+        "快亦佳",
+        "打印社",
+        "###",
+        "华清"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_1003",
+      "file": "image_1003.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "长江大桥",
+        "张之洞路",
+        "首义路",
+        "###",
+        "60",
+        "自由"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_6149",
+      "file": "image_6149.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "tel02787656068",
+        "砂锅粥·小海鲜·家常菜",
+        "鲁巷广场6楼",
+        "新粤粥府",
+        "特大优惠",
+        "吃100"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_4292",
+      "file": "image_4292.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "Green travel",
+        "Low caebon",
+        "东湖情侣车行连锁店",
+        "低碳生活",
+        "绿色出行"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_1179",
+      "file": "image_1179.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "车城大道三段",
+        "267"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_1623",
+      "file": "image_1623.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "Staff Only",
+        "非旅游区域",
+        "游客止步"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_5625",
+      "file": "image_5625.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "杭州客运中心站一期工程主站房",
+        "建集团·浙江二建",
+        "”鲁班奖",
+        "###"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_6701",
+      "file": "image_6701.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "河北省人力资源和社会保障厅制",
+        "河北省技工学校",
+        "毕业证书"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_446",
+      "file": "image_446.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "Welcome",
+        "适足平步青云",
+        "新履登堂显贵",
+        "临光迎欢",
+        "##足下",
+        "162"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_3129",
+      "file": "image_3129.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "中国银行湖北省分行宣",
+        "了解：非法集资",
+        "珍惜一生血汗",
+        "拒绝非法集资",
+        "非法",
+        "集资"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_7799",
+      "file": "image_7799.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "share"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        }
+      ],
+      "expected_description_keywords": [
+        "本广告仅作为要约邀请具体以双方签订的商品房买卖合同及政府最终批准文件为准最终解释权归开放商所有",
+        "光谷心·京师定制·全资源著品",
+        "PKU RESOURCES",
+        "通往地下停车场",
+        "北大资源",
+        "山水年华"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_974",
+      "file": "image_974.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "WUHANBLOODCENTER",
+        "0:930-17:00",
+        "街道口爱心捐血屋",
+        "武汉血液中心",
+        "街道口捐血屋",
+        "工作时间"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_1813",
+      "file": "image_1813.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "富贵荣华万事兴",
+        "China",
+        "复州大道",
+        "186",
+        "###",
+        "格力"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_3965",
+      "file": "image_3965.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "Sourceme",
+        "原价1680元",
+        "Source",
+        "无痕接发",
+        "Sour",
+        "799元"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_2576",
+      "file": "image_2576.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "中国移动|飞扬数码",
+        "飞扬智能手机俱乐",
+        "指定维修服务中心",
+        "放心交给我们吧",
+        "Android",
+        "主板芯片维修"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_7397",
+      "file": "image_7397.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "15873596651",
+        "电话：2153036",
+        "拉勾勾汽修",
+        "中华润滑油",
+        "特约经销商",
+        "###"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_2893",
+      "file": "image_2893.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "School of Mechanical Science and Engineering",
+        "制作装备数字化国家工程研究中心",
+        "国家数控系统工程技术研究中心",
+        "机械科学与工程学院"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_4195",
+      "file": "image_4195.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "同里店.NO.0017",
+        "安凡居家",
+        "###"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_5231",
+      "file": "image_5231.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "耒阳市五一路与大桥路交汇处",
+        "12月31日惊艳开盘",
+        "VIP LINE",
+        "龙腾·时代广场",
+        "五一路黄金旺铺",
+        "4358888"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_34",
+      "file": "image_34.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "社区蔬菜便民店",
+        "由此进30米",
+        "天天新鲜",
+        "康馨源",
+        "天天平",
+        "在后面"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_2198",
+      "file": "image_2198.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "22一线大牌开年大戏",
+        "引爆一座城",
+        "###"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_1835",
+      "file": "image_1835.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "南湖大道216号"
+      ],
+      "category": "address"
+    },
+    {
+      "id": "image_598",
+      "file": "image_598.jpg",
+      "expected_actions": [
+        "open_in_maps"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        }
+      ],
+      "expected_description_keywords": [
+        "German style street",
+        "德国风情街",
+        "7219",
+        "###"
+      ],
+      "category": "address"
+    }
+  ]
+}

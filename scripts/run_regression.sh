@@ -160,6 +160,7 @@ for cfg in suites:
     # handles None gracefully.
     components = {
         "v3_composite": None, "v3_actions": None, "v3_text": None, "v3_inputs": None,
+        "over_fire_rate": None,
     }
     if os.path.exists(json_out):
         try:
@@ -172,6 +173,7 @@ for cfg in suites:
                 ("overall_v3_actions", "v3_actions"),
                 ("overall_v3_text", "v3_text"),
                 ("overall_v3_inputs", "v3_inputs"),
+                ("overall_over_fire_rate", "over_fire_rate"),
             ):
                 v = j.get(src_key)
                 if v is not None:
@@ -196,6 +198,9 @@ for cfg in suites:
         print(f"   v3_components: actions={components['v3_actions']:.3f} "
               f"text={components['v3_text']:.3f} "
               f"inputs={components['v3_inputs']:.3f}")
+    if components["over_fire_rate"] is not None:
+        print(f"   over_fire_rate: {components['over_fire_rate']:.3f}  "
+              f"(fraction emitting chips when GT expected none — meaningful on the `none` suite)")
     if err_count:
         print(f"   ({err_count} Outcome.Error in JSON — possible 529 contamination)")
 
@@ -213,6 +218,7 @@ for cfg in suites:
         "v3_actions": components["v3_actions"],
         "v3_text": components["v3_text"],
         "v3_inputs": components["v3_inputs"],
+        "over_fire_rate": components["over_fire_rate"],
     })
 
 summary = {

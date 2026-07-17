@@ -112,6 +112,13 @@ def main() -> int:
                     f"now={now_val:.4f} Δ={comp_delta:+.4f} "
                     f"(v3 informational, threshold {V3_THRESHOLD})"
                 )
+        # Over-fire rate (informational, no baseline — lower is better).
+        # Meaningful on the `none` suite: fraction of fixtures where the
+        # LLM emitted chips despite GT expecting none (precision signal
+        # recall can't see).
+        ofr = s.get("over_fire_rate")
+        if ofr is not None:
+            print(f"    └ {'over_fire_rate':<22} {'—':>9} {ofr:>9.4f} {'':>8}   info")
 
     print()
     if fail:

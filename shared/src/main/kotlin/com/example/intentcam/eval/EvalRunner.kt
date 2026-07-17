@@ -317,6 +317,20 @@ internal class EvalRunner(private val config: EvalConfig) {
             val emittedActions = JSONArray()
             bubble?.llmProposedActions?.forEach { emittedActions.put(it) }
             val expectedActions = scene.optJSONArray("expected_actions") ?: JSONArray()
+            // Over-fire: the LLM emitted chips on a fixture whose GT
+            //  expects NO action (the `none` suite).  Recall is 1.0 on
+            //  empty expected so it can't see this — the over-fire rate
+            //  is the precision signal recall lacks.  `actual` mirrors
+            //  ScorerV3.computeActions's visible set (.actions, falling
+            //  back to llmProposedActions for legacy bubbles).
+            val expectedEmpty = expectedActions.length() == 0
+            val actualActions: Set<String> = when {
+                bubble?.actions?.isNotEmpty() == true -> bubble!!.actions.toSet()
+                !bubble?.llmProposedActions.isNullOrEmpty() ->
+                    bubble!!.llmProposedActions!!.toSet()
+                else -> emptySet()
+            }
+            val overFired = expectedEmpty && actualActions.isNotEmpty()
             results.add(mapOf(
                 "id" to sceneId,
                 "category" to category,
@@ -324,6 +338,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "v3_actions" to scorer.actions,
                 "v3_text" to scorer.text,
                 "v3_inputs" to scorer.inputs,
+                "over_fired" to overFired,
                 "details_count" to detailsCount,
                 "content_len" to contentLen,
                 "raw_content" to rawContent,
@@ -356,6 +371,8 @@ internal class EvalRunner(private val config: EvalConfig) {
                 "v3 components: actions=${"%.3f".format(avgV3Actions)} " +
                     "text=${"%.3f".format(avgV3Text)} inputs=${"%.3f".format(avgV3Inputs)}"
             )
+            val overFire = results.count { it["over_fired"] as Boolean }
+            println("over-fire: $overFire/${results.size} fixtures emitted chips when GT expected none")
             // Diagnostic aggregates — not part of composite.
             val avgDetails = results.map { (it["details_count"] as Int).toDouble() }.average()
             val emptyDetails = results.count { (it["details_count"] as Int) == 0 }
@@ -408,10 +425,18 @@ internal class EvalRunner(private val config: EvalConfig) {
                 results.map { it["v3_text"] as Double }.average())
             root.put("overall_v3_inputs",
                 results.map { it["v3_inputs"] as Double }.average())
+            // Over-fire rate: fraction of fixtures where the LLM emitted
+            //  chips despite GT expecting none.  Only meaningful on the
+            //  `none` suite (else expected is non-empty → never over-fires),
+            //  but harmless to report everywhere.
+            val overFire = results.count { it["over_fired"] as Boolean }
+                .toDouble() / results.size
+            root.put("overall_over_fire_rate", overFire)
         } else {
             root.put("overall_v3_actions", 0.0)
             root.put("overall_v3_text", 0.0)
             root.put("overall_v3_inputs", 0.0)
+            root.put("overall_over_fire_rate", 0.0)
         }
         root.put("fixture_count", results.size)
         val perCategory = JSONObject()
@@ -428,6 +453,7 @@ internal class EvalRunner(private val config: EvalConfig) {
             o.put("v3_actions", r["v3_actions"] as Double)
             o.put("v3_text", r["v3_text"] as Double)
             o.put("v3_inputs", r["v3_inputs"] as Double)
+            o.put("over_fired", r["over_fired"] as Boolean)
             // Raw LLM proposal + GT expected actions + raw content /
             //  details, kept so post-hoc scorer experiments can re-cut
             //  the score without re-running the LLM.
