@@ -203,24 +203,50 @@ fun registerDefaultActions(reg: ActionRegistry) {
             parser = { b -> com.example.intentcam.InputParsers.locationQuery(b) },
         )),
         body = { _, bubble, args ->
-            // Prefer the orchestrator-parsed `query` from `args` when present
-            //  (orchestrator-driven path:
-            //  parser already validated the value against bubble's
-            //  text surface).  Fall back to inline extraction when
-            //  args is empty (legacy path: user tapped a chip
-            //  before the orchestrator's gate ran, or the parser
-            //  couldn't extract).  "附近" is the last-resort
-            //  default when the bubble is text-empty.
-            val query = args["query"]
-                ?: bubble.title.takeIf { it.isNotBlank() }
-                    ?: bubble.detail.take(40).ifBlank { "附近" }
-            val intent = android.content.Intent(
-                android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse(
-                    "geo:0,0?q=${android.net.Uri.encode(query)}"
+            // Body-level fallback chain mirrors `InputParsers.locationQuery`
+            //  (priority: details[] address → simplified title → detail →
+            //  fallback detail row).  args["query"] comes from the
+            //  orchestrator's parser pass (`AppViewModel.parsedArgsFor`);
+            //  null when the parser returned null.  We re-derive here
+            //  so the legacy path (user taps chip before orchestrator
+            //  gate ran) also gets the new parser logic.
+            //
+            //  [2026-07-17 bugfix] The previous body fell through to
+            //  `bubble.title` and then `bubble.detail.take(40)` — both
+            //  wrong: title is the LLM action phrase ("导航去仙桃市仙桃
+            //  大道上岛咖啡"), detail.take(40) truncated real addresses
+            //  mid-token ("...上岛咖啡西餐厅" → "...上岛咖").  See
+            //  ~/.claude/plans/sorted-meandering-pond.md for context.
+            val rawQuery = (args["query"] ?: com.example.intentcam.InputParsers.locationQuery(bubble))
+                ?.trim().orEmpty()
+            // Cap query length to keep the geo: URI well under Android's
+            //  typical 2k Intent limit and avoid map-app-specific overflow
+            //  bugs (高德 truncates very long `q=` strings).
+            val query = rawQuery.take(60)
+            if (query.isBlank()) {
+                // No address recognized — typical for `route_to` fixtures
+                //  ("向前20米 藏方养生馆") that have a storefront name
+                //  but no mappable street.  Surface a Toast instead of
+                //  firing `geo:0,0?q=附近` (undefined map-app behavior;
+                //  some apps show empty map, some show user location).
+                ActionOutcome.ShowUiFeedback(
+                    "未识别到地址，请手动输入后打开地图"
                 )
-            ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            ActionOutcome.LaunchAndroidIntent(intent)
+            } else {
+                val intent = android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse(
+                        "geo:0,0?q=${android.net.Uri.encode(query)}"
+                    )
+                ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                // Explicit chooser so the user picks a known-installed
+                //  maps app rather than depending on system-default
+                //  resolution (which on some OEM ROMs surfaces non-installed
+                //  placeholder entries when the query is fuzzy).
+                ActionOutcome.LaunchAndroidIntent(
+                    android.content.Intent.createChooser(intent, "选择地图 App 打开")
+                )
+            }
         },
         // DELEGATE cluster: opens a system maps app with no in-app side
         //  effect; the OS chooser is the consent step.

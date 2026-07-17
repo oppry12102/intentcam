@@ -61,13 +61,66 @@ object InputParsers {
     /** For `open_in_maps` (and any future location-aware
      *  action).  Maps app accepts free-form queries, so we
      *  don't need to validate as a strict address — anything
-     *  non-blank from the bubble's title or detail works.
-     *  Prefers title (the model often puts the storefront
-     *  name / address there). */
-    fun locationQuery(bubble: Bubble): String? =
-        bubble.title.takeIf { it.isNotBlank() }
-            ?: bubble.detail.takeIf { it.isNotBlank() }?.take(40)
-            ?: bubble.details.firstOrNull { it.value.isNotBlank() }?.value
+     *  non-blank works.  But the **priority** matters: callers
+     *  historically got the LLM action phrase (`"导航去仙桃市仙桃
+     *  大道上岛咖啡"`) instead of the recognized address because
+     *  `bubble.title` short-circuited before any address scan.
+     *
+     *  Priority chain (2026-07-17 rewrite after user-reported
+     *  open_in_maps bug — see
+     *  `~/.claude/plans/sorted-meandering-pond.md`):
+     *
+     *  1. **`bubble.details[]` address scan** — pick the first row
+     *     whose value matches an address keyword (路/街/大道/巷/弄/
+     *     号/区/县/市/省/村/镇/栋/座/层/室).  LLM writes each visible
+     *     text element with bbox as a Detail row, so addresses
+     *     like `洪山区珞喻路370号` or `屯村东路350号` land here
+     *     verbatim.  This is the highest-signal source.
+     *  2. **Simplified `bubble.title`** — strip navigation-verb
+     *     prefixes (`导航去` / `导航到` / `去` / `找` / `到` / `在` /
+     *     `这里是` / `我在这里` / `查看` / `打开`) and return the
+     *     rest if non-blank.  Handles cases where LLM wrote the
+     *     address directly as the title (`"仙桃市仙桃大道"`).
+     *  3. **Full `bubble.detail`** — verbatim content description.
+     *     The previous `detail.take(40)` truncated real addresses
+     *     mid-token (`"...上岛咖啡西餐厅"` → `"...上岛咖"`) — that
+     *     was a regression source, removed.
+     *  4. **Last-resort detail row** — typically the storefront name
+     *     on `route_to` fixtures (`"向前20米 藏方养生馆"`).  Lets the
+     *     user tap-and-search, even though no street exists.
+     *
+     *  **Crucially** this parser no longer returns `"附近"` /
+     *  empty string.  Body-level UX (Toast on unresolvable query)
+     *  is the right place for that decision — see
+     *  `app/.../ActionDecl.kt` `open_in_maps` body.
+     *
+     *  Returns null when the bubble has no extractable address OR
+     *  no useful text.  Eval-side `EvalRunner.defaultRequiredInputs`
+     *  uses this non-null check as the "is query present" gate;
+     *  the new parser still returns non-null for every fixture that
+     *  had a non-null result under the old parser, so eval won't
+     *  silently drop `r_inputs_complete` credit. */
+    fun locationQuery(bubble: Bubble): String? {
+        // (1) details[] address-keyword scan
+        val addressRegex = Regex("""\S*(路|街|大道|巷|弄|号|区|县|市|省|村|镇|栋|座|层|室)\S*""")
+        bubble.details.firstOrNull { d ->
+            d.value.isNotBlank() && addressRegex.containsMatchIn(d.value)
+        }?.let { return it.value.trim() }
+
+        // (2) Simplified title — strip navigation-verb prefixes
+        val strippedTitle = bubble.title
+            .replace(Regex("""^(导航去|导航到|去|找|到|在|这里是|我在这里|查看|打开)\s*"""), "")
+            .trim()
+        if (strippedTitle.isNotBlank() && strippedTitle.length >= 2) {
+            return strippedTitle
+        }
+
+        // (3) Full detail (no truncation)
+        bubble.detail.takeIf { it.isNotBlank() }?.let { return it.trim() }
+
+        // (4) Last-resort: any non-blank detail row (route_to storefront names)
+        return bubble.details.firstOrNull { it.value.isNotBlank() }?.value?.trim()
+    }
 
     /** For all `copy_*` text-share actions.  Concatenates
      *  title + detail so the share-sheet payload matches

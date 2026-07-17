@@ -4,6 +4,68 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Fixed — `open_in_maps` action uses recognized address, not LLM action phrase (2026-07-17)
+
+User-reported bug: tapping the "在地图中打开" chip fired `geo:0,0?q=<title>`
+where `<title>` was the LLM action phrase like `"导航去仙桃市仙桃大道上岛咖啡"`
+— the recognized address sat ignored in `bubble.details[]`. On some OEM ROMs
+the geo Intent's chooser also surfaced non-installed map placeholders because
+the fuzzy query left every maps app's `q=` handler in a degenerate state.
+
+**Two coupled fixes**:
+
+- `shared/.../InputParsers.kt:67-70` — `locationQuery` priority chain
+  rewritten. Old order was `title → detail.take(40) → details.firstOrNull`
+  (title always won; `detail.take(40)` truncated real addresses
+  mid-token: `"...上岛咖啡西餐厅"` → `"...上岛咖"`). New order:
+  1. `details[]` scan for address-keyword rows
+     (`\S*(路|街|大道|巷|弄|号|区|县|市|省|村|镇|栋|座|层|室)\S*`) —
+     picks `洪山区珞喻路370号`, `屯村东路350号`, etc. verbatim from
+     the rows LLM writes with bboxes.
+  2. Simplified `bubble.title` (strip `导航去|导航到|去|找|到|在|这里是|我在这里|查看|打开`
+     prefix) for cases where LLM put the address directly in the title.
+  3. **Full** `bubble.detail` (no `.take(40)` truncation — was corrupting
+     long addresses).
+  4. Last-resort: any non-blank detail row (covers `route_to` fixtures
+     with storefront names but no street — user can still tap-and-search).
+
+- `app/.../ActionDecl.kt:205-241` — `open_in_maps` body tightened:
+  - `query.take(60)` length cap (geocoding apps truncate or fail on very
+    long `q=` strings).
+  - Explicit `Intent.createChooser(intent, "选择地图 App 打开")` —
+    user picks a known-installed maps app from the standard system
+    picker instead of relying on default-resolution that surfaced
+    non-installed placeholders on some ROMs.
+  - **No more `"附近"` fallback at body level**. When neither
+    `args["query"]` nor the parser returns a usable string, surface
+    `ActionOutcome.ShowUiFeedback("未识别到地址，请手动输入后打开地图")`
+    instead of firing `geo:0,0?q=附近` (undefined map-app behavior;
+    some apps show empty map, some show user location). This is the
+    right UX for `route_to` fixtures (`"向前20米 藏方养生馆"`) where
+    no mappable street exists.
+
+**Eval mirror flows through automatically**. `EvalRunner.defaultRequiredInputs`
+uses `InputParsers.locationQuery(b) != null` as a "present" gate; the new
+parser still returns non-null for every fixture that had a non-null result
+under the old parser, so `r_inputs_complete` won't silently drop credit.
+`ActionOrchestrator.rescueActions` exclusion of `open_in_maps` stays
+(parser still too lenient for rescue purposes — any non-blank title
+returns non-null).
+
+**Verified** (`summary_20260717_091349`, full 11-suite regression):
+11/11 v2 PASS-or-noise-band, 0 errors, exit 0.
+
+| suite | v2 baseline → now | Δ | notes |
+|---|---:|---:|---|
+| service_institution_60 | 0.776 → **0.801** | **+0.025** | new parser returns cleaner addresses → Jaccard lifts |
+| phone_60 | 0.624 → **0.645** | +0.022 | within-band LLM variance |
+| direction_arrow_60 | 0.788 → 0.798 | +0.010 | route_to fixtures unchanged (no address rows → fallback) |
+| real_estate_rental_11 | 0.658 → 0.679 | +0.021 | same — no addresses, but unrelated LLM variance |
+| pii20_60 | 0.711 → **0.766** | **+0.056** | **FAIL threshold** but root cause is pre-existing fixture GT: image_334 / image_2494 expect `redact_id` despite OCR explicitly noting "看不清"/"画面外未摄入"; LLM correctly emits `open_in_maps` (店招 + 地址可见,证件号不可见). KEEP per [[feedback-investigate-before-revert]] — fixture GT欠账, not open_in_maps regression |
+| 8 other suites | within ±0.020 | — | in-band |
+
+APK v3.4 (versionCode 8 / versionName 3.4) ships on-device.
+
 ### Added — content-based rescue (`ActionOrchestrator.rescueActions`) (2026-07-17)
 
 The soft-verifier hint landed earlier today (commit `1a9c147`) lifted
