@@ -21,15 +21,15 @@
       "limit": 30,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.62,
+      "baseline": 0.6567,
       "baseline_legacy": null,
-      "baseline_commit": "a0f3426",
-      "v3_composite": 0.62,
+      "baseline_commit": "(prompt-v2, uncommitted)",
+      "v3_composite": 0.6567,
       "v3_actions": 0.5667,
-      "v3_text": 0.7056,
-      "v3_inputs": 0.6444,
+      "v3_text": 0.8111,
+      "v3_inputs": 0.6778,
       "note": "action-first suite — dial_number recall. Built by build_action_suites.py from RCTW-171 (30 phone-bearing fixtures).",
-      "over_fire_rate": 0.0
+      "over_fire_rate": 0
     },
     {
       "name": "open_in_maps",
@@ -37,15 +37,15 @@
       "limit": 30,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.5331,
+      "baseline": 0.5456,
       "baseline_legacy": null,
-      "baseline_commit": "a0f3426",
-      "v3_composite": 0.5331,
-      "v3_actions": 0.3222,
-      "v3_text": 0.7083,
+      "baseline_commit": "(prompt-v2, uncommitted)",
+      "v3_composite": 0.5456,
+      "v3_actions": 0.3389,
+      "v3_text": 0.7194,
       "v3_inputs": 0.9556,
       "note": "action-first suite — open_in_maps recall. 30 address/institution/direction fixtures.",
-      "over_fire_rate": 0.0
+      "over_fire_rate": 0
     },
     {
       "name": "share",
@@ -53,15 +53,15 @@
       "limit": 30,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.6792,
+      "baseline": 0.7112,
       "baseline_legacy": null,
-      "baseline_commit": "a0f3426",
-      "v3_composite": 0.6792,
-      "v3_actions": 0.5722,
-      "v3_text": 0.7456,
-      "v3_inputs": 0.9389,
+      "baseline_commit": "(prompt-v2, uncommitted)",
+      "v3_composite": 0.7112,
+      "v3_actions": 0.6167,
+      "v3_text": 0.7622,
+      "v3_inputs": 0.9556,
       "note": "action-first suite — share recall. 30 promo/real-estate/recruit/menu/warning/hours fixtures.",
-      "over_fire_rate": 0.0
+      "over_fire_rate": 0
     },
     {
       "name": "redact_id",
@@ -71,13 +71,13 @@
       "quality": 90,
       "baseline": 0.6019,
       "baseline_legacy": null,
-      "baseline_commit": "a0f3426",
+      "baseline_commit": "(prompt-v2, uncommitted)",
       "v3_composite": 0.6019,
       "v3_actions": 0.463,
       "v3_text": 0.7037,
       "v3_inputs": 0.9074,
       "note": "action-first suite — redact_id recall. Only 9 ID-bearing fixtures in RCTW-171 (18-digit ID / 身份证/营业执照 rare). limit=9 = full bucket.",
-      "over_fire_rate": 0.0
+      "over_fire_rate": 0
     },
     {
       "name": "scan_to_pay",
@@ -85,15 +85,15 @@
       "limit": 30,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.6878,
+      "baseline": 0.6844,
       "baseline_legacy": null,
-      "baseline_commit": "a0f3426",
-      "v3_composite": 0.6878,
+      "baseline_commit": "(prompt-v2, uncommitted)",
+      "v3_composite": 0.6844,
       "v3_actions": 0.5611,
-      "v3_text": 0.8,
+      "v3_text": 0.7889,
       "v3_inputs": 0.9278,
       "note": "action-first suite — scan_to_pay recall. 30 payment-QR fixtures.",
-      "over_fire_rate": 0.0
+      "over_fire_rate": 0
     },
     {
       "name": "none",
@@ -101,15 +101,15 @@
       "limit": 30,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.9372,
+      "baseline": 0.9288,
       "baseline_legacy": null,
-      "baseline_commit": "a0f3426",
-      "v3_composite": 0.9372,
-      "v3_actions": 1.0,
-      "v3_text": 0.7906,
-      "v3_inputs": 1.0,
+      "baseline_commit": "(prompt-v2, uncommitted)",
+      "v3_composite": 0.9288,
+      "v3_actions": 1,
+      "v3_text": 0.7628,
+      "v3_inputs": 1,
       "note": "action-first suite — over-fire check. 30 fixtures with NO actionable content; recall is trivially 1.0, the over_fire_rate metric is the signal (lower=better).",
-      "over_fire_rate": 0.5667
+      "over_fire_rate": 0.4333
     }
   ]
 }
