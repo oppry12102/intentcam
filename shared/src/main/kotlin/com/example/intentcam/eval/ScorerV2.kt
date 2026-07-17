@@ -115,12 +115,28 @@ data class ScorerV2Result(
             )
         }
 
-        /** Jaccard overlap of expected vs actual action ids:
-         *  `|expected ∩ actual| / |expected ∪ actual|`.  Penalizes
-         *  both misses and spurious/wrong chips (symmetric), unlike
-         *  pure recall.  Empty expected → 1.0 (no penalty for
-         *  un-annotated fixtures); null bubble + nonempty expected
-         *  → 0.0. */
+        /** Recall of expected action ids against the VISIBLE chip set:
+         *  `|expected ∩ actual| / |expected|`.  Of the chips the user
+         *  was supposed to see, how many did they actually see?
+         *
+         *  `actual` = the visible set (`Bubble.actions` once the
+         *  orchestrator / eval mirror has folded LLM proposals +
+         *  content-rescue into it; falls back to raw
+         *  `llmProposedActions` for legacy bubbles).  Using RECALL
+         *  (not Jaccard) is the 2026-07-17 decision: content rescue is
+         *  add-only by design, so a rescue chip the LLM didn't propose
+         *  should CREDIT the score when it matches expected, and a
+         *  rescue chip that doesn't match expected must NOT dilute it
+         *  (Jaccard fought the add-only design — a rescue over-fire
+         *  like `redact_id` on a storefront dropped a correct
+         *  `dial_number` from 1.0 to 0.5).  Recall credits rescue hits
+         *  without penalizing rescue extras.  Trade-off: recall no
+         *  longer penalizes LLM over-emission (emitting every chip
+         *  would score 1.0); the r_text/r_type/r_inputs components
+         *  carry the precision signal instead.
+         *
+         *  Empty expected → 1.0 (no penalty for un-annotated fixtures);
+         *  null bubble + nonempty expected → 0.0. */
         private fun computeActions(bubble: Bubble?, scene: JSONObject): Double {
             val expectedArr = scene.optJSONArray("expected_actions") ?: return 1.0
             val expected = mutableSetOf<String>()
@@ -129,18 +145,23 @@ data class ScorerV2Result(
             }
             if (expected.isEmpty()) return 1.0
             val bubble0 = bubble ?: return 0.0
-            // Prefer the raw LLM-emitted list (did the LLM get it
-            // right?).  Fall back to the resolver-filtered list when
-            // the LLM didn't emit action_ids.
+            // The VISIBLE chip set the user sees = `.actions` once the
+            // orchestrator / eval mirror has folded the LLM's proposals
+            // + content rescue into it (prod: resolver(LLM∩enabled) +
+            // rescue; eval mirror: llmProposedActions + rescue).  Fall
+            // back to the raw llmProposedActions for legacy bubbles
+            // whose `.actions` was never populated (old runs / no
+            // mirror).
             val actual: Set<String> = when {
+                bubble0.actions.isNotEmpty() -> bubble0.actions.toSet()
                 !bubble0.llmProposedActions.isNullOrEmpty() ->
                     bubble0.llmProposedActions.toSet()
-                else -> bubble0.actions.toSet()
+                else -> emptySet()
             }
-            val intersection = expected.intersect(actual).size
-            val union = expected.union(actual).size
-            if (union == 0) return 1.0
-            return intersection.toDouble() / union
+            // Recall: |expected ∩ actual| / |expected|.  expected is
+            //  non-empty here (guarded above), so no div-by-zero.
+            val hits = expected.intersect(actual).size
+            return hits.toDouble() / expected.size
         }
 
         /** Convenience: did this bubble carry a phone number?  Used
@@ -150,39 +171,36 @@ data class ScorerV2Result(
         internal fun bubbleHasPhoneNumber(bubble: Bubble): Boolean =
             com.example.intentcam.InputParsers.phoneNumber(bubble) != null
 
-        /** Convenience: did this bubble carry any non-blank text
-         *  (title/detail/detail-rows)?  Mirrors the `textContent`
-         *  parser in [com.example.intentcam.InputParsers]. */
-        internal fun bubbleHasTextContent(bubble: Bubble): Boolean =
-            bubble.title.isNotBlank() || bubble.detail.isNotBlank() ||
-                bubble.details.any { it.value.isNotBlank() }
-
         /** Per-input satisfaction check used by
-         *  [computeInputsComplete].  Mirrors the production
-         *  [com.example.intentcam.InputParsers] regex set so
-         *  eval and prod agree on "is this input present in
-         *  the bubble's text surface?".  Returns true when the
-         *  parser would have returned non-null for the bubble.
+         *  [computeInputsComplete].  Dispatches each input key to the
+         *  SAME parser prod uses ([com.example.intentcam.InputParsers])
+         *  so eval and prod agree on "is this input present in the
+         *  bubble's text surface?" — single source of truth per the
+         *  input-parsers-drift-risk ADR.  Returns true when the parser
+         *  would have returned non-null for the bubble.
          *
          *  Mapping mirrors `ACTION_REQUIRED_INPUTS` in
-         *  `scripts/migrate_gt_v2_to_v3.py`; the two must stay
-         *  in sync.  When they drift, `r_inputs_complete`
-         *  becomes a soft signal (false 0s); the canonical fix
-         *  is to update this dispatch. */
+         *  `scripts/migrate_gt_v2_to_v3.py`; the two must stay in sync.
+         *  When they drift, `r_inputs_complete` becomes a soft signal
+         *  (false 0s); the canonical fix is to update this dispatch. */
         private fun inputSatisfied(
             bubble: Bubble,
             @Suppress("UNUSED_PARAMETER") actionId: String,
             key: String,
         ): Boolean = when {
-            // phoneNumber → regex chain (mobile → service → landline)
+            // phone_number → InputParsers.phoneNumber (mobile → service → landline)
             key == "phone_number" -> bubbleHasPhoneNumber(bubble)
-            // textContent + locationQuery both reduce to "is
-            // there ANY non-blank surface text on the bubble".
-            // Distinguishing them would require duplicating the
-            // parser's exact priority order (title → 40-char
-            // detail → first details[].value); for the v3.0
-            // r_inputs_complete floor they're equivalent.
-            key == "text" || key == "query" -> bubbleHasTextContent(bubble)
+            // query → InputParsers.locationQuery (open_in_maps). After
+            //  the 2026-07-17 locationQuery rewrite this scans
+            //  details[] for address keywords with a 4-level fallback;
+            //  calling the parser directly (instead of the old
+            //  "any non-blank text" collapse) means eval follows prod
+            //  automatically if the parser ever tightens.
+            key == "query" ->
+                com.example.intentcam.InputParsers.locationQuery(bubble) != null
+            // text → InputParsers.textContent (copy_* share payload).
+            key == "text" ->
+                com.example.intentcam.InputParsers.textContent(bubble) != null
             // Unknown key (future action): default to false so
             // the signal reflects "we don't know how to
             // validate this" rather than a false positive.

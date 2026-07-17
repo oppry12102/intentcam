@@ -268,8 +268,22 @@ internal class EvalRunner(private val config: EvalConfig) {
                     //  docs/adr/2026-07-16-input-parsers-drift-risk.md).
                     markValidated = { bubble ->
                         val rescueIds = contentRescueActions(bubble)
-                        val effectiveBubble = if (rescueIds.isEmpty()) bubble
-                            else bubble.copy(actions = (bubble.actions + rescueIds).distinct())
+                        // Mirror prod's VISIBLE chip set: the LLM's
+                        //  proposed actions (prod's resolver applies
+                        //  the enabled filter on top; eval can't reach
+                        //  the ActionRegistry, so the raw
+                        //  llmProposedActions stand in) PLUS content-
+                        //  rescue chips.  Writing the merged set into
+                        //  `.actions` is what lets ScorerV2.computeActions
+                        //  credit rescue — previously `.actions` held
+                        //  only the rescue ids (finalBubble came in
+                        //  with empty `.actions`), so when the LLM
+                        //  emitted any action_ids the scorer took the
+                        //  llmProposedActions branch and rescue was
+                        //  silently dropped.
+                        val base = bubble.llmProposedActions ?: bubble.actions
+                        val visibleActions = (base + rescueIds).distinct()
+                        val effectiveBubble = bubble.copy(actions = visibleActions)
                         val specs = defaultRequiredInputs()
                         val (validated, pending) = projectInputsValidation(effectiveBubble, specs)
                         effectiveBubble.copy(validatedInputs = validated, pendingInputs = pending)
