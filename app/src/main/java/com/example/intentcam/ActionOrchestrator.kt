@@ -46,47 +46,7 @@ package com.example.intentcam
 class ActionOrchestrator(
     private val actions: ActionRegistry,
 ) {
-    // ── Layer 1: Prompt framing ──────────────────────────────────────
-
-    /**
-     * Render the actions + requiredInputs block that gets spliced
-     * into the system prompt and the `emit_bubble` tool description.
-     *
-     * Format (one line per action):
-     *   `action_id (label) [需要: input_key1=label1, input_key2=label2]`
-     * Followed by a single-line workflow hint that tells the LLM:
-     *   - "选 1-N 个 action"
-     *   - "每个 action 的 required input 要在 bubble.details[] 里"
-     *   - "缺数据就调 extract_text / zoom_in 抓"
-     *   - "emit_bubble(intent, action_ids, details) 收尾"
-     *
-     * The exact wording is kept short on purpose — a verbose block
-     * would steal attention from the verbatim-OCR rules above it.
-     *
-     * Stable across calls for a given registry (the registry is
-     * build-once-at-startup), so the result can be cached at the
-     * `LlmClient.toolUseSystemPrompt` call site if profiling shows
-     * string allocation is a hotspot — for now we recompute per call.
-     */
-    fun frameAvailableActions(): String = buildString {
-        appendLine("可用 actions（选 1-N 个）:")
-        actions.list().forEach { def ->
-            val inputsDesc = if (def.requiredInputs.isEmpty()) {
-                "(无要求)"
-            } else {
-                def.requiredInputs.joinToString(", ") { "${it.key}=${it.label}" }
-            }
-            appendLine("  - ${def.id} (${def.label}) [需要: $inputsDesc]")
-        }
-        appendLine()
-        appendLine("Workflow:")
-        appendLine("1. 看图 + on-device OCR")
-        appendLine("2. 选合适的 actions，每个 action 的 required input 要在 bubble.details[] 里")
-        appendLine("3. 缺数据就调 extract_text / zoom_in 抓")
-        appendLine("4. emit_bubble(intent, action_ids, details) 收尾")
-    }
-
-    // ── Layer 2: Per-emit validator ──────────────────────────────────
+    // ── Per-emit validator ──────────────────────────────────────────
 
     /**
      * Pure function: given the LLM's latest emit_bubble, report
@@ -163,13 +123,16 @@ class ActionOrchestrator(
      *  populated, leaving everything else intact.
      *
      *  Used by:
-     *   - **CycleManager.onProgress** — Bubble stored in
-     *     `CycleJob.bubble.value` carries the populated fields so
-     *     downstream consumers (snapshot persistence, eval) read
-     *     them off the bubble directly.
-     *   - **ScorerV2** — reads `bubble.validatedInputs` directly;
-     *     the field becoming populated is what unblocks
-     *     `r_inputs_complete` from its 1.0 floor.
+     *   - **ToolUseLoop.runCycle** (via the `markValidated` callback)
+     *     — stamps the bubble BEFORE the `onEmit` gate and the
+     *     terminal `onProgress`, so `CycleJob.bubble.value` (what the
+     *     live UI renders) carries the populated fields and
+     *     `shouldFinalize` can detect missing inputs.
+     *   - **ScorerV2** does NOT read `validatedInputs` — it scores
+     *     `r_inputs_complete` by walking `scene.expected_inputs` and
+     *     re-running the `InputParsers` against the bubble's text
+     *     surface.  The stamp here is for the live UI's chip state
+     *     ([ChipStateMapper]), not for eval scoring.
      *
      *  When [Bubble.actions] is empty (legacy emit_bubble that didn't
      *  emit `action_ids`), returns the bubble with empty maps/lists

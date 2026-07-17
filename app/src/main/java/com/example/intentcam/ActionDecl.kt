@@ -73,15 +73,10 @@ sealed class ActionOutcome {
  *
  * **Intent applicability** (2026-07-13):
  * [applicableIntents] is the explicit list of intent ids the action
- * applies to (e.g. `setOf("location")` for `open_in_maps`).
- * [applicableFamilies] is the broader family-or-set filter:
- * `setOf(IntentFamily.OBSERVE)` matches every OBSERVE-family bubble
- * (info / location in the default registry) without re-listing them
- * every time a new in-family intent is added.  Both default to empty
- * (= the action applies to nothing).  Resolver keeps both in
- * OR-semantics: a bubble matches when `bubble.type ∈ applicableIntents
- * || bubble.family ∈ applicableFamilies`.  Empty = applies to all
- * (the "universal" pattern, reserved for future actions).
+ * applies to (e.g. `setOf("location")` for `open_in_maps`).  Defaults
+ * to empty (= the action applies to nothing).  The resolver matches
+ * when `bubble.type ∈ applicableIntents`; the LLM's explicit
+ * `action_ids` proposal bypasses this filter entirely.
  */
 data class ActionDef(
     /** Unique id, e.g. "open_in_maps".  Stored in
@@ -94,14 +89,10 @@ data class ActionDef(
      *  IconRegistry (planned).  Currently unused by the chips UI; the
      *  label alone is enough to be tappable. */
     val iconKey: String,
-    /** Ids of intents this action applies to.  Empty set +
-     *  [applicableFamilies] empty = applies to none.  Either list
-     *  non-empty = applies to matching bubbles. */
+    /** Ids of intents this action applies to.  Empty = applies to
+     *  none (no chips render unless the LLM explicitly proposes the
+     *  action via `action_ids`, which bypasses this filter). */
     val applicableIntents: Set<String> = emptySet(),
-    /** [IntentFamily] values the action matches.  Lets the action
-     *  "follow the family" — adding a new in-OBSERVE intent
-     *  automatically lights it up. */
-    val applicableFamilies: Set<IntentFamily> = emptySet(),
     /** Inputs this action needs to fire.  Each spec's
      *  [ActionInputSpec.parser] pulls
      *  the value out of the bubble's text surface
@@ -181,12 +172,10 @@ class ActionRegistry {
  *  one more `ActionDef` here.  No orchestrator / eval / settings
  *  change needed.
  *
- *  **2026-07-13** `applicableIntents` and `applicableFamilies` are
- *  now both fields; `registerDefaultActions` keeps the old explicit
- *  per-intent lists (each action targets a specific intent, no
- *  family-wide shortcut yet).  Future "share", "set reminder" etc.
- *  will opt into families — e.g. `share` over ACT_ON, `set reminder`
- *  universal. */
+ *  **2026-07-13** `applicableIntents` is the per-intent filter;
+ *  `registerDefaultActions` keeps explicit per-intent lists (each
+ *  action targets a specific intent).  The LLM's `action_ids`
+ *  proposal bypasses applicability entirely. */
 fun registerDefaultActions(reg: ActionRegistry) {
     // First real outbound action: open a location bubble in maps.
     // Android Intent geo:0,0?q=… opens the user's default maps app
@@ -492,10 +481,9 @@ fun registerDefaultActions(reg: ActionRegistry) {
  *   1. The bubble's intent must be registered (defensive — guards
  *      against the LLM emitting an unknown id).
  *   2. The action's [ActionDef.applicableIntents] includes the
- *      bubble's intent **OR** its [ActionDef.applicableFamilies]
- *      includes the bubble's intent's family.  Either list being
- *      non-empty AND matching is enough; both empty = the action
- *      applies to nothing (it's misconfigured).
+ *      bubble's intent.  Empty = the action applies to nothing
+ *      (misconfigured).  (The LLM-proposal path bypasses this
+ *      filter — it trusts `action_ids`.)
  *   3. The action must be in the user's enabled set (driven by
  *      `SettingsStore.enabledActionIds`).  When the prefs entry is
  *      absent we treat the action as enabled — the source of truth
@@ -532,10 +520,7 @@ class ActionResolver(
             // usually catches this, but JSON parsers can be lenient).
             llmProposed.mapNotNull { actions.get(it) }
         } else {
-            actions.list().filter { def ->
-                intent.id in def.applicableIntents ||
-                    intent.family in def.applicableFamilies
-            }
+            actions.list().filter { def -> intent.id in def.applicableIntents }
         }
         return candidates
             .map { it.id }

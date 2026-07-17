@@ -436,7 +436,14 @@ fun ToolRegistry.registerDefaultTools(intents: IntentRegistry) {
                         })
                     })
                 })
-                put("required", JSONArray().put("content").put("intent").put("type").put("confidence"))
+                // `type` is intentionally NOT required: the system
+                // prompt + tool description both tell the model it may
+                // omit `type` (defaults to "info" / FALLBACK_ID), and
+                // the body below falls back when absent.  Marking it
+                // required would make a strict tool-use validator
+                // reject an omit-`type` emit_bubble the prompt explicitly
+                // allows.
+                put("required", JSONArray().put("content").put("intent").put("confidence"))
                 put("additionalProperties", false)
             },
             body = { _, input ->
