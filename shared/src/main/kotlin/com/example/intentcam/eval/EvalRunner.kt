@@ -100,6 +100,30 @@ internal class EvalRunner(private val config: EvalConfig) {
         )
     }
 
+    /**
+     * Mirror of [com.example.intentcam.ActionOrchestrator.rescueActions]
+     * for the eval pipeline. Same rule set, same InputParsers
+     * constants (single source of truth shared with prod). See
+     * prod kdoc for the full rescue matrix and the deliberate
+     * exclusion of `open_in_maps` / `share` from rescue.
+     */
+    private fun contentRescueActions(
+        bubble: com.example.intentcam.Bubble,
+    ): List<String> {
+        val current = bubble.actions.toSet()
+        val rescue = mutableListOf<String>()
+        if ("dial_number" !in current &&
+            com.example.intentcam.InputParsers.phoneNumber(bubble) != null
+        ) rescue += "dial_number"
+        if ("redact_id" !in current &&
+            com.example.intentcam.InputParsers.idDocument(bubble) != null
+        ) rescue += "redact_id"
+        if ("scan_to_pay" !in current &&
+            com.example.intentcam.InputParsers.paymentQr(bubble) != null
+        ) rescue += "scan_to_pay"
+        return rescue
+    }
+
     private companion object {
         // Phone regex constants live in `com.example.intentcam.InputParsers`
         // (single source of truth shared with prod).  No local copies.
@@ -235,10 +259,20 @@ internal class EvalRunner(private val config: EvalConfig) {
                     //  [InputsValidator].  Kept lightweight — the
                     //  regex chain runs once per cycle on the
                     //  bubble's already-parsed text surface.
+                    //
+                    //  [2026-07-17 content-rescue] Mirror the prod
+                    //  rescue loop inline so eval scores what users
+                    //  actually see. Same InputParsers constants —
+                    //  single source of truth across prod + eval
+                    //  (see ADR
+                    //  docs/adr/2026-07-16-input-parsers-drift-risk.md).
                     markValidated = { bubble ->
+                        val rescueIds = contentRescueActions(bubble)
+                        val effectiveBubble = if (rescueIds.isEmpty()) bubble
+                            else bubble.copy(actions = (bubble.actions + rescueIds).distinct())
                         val specs = defaultRequiredInputs()
-                        val (validated, pending) = projectInputsValidation(bubble, specs)
-                        bubble.copy(validatedInputs = validated, pendingInputs = pending)
+                        val (validated, pending) = projectInputsValidation(effectiveBubble, specs)
+                        effectiveBubble.copy(validatedInputs = validated, pendingInputs = pending)
                     },
                 )
             }

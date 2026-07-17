@@ -4,6 +4,79 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Added — content-based rescue (`ActionOrchestrator.rescueActions`) (2026-07-17)
+
+The soft-verifier hint landed earlier today (commit `1a9c147`) lifted
+OBSERVE-family suites via the per-intent canonical-action mapping but
+left phone / PII suites flat — by design, because phone_20 fixtures
+are mixed-content (restaurant + phone, school ad + phone, real_estate
+billboard + phone) where the LLM correctly classifies the type as
+`location` / `recruit_hiring` and the per-intent hint never fires.
+
+This commit ships the second half of the v3 inversion's planned
+recovery: a **content-based rescue** that scans the bubble's text
+surface for actionable patterns the LLM may have omitted, and
+**adds** (never removes) the corresponding chip.
+
+**Design boundary** (deliberate, see plan
+`~/.claude/plans/sorted-meandering-pond.md` "Why this design" +
+memory `eval-soft-verifier-ship-2026-07-17.md` "Next iteration #1"):
+- **Add-only.** LLM-chosen chips are never removed. The LLM remains
+  authoritative for type + action selection; rescue is an
+  input-driven fill, not a rewrite.
+- **Limited scope.** Three rescuers ship (dial_number / redact_id /
+  scan_to_pay). `open_in_maps` and `share` are deliberately
+  excluded — `InputParsers.locationQuery` and
+  `InputParsers.textContent` are too lenient (return non-null on
+  any populated bubble), false-positive rate would put those chips
+  on every bubble. Soft hint + LLM is the lever for those.
+- **Conservative regex.** `idDocument` matches explicit keywords
+  ("身份证" / "营业执照" / "驾驶证" / "车牌") AND the standard
+  18-digit ID pattern with non-digit boundaries. `paymentQr`
+  matches explicit keywords ("收款码" / "付款码" / "扫一扫" /
+  "转账" / "微信收款" / "支付宝付款").
+
+**Wiring**:
+- `shared/.../InputParsers.kt` — new `idDocument(bubble)` +
+  `paymentQr(bubble)` parsers. Live alongside the existing
+  `phoneNumber` / `locationQuery` / `textContent` so prod + eval
+  share the same regex constants (single source of truth per
+  ADR `2026-07-16-input-parsers-drift-risk.md`).
+- `app/.../ActionOrchestrator.kt` — new `rescueActions(bubble)`
+  method returns the list of action ids to ADD to
+  `bubble.actions`. `markValidatedInputs` now calls rescue FIRST
+  then marks (LLM-chosen chips preserved, rescue chip included in
+  `validatedInputs` so ScorerV2 + live UI see the rescued state).
+- `shared/.../eval/EvalRunner.kt` — `markValidated` callback (the
+  lambda EvalRunner passes into `ToolUseLoop.runCycle`) mirrors the
+  prod rescue inline. Same InputParsers, same rules. Eval scores
+  what users actually see.
+
+**NOT ship**:
+- `IntentVerifier.kt` resurrection — explicitly rejected.
+- Per-image dynamic hint — verifier in disguise.
+
+**Verified** (`summary_20260717_065053`, full 11-suite regression,
+post soft-hint): 11/11 v2 PASS, 0 errors, exit 0. **Net v2 composite
+Δ +0.149 across 11 suites** — biggest single ship since v3.0
+inversion. Per-suite lift on the rescue target suites:
+
+| suite | v2 baseline → now | Δ |
+|---|---:|---:|
+| **pii_20** | 0.7281 → **0.7590** | **+0.031** |
+| **phone_60** | 0.6235 → **0.6575** | **+0.034** |
+| **real_estate_rental_11** | 0.6583 → **0.6886** | **+0.031** |
+| recruit_hiring_11 | 0.6398 → 0.6576 | +0.018 |
+| direction_arrow_20 | 0.7767 → 0.8067 | +0.030 |
+| service_institution_60 | 0.7759 → 0.7939 | +0.018 |
+| phone_20 | 0.6033 → 0.6189 | +0.016 |
+| phaseG_15 / pii20_60 / shopping_promo_20 / direction_arrow_60 | unchanged within ±0.015 | — |
+
+`profiling/baselines.json` v3 baseline updated to 4-run mean (the 3
+runs from soft-hint + the rescue run) capturing both lifts.
+
+APK v3.3 (versionCode 7 / versionName 3.3) ships on-device.
+
 ### Added — soft-verifier hint via `IntentDecl.canonicalAction` (2026-07-17)
 
 The v3.0 inversion (commit `59c1128` / 2026-07-14) deliberately removed

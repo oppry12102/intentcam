@@ -173,20 +173,88 @@ class ActionOrchestrator(
      *
      *  When [Bubble.actions] is empty (legacy emit_bubble that didn't
      *  emit `action_ids`), returns the bubble with empty maps/lists
-     *  — nothing to validate = nothing missing. */
-    fun markValidatedInputs(bubble: Bubble): Bubble =
-        when (val v = validateInputs(bubble)) {
-            is InputsValidation.Complete -> bubble.copy(
-                validatedInputs = bubble.actions.associateWith { true },
+     *  — nothing to validate = nothing missing.
+     *
+     *  [2026-07-17 content-rescue] Runs [rescueActions] BEFORE the
+     *  mark so the rescue chip (`dial_number` / `redact_id` /
+     *  `scan_to_pay`) shows up in `validatedInputs` and gets scored
+     *  correctly by downstream consumers. The rescue is additive —
+     *  LLM-chosen chips are never removed. */
+    fun markValidatedInputs(bubble: Bubble): Bubble {
+        val rescued = rescueActions(bubble)
+        val effectiveBubble = if (rescued.isEmpty()) bubble
+            else bubble.copy(actions = (bubble.actions + rescued).distinct())
+        return when (val v = validateInputs(effectiveBubble)) {
+            is InputsValidation.Complete -> effectiveBubble.copy(
+                validatedInputs = effectiveBubble.actions.associateWith { true },
                 pendingInputs = emptyList(),
             )
-            is InputsValidation.Missing -> bubble.copy(
-                validatedInputs = bubble.actions.associateWith { actionId ->
+            is InputsValidation.Missing -> effectiveBubble.copy(
+                validatedInputs = effectiveBubble.actions.associateWith { actionId ->
                     actionId !in v.perAction
                 },
-                pendingInputs = missingInputKeys(bubble),
+                pendingInputs = missingInputKeys(effectiveBubble),
             )
         }
+    }
+
+    /**
+     * Content-based rescue — scan [bubble]'s text surface (title +
+     * detail + details[].value) for actionable patterns the LLM may
+     * have omitted. Returns the list of action ids to ADD to
+     * [Bubble.actions] (additive — LLM-chosen chips are never
+     * removed). The LLM remains authoritative for type + action
+     * selection; this only fills gaps where a clear, verifiable
+     * content cue supports a chip the LLM didn't pick.
+     *
+     * Designed to recover mixed-content fixtures where the LLM
+     * correctly classifies the type (e.g. `location`) but misses
+     * that the image also contains a phone number / id document /
+     * payment QR. Per-intent [soft hint][com.example.intentcam.IntentDecl.canonicalAction]
+     * doesn't help those because the type isn't the rescue target.
+     *
+     * **Rules** (each is independent — multiple can fire on one bubble):
+     *   - `dial_number` rescue — `InputParsers.phoneNumber(bubble) != null`
+     *     AND `dial_number` not already in `bubble.actions`. Covers
+     *     phone-20 mixed-content (restaurant / school / billboard
+     *     fixtures where the LLM classifies as location but a phone
+     *     number is present in OCR).
+     *   - `redact_id` rescue — `InputParsers.idDocument(bubble) != null`
+     *     AND `redact_id` not already in `bubble.actions`. Covers
+     *     pii-20 fixtures (clinic registration / business license /
+     *     id-document surfaces).
+     *   - `scan_to_pay` rescue — `InputParsers.paymentQr(bubble) != null`
+     *     AND `scan_to_pay` not already in `bubble.actions`. Covers
+     *     payment_qr intent fixtures.
+     *
+     * **NOT rescued** (deliberate, see plan
+     * `~/.claude/plans/sorted-meandering-pond.md` "Why this design"):
+     *   - `open_in_maps` — `InputParsers.locationQuery` is too lenient
+     *     (returns any non-blank title), false-positive rate would
+     *     put `open_in_maps` on every bubble. Soft hint + LLM is the
+     *     lever for location intent.
+     *   - `share` — `InputParsers.textContent` always returns non-null
+     *     for any populated bubble, would put `share` on every
+     *     bubble. Soft hint is the lever for share-able intents.
+     *
+     * The eval pipeline's [com.example.intentcam.eval.EvalRunner.markValidated]
+     * callback mirrors this rescue (via [com.example.intentcam.InputParsers]
+     * shared state) so eval scores what users actually see.
+     */
+    fun rescueActions(bubble: Bubble): List<String> {
+        val current = bubble.actions.toSet()
+        val rescue = mutableListOf<String>()
+        if ("dial_number" !in current && com.example.intentcam.InputParsers.phoneNumber(bubble) != null) {
+            rescue += "dial_number"
+        }
+        if ("redact_id" !in current && com.example.intentcam.InputParsers.idDocument(bubble) != null) {
+            rescue += "redact_id"
+        }
+        if ("scan_to_pay" !in current && com.example.intentcam.InputParsers.paymentQr(bubble) != null) {
+            rescue += "scan_to_pay"
+        }
+        return rescue
+    }
 
     // ── Layer 3: Finalizer ───────────────────────────────────────────
 

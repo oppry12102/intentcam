@@ -82,4 +82,71 @@ object InputParsers {
             if (isNotEmpty() && bubble.detail.isNotBlank()) append('\n')
             append(bubble.detail)
         }.takeIf { it.isNotBlank() }
+
+    /**
+     * For the `redact_id` action. Returns the first id-document-shaped
+     * string found in title/detail/details[].value, or null when none.
+     *
+     * Patterns recognized:
+     *   - Chinese resident-ID card: 18-digit, last char may be `X`/`x`
+     *     (GB 11643-1999). Regex `\d{17}[\dXx]` — must appear in
+     *     numeric context (preceded by space / start / punctuation,
+     *     followed by space / end / punctuation) to avoid matching
+     *     phone number substrings.
+     *   - Explicit keyword hits: "身份证", "营业执照", "驾驶证",
+     *     "车牌号" — covers fixtures where the LLM has paraphrased
+     *     the number as "张三 身份证 130123..." and the number got
+     *     OCR'd as separate tokens.
+     *
+     * Conservative on purpose: a false negative costs one missed
+     * `redact_id` rescue; a false positive forces a privacy-irrelevant
+     * chip on a bubble the LLM intentionally omitted (e.g. a clinic
+     * sign mentioning "ID" in passing). The intent-alignment gate in
+     * [validateIntentAlignment] soft-warns but doesn't gate, so the
+     * LLM can still override at the next round.
+     */
+    fun idDocument(bubble: Bubble): String? {
+        val corpus = buildString {
+            append(bubble.title).append('\n')
+            append(bubble.detail).append('\n')
+            bubble.details.forEach { d -> append(d.value).append('\n') }
+        }
+        // Keyword hit first — cheap, covers paraphrased content.
+        val keywordRegex = Regex("""身份证|营业执照|驾驶证|车牌""")
+        keywordRegex.find(corpus)?.value?.let { return it }
+        // Numeric ID hit — bounded to avoid phone-number substrings.
+        // Phone numbers are 11 digits, IDs are 18 — no overlap.
+        val idRegex = Regex("""(?<![\d])\d{17}[\dXx](?![\d])""")
+        idRegex.find(corpus)?.value?.let { return it }
+        return null
+    }
+
+    /**
+     * For the `scan_to_pay` action. Returns a hit-string when the
+     * bubble text suggests a payment QR / 收款码 / 付款码 surface,
+     * or null otherwise.
+     *
+     * Pattern: explicit Chinese keyword hits — "收款码", "付款码",
+     * "扫一扫", "转账", "收款二维码", "微信收款", "支付宝付款".
+     * Returns the matched keyword (not the QR image itself — the
+     * QR isn't in `bubble.content`; it's only on the original
+     * image, which `ActionDef.body` of `scan_to_pay` reads at
+     * fire-time). The bubble-text hit is the rescue trigger, not
+     * the actual QR data.
+     *
+     * Conservative on purpose: this regex is the ONLY thing standing
+     * between a phone-number-on-a-payment-flyer and an accidental
+     * `scan_to_pay` chip. False positive → user sees a payment chip
+     * they didn't ask for. False negative → missed rescue, soft-hint
+     * already covers the common case via `payment_qr` intent.
+     */
+    fun paymentQr(bubble: Bubble): String? {
+        val corpus = buildString {
+            append(bubble.title).append('\n')
+            append(bubble.detail).append('\n')
+            bubble.details.forEach { d -> append(d.value).append('\n') }
+        }
+        val payRegex = Regex("""收款码|付款码|扫一扫|转账|收款二维码|微信收款|支付宝付款""")
+        return payRegex.find(corpus)?.value
+    }
 }
