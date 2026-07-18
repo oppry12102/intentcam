@@ -246,7 +246,7 @@ class ToolUseLoop(
         //  consulted: CONTINUE → inject missing-input hint + re-loop.
         //  Capped at [INPUT_MISSING_MAX_RETRIES] (3) per fixture to
         //  bound wall-time.  Mirrors the max_tokens retry pattern
-        //  (ToolUseLoop.kt:411-444) but is distinct: this gate fires
+        //  (below) but is distinct: this gate fires
         //  when the bubble parses cleanly but is missing required
         //  action inputs (LLM didn't extract them in round 1); the
         //  max_tokens gate fires when the bubble itself is malformed.
@@ -262,6 +262,83 @@ class ToolUseLoop(
         // round-2 zoom_in the [LOW] bbox → round-3 zoom_in on the
         // crop again for deeper drill-down) actually work end-to-end.
         var currentImage: ByteArray = fullRes
+
+        // ── Next-user-message builders ────────────────────────────
+        // Shared by the round's three exits that continue the loop:
+        // the no-final-bubble path, the max_tokens retry, and the
+        // missing-input nudge.  Keeping them here guarantees every
+        // continuing round ships EXACTLY ONE user message whose
+        // tool_results answer every tool_use of the assistant turn
+        // (strict-Anthropic alternation + tool_result pairing).
+        //
+        // Phase 2a (2026-07-11): every zoom_in crop auto-runs
+        //  on-device OCR and ships the formatted hint alongside the
+        //  image.  The hint uses the CROP variant of
+        //  OcrResult.formatHint: header is "zoom_in crop OCR
+        //  高保真重扫" (not the round-1 全图扫描 wording), and the
+        //  [LOW] follow-up advice is "trust verbatim" instead of
+        //  "不要 verbatim 复制" — the workflow narrative is in
+        //  TOOL_USE_SYSTEM (LlmClient.kt) and the hint text just
+        //  echoes the verdict.
+        suspend fun appendFollowUpBlocks(nextContent: JSONArray, images: List<ByteArray>) {
+            images.forEachIndexed { i, img ->
+                val b64 = java.util.Base64.getEncoder().encodeToString(img)
+                nextContent.put(
+                    JSONObject()
+                        .put("type", "image")
+                        .put(
+                            "source",
+                            JSONObject()
+                                .put("type", "base64")
+                                .put("media_type", "image/jpeg")
+                                .put("data", b64 as Any)
+                        )
+                )
+                // Auto-OCR per crop.  Silent drop on exception
+                // (matches round-1's contract).  Budget-gated by
+                // cropOcrCap so the eval can fast-iterate at
+                // ~2-min/20-fixture pace; prod uses unlimited.
+                val cropNote = if (cropOcrUsed < cropOcrBudget) {
+                    cropOcrUsed++
+                    val result = runCatching { OcrEngine.recognize(img) }
+                    result.onFailure { e ->
+                        log("OCR_ERR_CROP", formatThrowable(e))
+                    }
+                    val cropOcr = result.getOrDefault(OcrResult.EMPTY)
+                    val cropHint = OcrResult.formatHint(
+                        cropOcr.blocks,
+                        maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
+                        isCropHint = true,
+                    )
+                    log(
+                        "OCR_CROP",
+                        "blocks=${cropOcr.blocks.size} " +
+                            "topConf=${cropOcr.blocks.maxOfOrNull { it.confidence }?.let { "%.2f".format(it) } ?: "n/a"} " +
+                            "hintLines=${if (cropHint.isNotBlank()) cropHint.lines().count { it.startsWith("  line ") } else 0} " +
+                            "lowCount=${cropOcr.blocks.count { it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD }}"
+                    )
+                    if (cropHint.isNotBlank()) cropHint
+                    else "(已对该裁剪区域跑 OCR，未识别到文字——继续 zoom_in 钻更细或直接 emit)"
+                } else null
+                val hintPrefix = if (images.size == 1) {
+                    "已放大你刚才要求的区域（更高分辨率）"
+                } else {
+                    "放大区域 #${i + 1}/${images.size}"
+                }
+                val hint = if (cropNote != null) "$hintPrefix。$cropNote" else hintPrefix
+                nextContent.put(
+                    JSONObject()
+                        .put("type", "text")
+                        .put("text", hint)
+                )
+            }
+        }
+
+        fun appendToolResults(nextContent: JSONArray, results: JSONArray) {
+            for (i in 0 until results.length()) {
+                nextContent.put(results.get(i))
+            }
+        }
 
         for (round in 1..maxRounds) {
             log("TOOL", "→ 第 $round 轮（messages=${messages.length()}）")
@@ -470,6 +547,17 @@ class ToolUseLoop(
             //  - detail blank + details empty (rctw_21/49)
             //  - detail blank + details non-empty (rctw_14, 2026-07-10
             //    debug: 11 detail rows but content empty)
+            //
+            // Protocol fix (2026-07-18): the retry's user message now
+            // CARRIES the round's tool_results before the nudge text.
+            // Previously they were dropped (comment claimed the failed
+            // round's results were "part of the failed round"), leaving
+            // the assistant turn's `tool_use` blocks unanswered — a
+            // 400 (`tool_use without tool_result`) on strict Anthropic
+            // endpoints, silently tolerated by the GLM/MiniMax-compat
+            // endpoints we run against.  Follow-up IMAGES are still
+            // skipped: the nudge asks for an immediate re-emit, not
+            // further exploration, so the crop bytes would be bloat.
             if (response.stopReason == "max_tokens" &&
                 anyFinalBubble?.detail.isNullOrBlank() &&
                 maxTokensRetries < 1
@@ -478,115 +566,26 @@ class ToolUseLoop(
                 log(
                     "TOOL_RETRY",
                     "round $round truncated emit_bubble at stop=max_tokens " +
-                        "(detail empty, details empty); nudging to summarize short"
+                        "(detail empty); nudging to summarize short"
                 )
-                // Replace the normal next-round user message with a
-                // single nudge text block.  We don't include the
-                // follow-up images or prior tool_results — they were
-                // all part of the failed round and re-attaching them
-                // would just bloat the next request.  The model's
-                // conversation history already has the assistant's
-                // truncated emit_bubble from the failed round (we
-                // persisted it via reconstructAssistantMessage above);
-                // Anthropic's protocol will quote it back unchanged.
                 val nudgeContent = JSONArray()
-                    .put(
-                        JSONObject().put("type", "text").put(
-                            "text",
-                            "你上一次的 emit_bubble 调用被 token 预算截断了（response 撞到 " +
-                                "max_tokens）。请**立刻**重新调一次 emit_bubble，这次：" +
-                                "\n  - content 用 ≤150 字总结场景" +
-                                "\n  - 完整文字 / 数字 / 品牌 / 价格写到 details[]（≥1 行，" +
-                                "≤10 行，多了会再次撞 max_tokens）" +
-                                "\n  - 不要在 emit_bubble 调用前再写长 prose——直接 emit。"
-                        )
+                for (i in 0 until toolResults.length()) {
+                    nudgeContent.put(toolResults.get(i))
+                }
+                nudgeContent.put(
+                    JSONObject().put("type", "text").put(
+                        "text",
+                        "你上一次的 emit_bubble 调用被 token 预算截断了（response 撞到 " +
+                            "max_tokens）。请**立刻**重新调一次 emit_bubble，这次：" +
+                            "\n  - content 用 ≤150 字总结场景" +
+                            "\n  - 完整文字 / 数字 / 品牌 / 价格写到 details[]（≥1 行，" +
+                            "≤10 行，多了会再次撞 max_tokens）" +
+                            "\n  - 不要在 emit_bubble 调用前再写长 prose——直接 emit。"
                     )
+                )
                 messages.put(JSONObject().put("role", "user").put("content", nudgeContent))
                 continue
             }
-            // Build next user message.  If any tool returned a
-            // follow-up image (zoom_in), prepend an image content
-            // block + a hint per image so the model sees the
-            // high-detail regions in addition to the tool_results.
-            //
-            // Phase 2a (2026-07-11): every zoom_in crop auto-runs
-            // on-device OCR and ships the formatted hint alongside
-            // the image.  The hint uses the CROP variant of
-            // OcrResult.formatHint: header is "zoom_in crop OCR
-            // 高保真重扫" (not the round-1 全图扫描 wording), and the
-            // [LOW] follow-up advice is "trust verbatim" instead of
-            // "不要 verbatim 复制" — the workflow narrative is in
-            // TOOL_USE_SYSTEM (LlmClient.kt) and the hint text just
-            // echoes the verdict.
-            val nextContent = JSONArray()
-            if (followUps.isNotEmpty()) {
-                followUps.forEachIndexed { i, img ->
-                    val b64 = java.util.Base64.getEncoder().encodeToString(img)
-                    nextContent.put(
-                        JSONObject()
-                            .put("type", "image")
-                            .put(
-                                "source",
-                                JSONObject()
-                                    .put("type", "base64")
-                                    .put("media_type", "image/jpeg")
-                                    .put("data", b64 as Any)
-                            )
-                    )
-                    // Auto-OCR per crop.  Silent drop on exception
-                    // (matches round-1's contract).  Budget-gated by
-                    // cropOcrCap so the eval can fast-iterate at
-                    // ~2-min/20-fixture pace; prod uses unlimited.
-                    val cropNote = if (cropOcrUsed < cropOcrBudget) {
-                        cropOcrUsed++
-                        val result = runCatching { OcrEngine.recognize(img) }
-                        result.onFailure { e ->
-                            log("OCR_ERR_CROP", formatThrowable(e))
-                        }
-                        val cropOcr = result.getOrDefault(OcrResult.EMPTY)
-                        val cropHint = OcrResult.formatHint(
-                            cropOcr.blocks,
-                            maxLines = OcrResult.MAX_CROP_OCR_HINT_LINES,
-                            isCropHint = true,
-                        )
-                        log(
-                            "OCR_CROP",
-                            "blocks=${cropOcr.blocks.size} " +
-                                "topConf=${cropOcr.blocks.maxOfOrNull { it.confidence }?.let { "%.2f".format(it) } ?: "n/a"} " +
-                                "hintLines=${if (cropHint.isNotBlank()) cropHint.lines().count { it.startsWith("  line ") } else 0} " +
-                                "lowCount=${cropOcr.blocks.count { it.confidence < OcrResult.LOW_CONFIDENCE_THRESHOLD }}"
-                        )
-                        if (cropHint.isNotBlank()) cropHint
-                        else "(已对该裁剪区域跑 OCR，未识别到文字——继续 zoom_in 钻更细或直接 emit)"
-                    } else null
-                    val hintPrefix = if (followUps.size == 1) {
-                        "已放大你刚才要求的区域（更高分辨率）"
-                    } else {
-                        "放大区域 #${i + 1}/${followUps.size}"
-                    }
-                    val hint = if (cropNote != null) "$hintPrefix。$cropNote" else hintPrefix
-                    nextContent.put(
-                        JSONObject()
-                            .put("type", "text")
-                            .put("text", hint)
-                    )
-                }
-            }
-            for (i in 0 until toolResults.length()) {
-                nextContent.put(toolResults.get(i))
-            }
-            // If the model didn't emit_bubble this round, nudge it
-            // to wrap up.  Keeps the loop bounded: the model can
-            // zoom_in as many times as it likes, but at the end of
-            // each round we ask for a final summary.
-            if (anyFinalBubble == null) {
-                nextContent.put(JSONObject().put("type", "text").put(
-                    "text",
-                    "你已经 zoom_in ${followUps.size} 次。如果还有看不清的，可以再 zoom_in；如果内容已经清楚，" +
-                        "**必须**调 emit_bubble 总结 (content / intent / type / confidence)。"
-                ))
-            }
-            messages.put(JSONObject().put("role", "user").put("content", nextContent))
 
             if (anyFinalBubble != null) {
                 val tb = anyFinalBubble
@@ -677,7 +676,20 @@ class ToolUseLoop(
                         "round $round missing=${gate.missing}; " +
                             "retry $inputMissingRetries/$INPUT_MISSING_MAX_RETRIES"
                     )
-                    val nudgeContent = buildMissingInputNudge(gate.missing)
+                    // Protocol fix (2026-07-18): ONE user message
+                    //  carrying follow-up images + tool_results + the
+                    //  nudge text.  Previously the tool_results went
+                    //  out in one user message and the nudge in a
+                    //  SECOND consecutive user message — tolerated by
+                    //  GLM/MiniMax-compat endpoints but a 400
+                    //  ("roles must alternate") on strict Anthropic.
+                    val nudgeContent = JSONArray()
+                    appendFollowUpBlocks(nudgeContent, followUps)
+                    appendToolResults(nudgeContent, toolResults)
+                    nudgeContent.put(
+                        JSONObject().put("type", "text")
+                            .put("text", missingInputNudgeText(gate.missing))
+                    )
                     messages.put(JSONObject().put("role", "user").put("content", nudgeContent))
                     continue
                 }
@@ -689,6 +701,9 @@ class ToolUseLoop(
                 //  stamped bubble to the UI as COMPLETE — it carries
                 //  rescue chips + populated validatedInputs so the
                 //  live UI renders Ghost/Validated chip state.
+                //  No further user message is appended: the cycle is
+                //  over, and the local `messages` array is discarded
+                //  on return.
                 onProgress.invoke(CycleProgress(
                     cycleId = cycleId,
                     round = round,
@@ -697,6 +712,27 @@ class ToolUseLoop(
                 ))
                 return Outcome.Bubble(stamped, firstToolName = chosenToolName)
             }
+
+            // No emit_bubble this round — build the next user
+            //  message: follow-up crop images (auto-OCR'd) + the
+            //  round's tool_results + a wrap-up nudge asking for
+            //  emit_bubble.  Keeps the loop bounded: the model can
+            //  zoom_in as many times as it likes, but at the end of
+            //  each round we ask for a final summary.
+            //
+            // Phase 2a (2026-07-11): every zoom_in crop auto-runs
+            //  on-device OCR and ships the formatted hint alongside
+            //  the image (see [appendFollowUpBlocks]).
+            val nextContent = JSONArray()
+            appendFollowUpBlocks(nextContent, followUps)
+            appendToolResults(nextContent, toolResults)
+            nextContent.put(JSONObject().put("type", "text").put(
+                "text",
+                "你已经 zoom_in ${followUps.size} 次。如果还有看不清的，可以再 zoom_in；如果内容已经清楚，" +
+                    "**必须**调 emit_bubble 总结 (content / intent / type / confidence)。"
+            ))
+            messages.put(JSONObject().put("role", "user").put("content", nextContent))
+
             if (anyNeedsInput && pendingUserInput != null) {
                 val pui = pendingUserInput
                 return Outcome.PendingUserInput(
@@ -759,11 +795,13 @@ class ToolUseLoop(
     )
 
     /**
-     * Build the user-role nudge message that steers the LLM toward
-     * extracting the missing required inputs.  Mirrors the shape of
-     * the max_tokens retry nudge (ToolUseLoop.kt:411-444) — a single
-     * text block appended to the messages array so the next round's
-     * `streamToolUse` call quotes it as the user's voice.
+     * Build the nudge TEXT that steers the LLM toward extracting the
+     * missing required inputs.  Returned as a bare string (not a
+     * JSONArray) so the caller appends it as ONE text block inside the
+     * round's single user message — alongside the follow-up images and
+     * tool_results — instead of shipping a second consecutive
+     * user-role message (2026-07-18 protocol fix; strict Anthropic
+     * endpoints reject back-to-back user turns).
      *
      * The wording tells the LLM three things:
      *   1. Which input keys are still missing (deduplicated, in
@@ -777,23 +815,18 @@ class ToolUseLoop(
      *
      * Capped at [INPUT_MISSING_MAX_RETRIES] (3) — beyond that, the
      * bubble ships as-is with `pendingInputs` populated for the UI's
-     * ghost-chip state.  The cap is enforced at the call site
-     * (ToolUseLoop.kt:643 onward), not here.
+     * ghost-chip state.  The cap is enforced at the call site, not here.
      */
-    private fun buildMissingInputNudge(missing: List<String>): JSONArray {
-        val text = buildString {
-            append("你刚才的 emit_bubble 还差 ${missing.size} 个 input: ")
-            append(missing.joinToString("、"))
-            append("。")
-            append("\n请按以下步骤补齐:")
-            append("\n  - **已经在缩略图里看到 + OCR 不确定** → 调 `extract_text(bbox)` 拿 verbatim 字符（不付 image token）")
-            append("\n  - **缩略图里完全看不到那块**（角落字 / 裁切掉的部分）→ 调 `zoom_in(bbox, source='original')` 拉新像素")
-            append("\n  - **缺地址 / 店名** → 一般在 title / detail / details[].value 任意一个非空字段里，extract_text 抓回来 verbatim 写到 details[]")
-            append("\n\n**关键**：input 是从 bubble.details[].value 抽取的，所以 OCR / 自己读到的字符必须 verbatim 写进 details[].value（label 用 “手机号” / “地点” 等），parser 才能在下一轮 validate 时拿到。")
-            append("\n不要意译、不要概括、不要只写到 detail prose 里——写不到 details[] = parser 抽不到 = 还是缺 input。")
-        }
-        return JSONArray()
-            .put(JSONObject().put("type", "text").put("text", text))
+    private fun missingInputNudgeText(missing: List<String>): String = buildString {
+        append("你刚才的 emit_bubble 还差 ${missing.size} 个 input: ")
+        append(missing.joinToString("、"))
+        append("。")
+        append("\n请按以下步骤补齐:")
+        append("\n  - **已经在缩略图里看到 + OCR 不确定** → 调 `extract_text(bbox)` 拿 verbatim 字符（不付 image token）")
+        append("\n  - **缩略图里完全看不到那块**（角落字 / 裁切掉的部分）→ 调 `zoom_in(bbox, source='original')` 拉新像素")
+        append("\n  - **缺地址 / 店名** → 一般在 title / detail / details[].value 任意一个非空字段里，extract_text 抓回来 verbatim 写到 details[]")
+        append("\n\n**关键**：input 是从 bubble.details[].value 抽取的，所以 OCR / 自己读到的字符必须 verbatim 写进 details[].value（label 用 “手机号” / “地点” 等），parser 才能在下一轮 validate 时拿到。")
+        append("\n不要意译、不要概括、不要只写到 detail prose 里——写不到 details[] = parser 抽不到 = 还是缺 input。")
     }
 
     /**
