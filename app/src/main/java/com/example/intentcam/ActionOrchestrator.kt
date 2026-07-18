@@ -143,16 +143,12 @@ class ActionOrchestrator(
      *  [com.example.intentcam.ActionRescue] (shared/, single
      *  implementation for prod + eval) and is filtered by [enabled]
      *  — previously rescue bypassed the user's enabled/consent set,
-     *  so default-OFF PII chips (dial_number etc.) still rendered.
-     *  The share precision-gate ([ActionRescue.dropUnfoundedShare])
-     *  is applied here too so prod and eval see the same chips. */
+     *  so default-OFF PII chips (dial_number etc.) still rendered. */
     fun markValidatedInputs(bubble: Bubble, enabled: Set<String>): Bubble {
         val merged = (bubble.actions + ActionRescue.contentRescueActions(bubble))
             .distinct()
             .filter { it in enabled }
-        val effectiveBubble = bubble.copy(
-            actions = ActionRescue.dropUnfoundedShare(bubble, merged),
-        )
+        val effectiveBubble = bubble.copy(actions = merged)
         return when (val v = validateInputs(effectiveBubble)) {
             is InputsValidation.Complete -> effectiveBubble.copy(
                 validatedInputs = effectiveBubble.actions.associateWith { true },

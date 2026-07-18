@@ -13,10 +13,10 @@ package com.example.intentcam
  *  - [contentRescueActions] — the add-only rescue rules
  *    (phone / id-document / payment-QR).
  *  - [visibleActions] — the full visible chip set:
- *    (LLM proposals + rescue) ∩ enabled, with the share
- *    precision-gate applied.  Prod passes the user's enabled set;
- *    eval passes the full registered vocabulary (no gating), which
- *    keeps eval measuring the idealized config by design.
+ *    (LLM proposals + rescue) ∩ enabled.  Prod passes the user's
+ *    enabled set; eval passes the full registered vocabulary
+ *    (no gating), which keeps eval measuring the idealized config
+ *    by design.
  */
 object ActionRescue {
 
@@ -52,8 +52,7 @@ object ActionRescue {
      *     put `open_in_maps` on every bubble.
      *   - `share` — `InputParsers.textContent` always returns non-null
      *     for any populated bubble, would put `share` on every
-     *     bubble.  (Share over-emission is handled the opposite way —
-     *     by the precision gate in [visibleActions].)
+     *     bubble.
      *
      * Note: the returned ids are NOT filtered against the user's
      * enabled set here — that gate lives in [visibleActions] (and in
@@ -77,8 +76,7 @@ object ActionRescue {
 
     /**
      * The full visible chip set for [bubble]:
-     * `(LLM proposals + content-rescue) ∩ enabled`, with the share
-     * precision-gate applied.
+     * `(LLM proposals + content-rescue) ∩ enabled`.
      *
      *  - `base` = `bubble.llmProposedActions ?: bubble.actions` — the
      *    LLM's explicit pick when present, else whatever the bubble
@@ -89,35 +87,20 @@ object ActionRescue {
      *    stay hidden (the 2026-07-18 P3 fix: rescue previously
      *    bypassed the enabled gate and surfaced default-OFF PII
      *    chips).
-     *  - finally the share precision-gate drops an unfounded `share`
-     *    (see [dropUnfoundedShare]).
+     *
+     *  Note: a share precision-gate (`details<2 && content<40` →
+     *  drop `share`) was implemented here on 2026-07-18 and REVERTED
+     *  the same day: offline replay over the stored eval JSONs showed
+     *  it caught 0/9 none-suite over-fires (those fixtures are
+     *  text-rich menus/posters — the over-fire is GT under-annotation,
+     *  not LLM decoration confusion) while adding prod false-negative
+     *  risk on terse-but-legit share targets (WiFi posters).  The
+     *  over-fire lever is GT curation, not a code gate — see the
+     *  2026-07-18 audit memory.
      */
     fun visibleActions(bubble: Bubble, enabled: Set<String>): List<String> {
         val base = bubble.llmProposedActions ?: bubble.actions
-        val merged = (base + contentRescueActions(bubble)).distinct()
+        return (base + contentRescueActions(bubble)).distinct()
             .filter { it in enabled }
-        return dropUnfoundedShare(bubble, merged)
-    }
-
-    /**
-     * Share precision-gate (2026-07-18, over-fire lever).  The LLM's
-     * single biggest over-fire source is `share` on decorative text:
-     * 9 of 13 over-fired chips on the `none` eval suite were `share`
-     * (prompt-v2, run none_20260717_224736).  `share`'s entire value
-     * is copying text — a bubble with fewer than 2 detail rows AND a
-     * sub-40-char content has no payload worth sharing, so the gate
-     * drops the proposal.  Recall risk is bounded: any fixture with
-     * real informational text (menu / poster / hours / listing)
-     * produces ≥2 detail rows or a long content by construction of
-     * the emit_bubble prompt ("图里每一处独立的文字…都要有一行").
-     *
-     * Only `share` is gated — the other four actions carry
-     * content-verifiable cues (phone regex / id regex / QR keywords /
-     * address keywords) and don't share the decoration failure mode.
-     */
-    fun dropUnfoundedShare(bubble: Bubble, actions: List<String>): List<String> {
-        if ("share" !in actions) return actions
-        val hasTextPayload = bubble.details.size >= 2 || bubble.detail.length >= 40
-        return if (hasTextPayload) actions else actions - "share"
     }
 }

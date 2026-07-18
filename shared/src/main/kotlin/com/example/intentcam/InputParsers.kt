@@ -193,22 +193,25 @@ object InputParsers {
      * bubble text suggests a payment QR / 收款码 / 付款码 surface,
      * or null otherwise.
      *
-     * Pattern: explicit Chinese payment-context keywords — 收款码,
-     * 付款码, 收款二维码, 付款二维码, 微信收款, 支付宝收款/付款,
-     * 扫码支付/付款.  Returns the matched keyword (not the QR image
-     * itself — the QR isn't in `bubble.content`; it's only on the
-     * original image, which `ActionDef.body` of `scan_to_pay` reads
-     * at fire-time). The bubble-text hit is the rescue trigger, not
+     * Pattern: explicit Chinese keyword hits — "收款码", "付款码",
+     * "扫一扫", "转账", "收款二维码", "微信收款", "支付宝付款".
+     * Returns the matched keyword (not the QR image itself — the
+     * QR isn't in `bubble.content`; it's only on the original
+     * image, which `ActionDef.body` of `scan_to_pay` reads at
+     * fire-time). The bubble-text hit is the rescue trigger, not
      * the actual QR data.
      *
      * Conservative on purpose: this regex is the ONLY thing standing
-     * between a QR-poster and an accidental `scan_to_pay` chip.
-     * Bare `扫一扫` / `转账` were REMOVED 2026-07-18 — they fire on
-     * WiFi-QR posters, follow-us QRs, and bank-transfer ads that
-     * have no payment intent.  False positive → user sees a payment
-     * chip they didn't ask for.  False negative → missed rescue;
-     * the LLM's own `action_ids` proposal usually covers the common
-     * case anyway.
+     * between a phone-number-on-a-payment-flyer and an accidental
+     * `scan_to_pay` chip. False positive → user sees a payment chip
+     * they didn't ask for. False negative → missed rescue.
+     *
+     * 2026-07-18: removing 扫一扫 / 转账 was tested and REVERTED —
+     * offline replay over the scan_to_pay suite showed -0.144 recall
+     * (7 of 30 fixtures are detected via 转账, 2 via 扫一扫 — real
+     * payment QRs carry transfer/scan instructions).  The theoretical
+     * WiFi-QR false-positive cost doesn't show up in the none-suite
+     * over-fire data, so the loose keywords stay.
      */
     fun paymentQr(bubble: Bubble): String? {
         val corpus = buildString {
@@ -216,7 +219,7 @@ object InputParsers {
             append(bubble.detail).append('\n')
             bubble.details.forEach { d -> append(d.value).append('\n') }
         }
-        val payRegex = Regex("""收款码|付款码|收款二维码|付款二维码|微信收款|支付宝收款|支付宝付款|扫码支付|扫码付款""")
+        val payRegex = Regex("""收款码|付款码|扫一扫|转账|收款二维码|微信收款|支付宝付款""")
         return payRegex.find(corpus)?.value
     }
 }
