@@ -1,13 +1,13 @@
 package com.example.intentcam
 
 /**
- * Thin boundary checker for the Intent↔Action framework.  LLM is
+ * Thin boundary checker for the action-first framework.  LLM is
  * the loop driver; this class only
  * runs at three boundaries:
  *
- *   1. **Before round 1** — [frameAvailableActions] renders the
- *      actions + requiredInputs block that gets spliced into the
- *      system prompt so the LLM knows what's available.
+ *   1. **Before round 1** — the registered action ids are spliced
+ *      into the system prompt (the `actions ∈ {...}` line) so the
+ *      LLM knows what's available.
  *   2. **After every `emit_bubble`** — [validateInputs] parses each
  *      action's required inputs from the bubble's text surface and
  *      reports which are missing.
@@ -16,29 +16,25 @@ package com.example.intentcam
  *      coverage and the round counter.
  *
  * The orchestrator does NOT decide which actions to surface
- * (LLM does, via [Bubble.llmProposedActions]), does NOT drive
- * tool calls (LLM does), and does NOT flip intent types (the
- * legacy [IntentVerifier] still handles that in Phase A-D as a
- * safety net — removed in Phase E).
+ * (LLM does, via [Bubble.llmProposedActions] + the add-only
+ * content-rescue in [com.example.intentcam.ActionRescue]) and does
+ * NOT drive tool calls (LLM does).
  *
  * Kept side-effect-free.  Lives in `app/` (not `shared/`) because
  * it references [ActionRegistry], which is Android-coupled (its
  * [ActionDef.body] lambda takes `android.content.Context`).  The
  * body of this class itself touches no Android types — only the
- * type signatures do.  When Phase E migrates the action framework
- * further, the orchestrator can move back to `shared/` once
- * [ActionRegistry] is split into a metadata-only shared view +
- * Android-only body wrapper.
+ * type signatures do.
  *
  * Consumed by:
- *   - `AppViewModel` (Phase C) — [validateInputs] drives live-UI
- *     ghost-vs-solid chip state.
- *   - `eval/ScorerV2` (Phase D) — duplicates the [validateInputs]
- *     body inline (≈15 lines) to compute `r_inputs_complete`
- *     without depending on app/.  Sharing the code would require
- *     lifting [ActionRegistry] into shared/, which is Phase E's
- *     layer-split refactor.  The duplication is contained and
- *     tested against the same fixtures.
+ *   - `AppViewModel` / `CycleManager` — [markValidatedInputs] drives
+ *     live-UI ghost-vs-solid chip state + the missing-input nudge
+ *     loop; rescue + the share precision-gate come from the shared
+ *     [com.example.intentcam.ActionRescue] (single implementation
+ *     with the eval since 2026-07-18).
+ *   - `eval/EvalRunner` — mirrors the validation walk via the shared
+ *     `projectInputsValidation` + the same `ActionRescue`, so prod
+ *     and eval agree by construction.
  *
  * Total ~120 lines; intentionally small so the entire
  * "what does the orchestrator do" surface fits in one screen.
@@ -65,7 +61,7 @@ class ActionOrchestrator(
      *
      * `bubble.actions` is the source of truth for "which actions to
      * validate" — it carries the post-resolve chip list (LLM
-     * proposal intersected with applicability + enabled set).  When
+     * proposal intersected with the enabled set, plus rescue).  When
      * a bubble has no actions yet (e.g. legacy emit_bubble that
      * didn't emit `action_ids`), the result is `Complete` by
      * definition: nothing to validate = nothing missing.

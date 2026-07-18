@@ -119,15 +119,6 @@ class LlmClient(@Volatile var config: LlmConfig) {
         return JSONObject().put("role", "user").put("content", content)
     }
 
-    private fun imageBlock(jpeg: ByteArray): JSONObject {
-        val b64 = Base64.getEncoder().encodeToString(jpeg)
-        val source = JSONObject()
-            .put("type", "base64")
-            .put("media_type", "image/jpeg")
-            .put("data", b64)
-        return JSONObject().put("type", "image").put("source", source)
-    }
-
     // ── SSE parsers ───────────────────────────────────────────────────
 
     /**
@@ -358,6 +349,10 @@ class LlmClient(@Volatile var config: LlmConfig) {
         // Pre-Phase-2 3072 was rejected @20 (-0.016 / -0.023 attention-spread
         // on rctw_04/14/20).  Hypothesis: OCR-verbatim details[] disables
         // the failure mode.  Ship threshold ≥0.91; revert if <0.90.
+        //
+        // CURRENT VALUE: 3072 — the retest shipped it (the "2048 stays"
+        // narrative above is kept for the rejection history; the const
+        // below is authoritative).
         const val MAX_TOKENS = 3072
 
         /** Lock at 0 to keep intent classification deterministic. */

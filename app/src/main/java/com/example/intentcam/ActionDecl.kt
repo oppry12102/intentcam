@@ -389,24 +389,17 @@ fun registerDefaultActions(reg: ActionRegistry) {
             parser = { b -> com.example.intentcam.InputParsers.textContent(b) },
         )),
         body = { _, bubble, args ->
-            // Chooser title + text-empty fallback vary by intent; the
-            //  payload build + 600-char cap are uniform (the cap was
-            //  already applied to menu/promo; harmless for the rest,
-            //  600 chars is ample for a share-sheet payload).
-            val (chooserTitle, fallbackTitle) = when (bubble.type) {
-                "real_estate_rental" -> "分享房源" to (bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
-                "recruit_hiring" -> "保存招聘" to (bubble.title.takeIf { it.isNotBlank() } ?: bubble.detail.take(60))
-                "warning_safety" -> "分享警示" to "警示标识"
-                "menu_food" -> "分享菜单" to "菜单"
-                "hours_schedule", "service_institution" -> "分享营业时间" to "营业时间"
-                "shopping_promo" -> "分享促销" to "促销信息"
-                else -> "分享" to "内容"
-            }
+            // Uniform share-sheet payload.  (The 2026-07-17 intent
+            //  retirement made `bubble.type` a free-form label, so the
+            //  former per-intent chooser-title `when` collapsed to
+            //  this single default — the branches it keyed on can no
+            //  longer be produced.)
             // Prefer the orchestrator-parsed `text` from `args` (validated
             //  path); fall back to inline build for a legacy chip-tap
-            //  before the orchestrator gate ran.
+            //  before the orchestrator gate ran.  600-char cap is ample
+            //  for a share-sheet payload.
             val payload = (args["text"] ?: buildString {
-                append(bubble.title.takeIf { it.isNotBlank() } ?: fallbackTitle)
+                append(bubble.title.takeIf { it.isNotBlank() } ?: "内容")
                 append('\n')
                 append(bubble.detail)
             }.trim()).take(600)
@@ -415,7 +408,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 putExtra(android.content.Intent.EXTRA_TEXT, payload)
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, chooserTitle))
+            ActionOutcome.LaunchAndroidIntent(android.content.Intent.createChooser(intent, "分享"))
         },
         // DELEGATE cluster: the OS share-sheet target picker is the
         //  consent step; the text payload is already visible to the
@@ -424,62 +417,28 @@ fun registerDefaultActions(reg: ActionRegistry) {
     ))
 }
 
-/** Pull the first plausible phone number from a bubble's surface text.
- *  Pure function; lives alongside [ActionDef.body] so the extraction
- *  regex + priority order stay co-located with the only caller.
- *
- *  Initial version for the dial_number action.  Order
- *  matters: mobile (1xxxxxxxxxx) wins over landline (0xxxxxxxxxxx
- *  or xxx-xxxxxxxx), which wins over 400/800 service lines.  This
- *  matches what a Chinese user tapping "dial" would expect — the
- *  number on a storefront sign is overwhelmingly a mobile when both
- *  are present.
- *
- *  Returns null on no match — the action then surfaces a Toast.
- *  Side-effect-free; safe to call from any context (it's a suspend-
- *  ready regex on a string).
- *
- *  Now also exported as [com.example.intentcam.InputParsers.phoneNumber]
- *  in `shared/` so [ActionDef.requiredInputs] can declare
- *  `phone_number` as a parser without reaching into a private
- *  object.  Same logic, single source of truth — see
- *  [docs/adr/2026-07-16-input-parsers-drift-risk.md](../docs/adr/2026-07-16-input-parsers-drift-risk.md)
- *  for the migration that lifted this out of `app/`.
- */
-
-/** Reusable parsers for the common [ActionInputSpec] inputs.
- *  Lives in [com.example.intentcam.InputParsers] (shared/) so
- *  the eval pipeline can score `r_inputs_complete` against the
- *  same logic prod uses.  This file's [registerDefaultActions]
- *  declares the parser references via lambdas wrapping the
- *  shared functions (preserves the `(Bubble) -> String?`
- *  ActionInputSpec signature).
- * Decides which actions should surface on a given bubble, given the
- * intent + the user's currently-enabled set.
+/** Decides which actions should surface on a given bubble, given the
+ * LLM's proposal + the user's currently-enabled set.
  *
  * Returns a list of *ids* (not full [ActionDef]s) because the caller
  * (`AppViewModel`) stitches them into `Bubble.actions: List<String>`
  * — and `Bubble` lives in `shared/` and can't hold Android types.
  *
- * Filtering rules, in order:
+ * Filtering rules:
  *   1. The LLM's `action_ids` proposal is the sole routing signal
  *      (the intent taxonomy + `applicableIntents` filter were retired
  *      2026-07-17).  Unknown ids are dropped (defensive against LLM
  *      hallucination).
  *   2. The action must be in the user's enabled set (driven by
- *      `SettingsStore.enabledActionIds`).  When the prefs entry is
- *      absent we treat the action as enabled — the source of truth
- *      for "enabled by default" is whoever builds the `enabledIds`
- *      closure in `AppViewModel`.
- *   4. **LLM override (2026-07-13)**: when the bubble carries
- *      [Bubble.llmProposedActions] (the model emitted an explicit
- *      list in `emit_bubble`), intersect that with the user's
- *      enabled set instead of the applicability filter.  Keeps the
- *      model from auto-suggesting every applicable action when it
- *      only meant to propose one.  Empty / null list = fall back to
- *      the applicability filter (acts as a feature flag: when the
- *      prompt isn't updated to ask for action_ids, behavior is
- *      unchanged).
+ *      `SettingsStore.enabledActionIds` + per-action `userPrefKey`
+ *      consent toggles).  When the prefs entry is absent we treat the
+ *      action as enabled — the source of truth for "enabled by
+ *      default" is whoever builds the `enabledIds` closure in
+ *      `AppViewModel`.
+ * Null / empty [Bubble.llmProposedActions] → empty list: no LLM
+ * proposal means no resolver chips (only content-rescue, applied
+ * downstream by [com.example.intentcam.ActionOrchestrator], can
+ * still add).
  */
 class ActionResolver(
     private val actions: ActionRegistry,
@@ -505,10 +464,4 @@ class ActionResolver(
             .map { it.id }
             .filter { it in enabled }
     }
-
-    /** Resolve a list of ids (typically `bubble.actions`) to the
-     *  matching [ActionDef]s.  Missing ids are silently skipped so
-     *  that older bubbles referencing retired actions don't crash. */
-    fun resolve(actions: List<String>): List<ActionDef> =
-        actions.mapNotNull { this.actions.get(it) }
 }

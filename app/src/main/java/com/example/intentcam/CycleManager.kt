@@ -240,31 +240,6 @@ class CycleManager(
         handle.start()
     }
 
-    /** Mark the currently-focused job (if any non-COMPLETE) as
-     *  SUPERSEDED.  Does NOT remove from [allJobs] — that's the
-     *  startCycle cap-enforcement's job.  Useful when the UI
-     *  wants to demote a cycle without immediately evicting it
-     *  (e.g. user scrolled past it). */
-    fun supersedeCurrent() {
-        val focusedId = _focusedJobId.value ?: return
-        val job = _allJobs.value[focusedId] ?: return
-        if (job.status.value == JobStatus.COMPLETE) return
-        job.status.value = JobStatus.SUPERSEDED
-        log("CYCLE", "superseded focused $focusedId")
-    }
-
-    /** True iff there's at least one job that should block the
-     *  user from doing something silly (e.g. tapping a second
-     *  action chip on a different bubble).  Phase C will use
-     *  this for the shutter button: button is enabled iff there
-     *  is no focused non-COMPLETE job (so the user can always
-     *  take a photo — CycleManager handles the buffering). */
-    fun hasFocusedJob(): Boolean {
-        val focusedId = _focusedJobId.value ?: return false
-        val job = _allJobs.value[focusedId] ?: return false
-        return job.status.value != JobStatus.COMPLETE
-    }
-
     /** Drive one cycle: mark IN_FLIGHT, call runCycle with the
      *  job's id + an onProgress callback that mirrors
      *  CycleProgress back into the job's MutableStateFlows.
@@ -511,11 +486,6 @@ class CycleManager(
         updated.remove(cycleId)
         _allJobs.value = updated
         log("CYCLE", "cancelled pending cycle $cycleId: $reason")
-    }
-
-    /** For tests + AppViewModel's idle-check. */
-    fun activeJobCount(): Int = _allJobs.value.count {
-        it.value.status.value != JobStatus.COMPLETE
     }
 
     /** Count of cycles whose status is [JobStatus.PENDING] or

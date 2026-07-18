@@ -22,15 +22,15 @@ import java.io.File
  * fixture, scores the outcome, and prints a per-fixture + overall
  * summary.
  *
- * Scoring is the same composite metric the previous Python eval
- * used:
- *   composite = 0.50 * r1_score + 0.50 * r2_score
- *   r1_score  = 0.70 * tool_pick + 0.30 * input_valid
- *   r2_score  = 0.50 * text_keyword_hit_rate + 0.50 * emit_type
- *
- * r2_text = avg of:
- *   - fraction of expected_description_keywords found in model text
- *   - fraction of expected_details matched in emit_bubble.details
+ * Scoring is the action-first canonical composite (ScorerV3, sole
+ * scorer since the 2026-07-17 intent-taxonomy retirement):
+ *   composite_v3 = 0.55 * r_actions(recall) + 0.30 * r_text + 0.15 * r_inputs
+ *   r_actions = recall of scene.expected_actions against the visible
+ *               chip set (LLM proposals + rescue, share-gated)
+ *   r_text    = keyword/detail hit-rate via hybridMatch (this file)
+ *   r_inputs  = scene.expected_inputs satisfaction via InputParsers
+ * Plus the diagnostic over_fire_rate (chips emitted on empty-expected
+ * fixtures — the precision signal recall can't see).
  */
 internal class EvalRunner(private val config: EvalConfig) {
 
@@ -214,9 +214,9 @@ internal class EvalRunner(private val config: EvalConfig) {
                     userText = "",
                     cropOcrCap = config.cropOcrCap,
                     // Splice the registered action-id vocabulary
-                    //  into the system prompt.  Empty list = no
-                    //  LLM-proposal branch (legacy applicability
-                    //  filter).
+                    //  into the system prompt (the `actions ⊆ {...}`
+                    //  line) so the model sees the same action-id
+                    //  vocabulary as prod.
                     actionIds = defaultActionIds,
                     // Stamp validation state on the bubble using
                     //  shared-side parser mirrors.  Prod uses

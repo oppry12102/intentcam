@@ -331,14 +331,15 @@ fun ToolRegistry.registerDefaultTools() {
     //                     intent-taxonomy retirement; kept only as an
     //                     optional debug/log label.
     //   - action_ids:     which [ActionDef]s should
-    //                     light up as chips on this bubble.  In Phase
-    //                     E the LLM picks them WITHOUT the legacy
-    //                     type→canonical-action table — the
+    //                     light up as chips on this bubble.  The LLM picks
+    //                     them directly (no type→canonical-action table —
+    //                     that taxonomy was retired 2026-07-17); the
     //                     orchestrator validates inputs separately.
     //                     Listing ids explicitly = only those ids
     //                     become chips (intersected with user-enabled
-    //                     ids).  Empty = fall through to
-    //                     ActionResolver's applicability filter.
+    //                     ids).  Empty / omitted = no LLM proposals;
+    //                     only content-rescue (phone / id / payment-QR)
+    //                     can still add chips.
     //   - confidence:     0.0 .. 1.0
     register(
         ToolDef(
@@ -477,8 +478,8 @@ fun ToolRegistry.registerDefaultTools() {
                 // resolver's job (ActionResolver.suggestIds does
                 // mapNotNull on the registry); we just hand the raw
                 // list through.  Empty list (or absent field) =
-                // `null` so the resolver's "fall back to
-                // applicability filter" branch fires.
+                // `null`: no LLM-proposed chips — only content-rescue
+                // can still add.
                 val actionIdsArr = input.optJSONArray("action_ids")
                 val proposedActions: List<String>? = when {
                     actionIdsArr == null -> null

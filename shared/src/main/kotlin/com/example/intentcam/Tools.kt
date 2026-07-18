@@ -121,12 +121,13 @@ data class ToolResult(
     val followUpJpeg: ByteArray? = null,
     /** When `emit_bubble` accepts an `action_ids: List<String>`
      *  field from the model, populated here so the orchestrator can
-     *  persist it onto [Bubble.llmProposedActions].  Drives the
-     *  LLM-override branch of [com.example.intentcam.ActionResolver]:
-     *  non-null list = the model's explicit pick (intersected with
-     *  enabled ids in the resolver), null = the legacy applicability
-     *  filter.  Kept on the shared ToolResult so the prompt-time
-     *  schema and the orchestrator's plumbing don't drift. */
+     *  persist it onto [Bubble.llmProposedActions].  This is the sole
+     *  action-routing signal after the 2026-07-17 intent-taxonomy
+     *  retirement: non-null list = the model's explicit pick
+     *  (intersected with enabled ids in the resolver); null = no LLM
+     *  proposals, only content-rescue can still add chips.  Kept on
+     *  the shared ToolResult so the prompt-time schema and the
+     *  orchestrator's plumbing don't drift. */
     val proposedActions: List<String>? = null,
 )
 

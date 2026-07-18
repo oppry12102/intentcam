@@ -155,14 +155,6 @@ data class ScorerV3Result(
     }
 }
 
-/** Helper: extract all detail values from a bubble as a single corpus
- *  string (debug/diagnostic use). */
-internal fun Bubble.corpus(): String = buildString {
-    append(title).append('\n')
-    append(detail).append('\n')
-    details.forEach { d -> append(d.value).append('\n') }
-}
-
 /** Helper: format the per-fixture numbers into a human-readable line
  *  for [EvalRunner]'s console output. */
 internal fun ScorerV3Result.format(): String =

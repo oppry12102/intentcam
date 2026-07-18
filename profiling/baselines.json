@@ -2,9 +2,9 @@
   "_meta": {
     "threshold": 0.05,
     "threshold_rationale": "±0.03 typical 20-fixture LLM variance; 0.05 catches true regressions without false-positive noise. See [[feedback-529-contamination-awareness]] for variance bands.",
-    "composite_formula": "[2026-07-15 redesign] composite_v2 = 0.35*r_type + 0.25*r_text + 0.20*r_actions + 0.20*r_inputs. r_type is the new dominant signal (graded 1.0/0.7/0.3/0.0) — restored because the action merge (six share-text actions → one `share` for 7 intents) gutted the old actions_recall / intent_derived signals. r_actions switched from pure recall to Jaccard so over-proposals are penalized. r_rounds_efficiency + the legacy composite (0.45·r1+0.45·r2+0.10·r3) are RETIRED.",
+    "composite_formula": "[2026-07-17 action-first, canonical] composite_v3 = 0.55*r_actions(recall) + 0.30*r_text + 0.15*r_inputs. r_actions = recall of expected_actions against the visible chip set (LLM proposals + content-rescue, share precision-gated since 2026-07-18); over_fire_rate is the companion precision signal on the `none` suite. ScorerV2/r_type retired.",
     "image_dir": "/home/oppry/RCTW-171/train_images",
-    "last_updated": "2026-07-15",
+    "last_updated": "2026-07-18",
     "last_updated_commit": "PENDING (post-scoring-redesign re-baseline)",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",

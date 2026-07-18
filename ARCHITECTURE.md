@@ -4,6 +4,22 @@
 > and at-a-glance summary live there; this file is the deep-dive.
 > See [CONFIG.md](CONFIG.md) for every tunable constant.
 
+> **⚠️ Currency note (2026-07-18):** the registered intent taxonomy
+> (14 intent ids, `IntentDecl`, 2-register lockstep — §15) was
+> **retired on 2026-07-17** (commit `f522053`).  The current
+> architecture is **action-first**: the LLM emits a free-form
+> `intent` phrase (UX glue, not scored) + first-class `action_ids`;
+> chips = LLM proposals ∩ enabled set + content-rescue
+> (`shared/.../ActionRescue.kt`), minus the share precision-gate.
+> Scoring is ScorerV3 (`0.55·r_actions + 0.30·r_text + 0.15·r_inputs`)
+> over 6 action-first suites (`dial_number` / `open_in_maps` /
+> `share` / `redact_id` / `scan_to_pay` / `none`), with
+> `over_fire_rate` as the precision signal.  §15 is kept as history;
+> treat §1–§14 + §16 as current except where they reference intent
+> ids / ScorerV2.  See `docs/adr/2026-07-14-v3-inversion.md`,
+> `docs/adr/2026-07-18-eval-prod-parity.md`, and CHANGELOG
+> [2026-07-17] entries.
+
 ## 1. The four-tool design (v1.1, 2026-07-12)
 
 Phase 2 (2026-07-11) collapsed the previous 12-tool design to
@@ -421,7 +437,7 @@ data class Detail(
 data class Bubble(
     val id: String,
     val cycleId: String,  // owning CycleJob id (Phase B+; defaults to bubble.id for legacy path)
-    val type: String,            // 14 intent ids — see §15 / CONFIG §H.1
+    val type: String,            // free-form label (default "info"); NOT a registered enum since 2026-07-17
     val intent: String,          // free-form Chinese phrase (≤30 chars), v3.0+
     val title: String,            // user-facing title (动宾短语)
     val detail: String,           // content description
@@ -451,10 +467,11 @@ The LLM populates these in `emit_bubble`'s `details` input field.
 
 `actions` is the post-resolve chip list — populated by
 `ActionResolver.suggestIds(bubble)` from the LLM's
-`llmProposedActions` (LLM-proposal branch) intersected with
-applicable intents/families and the user's enabled-action set.
+`llmProposedActions` intersected with the user's enabled-action set,
+plus content-rescue additions (`ActionRescue`, also ∩ enabled).
 This is the per-bubble action surface the chip UI renders on the
-BubbleCard.  See §15 for the full design.
+BubbleCard.  See the currency note at the top for the post-2026-07-17
+routing design.
 
 ## 8. Cancellation & concurrency
 
@@ -698,6 +715,17 @@ v1.0 layout:
   start.  Currently in-memory only — wiped on process death.
 
 ## 15. Intent↔Action framework (v3.0 inversion, 2026-07-14)
+
+> **⛔ SUPERSEDED 2026-07-17 (commit `f522053`).**  The registered
+> intent taxonomy described in this section — 14 intent ids,
+> `IntentDecl` / `IntentRegistry` / `IntentFamily`, the 2-register
+> lockstep (§15.4), the type→canonical-action table, and the
+> soft-hint prompt block — was retired.  Intent is now a free-form
+> LLM phrase (UX glue, not scored); `action_ids` is the sole
+> routing signal; content-rescue (`shared/.../ActionRescue.kt`) is
+> the add-only safety net; ScorerV3 (recall) replaced ScorerV2.
+> This section is kept as ship-history only — do NOT implement
+> against it.  Current design: see the currency note at the top.
 
 Each `emit_bubble` carries:
 

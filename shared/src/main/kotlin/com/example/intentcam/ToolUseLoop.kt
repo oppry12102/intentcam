@@ -621,9 +621,9 @@ class ToolUseLoop(
                     // Persist the model's explicit
                     // action_ids choice onto the bubble so
                     // AppViewModel's resolver can use it as the
-                    // LLM-override branch.  Null when emit_bubble
-                    // didn't receive the field (the legacy
-                    // applicability path).
+                    // LLM-routing signal.  Null when emit_bubble
+                    // omitted the field — then no LLM-proposed chips
+                    // (only content-rescue can still add).
                     llmProposedActions = verifiedActions,
                 )
                 // Notify the CycleManager that
@@ -766,8 +766,8 @@ class ToolUseLoop(
         //  too so eval/prod see consistent validation state
         //  regardless of whether the cycle hit the round cap or
         //  emitted normally.  The fallback has no llmProposedActions,
-        //  so resolveActions (when wired) falls back to the
-        //  applicability path.
+        //  so the resolver contributes nothing; only content-rescue
+        //  (inside markValidated) can add chips.
         val resolvedFallback = resolveActions?.invoke(fallbackBubble) ?: fallbackBubble
         val stampedFallback = markValidated?.invoke(resolvedFallback) ?: resolvedFallback
         return Outcome.Bubble(stampedFallback, firstToolName = chosenToolName)
