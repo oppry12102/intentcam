@@ -599,8 +599,11 @@ private fun compareClaimAgainstBlocks(
             }
             // OCR text is high-similarity to a claim fragment (>=0.5)
             // → disagree (LLM and OCR both have something here but
-            // the wording diverges).
-            similarity(blockNorm, remainingClaim) >= 0.5 -> {
+            // the wording diverges).  Compares against the best-
+            // matching WINDOW of the claim, not the whole remainder:
+            // block-vs-whole-claim similarity dilutes toward 0 as the
+            // claim grows, which kept this branch dead (2026-07-18 fix).
+            bestWindowSimilarity(blockNorm, remainingClaim) >= 0.5 -> {
                 results.add(
                     CompareDiff(
                         conflict = "disagree",
@@ -654,11 +657,13 @@ private fun compareClaimAgainstBlocks(
     return results
 }
 
-/** Strip whitespace and lowercase for substring matching.  We
- *  intentionally do NOT normalize Unicode / punctuation — the goal
- *  is to catch verbatim differences, not paper over them. */
+/** Strip whitespace and lowercase for substring matching.  Whitespace
+ *  goes away entirely so "建国路 100号" matches "建国路100号" (OCR
+ *  and the LLM disagree on token spacing constantly).  We
+ *  intentionally do NOT normalize Unicode / punctuation beyond that —
+ *  the goal is to catch verbatim differences, not paper over them. */
 private fun normalizeForMatch(s: String): String =
-    s.trim().lowercase()
+    s.trim().lowercase().replace(Regex("\\s+"), "")
 
 /** Quick similarity ratio: 1 - (levenshtein / max(len)).  O(n*m)
  *  but fine for short claim / block strings (typically < 100 chars). */
@@ -668,6 +673,26 @@ private fun similarity(a: String, b: String): Float {
     val dist = levenshtein(a, b)
     val maxLen = maxOf(a.length, b.length)
     return 1f - dist.toFloat() / maxLen
+}
+
+/** Max [similarity] between [block] and any length-`block.length`
+ *  window of [claim].  Fixes the dead `disagree` branch: comparing a
+ *  short block against the WHOLE remaining claim makes the ratio
+ *  collapse toward 0 on long claims (levenshtein ≈ len difference),
+ *  so near-matching fragments were never classified "disagree".
+ *  O((n-w+1) · w²) worst case, fine for the ≤100-char strings this
+ *  tool sees. */
+private fun bestWindowSimilarity(block: String, claim: String): Float {
+    if (block.isEmpty() || claim.isEmpty()) return 0f
+    if (claim.length <= block.length) return similarity(block, claim)
+    var best = 0f
+    val w = block.length
+    for (i in 0..claim.length - w) {
+        val s = similarity(block, claim.substring(i, i + w))
+        if (s > best) best = s
+        if (best >= 1f) break
+    }
+    return best
 }
 
 /** Iterative Levenshtein distance.  Returns the number of single-

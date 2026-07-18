@@ -83,11 +83,13 @@ object InputParsers {
      *     text element with bbox as a Detail row, so addresses
      *     like `洪山区珞喻路370号` or `屯村东路350号` land here
      *     verbatim.  This is the highest-signal source.
-     *  2. **Simplified `bubble.title`** — strip navigation-verb
-     *     prefixes (`导航去` / `导航到` / `去` / `找` / `到` / `在` /
-     *     `这里是` / `我在这里` / `查看` / `打开`) and return the
-     *     rest if non-blank.  Handles cases where LLM wrote the
-     *     address directly as the title (`"仙桃市仙桃大道"`).
+     *  2. **Simplified `bubble.title`** — strip unambiguous
+     *     navigation-verb prefixes (`导航去` / `导航到` / `这里是` /
+     *     `我在这里` / `查看` / `打开`) and return the rest if
+     *     non-blank.  Handles cases where LLM wrote the address
+     *     directly as the title (`"仙桃市仙桃大道"`).  Single-char
+     *     verbs (去/找/到/在) are deliberately NOT stripped — they
+     *     behead legitimate titles (2026-07-18).
      *  3. **Full `bubble.detail`** — verbatim content description.
      *     The previous `detail.take(40)` truncated real addresses
      *     mid-token (`"...上岛咖啡西餐厅"` → `"...上岛咖"`) — that
@@ -114,9 +116,14 @@ object InputParsers {
             d.value.isNotBlank() && addressRegex.containsMatchIn(d.value)
         }?.let { return it.value.trim() }
 
-        // (2) Simplified title — strip navigation-verb prefixes
+        // (2) Simplified title — strip navigation-verb prefixes.
+        //  Only multi-char unambiguous prefixes: the single-char
+        //  verbs (去/找/到/在) were dropped from this list 2026-07-18
+        //  because they mangle legitimate titles ("在岗打工人员" →
+        //  "岗打工人员"); maps apps tolerate a leading 去/到 in the
+        //  query far better than a beheaded title.
         val strippedTitle = bubble.title
-            .replace(Regex("""^(导航去|导航到|去|找|到|在|这里是|我在这里|查看|打开)\s*"""), "")
+            .replace(Regex("""^(导航去|导航到|这里是|我在这里|查看|打开)\s*"""), "")
             .trim()
         if (strippedTitle.isNotBlank() && strippedTitle.length >= 2) {
             return strippedTitle
@@ -186,19 +193,22 @@ object InputParsers {
      * bubble text suggests a payment QR / 收款码 / 付款码 surface,
      * or null otherwise.
      *
-     * Pattern: explicit Chinese keyword hits — "收款码", "付款码",
-     * "扫一扫", "转账", "收款二维码", "微信收款", "支付宝付款".
-     * Returns the matched keyword (not the QR image itself — the
-     * QR isn't in `bubble.content`; it's only on the original
-     * image, which `ActionDef.body` of `scan_to_pay` reads at
-     * fire-time). The bubble-text hit is the rescue trigger, not
+     * Pattern: explicit Chinese payment-context keywords — 收款码,
+     * 付款码, 收款二维码, 付款二维码, 微信收款, 支付宝收款/付款,
+     * 扫码支付/付款.  Returns the matched keyword (not the QR image
+     * itself — the QR isn't in `bubble.content`; it's only on the
+     * original image, which `ActionDef.body` of `scan_to_pay` reads
+     * at fire-time). The bubble-text hit is the rescue trigger, not
      * the actual QR data.
      *
      * Conservative on purpose: this regex is the ONLY thing standing
-     * between a phone-number-on-a-payment-flyer and an accidental
-     * `scan_to_pay` chip. False positive → user sees a payment chip
-     * they didn't ask for. False negative → missed rescue, soft-hint
-     * already covers the common case via `payment_qr` intent.
+     * between a QR-poster and an accidental `scan_to_pay` chip.
+     * Bare `扫一扫` / `转账` were REMOVED 2026-07-18 — they fire on
+     * WiFi-QR posters, follow-us QRs, and bank-transfer ads that
+     * have no payment intent.  False positive → user sees a payment
+     * chip they didn't ask for.  False negative → missed rescue;
+     * the LLM's own `action_ids` proposal usually covers the common
+     * case anyway.
      */
     fun paymentQr(bubble: Bubble): String? {
         val corpus = buildString {
@@ -206,7 +216,7 @@ object InputParsers {
             append(bubble.detail).append('\n')
             bubble.details.forEach { d -> append(d.value).append('\n') }
         }
-        val payRegex = Regex("""收款码|付款码|扫一扫|转账|收款二维码|微信收款|支付宝付款""")
+        val payRegex = Regex("""收款码|付款码|收款二维码|付款二维码|微信收款|支付宝收款|支付宝付款|扫码支付|扫码付款""")
         return payRegex.find(corpus)?.value
     }
 }
