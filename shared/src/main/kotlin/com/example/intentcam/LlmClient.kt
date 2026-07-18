@@ -350,10 +350,32 @@ class LlmClient(@Volatile var config: LlmConfig) {
         // on rctw_04/14/20).  Hypothesis: OCR-verbatim details[] disables
         // the failure mode.  Ship threshold ≥0.91; revert if <0.90.
         //
-        // CURRENT VALUE: 3072 — the retest shipped it (the "2048 stays"
-        // narrative above is kept for the rejection history; the const
-        // below is authoritative).
-        const val MAX_TOKENS = 3072
+        // CURRENT VALUE: 8192 — kimi k3 era (2026-07-18).  The 3072
+        // retest shipped under glm-4.6 (the "2048 stays" narrative above
+        // is kept for the rejection history; the const below is
+        // authoritative).
+        //
+        // 2026-07-18 k3 bump 3072 → 8192: kimi k3 ALWAYS thinks
+        // (`reasoning_effort=max` is the only level — thinking cannot be
+        // disabled or budgeted, per platform.kimi.com/docs/guide/
+        // use-thinking-effort) and thinking tokens count against
+        // max_tokens.  Measured on image_7398: ~1100 chars thinking
+        // (≈600-700 tokens) for a trivial describe prompt; eval rounds
+        // with tool planning + OCR-hint digestion run longer.  Result at
+        // 3072: 2-3/30 fixtures per regression run returned COMPLETELY
+        // empty bubbles (content/details/actions all blank — thinking
+        // burned the budget before emit_bubble JSON started, and the
+        // Phase-2c retry-once hit the same wall; image_7398 was empty in
+        // BOTH k3 runs).  ~7-10% of fixtures scoring 0 deflated every
+        // action-suite composite by ~0.02-0.05.  8192 = ~6k thinking
+        // headroom + ~2k emit_bubble JSON.  Normal rounds still stop at
+        // end_turn (~0.5-1.5k tokens) so the cost is only paid by scenes
+        // that need it — the same reasoning as the 1024→2048 bump.
+        // The MiniMax-era 3072 attention-spread rejection is moot: that
+        // failure was visible-prose verbosity; k3's verbosity lives in
+        // the invisible thinking block, and k3 baselines re-measure from
+        // scratch anyway.
+        const val MAX_TOKENS = 8192
 
         /** Lock at 0 to keep intent classification deterministic. */
         const val REQUEST_TEMPERATURE = 0.0
@@ -368,8 +390,21 @@ class LlmClient(@Volatile var config: LlmConfig) {
          *  headroom; OkHttp's readTimeout/callTimeout are still 0
          *  (infinite) so a true hang will still be caught.  60s was
          *  the right value for MAX_TOKENS=1024 (~38s worst case); 90s
-         *  matches the new ceiling. */
-        const val TOTAL_TIMEOUT_MS = 90_000L
+         *  matches the new ceiling.
+         *
+         *  2026-07-18: 90s → 180s alongside MAX_TOKENS 3072 → 8192
+         *  (kimi k3 mandatory thinking).  Measured k3 throughput
+         *  ~45-60 tok/s → a pathological full-cap round is
+         *  8192/50 ≈ 164s + first-byte ~10s ≈ 175s.  Without this
+         *  bump the same hard fixtures that truncated at the token
+         *  cap would die on the timeout instead (timeout →
+         *  IllegalStateException → fixture error) — same empty score
+         *  through a different door.  Typical rounds finish in
+         *  ~10-25s (measured 12s for a 437-token thinking+text round),
+         *  so the average fixture cost is unchanged; only the
+         *  previously-doomed rounds run longer, and they now return a
+         *  real bubble instead of an empty one. */
+        const val TOTAL_TIMEOUT_MS = 180_000L
 
         /** System prompt for the tool-use path.  Two-stage flow:
          *  Stage 1 — content understanding.  Look at the image; if any
