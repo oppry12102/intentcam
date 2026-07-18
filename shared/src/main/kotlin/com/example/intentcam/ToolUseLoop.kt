@@ -681,15 +681,24 @@ class ToolUseLoop(
                             "retry $inputMissingRetries/$INPUT_MISSING_MAX_RETRIES"
                     )
                     // Protocol fix (2026-07-18): ONE user message
-                    //  carrying follow-up images + tool_results + the
+                    //  carrying tool_results + follow-up images + the
                     //  nudge text.  Previously the tool_results went
                     //  out in one user message and the nudge in a
                     //  SECOND consecutive user message — tolerated by
                     //  GLM/MiniMax-compat endpoints but a 400
                     //  ("roles must alternate") on strict Anthropic.
+                    // Protocol fix (2026-07-19): tool_results FIRST,
+                    //  then images.  kimi k3's validator (strict
+                    //  Anthropic) requires tool_result blocks to lead
+                    //  the user message; an image block ahead of them
+                    //  makes it report the round's tool_calls as
+                    //  unanswered (HTTP 400 "...did not have response
+                    //  messages: zoom_in:1").  GLM/MiniMax accepted
+                    //  either order, which is why the image-first
+                    //  shape survived since 2026-07-11 Phase 2a.
                     val nudgeContent = JSONArray()
-                    appendFollowUpBlocks(nudgeContent, followUps)
                     appendToolResults(nudgeContent, toolResults)
+                    appendFollowUpBlocks(nudgeContent, followUps)
                     nudgeContent.put(
                         JSONObject().put("type", "text")
                             .put("text", missingInputNudgeText(gate.missing))
@@ -718,9 +727,12 @@ class ToolUseLoop(
             }
 
             // No emit_bubble this round — build the next user
-            //  message: follow-up crop images (auto-OCR'd) + the
-            //  round's tool_results + a wrap-up nudge asking for
-            //  emit_bubble.  Keeps the loop bounded: the model can
+            //  message: the round's tool_results FIRST (strict-
+            //  Anthropic validators like kimi k3's 400 otherwise —
+            //  "tool_calls did not have response messages" when an
+            //  image block precedes the tool_result), then follow-up
+            //  crop images (auto-OCR'd), then a wrap-up nudge asking
+            //  for emit_bubble.  Keeps the loop bounded: the model can
             //  zoom_in as many times as it likes, but at the end of
             //  each round we ask for a final summary.
             //
@@ -728,8 +740,8 @@ class ToolUseLoop(
             //  on-device OCR and ships the formatted hint alongside
             //  the image (see [appendFollowUpBlocks]).
             val nextContent = JSONArray()
-            appendFollowUpBlocks(nextContent, followUps)
             appendToolResults(nextContent, toolResults)
+            appendFollowUpBlocks(nextContent, followUps)
             nextContent.put(JSONObject().put("type", "text").put(
                 "text",
                 "你已经 zoom_in ${followUps.size} 次。如果还有看不清的，可以再 zoom_in；如果内容已经清楚，" +
