@@ -24,11 +24,18 @@ package com.example.intentcam
  */
 object InputParsers {
     // Mobile: 1[3-9] + 9 digits (covers all 3 Chinese carriers
-    // incl. 14x/15x/16x/17x/18x/19x series).
-    val MOBILE_REGEX = Regex("""1[3-9]\d{9}""")
+    // incl. 14x/15x/16x/17x/18x/19x series).  `(?<!\d)` / `(?!\d)`
+    // guards are REQUIRED: without them the pattern matches the
+    // birthdate+serial substring inside 18-digit ID numbers for
+    // anyone born 1930–1999 ("110101199003077777" → "19900307777"),
+    // which made every ID-card bubble grow a phantom dial_number
+    // rescue chip (2026-07-18 audit, P1).
+    val MOBILE_REGEX = Regex("""(?<!\d)1[3-9]\d{9}(?!\d)""")
     // 400 / 800 service line.  Format: 400/800 + (3-4 digits) +
-    // (3-4 digits), possibly hyphenated.
-    val SERVICE_REGEX = Regex("""(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}""")
+    // (3-4 digits), possibly hyphenated.  Same boundary guards as
+    // MOBILE — unguarded, a longer digit run containing "400…"
+    // (e.g. "84001234567") matched a spurious service number.
+    val SERVICE_REGEX = Regex("""(?<!\d)(?:400|800)[\s-]?\d{3,4}[\s-]?\d{3,4}(?!\d)""")
     // Landline: area code 3-4 digits + 7-8 digits, possibly
     // hyphenated, optionally leading 0 (sometimes present,
     // sometimes not — sign posters are inconsistent).
