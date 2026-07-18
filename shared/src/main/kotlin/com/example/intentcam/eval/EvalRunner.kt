@@ -58,19 +58,17 @@ internal class EvalRunner(private val config: EvalConfig) {
                           //   copy_listing/save_posting/copy_warning/
                           //   copy_menu/copy_hours/copy_promo)
     )
+    private val defaultActionIdSet = defaultActionIds.toSet()
 
     /** Eval-side parser-mirror registry.  Used by the
      *  [markValidated] callback passed to ToolUseLoop.runCycle so
-     *  eval-side ScorerV2 sees populated `validatedInputs` /
+     *  eval-side ScorerV3 sees populated `validatedInputs` /
      *  `pendingInputs` fields (parity with prod's
      *  `ActionOrchestrator.markValidatedInputs`).
      *
-     *  Mirrors the production `InputParsers` regex set
-     *  (`app/.../ActionDecl.kt`) so a bubble that's "Complete" in
-     *  prod is also Complete in eval.  See ScorerV2's inputSatisfied
-     *  for the same set — both stay in lockstep with the canonical
-     *  `ACTION_REQUIRED_INPUTS` table in
-     *  `scripts/migrate_gt_v2_to_v3.py`.
+     *  Mirrors the production `InputParsers` regex set — single
+     *  source of truth, see ADR
+     *  docs/adr/2026-07-16-input-parsers-drift-risk.md.
      *
      *  Returned as `Map<actionId, List<ActionInputSpec>>` so it
      *  feeds directly into [projectInputsValidation]. */
@@ -93,30 +91,6 @@ internal class EvalRunner(private val config: EvalConfig) {
             )),
             // scan_to_pay / redact_id have no requiredInputs.
         )
-    }
-
-    /**
-     * Mirror of [com.example.intentcam.ActionOrchestrator.rescueActions]
-     * for the eval pipeline. Same rule set, same InputParsers
-     * constants (single source of truth shared with prod). See
-     * prod kdoc for the full rescue matrix and the deliberate
-     * exclusion of `open_in_maps` / `share` from rescue.
-     */
-    private fun contentRescueActions(
-        bubble: com.example.intentcam.Bubble,
-    ): List<String> {
-        val current = bubble.actions.toSet()
-        val rescue = mutableListOf<String>()
-        if ("dial_number" !in current &&
-            com.example.intentcam.InputParsers.phoneNumber(bubble) != null
-        ) rescue += "dial_number"
-        if ("redact_id" !in current &&
-            com.example.intentcam.InputParsers.idDocument(bubble) != null
-        ) rescue += "redact_id"
-        if ("scan_to_pay" !in current &&
-            com.example.intentcam.InputParsers.paymentQr(bubble) != null
-        ) rescue += "scan_to_pay"
-        return rescue
     }
 
     private companion object {
@@ -261,23 +235,19 @@ internal class EvalRunner(private val config: EvalConfig) {
                     //  (see ADR
                     //  docs/adr/2026-07-16-input-parsers-drift-risk.md).
                     markValidated = { bubble ->
-                        val rescueIds = contentRescueActions(bubble)
-                        // Mirror prod's VISIBLE chip set: the LLM's
-                        //  proposed actions (prod's resolver applies
-                        //  the enabled filter on top; eval can't reach
-                        //  the ActionRegistry, so the raw
-                        //  llmProposedActions stand in) PLUS content-
-                        //  rescue chips.  Writing the merged set into
-                        //  `.actions` is what lets ScorerV2.computeActions
-                        //  credit rescue — previously `.actions` held
-                        //  only the rescue ids (finalBubble came in
-                        //  with empty `.actions`), so when the LLM
-                        //  emitted any action_ids the scorer took the
-                        //  llmProposedActions branch and rescue was
-                        //  silently dropped.
-                        val base = bubble.llmProposedActions ?: bubble.actions
-                        val visibleActions = (base + rescueIds).distinct()
-                        val effectiveBubble = bubble.copy(actions = visibleActions)
+                        // Shared visible-chip-set computation (single
+                        //  implementation with prod since 2026-07-18 —
+                        //  the inline rescue mirror that lived here
+                        //  before drifted twice; see
+                        //  docs/adr/2026-07-16-input-parsers-drift-risk.md).
+                        //  Eval passes the FULL registered vocabulary
+                        //  as `enabled` (no user consent gating) so
+                        //  scores measure the idealized config by
+                        //  design — see
+                        //  docs/adr/2026-07-18-eval-prod-parity.md.
+                        val visible = com.example.intentcam.ActionRescue
+                            .visibleActions(bubble, defaultActionIdSet)
+                        val effectiveBubble = bubble.copy(actions = visible)
                         val specs = defaultRequiredInputs()
                         val (validated, pending) = projectInputsValidation(effectiveBubble, specs)
                         effectiveBubble.copy(validatedInputs = validated, pendingInputs = pending)

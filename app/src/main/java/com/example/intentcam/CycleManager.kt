@@ -326,9 +326,14 @@ class CycleManager(
                         //  + pendingInputs).  Runs on the already-
                         //  resolved bubble so rescue sees the LLM's
                         //  chosen chips and only adds what's missing.
+                        //  Rescue is filtered by the user's enabled
+                        //  set (2026-07-18 P3 fix) so consent-gated
+                        //  chips don't surface uninvited.
                         //  CycleJob's reactive flows are kept in sync
                         //  separately via CycleJob.refreshValidation().
-                        markValidated = { bubble -> orchestrator.markValidatedInputs(bubble) },
+                        markValidated = { bubble ->
+                            orchestrator.markValidatedInputs(bubble, enabledIds())
+                        },
                         onProgress = { progress ->
                             // progress.bubble is already resolved +
                             //  stamped (rescue + validatedInputs) by

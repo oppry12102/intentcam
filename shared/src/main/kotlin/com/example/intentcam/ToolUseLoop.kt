@@ -133,8 +133,12 @@ class ToolUseLoop(
          *  parser-registry is at hand.  Prod wires
          *  [com.example.intentcam.ActionOrchestrator.markValidatedInputs];
          *  eval wires a pure-shared helper (no Android dep).  Default
-         *  null leaves the fields empty (legacy behavior). */
-        markValidated: ((bubble: com.example.intentcam.Bubble) -> com.example.intentcam.Bubble)? = null,
+         *  null leaves the fields empty (legacy behavior).
+         *
+         *  `suspend` because prod's projection reads the user's
+         *  enabled-action set from SharedPreferences on every emit
+         *  (same reason [resolveActions] suspends). */
+        markValidated: (suspend (bubble: com.example.intentcam.Bubble) -> com.example.intentcam.Bubble)? = null,
         /** Optional resolver called once per emit to fold the
          *  model's `action_ids` ([com.example.intentcam.Bubble.llmProposedActions])
          *  into [com.example.intentcam.Bubble.actions] (LLM pick ∩

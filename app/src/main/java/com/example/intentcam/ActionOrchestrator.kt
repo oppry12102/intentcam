@@ -128,8 +128,8 @@ class ActionOrchestrator(
      *     terminal `onProgress`, so `CycleJob.bubble.value` (what the
      *     live UI renders) carries the populated fields and
      *     `shouldFinalize` can detect missing inputs.
-     *   - **ScorerV2** does NOT read `validatedInputs` — it scores
-     *     `r_inputs_complete` by walking `scene.expected_inputs` and
+     *   - **ScorerV3** does NOT read `validatedInputs` — it scores
+     *     `r_inputs` by walking `scene.expected_inputs` and
      *     re-running the `InputParsers` against the bubble's text
      *     surface.  The stamp here is for the live UI's chip state
      *     ([ChipStateMapper]), not for eval scoring.
@@ -138,15 +138,25 @@ class ActionOrchestrator(
      *  emit `action_ids`), returns the bubble with empty maps/lists
      *  — nothing to validate = nothing missing.
      *
-     *  [2026-07-17 content-rescue] Runs [rescueActions] BEFORE the
-     *  mark so the rescue chip (`dial_number` / `redact_id` /
-     *  `scan_to_pay`) shows up in `validatedInputs` and gets scored
-     *  correctly by downstream consumers. The rescue is additive —
-     *  LLM-chosen chips are never removed. */
-    fun markValidatedInputs(bubble: Bubble): Bubble {
-        val rescued = rescueActions(bubble)
-        val effectiveBubble = if (rescued.isEmpty()) bubble
-            else bubble.copy(actions = (bubble.actions + rescued).distinct())
+     *  [2026-07-17 content-rescue] Runs the rescue BEFORE the mark so
+     *  a rescued chip (`dial_number` / `redact_id` / `scan_to_pay`)
+     *  shows up in `validatedInputs`. The rescue is additive —
+     *  LLM-chosen chips are never removed.
+     *
+     *  [2026-07-18 P3 fix] The rescue + merge now goes through
+     *  [com.example.intentcam.ActionRescue] (shared/, single
+     *  implementation for prod + eval) and is filtered by [enabled]
+     *  — previously rescue bypassed the user's enabled/consent set,
+     *  so default-OFF PII chips (dial_number etc.) still rendered.
+     *  The share precision-gate ([ActionRescue.dropUnfoundedShare])
+     *  is applied here too so prod and eval see the same chips. */
+    fun markValidatedInputs(bubble: Bubble, enabled: Set<String>): Bubble {
+        val merged = (bubble.actions + ActionRescue.contentRescueActions(bubble))
+            .distinct()
+            .filter { it in enabled }
+        val effectiveBubble = bubble.copy(
+            actions = ActionRescue.dropUnfoundedShare(bubble, merged),
+        )
         return when (val v = validateInputs(effectiveBubble)) {
             is InputsValidation.Complete -> effectiveBubble.copy(
                 validatedInputs = effectiveBubble.actions.associateWith { true },
@@ -159,64 +169,6 @@ class ActionOrchestrator(
                 pendingInputs = missingInputKeys(effectiveBubble),
             )
         }
-    }
-
-    /**
-     * Content-based rescue — scan [bubble]'s text surface (title +
-     * detail + details[].value) for actionable patterns the LLM may
-     * have omitted. Returns the list of action ids to ADD to
-     * [Bubble.actions] (additive — LLM-chosen chips are never
-     * removed). The LLM remains authoritative for type + action
-     * selection; this only fills gaps where a clear, verifiable
-     * content cue supports a chip the LLM didn't pick.
-     *
-     * Designed to recover mixed-content fixtures where the LLM
-     * misses that the image also contains a phone number / id
-     * document / payment QR. After the 2026-07-17 intent-taxonomy
-     * retirement there's no type-keyed soft hint; content-rescue is
-     * the add-only safety net for these structured signals.
-     *
-     * **Rules** (each is independent — multiple can fire on one bubble):
-     *   - `dial_number` rescue — `InputParsers.phoneNumber(bubble) != null`
-     *     AND `dial_number` not already in `bubble.actions`. Covers
-     *     phone-20 mixed-content (restaurant / school / billboard
-     *     fixtures where the LLM classifies as location but a phone
-     *     number is present in OCR).
-     *   - `redact_id` rescue — `InputParsers.idDocument(bubble) != null`
-     *     AND `redact_id` not already in `bubble.actions`. Covers
-     *     pii-20 fixtures (clinic registration / business license /
-     *     id-document surfaces).
-     *   - `scan_to_pay` rescue — `InputParsers.paymentQr(bubble) != null`
-     *     AND `scan_to_pay` not already in `bubble.actions`. Covers
-     *     payment_qr intent fixtures.
-     *
-     * **NOT rescued** (deliberate, see plan
-     * `~/.claude/plans/sorted-meandering-pond.md` "Why this design"):
-     *   - `open_in_maps` — `InputParsers.locationQuery` is too lenient
-     *     (returns any non-blank title), false-positive rate would
-     *     put `open_in_maps` on every bubble. Soft hint + LLM is the
-     *     lever for location intent.
-     *   - `share` — `InputParsers.textContent` always returns non-null
-     *     for any populated bubble, would put `share` on every
-     *     bubble. Soft hint is the lever for share-able intents.
-     *
-     * The eval pipeline's [com.example.intentcam.eval.EvalRunner.markValidated]
-     * callback mirrors this rescue (via [com.example.intentcam.InputParsers]
-     * shared state) so eval scores what users actually see.
-     */
-    fun rescueActions(bubble: Bubble): List<String> {
-        val current = bubble.actions.toSet()
-        val rescue = mutableListOf<String>()
-        if ("dial_number" !in current && com.example.intentcam.InputParsers.phoneNumber(bubble) != null) {
-            rescue += "dial_number"
-        }
-        if ("redact_id" !in current && com.example.intentcam.InputParsers.idDocument(bubble) != null) {
-            rescue += "redact_id"
-        }
-        if ("scan_to_pay" !in current && com.example.intentcam.InputParsers.paymentQr(bubble) != null) {
-            rescue += "scan_to_pay"
-        }
-        return rescue
     }
 
     // ── Layer 3: Finalizer ───────────────────────────────────────────
