@@ -5,7 +5,7 @@
     "composite_formula": "[2026-07-17 action-first, canonical] composite_v3 = 0.55*r_actions(recall) + 0.30*r_text + 0.15*r_inputs. r_actions = recall of expected_actions against the visible chip set (LLM proposals + content-rescue, share precision-gated since 2026-07-18); over_fire_rate is the companion precision signal on the `none` suite. ScorerV2/r_type retired.",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-19",
-    "last_updated_commit": "2c68575 (maps name-search prompt) + 41398ad/450 GT hygiene",
+    "last_updated_commit": "4754cfe (scan strict suite + acceptance rescue) + 6311f6a (redact retired)",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",
       "2026-07-13+": "Local PP-OCRv4 mobile (PaddleOCR 2.7.3, on-prem) — Huawei Cloud retained as fallback only. All prior suites' numbers are reference-only; new baselines below."
@@ -15,7 +15,8 @@
     "v3_baseline_flip": "2026-07-17: v3 baseline = mean of 4 runs (summary_20260716_165400, summary_20260716_193517 [pre-soft-hint], summary_20260716_231731 [post-soft-hint], summary_20260717_065053 [post-content-rescue]). Four-sample mean captures both the soft-hint lift (OBSERVE-family) and the content-rescue lift (phone/PII rescue: pii_20 +0.031, phone_60 +0.034, real_estate_rental_11 +0.031).",
     "k3_rebaseline": "2026-07-19: baselines re-measured on kimi k3 (k3[1m] @ api.kimi.com/coding) after bigmodel glm-4.6 token expiry — prior numbers were glm-4.6 and are preserved per-suite as baseline_glm46. This run includes the two k3 fixes: MAX_TOKENS 3072->8192 (k3 mandatory thinking counts against max_tokens; empty-bubble bug) + tool_result-first user-message ordering (k3 strict validator 400s on image-first). 0/159 empty fixtures. Single-run numbers except dial_number corroborated by an independent verification run (0.793 vs 0.799, within noise). none-suite over_fire_rate 0.70 is dominated by GT under-annotation (share/maps on storefronts); see bug-audit-2026-07-18 memory.",
     "gt_curation_2026_07_19": "none-GT full migration (user-approved: named places/storefronts ARE actionable): 17 fixtures moved to share(+8)/maps(+8)/dial(+1) GTs; dial GT trimmed of 2 over-annotated (7995->none, 3371 dropped). Suite sizes: share 38 / maps 38 / dial 29 / none 14. none over_fire 0.429 decomposes: 7173/1138/7931 weak-content share (true model-GT disagreement ~0.21), 682 defensible plate-redact, 5126 storefront (borderline, kept), 7995 verb-trigger (borderline, kept). redact_id/scan_to_pay unchanged from summary_20260719_073308.",
-    "maps_prompt_2026_07_19": "open_in_maps name-search/non-exclusive prompt (2c68575): maps 0.747->0.812 (actions 0.649->0.748). Decomposed: GT hygiene +0.033 (7558/1003/1623/2198 removed), prompt +0.032 (5 recall flips: 1302/2420/3625/4178/7799). Losses: 450 (弯道减速 — GT keyword noise, model correctly abstains; moved to none, baseline re-measure pending), 7397/2893 residual variance. maps baseline measured on 35 scenes; GT now 34 (450 out, expected +0.012 folds into next run). none 0.949, over_fire 0.133 = cleanest yet (682 defensible + 7173 weak-content)."
+    "maps_prompt_2026_07_19": "open_in_maps name-search/non-exclusive prompt (2c68575): maps 0.747->0.812 (actions 0.649->0.748). Decomposed: GT hygiene +0.033 (7558/1003/1623/2198 removed), prompt +0.032 (5 recall flips: 1302/2420/3625/4178/7799). Losses: 450 (弯道减速 — GT keyword noise, model correctly abstains; moved to none, baseline re-measure pending), 7397/2893 residual variance. maps baseline measured on 35 scenes; GT now 34 (450 out, expected +0.012 folds into next run). none 0.949, over_fire 0.133 = cleanest yet (682 defensible + 7173 weak-content).",
+    "scan_redact_curation_2026_07_19": "scan_to_pay strict-payment curation 30->6 (word-misfires + non-payment QRs dropped; 1696/2048/4491/5264/2584 visually verified) + paymentQr rescue widened (+微信支付|支付宝支付; offline replay 3/6 rescued, 0 none fires; live 0.808->0.844). redact_id suite RETIRED to reference-only (8/9 over-annotated, only image_170 true; 1-fixture suite can't gate). 1696 residual: model vision misses small counter QR ~50% of runs — zoom-side lever, not parser. NOTE: 2026-07-19 ~12:30 the coding endpoint dropped the k3[1m] alias — use ANTHROPIC_MODEL=k3."
   },
   "suites": [
     {
@@ -95,16 +96,17 @@
       "limit": 6,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.7433,
+      "baseline": 0.8444,
       "baseline_legacy": null,
-      "baseline_commit": "3c5d3a1 (k3: MAX_TOKENS 8192 + tool_result-first)",
-      "v3_composite": 0.7433,
-      "v3_actions": 0.65,
-      "v3_text": 0.8222,
-      "v3_inputs": 0.9278,
+      "baseline_commit": "4754cfe (paymentQr acceptance-sign rescue) strict-6 suite",
+      "v3_composite": 0.8444,
+      "v3_actions": 0.7778,
+      "v3_text": 0.8889,
+      "v3_inputs": 1.0,
       "note": "action-first suite — scan_to_pay recall, STRICT payment semantics (2026-07-19 curation): 30 -> 6 true fixtures (收款码/支付牌/扫一扫转账). Dropped: 转账-word misfires (chat records, police notice, red packet), non-payment QRs (add-friend/official-account/training-promo/plant), no-QR word matches, wallet-UI screenshots. CAUTION: 1 fixture flip ≈ +0.09 composite — wider than the 0.05 gate; review FAILs per-fixture.",
       "over_fire_rate": 0.0,
-      "baseline_glm46": 0.6844
+      "baseline_glm46": 0.6844,
+      "baseline_prev_k3": 0.7433
     },
     {
       "name": "none",
