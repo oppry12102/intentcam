@@ -31,16 +31,18 @@ object LabelHtml {
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
-<!-- No viewport meta on purpose: the host WebView sets
-     useWideViewPort=false, so the page lays out at exactly the
-     view's width (a viewport meta would force device-width layout
-     and shrink the card's text when the view is narrower). -->
+<!-- device-width viewport: layout width = screen width in CSS px,
+     so 1 CSS px = 1 dp and font sizes below are dp-equivalents.
+     (The first version omitted this: without a viewport meta the
+     WebView lays out at PHYSICAL pixel width — 15px type shrank to
+     ≈5dp on a 3× display, the "页面很小" user report 2026-07-19.) -->
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <style>
 $CSS
 </style>
 </head>
 <body>
-<div class="label-card">
+<div class="label-page">
   <div class="label-header">$safeTitle</div>
   <div class="label-body">
 $body
@@ -227,51 +229,53 @@ $body
         }
     }
 
-    /** Label-card template.  White card, dashed border (physical-label
-     *  feel), CJK font stack, full-width bordered tables.  Font sizes
-     *  in px (WebView CSS px ≈ dp with the viewport meta), body sized
-     *  for comfortable reading at card width. */
+    /** Full-screen label page template.  Clean white page (the app
+     *  chrome above/below it is dark); CJK font stack; full-width
+     *  bordered tables.  Font sizes in px which, with the
+     *  device-width viewport, are dp-equivalents — so the page reads
+     *  at the same physical size on any screen. */
     private const val CSS = """
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { background: transparent; }
+html, body { background: #ffffff; }
 body {
   font-family: system-ui, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
   color: #1a1a1a;
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.6;
 }
-.label-card {
+.label-page {
   background: #ffffff;
-  border: 1.5px dashed #9aa4b2;
-  border-radius: 10px;
-  padding: 14px 16px 16px;
-  overflow: hidden;
+  /* no min-height:100vh — vh resolves against the WebView's own
+     height, which is unstable in the off-screen capture path (view
+     laid out at 1px before load); the Compose side already paints
+     the white background. */
+  padding: 18px 20px 24px;
 }
 .label-header {
   font-size: 13px;
   color: #6b7280;
   letter-spacing: 0.05em;
-  padding-bottom: 8px;
-  margin-bottom: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
 }
-.label-body h1 { font-size: 20px; text-align: center; margin: 4px 0 10px; }
-.label-body h2 { font-size: 17px; margin: 10px 0 6px; }
-.label-body h3 { font-size: 15px; margin: 8px 0 4px; color: #374151; }
-.label-body h4, .label-body h5, .label-body h6 { font-size: 14px; margin: 6px 0 4px; color: #4b5563; }
-.label-body p { margin: 6px 0; }
-.label-body ul, .label-body ol { margin: 6px 0 6px 1.3em; }
-.label-body li { margin: 2px 0; }
-.label-body hr { border: none; border-top: 1px dashed #cbd5e1; margin: 10px 0; }
+.label-body h1 { font-size: 22px; text-align: center; margin: 6px 0 12px; }
+.label-body h2 { font-size: 18px; margin: 12px 0 6px; }
+.label-body h3 { font-size: 16px; margin: 10px 0 4px; color: #374151; }
+.label-body h4, .label-body h5, .label-body h6 { font-size: 15px; margin: 8px 0 4px; color: #4b5563; }
+.label-body p { margin: 7px 0; }
+.label-body ul, .label-body ol { margin: 7px 0 7px 1.3em; }
+.label-body li { margin: 3px 0; }
+.label-body hr { border: none; border-top: 1px dashed #cbd5e1; margin: 12px 0; }
 .label-body table {
   width: 100%;
   border-collapse: collapse;
-  margin: 8px 0;
-  font-size: 14px;
+  margin: 10px 0;
+  font-size: 15px;
 }
 .label-body th, .label-body td {
   border: 1px solid #d1d5db;
-  padding: 5px 8px;
+  padding: 6px 9px;
   text-align: left;
   vertical-align: top;
   word-break: break-word;
@@ -282,7 +286,7 @@ body {
   background: #f3f4f6;
   border-radius: 4px;
   padding: 0 4px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .label-body strong { font-weight: 600; }
 """

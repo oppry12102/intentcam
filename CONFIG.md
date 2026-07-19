@@ -421,14 +421,18 @@ overlay) and exports it via `app/LabelPageExporter.kt`.
 
 | Constant | Value | File:line | What it controls | Why this value |
 |---|---|---|---|---|
-| `MAX_CAPTURE_HEIGHT_PX` | `6000` | `LabelPageExporter.kt:~50` | Off-screen PNG height ceiling | Bounds transient bitmap (1080×6000 ARGB ≈ 25 MB); real labels are far shorter |
-| `MAX_CAPTURE_WIDTH_PX` | `1440` | `LabelPageExporter.kt:~53` | Off-screen PNG width ceiling | Same bitmap-memory bound on wide tablets |
-| `PAGE_LOAD_TIMEOUT_MS` | `5000` | `LabelPageExporter.kt:~56` | Off-screen render wait | Inline HTML loads instantly; timeout only guards a wedged WebView |
-| `MAX_PAGE_HEIGHT_FRACTION` | `0.62` | `LabelPageScreen.kt:~216` | On-screen page height cap (fraction of screen) | Keeps header + 4 buttons visible; longer labels scroll inside the WebView |
-| `MAX_CARD_WIDTH_DP` | `520dp` | `LabelPageScreen.kt:~213` | Card width ceiling | Phone screens are ≪ this; tablet guard only |
+| `MAX_CAPTURE_HEIGHT_PX` | `6000` | `LabelPageExporter.kt:~40` | PNG height ceiling | Bounds transient bitmap (1080×6000 ARGB ≈ 25 MB); real labels are far shorter |
+| viewport meta | `width=device-width, initial-scale=1` | `LabelHtml.kt` template | CSS px = dp mapping | Without it the WebView lays out at PHYSICAL px width — 15px type ≈ 5dp on a 3× display (the "页面很小" acceptance bug) |
+| `enableSlowWholeDocumentDraw` | on | `LabelPageScreen.kt` (static, before load) | Whole-document layout | Required so the full-height share capture can draw below the fold; without it the WebView tiles content per-viewport and the capture is blank below the fold |
 
-No storage permission: MediaStore on API 29+, app-external-dir +
-MediaScanner on 26–28 (ADR `docs/adr/2026-07-19-view-label-action.md`).
+Page layout is full-screen (2026-07-19 acceptance redesign): WebView
+fills the space between header and the two-button bar (分享图片 /
+分享文字 only — save-to-gallery / save-as-file dropped per user
+request).  No storage permission needed anywhere (share goes through
+FileProvider).  Capture draws the ON-SCREEN WebView (off-screen
+WebViews rasterize unreliably — two blank-PNG shipments), verified
+on emulator via the `--ez dev_label_page true` debug hook.
+ADR `docs/adr/2026-07-19-view-label-action.md`.
 
 ---
 

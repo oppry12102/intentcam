@@ -8,13 +8,18 @@ package com.example.intentcam
  *  - [Validated] — every required input for this action was
  *    satisfied by the bubble's surface text.  Chip renders solid
  *    + tap fires the action immediately.
- *  - [Ghost]     — at least one required input is missing.  Chip
- *    renders gray + tooltip "需要 X"; tapping it does nothing
- *    (or, in a future phase, could open an inline input dialog).
+ *  - [Ghost]     — the cycle reached a TERMINAL state with at least
+ *    one required input still missing.  Chip renders gray + tooltip
+ *    "需要 X"; tapping it surfaces the body's own feedback (e.g.
+ *    dial_number's "未发现号码" Toast).
  *  - [Spinner]   — the cycle is still IN_FLIGHT and this action
- *    hasn't been validated yet.  Chip renders yellow with a small
- *    spinner icon; tapping it does nothing until the cycle
- *    reaches COMPLETE.
+ *    hasn't been validated yet — INCLUDING an already-computed
+ *    `false`: the missing-input nudge round may still deliver the
+ *    value, so the chip must not be tappable yet.  (`view_label`'s
+ *    `label_markdown` transcription is the canonical slow case —
+ *    2026-07-19 user report: the Ghost-tappable window let users
+ *    fire the action mid-generation and get the "未识别到标签内容"
+ *    Toast while the label was still coming.)
  *  - [Hidden]    — the action's `requiredInputs` cannot be parsed
  *    from this bubble's text at all (e.g. `dial_number` on a
  *    bubble with no phone number AND no detail rows).  Chip is
@@ -46,8 +51,10 @@ sealed class ChipState {
  *     (cycle in flight) from Ghost (cycle done, missing inputs).
  *
  * Decision tree (in order):
- *   1. `actionId ∉ bubble.validatedInputs` AND cycle in flight
- *      → Spinner (waiting on validation).
+ *   1. Cycle in flight AND not yet validated (null or computed false)
+ *      → Spinner.  A mid-flight `false` is NOT Ghost: the missing-
+ *      input nudge round may still deliver the value, and Ghost is
+ *      tappable (2026-07-19 view_label mid-generation bug).
  *   2. `bubble.validatedInputs[actionId] == true` → Validated.
  *   3. `bubble.validatedInputs[actionId] == false` → Ghost (cycle
  *      finished but this action's inputs are missing).
@@ -61,9 +68,12 @@ sealed class ChipState {
  */
 fun resolveChipState(bubble: Bubble, action: ActionDef, cycleStatus: JobStatus): ChipState {
     val validated = bubble.validatedInputs[action.id]
-    // Spinner: cycle still in flight and this action hasn't been
-    // validated yet.
-    if (validated == null && (cycleStatus == JobStatus.PENDING || cycleStatus == JobStatus.IN_FLIGHT)) {
+    val inFlight = cycleStatus == JobStatus.PENDING || cycleStatus == JobStatus.IN_FLIGHT
+    if (inFlight && validated != true) {
+        // Mid-flight: not-yet-validated chips (null OR computed false)
+        // stay non-tappable spinners — a `false` can still flip when
+        // the missing-input nudge round delivers the value.  Ghost's
+        // tappable-with-Toast contract is reserved for terminal cycles.
         return ChipState.Spinner
     }
     // No required inputs → always Validated (universal actions).
