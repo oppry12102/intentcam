@@ -129,6 +129,13 @@ data class ToolResult(
      *  the shared ToolResult so the prompt-time schema and the
      *  orchestrator's plumbing don't drift. */
     val proposedActions: List<String>? = null,
+    /** When `emit_bubble` accepts a `label_markdown` field from the
+     *  model (full label content as markdown for label-like scenes),
+     *  populated here so the orchestrator can persist it onto
+     *  [Bubble.labelMarkdown].  Drives the `view_label` action's
+     *  required input + rendered-page payload.  Null for non-label
+     *  scenes. */
+    val labelMarkdown: String? = null,
 )
 
 /**

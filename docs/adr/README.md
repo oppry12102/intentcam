@@ -22,6 +22,7 @@ context matters.
 | 2026-07-15 | [2026-07-15-v4-action-first-composite.md](2026-07-15-v4-action-first-composite.md) | v4 action-first composite + UI accent |
 | 2026-07-16 | [2026-07-16-producer-consumer-pipeline.md](2026-07-16-producer-consumer-pipeline.md) | CycleManager producer/consumer pipeline + busy derived flow |
 | 2026-07-16 | [2026-07-16-input-parsers-drift-risk.md](2026-07-16-input-parsers-drift-risk.md) | InputParsers drift risk (phone regex duplicated 3 places) — mitigation pending |
+| 2026-07-19 | [2026-07-19-view-label-action.md](2026-07-19-view-label-action.md) | `view_label` action: `label_markdown` contract + WebView-rendered label page |
 
 ## ADR template
 

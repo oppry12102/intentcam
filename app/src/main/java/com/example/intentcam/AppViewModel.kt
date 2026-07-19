@@ -853,6 +853,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(pendingAction = null)
     }
 
+    /** User closed the rendered-label page (view_label).  Clears
+     *  [UiState.renderedLabel]; whatever was underneath (camera or
+     *  detail screen) shows again. */
+    fun dismissRenderedLabel() {
+        if (_state.value.renderedLabel != null) {
+            _state.value = _state.value.copy(renderedLabel = null)
+        }
+    }
+
     /**
      * Shared core for [runAction] + [submitActionArgs]: invoke the
      * body, catch into a Toast on throw, and dispatch the resulting
@@ -922,6 +931,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             "ACTION",
                             "request args via=${outcome.resumeActionId} " +
                                 "${outcome.args.size} fields"
+                        )
+                    }
+                    is ActionOutcome.ShowRenderedLabel -> {
+                        // Park the page payload; MainActivity overlays
+                        // LabelPageScreen while it is non-null.  The
+                        // payload is a copy, so the page survives the
+                        // source bubble's eviction from history.
+                        _state.value = _state.value.copy(renderedLabel = outcome.label)
+                        logDebug(
+                            "ACTION",
+                            "show label page title='${outcome.label.title.take(30)}' " +
+                                "md=${outcome.label.markdown.length} chars"
                         )
                     }
                 }

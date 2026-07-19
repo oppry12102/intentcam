@@ -25,8 +25,13 @@ import android.content.Context
  *                              phone number, a timestamp, etc. that
  *                              the LLM can guess from the scene but
  *                              must hand off to the user.
+ *   - [ShowRenderedLabel]    — view_label's rendered-label page:
+ *                              AppViewModel parks the payload on
+ *                              `UiState.renderedLabel`; MainActivity
+ *                              overlays the full-screen page (WebView
+ *                              card + save/share buttons).
  *
- * Kept deliberately narrow (4 cases).  Adding a new action category
+ * Kept deliberately narrow (5 cases).  Adding a new action category
  * (e.g., "LaunchApp") typically means adding a new outcome variant —
  * which is the point: the dispatcher in AppViewModel is exhaustive on
  * this sealed class, so adding an outcome catches every site that
@@ -51,6 +56,14 @@ sealed class ActionOutcome {
          *  in practice). */
         val resumeActionId: String,
     ) : ActionOutcome()
+
+    /** Open the in-app rendered-label page.  The body has already
+     *  packed everything the page needs into [label] (a *copy*, so
+     *  the page survives bubble-history eviction); AppViewModel just
+     *  parks it on `UiState.renderedLabel` and MainActivity overlays
+     *  the page.  Distinct from [None]'s "purely UI-side effect"
+     *  because the dispatcher must carry a payload. */
+    data class ShowRenderedLabel(val label: RenderedLabel) : ActionOutcome()
 }
 
 /**
@@ -413,6 +426,49 @@ fun registerDefaultActions(reg: ActionRegistry) {
         // DELEGATE cluster: the OS share-sheet target picker is the
         //  consent step; the text payload is already visible to the
         //  user.
+        accent = AccentCluster.DELEGATE,
+    ))
+    // view_label — 标签识别。  When the LLM recognizes a label-like
+    // structured text block (商品标签/价签/吊牌/合格证/快递面单/票据/
+    // 铭牌 …) it transcribes the FULL label content into
+    // `emit_bubble.label_markdown`; this action renders that markdown
+    // into a styled in-app page (LabelPageScreen, WebView + built-in
+    // HTML template) that can be saved / shared as image or text.
+    //
+    // requiredInputs=[label_markdown]: proposing the action without
+    // the content lands the chip in ghost state, same contract as
+    // open_in_maps' `query`.  No confirmation, no pref toggle:
+    // read-only page view with zero side effects (save/share are
+    // user-driven buttons on the page itself, and each goes through
+    // its own OS-mediated surface — gallery insert / share sheet).
+    reg.register(ActionDef(
+        id = "view_label",
+        label = "查看标签",
+        iconKey = "tag",
+        requiredInputs = listOf(ActionInputSpec(
+            key = "label_markdown",
+            label = "标签内容",
+            parser = { b -> com.example.intentcam.InputParsers.labelMarkdown(b) },
+        )),
+        body = { _, bubble, args ->
+            val md = args["label_markdown"]
+                ?: com.example.intentcam.InputParsers.labelMarkdown(bubble)
+            if (md == null) {
+                ActionOutcome.ShowUiFeedback("未识别到标签内容")
+            } else {
+                ActionOutcome.ShowRenderedLabel(
+                    com.example.intentcam.RenderedLabel(
+                        title = bubble.title,
+                        markdown = md,
+                        bubbleId = bubble.id,
+                    )
+                )
+            }
+        },
+        // DELEGATE cluster: hands the content off to a viewer page;
+        //  no consent gate needed — the page is read-only and every
+        //  outbound path from it (save / share) is separately
+        //  user-initiated.
         accent = AccentCluster.DELEGATE,
     ))
 }

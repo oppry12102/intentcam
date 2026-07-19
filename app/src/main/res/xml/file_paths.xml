@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider paths.  Only the view_label rendered-page PNG cache
+     is exposed; everything else stays private. -->
+<paths>
+    <cache-path name="label_pages" path="label_pages/" />
+</paths>

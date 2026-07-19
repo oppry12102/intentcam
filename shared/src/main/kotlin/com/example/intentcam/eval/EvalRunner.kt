@@ -57,6 +57,7 @@ internal class EvalRunner(private val config: EvalConfig) {
         "share",          // unified share-text action (was
                           //   copy_listing/save_posting/copy_warning/
                           //   copy_menu/copy_hours/copy_promo)
+        "view_label",     // label → rendered markdown page (save/share)
     )
     private val defaultActionIdSet = defaultActionIds.toSet()
 
@@ -88,6 +89,10 @@ internal class EvalRunner(private val config: EvalConfig) {
             "share"         to listOf(ActionInputSpec(
                 "text", "正文",
                 { b -> if (com.example.intentcam.InputParsers.textContent(b) != null) "present" else null }
+            )),
+            "view_label"    to listOf(ActionInputSpec(
+                "label_markdown", "标签内容",
+                { b -> if (com.example.intentcam.InputParsers.labelMarkdown(b) != null) "present" else null }
             )),
             // scan_to_pay / redact_id have no requiredInputs.
         )

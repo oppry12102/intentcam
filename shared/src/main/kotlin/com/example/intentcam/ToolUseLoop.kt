@@ -625,6 +625,10 @@ class ToolUseLoop(
                     // omitted the field — then no LLM-proposed chips
                     // (only content-rescue can still add).
                     llmProposedActions = verifiedActions,
+                    // Full label transcription (markdown) when the
+                    // model recognized a label-like scene; null
+                    // otherwise.  Payload for the view_label page.
+                    labelMarkdown = tb.labelMarkdown,
                 )
                 // Notify the CycleManager that
                 // this cycle has a finalized bubble.  `isTerminal =

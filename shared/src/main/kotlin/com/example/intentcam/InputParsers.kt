@@ -150,6 +150,15 @@ object InputParsers {
             append(bubble.detail)
         }.takeIf { it.isNotBlank() }
 
+    /** For the `view_label` action.  The label's full markdown
+     *  transcription is emitted by the LLM as a first-class bubble
+     *  field (`emit_bubble.label_markdown`), so the parser is a
+     *  plain field read — no text-surface regex needed.  Null when
+     *  the model proposed `view_label` but omitted the content
+     *  (drives the ghost-chip / missing-input path). */
+    fun labelMarkdown(bubble: Bubble): String? =
+        bubble.labelMarkdown?.takeIf { it.isNotBlank() }
+
     /**
      * For the `redact_id` action. Returns the first id-document-shaped
      * string found in title/detail/details[].value, or null when none.

@@ -154,40 +154,51 @@ private fun AppRoot(viewModel: AppViewModel) {
         }
     }
 
-    when (state.phase) {
-        Phase.SETTINGS -> SettingsScreen(
-            current = viewModel.config,
-            piiPermissions = viewModel.piiActionPermissions(),
-            onSave = viewModel::saveConfig,
-            onResetDefault = viewModel::resetConfigToDefault,
-            onClose = viewModel::closeSettings,
-            onTogglePii = viewModel::setPiiActionPermission,
-        )
-        Phase.NEED_PERMISSION -> {
-            // Landing here after a permission request means the camera is still
-            // unavailable. Record that semantic state so the rationale API can
-            // distinguish a soft denial from a permanently blocked request.
-            LaunchedEffect(Unit) {
-                if (hasLaunchedOnce && ContextCompat.checkSelfPermission(
-                        context, Manifest.permission.CAMERA
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    permissionDeniedOnce = true
+    Box(Modifier.fillMaxSize()) {
+        when (state.phase) {
+            Phase.SETTINGS -> SettingsScreen(
+                current = viewModel.config,
+                piiPermissions = viewModel.piiActionPermissions(),
+                onSave = viewModel::saveConfig,
+                onResetDefault = viewModel::resetConfigToDefault,
+                onClose = viewModel::closeSettings,
+                onTogglePii = viewModel::setPiiActionPermission,
+            )
+            Phase.NEED_PERMISSION -> {
+                // Landing here after a permission request means the camera is still
+                // unavailable. Record that semantic state so the rationale API can
+                // distinguish a soft denial from a permanently blocked request.
+                LaunchedEffect(Unit) {
+                    if (hasLaunchedOnce && ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        permissionDeniedOnce = true
+                    }
                 }
+                PermissionScreen(
+                    onRequest = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                    onOpenSettings = {
+                        val intent = android.content.Intent(
+                            android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            android.net.Uri.fromParts("package", context.packageName, null),
+                        ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    },
+                    permanentlyDenied = permanentlyDenied,
+                )
             }
-            PermissionScreen(
-                onRequest = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                onOpenSettings = {
-                    val intent = android.content.Intent(
-                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        android.net.Uri.fromParts("package", context.packageName, null),
-                    ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(intent)
-                },
-                permanentlyDenied = permanentlyDenied,
+            else -> CameraScreen(viewModel, state)
+        }
+        // view_label's rendered-label page overlays whatever is
+        // underneath (camera or detail screen) while the payload is
+        // parked on UiState.  Chips on both screens can open it.
+        state.renderedLabel?.let { rendered ->
+            LabelPageScreen(
+                label = rendered,
+                onDismiss = viewModel::dismissRenderedLabel,
             )
         }
-        else -> CameraScreen(viewModel, state)
     }
 }
 

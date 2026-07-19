@@ -90,6 +90,27 @@ data class PendingConfirmation(
     val detail: String,
 )
 
+/** Payload for the `view_label` action's rendered-label page.
+ *  Carried by `ActionOutcome.ShowRenderedLabel` (app/) and parked on
+ *  `UiState.renderedLabel`; MainActivity overlays the full-screen
+ *  label page while this is non-null.  Lives in `shared/` for the
+ *  same reason as [PendingAction]: [UiState] is cross-platform and
+ *  must not reference Android types.
+ *
+ *  The page content rides along as a *copy* (not a bubble reference)
+ *  so the page survives bubble-history eviction while it is open. */
+data class RenderedLabel(
+    /** Page title — the bubble's intent phrase (e.g. "查看商品标签"). */
+    val title: String,
+    /** Full label content as markdown (the `label_markdown` field the
+     *  LLM emitted in `emit_bubble`).  Rendered to HTML by
+     *  [com.example.intentcam.LabelHtml]; also the payload for
+     *  save-as-text / share-as-text. */
+    val markdown: String,
+    /** Source bubble id, for audit logging / correlation only. */
+    val bubbleId: String,
+)
+
 /** Output of [com.example.intentcam.ActionOrchestrator.validateInputs].
  *  Sealed so callers (live UI, ScorerV2, prompt framing) handle both
  *  shapes exhaustively.  Lives in `:shared/` because

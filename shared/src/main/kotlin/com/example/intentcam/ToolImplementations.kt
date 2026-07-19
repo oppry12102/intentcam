@@ -365,7 +365,11 @@ fun ToolRegistry.registerDefaultTools() {
                 "识别到**信息类文字** → **share**：招聘 / 房源 / 促销 / 菜单 / 营业时间 / 警示告示 / 启事 / 公告 等" +
                 "有明确信息量、值得复制转发的文字；" +
                 "识别到证件号（身份证/营业执照/驾驶证/车牌/18 位号码）→ **redact_id**；" +
-                "识别到收款码/付款码/扫码支付 → **scan_to_pay**。" +
+                "识别到收款码/付款码/扫码支付 → **scan_to_pay**；" +
+                "识别到**标签类内容** → **view_label**：商品标签 / 价签 / 吊牌 / 合格证 / 包装信息 / " +
+                "快递面单 / 行李牌 / 票据 / 铭牌 等**成片结构化文字块**。命中时必须同时在 **label_markdown** " +
+                "字段输出该标签完整内容的 markdown 还原（标题用 `#`，字段用 `-` 列表，键值对整齐排列，" +
+                "有表格用 markdown 表格），逐字保留原文不要概括；画面中没有明确标签时**不要**输出该字段。" +
                 "**例外（留空 `[]`）**：纯装饰 / 段子 / 表情包 / 单字 / 书法 / 抽象图案 / 商品 slogan 这类" +
                 "**没有可操作对象**的文字 → 留空 `[]`，**不要填 share**（share 是信息类文字，不是任何文字图的兜底）。" +
                 "一张图可同时命中多条（如店铺招牌带电话 → dial_number + open_in_maps）。" +
@@ -445,6 +449,16 @@ fun ToolRegistry.registerDefaultTools() {
                             put("type", "string")
                         })
                     })
+                    // label_markdown is optional and ONLY meaningful
+                    // alongside the view_label action id: the model
+                    // transcribes the full label content as markdown
+                    // here; the app renders it into a styled page.
+                    put("label_markdown", JSONObject().apply {
+                        put("type", "string")
+                        put("description", "（可选）标签完整内容的 markdown 还原：标题用 #，字段用 - 列表，" +
+                            "表格用 markdown 表格。仅当画面中存在明确标签（商品标签/价签/吊牌/合格证/" +
+                            "快递面单/票据/铭牌等）且 action_ids 含 view_label 时填写；逐字保留原文。")
+                    })
                 })
                 // `type` is intentionally NOT required: the system
                 // prompt + tool description both tell the model it may
@@ -510,6 +524,11 @@ fun ToolRegistry.registerDefaultTools() {
                     confidence = input.optDouble("confidence", 0.7).toFloat().coerceIn(0f, 1f),
                     details = details,
                     proposedActions = proposedActions,
+                    // Optional label transcription (markdown).  Blank
+                    // → null so the view_label required-input parser
+                    // treats it as missing rather than empty.
+                    labelMarkdown = input.optString("label_markdown", "")
+                        .trim().takeIf { it.isNotEmpty() },
                 )
             },
         )

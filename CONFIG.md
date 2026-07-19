@@ -413,6 +413,25 @@ removal.  See `commit 8458906` for the full diff and rationale.
 
 ---
 
+## N. `view_label` rendered-label page (2026-07-19)
+
+The `view_label` action renders `emit_bubble.label_markdown` into a
+WebView page (`shared/LabelHtml.kt` template + `app/LabelPageScreen.kt`
+overlay) and exports it via `app/LabelPageExporter.kt`.
+
+| Constant | Value | File:line | What it controls | Why this value |
+|---|---|---|---|---|
+| `MAX_CAPTURE_HEIGHT_PX` | `6000` | `LabelPageExporter.kt:~50` | Off-screen PNG height ceiling | Bounds transient bitmap (1080×6000 ARGB ≈ 25 MB); real labels are far shorter |
+| `MAX_CAPTURE_WIDTH_PX` | `1440` | `LabelPageExporter.kt:~53` | Off-screen PNG width ceiling | Same bitmap-memory bound on wide tablets |
+| `PAGE_LOAD_TIMEOUT_MS` | `5000` | `LabelPageExporter.kt:~56` | Off-screen render wait | Inline HTML loads instantly; timeout only guards a wedged WebView |
+| `MAX_PAGE_HEIGHT_FRACTION` | `0.62` | `LabelPageScreen.kt:~216` | On-screen page height cap (fraction of screen) | Keeps header + 4 buttons visible; longer labels scroll inside the WebView |
+| `MAX_CARD_WIDTH_DP` | `520dp` | `LabelPageScreen.kt:~213` | Card width ceiling | Phone screens are ≪ this; tablet guard only |
+
+No storage permission: MediaStore on API 29+, app-external-dir +
+MediaScanner on 26–28 (ADR `docs/adr/2026-07-19-view-label-action.md`).
+
+---
+
 ## Recently retired (kept here for one cycle, then delete)
 
 | Constant | Was at | Removed | Why |

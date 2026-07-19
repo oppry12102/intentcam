@@ -4,6 +4,77 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Added — `view_label` 标签识别 action：渲染标签页 + 保存/分享 (2026-07-19)
+
+New action for label-like structured text blocks (商品标签/价签/吊牌/合格证/
+快递面单/票据/铭牌).  When the LLM recognizes one, it transcribes the FULL
+label content into the new optional `emit_bubble.label_markdown` field
+(markdown: `#` headings, `-` field lists, GFM tables, verbatim text).  The
+`view_label` chip (「查看标签」, DELEGATE blue) opens an in-app page that
+renders the markdown into a styled label card and offers four affordances:
+保存图片 (PNG → gallery) / 保存文字 (`.md` → Downloads) / 分享图片 /
+分享文字.
+
+**Contract & pipeline** (shared/, prod+eval single source):
+- `Tools.kt` `ToolResult.labelMarkdown` → `ToolUseLoop` →
+  `Models.kt` `Bubble.labelMarkdown`; `UiState.renderedLabel` parks the
+  open page's payload (a copy — survives bubble-history eviction).
+- `emit_bubble` description gains the label→`view_label` mapping sentence;
+  schema gains optional `label_markdown` (explicitly "no label in scene →
+  omit the field").
+- `InputParsers.labelMarkdown` — the action's required input is the field
+  itself (no text-surface regex); `ActionRescue` adds `view_label` when the
+  field exists but the chip wasn't proposed (zero-precision-risk rescue:
+  the field only exists when the model deliberately wrote it).
+
+**Rendering** (no third-party markdown lib — build-env download history +
+APK budget; Compose ui-1.6.1 has no `rememberGraphicsLayer`/`toImageBitmap`):
+- `shared/.../LabelHtml.kt` — deterministic markdown-subset → HTML
+  converter (headings/lists/tables/bold/code/rules; escape-first so LLM
+  output can never inject markup) + built-in label-card CSS template.
+- `app/.../LabelPageScreen.kt` — full-screen overlay (scrim + centered
+  card, width = screen−32dp ≤520dp, height follows WebView content
+  capped at 62% screen, longer labels scroll inside).
+- `app/.../LabelPageExporter.kt` — PNG capture via off-screen WebView
+  (`measure(width EXACT, height UNSPECIFIED)` → `layout` → `draw()` with
+  software layer; height cap 6000px), MediaStore save (API 29+) /
+  app-external-dir + MediaScanner (26–28, **no storage permission
+  anywhere**), FileProvider `image/png` share (+ClipData grant for 微信),
+  `text/plain` markdown share.
+- `ActionOutcome.ShowRenderedLabel` — 5th outcome variant; the exhaustive
+  dispatcher in `AppViewModel.executeAndDispatch` parks the payload.
+- Manifest gains only a FileProvider (`cache/label_pages`).
+
+**Eval** (eval-prod-parity ADR): `EvalRunner.defaultActionIds` +
+`defaultRequiredInputs` mirror the registry; `ScorerV3.inputSatisfied` gains
+the `label_markdown` branch; `migrate_gt_v2_to_v3.py` + `build_action_suites.py`
+tables extended (trigger vocabulary: 标签/价签/吊牌/合格证/生产日期/保质期/
+净含量/配料表/执行标准/快递单/面单/铭牌/营养成分/条形码/制造商 — tight on
+purpose, RCTW is street-scene).  New suite `ground_truth_view_label.json`
+(30 scenes — the corpus turned out to carry real product-packaging fixtures:
+净含量/执行标准 on cans/boxes/bottles); none-suite overlap check: 0/16.
+`build_action_suites.py` gained `--only ACTION` because a full rebuild
+regenerates (clobbers) the hand-curated suites (scan_to_pay 30→6 etc.) —
+existing curated files restored from git.  **First baseline (k3, 30 scenes):
+composite 0.6711 — actions 0.594 / text 0.808 / inputs 0.678; 0 errors,
+0 empty bubbles.**  The 8 a=0 misses (model didn't propose `view_label`
+on genuine packaging) are the next prompt-tuning lever.
+
+**Regression after the shared-prompt change** (summary_20260719_160413,
+5 suites, 123 scenes, 0 errors): dial **+0.074** (0.8305→0.9049),
+maps **+0.102** (0.8123→0.9144), share **+0.133** (0.8255→0.9587) —
+all lifts concentrated in `r_actions` (the new mapping sentence raised
+`action_ids` salience; k3 endpoint drift not separable but environmental).
+scan_to_pay +0.025 PASS; none −0.000 PASS with over_fire **0.4375** (same
+documented weak-content share set, **0 `view_label` fires** — precision
+intact).  Baselines refreshed on the three lifted suites.
+
+**Manual acceptance checklist** (device-side, not verifiable in CI):
+tap 查看标签 → page renders sized to content; long label scrolls; 保存图片
+lands in 相册 Pictures/IntentCam; 分享图片 opens sheet and target receives
+the PNG; 保存文字 lands in Download/IntentCam/*.md; no-label scenes show no
+chip.
+
 ### Fixed — `open_in_maps` action uses recognized address, not LLM action phrase (2026-07-17)
 
 User-reported bug: tapping the "在地图中打开" chip fired `geo:0,0?q=<title>`

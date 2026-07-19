@@ -45,6 +45,12 @@ object ActionRescue {
      *     AND `redact_id` not already in `bubble.actions`.
      *   - `scan_to_pay` rescue — `InputParsers.paymentQr(bubble) != null`
      *     AND `scan_to_pay` not already in `bubble.actions`.
+     *   - `view_label` rescue — `InputParsers.labelMarkdown(bubble) != null`
+     *     AND `view_label` not already in `bubble.actions`.  The LLM
+     *     transcribed a label (`label_markdown` present) but forgot to
+     *     light its chip — the field's existence IS the verifiable cue,
+     *     so precision risk is nil (unlike the lenient text parsers,
+     *     this field only exists when the model deliberately wrote it).
      *
      * **NOT rescued** (deliberate):
      *   - `open_in_maps` — `InputParsers.locationQuery` is too lenient
@@ -70,6 +76,9 @@ object ActionRescue {
         }
         if ("scan_to_pay" !in current && InputParsers.paymentQr(bubble) != null) {
             rescue += "scan_to_pay"
+        }
+        if ("view_label" !in current && InputParsers.labelMarkdown(bubble) != null) {
+            rescue += "view_label"
         }
         return rescue
     }

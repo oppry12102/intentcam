@@ -133,6 +133,8 @@ data class ScorerV3Result(
                 com.example.intentcam.InputParsers.locationQuery(bubble) != null
             key == "text" ->
                 com.example.intentcam.InputParsers.textContent(bubble) != null
+            key == "label_markdown" ->
+                com.example.intentcam.InputParsers.labelMarkdown(bubble) != null
             else -> false
         }
 

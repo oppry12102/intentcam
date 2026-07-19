@@ -106,6 +106,12 @@ data class Bubble(
      *  requiredInputs registered → all actions are implicitly
      *  "validated").  Drives the live-UI chip state in Phase C. */
     val validatedInputs: Map<String, Boolean> = emptyMap(),
+    /** Full label content as markdown when the LLM recognized a
+     *  label-like structured text block (商品标签/价签/吊牌/合格证/快递
+     *  面单/票据/铭牌 …) and emitted `emit_bubble.label_markdown`.
+     *  Drives the `view_label` action: required input + rendered-page
+     *  payload.  Null for non-label scenes. */
+    val labelMarkdown: String? = null,
     /** Cross-action aggregate of missing input
      *  keys (deduplicated, ordered by first appearance across
      *  [actions]).  Empty when every action's requiredInputs are
@@ -157,6 +163,12 @@ data class UiState(
      *  yes/no gate, an args form is a fields-to-fill gate, mixing
      *  them would compose badly. */
     val pendingConfirmation: PendingConfirmation? = null,
+    /** Non-null while the `view_label` action's rendered-label page is
+     *  on screen.  Set by `executeAndDispatch` on
+     *  `ActionOutcome.ShowRenderedLabel`; cleared by
+     *  `AppViewModel.dismissRenderedLabel()`.  Overlays whatever phase
+     *  is underneath (camera or detail screen). */
+    val renderedLabel: RenderedLabel? = null,
     /** Live in-flight cycles
      *  keyed by [com.example.intentcam.CycleJob.id].  Each entry's
      *  [CycleSnapshot] exposes the cycle's current bubble + status
