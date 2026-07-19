@@ -19,7 +19,7 @@
     {
       "name": "dial_number",
       "gt": "profiling/ground_truth_dial_number.json",
-      "limit": 30,
+      "limit": 29,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.7989,
@@ -36,7 +36,7 @@
     {
       "name": "open_in_maps",
       "gt": "profiling/ground_truth_open_in_maps.json",
-      "limit": 30,
+      "limit": 38,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.6394,
@@ -53,7 +53,7 @@
     {
       "name": "share",
       "gt": "profiling/ground_truth_share.json",
-      "limit": 30,
+      "limit": 38,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.8006,
@@ -104,7 +104,7 @@
     {
       "name": "none",
       "gt": "profiling/ground_truth_none.json",
-      "limit": 30,
+      "limit": 14,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.9623,

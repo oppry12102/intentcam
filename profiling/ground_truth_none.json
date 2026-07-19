@@ -1,387 +1,179 @@
 {
-  "version": 5,
-  "description": "action-first suite — action=none (built from RCTW-171 via build_action_suites.py)",
-  "rctw_root": "/home/oppry/RCTW-171",
-  "img_dir": "/home/oppry/RCTW-171/train_images",
-  "scenes": [
-    {
-      "id": "image_3526",
-      "file": "image_3526.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "下午：13:00-17:00",
-        "上午：9：00-12:00",
-        "青羊国土办证大厅",
-        "每周一到周五",
-        "办证时间",
-        "###"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_7266",
-      "file": "image_7266.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "czxiu.com",
-        "群里的朋友",
-        "大家好"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_5710",
-      "file": "image_5710.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "总要带这个防身",
-        "人太帅了，",
-        "###"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_6084",
-      "file": "image_6084.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "吓死本宝宝了",
-        "现代快报",
-        "啊噢！"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_4178",
-      "file": "image_4178.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "欢迎光临",
-        "182",
-        "男主角",
-        "24K",
-        "###",
-        "男少"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_6628",
-      "file": "image_6628.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "妈的，谁怕谁呀?",
-        "俺也豁出去了,"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_7849",
-      "file": "image_7849.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "柑橘牛奶",
-        "西番莲",
-        "冰沙",
-        "芒果"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_4304",
-      "file": "image_4304.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "鲜又多水果超市"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_2100",
-      "file": "image_2100.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "为爱专注",
-        "为家守护",
-        "999",
-        "15#",
-        "8#"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_2625",
-      "file": "image_2625.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "驱魔使者",
-        "世宇科技",
-        "###"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_6582",
-      "file": "image_6582.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "DVELOCK",
-        "点维洛克装饰",
-        "生活一开门红",
-        "活一开门"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_6921",
-      "file": "image_6921.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "第一山"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_4112",
-      "file": "image_4112.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "沈氏净化"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_1138",
-      "file": "image_1138.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "糖尿病患者",
-        "购糖尿病",
-        "###"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_4862",
-      "file": "image_4862.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "浴池淋浴单间双人间",
-        "浴室"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_682",
-      "file": "image_682.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "川A·3R5J0"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_7173",
-      "file": "image_7173.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "男士止步"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_6355",
-      "file": "image_6355.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "金色乐##公司是一##",
-        "JIN BEI",
-        "鄂AS8M52",
-        "务娱乐####",
-        "配置，因###",
-        "鄂AR544"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_748",
-      "file": "image_748.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "张爱施艺术西点"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_2152",
-      "file": "image_2152.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "仙桃是我家",
-        "文明靠大家",
-        "沔阳一#",
-        "华氏数码",
-        "###",
-        "美整"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_2399",
-      "file": "image_2399.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "一款动荡金融时代最安心的理财利器！",
-        "让客户真正省心和认可的产品！",
-        "2016年国民理财第一险！",
-        "体验俱乐部",
-        "鑫福年年"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_7101",
-      "file": "image_7101.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "###",
-        "肉制品"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_2386",
-      "file": "image_2386.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "FIREHYDRANT",
-        "0003-05",
-        "负责人：韩兵",
-        "火警119",
-        "5F D4",
-        "消火栓"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_7446",
-      "file": "image_7446.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "SIMPLYBASIC",
-        "99元/件",
-        "买任意两件",
-        "男士正装",
-        "减10元",
-        "免烫衬衫"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_6530",
-      "file": "image_6530.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "薪 3000+",
-        "甲 388元",
-        "睫 88元",
-        "进巍美甲",
-        "全国连锁",
-        "免费领取"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_7931",
-      "file": "image_7931.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "检测和探伤"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_3185",
-      "file": "image_3185.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "经济实惠",
-        "馄饨水饺",
-        "农家客饭",
-        "沙锅王",
-        "豆腐花"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_1302",
-      "file": "image_1302.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "耐克专柜请往前面走30米",
-        "COME RUN",
-        "WITH US",
-        "欢迎选购试穿",
-        "###"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_5126",
-      "file": "image_5126.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "life Custom Furniture",
-        "抗16吨液压钳",
-        "定制衣柜",
-        "家具定制",
-        "丑莱福",
-        "好汉"
-      ],
-      "category": "none"
-    },
-    {
-      "id": "image_3766",
-      "file": "image_3766.jpg",
-      "expected_actions": [],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "特色小碗菜",
-        "回家过年",
-        "初八营业",
-        "火锅",
-        "炒菜"
-      ],
-      "category": "none"
-    }
-  ]
+ "version": 5,
+ "description": "action-first suite — action=none (built from RCTW-171 via build_action_suites.py)",
+ "rctw_root": "/home/oppry/RCTW-171",
+ "img_dir": "/home/oppry/RCTW-171/train_images",
+ "scenes": [
+  {
+   "id": "image_7266",
+   "file": "image_7266.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "czxiu.com",
+    "群里的朋友",
+    "大家好"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_5710",
+   "file": "image_5710.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "总要带这个防身",
+    "人太帅了，",
+    "###"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_6084",
+   "file": "image_6084.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "吓死本宝宝了",
+    "现代快报",
+    "啊噢！"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_6628",
+   "file": "image_6628.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "妈的，谁怕谁呀?",
+    "俺也豁出去了,"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_2100",
+   "file": "image_2100.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "为爱专注",
+    "为家守护",
+    "999",
+    "15#",
+    "8#"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_2625",
+   "file": "image_2625.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "驱魔使者",
+    "世宇科技",
+    "###"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_1138",
+   "file": "image_1138.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "糖尿病患者",
+    "购糖尿病",
+    "###"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_682",
+   "file": "image_682.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "川A·3R5J0"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_7173",
+   "file": "image_7173.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "男士止步"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_2152",
+   "file": "image_2152.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "仙桃是我家",
+    "文明靠大家",
+    "沔阳一#",
+    "华氏数码",
+    "###",
+    "美整"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_7101",
+   "file": "image_7101.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "###",
+    "肉制品"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_7931",
+   "file": "image_7931.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "检测和探伤"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_5126",
+   "file": "image_5126.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "life Custom Furniture",
+    "抗16吨液压钳",
+    "定制衣柜",
+    "家具定制",
+    "丑莱福",
+    "好汉"
+   ],
+   "category": "none"
+  },
+  {
+   "id": "image_7995",
+   "file": "image_7995.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "别TM唧唧歪歪的，没那么复杂",
+    "人生何必复杂",
+    "喜欢什么。",
+    "讨厌什么。",
+    "想被理解。",
+    "想见面。"
+   ],
+   "category": "none"
+  }
+ ]
 }

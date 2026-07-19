@@ -1,763 +1,944 @@
 {
-  "version": 5,
-  "description": "action-first suite — action=share (built from RCTW-171 via build_action_suites.py)",
-  "rctw_root": "/home/oppry/RCTW-171",
-  "img_dir": "/home/oppry/RCTW-171/train_images",
-  "scenes": [
+ "version": 5,
+ "description": "action-first suite — action=share (built from RCTW-171 via build_action_suites.py)",
+ "rctw_root": "/home/oppry/RCTW-171",
+ "img_dir": "/home/oppry/RCTW-171/train_images",
+ "scenes": [
+  {
+   "id": "image_3078",
+   "file": "image_3078.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
     {
-      "id": "image_3078",
-      "file": "image_3078.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "FU ZHOU BRANCH POSTAL SAVINGS BANK OF CHINA",
-        "happy new year",
-        "中国邮政储蓄银行复州营业所",
-        "08:00-17:00",
-        "08:30-16:30",
-        "营业时间"
-      ],
-      "category": "share_text"
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
     },
     {
-      "id": "image_5842",
-      "file": "image_5842.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "SIGHTSEEING BUS",
-        "GERMANY",
-        "禁止中途载人",
-        "火车行驶中"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_742",
-      "file": "image_742.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "2014年中央电视台《开门大吉》独家冠名企业",
-        "鄂A·TC667",
-        "净含量310毫升",
-        "龙虎副食商店",
-        "上海通用五菱",
-        "CCTV3"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_1740",
-      "file": "image_1740.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "不便敬请谅解",
-        "在此施工带来",
-        "注意安全"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_2042",
-      "file": "image_2042.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Beat Centurial Hotel",
-        "急招：餐厅 服务员",
-        "好百年饭店",
-        "###"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_6807",
-      "file": "image_6807.jpg",
-      "expected_actions": [
-        "dial_number",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "电话2666673",
-        "又一佳超市",
-        "真的不一样",
-        "一佳超市",
-        "真###",
-        "###"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_1708",
-      "file": "image_1708.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Barbecue Not Allowed",
-        "Non-barbecue Area",
-        "Wuhan East Lake",
-        "easylake",
-        "非烧烤区",
-        "严禁烧烤"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_6780",
-      "file": "image_6780.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "mountain Bike",
-        "周一至周五58元欢",
-        "满天星量贩式",
-        "福的紫菜包饭",
-        "联峰广场3楼",
-        "PIEGON"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_7367",
-      "file": "image_7367.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "的顾客移步到候车室休息",
-        "NO SMOKING",
-        "因本餐厅座位有限",
-        "尊敬的顾客您好",
-        "谢谢您的合作",
-        "请勿吸烟"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_4808",
-      "file": "image_4808.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "火车",
-        "小心"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_4984",
-      "file": "image_4984.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "56666928931",
-        "本店出租",
-        "###"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_3087",
-      "file": "image_3087.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "2014年中央电视台开门大吉独家冠名企业",
-        "电话：15827056039",
-        "经营范围：烟酒副食生活用品",
-        "认准正宗王老吉",
-        "鄂ATC667",
-        "龙虎副食商店"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_2040",
-      "file": "image_2040.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "严禁携带易燃易爆物品上车",
-        "话梅味西瓜子",
-        "椒盐味南瓜子",
-        "百里挑一",
-        "一元1包",
-        "坚果世家"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_128",
-      "file": "image_128.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "全新进口钢琴",
-        "一律标准琴房",
-        "魔音琴行",
-        "乐器销售",
-        "乐器教学",
-        "琴房练习"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_7874",
-      "file": "image_7874.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "afternoon tea",
-        "给对食物有态度的人",
-        "在这个夏天",
-        "下午茶套餐",
-        "仅售¥75"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_934",
-      "file": "image_934.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "禁止停车"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_4911",
-      "file": "image_4911.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "2016年02月12日",
-        "Lightness",
-        "19时10分32",
-        "雅居宾馆欢迎您",
-        "麻套房：2",
-        "宾馆式出租"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_7600",
-      "file": "image_7600.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Do not leave kids",
-        "on the rail",
-        "请勿将小孩放上栏杆"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_1257",
-      "file": "image_1257.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Union Pay",
-        "Welcome",
-        "畅刷银联卡",
-        "欢迎光临",
-        "钓鱼游戏",
-        "OPEN"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_7019",
-      "file": "image_7019.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "No Smoking",
-        "请您保管好随身财物",
-        "请勿吸烟",
-        "###",
-        "谢谢"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_2955",
-      "file": "image_2955.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Private sale of tokons is",
-        "Care of their property",
-        "strictly prohibited",
-        "除星期六。星期日及法定节假日外",
-        "小朋友，记得在规定的时间内玩喔",
-        "上午10:00-晚上24:00"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_1430",
-      "file": "image_1430.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "CHINA TELECOM",
-        "10:00-19:00",
-        "10:00-21:00",
-        "武汉光谷天地营业厅",
-        "周日-周四",
-        "周五、周六"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_6030",
-      "file": "image_6030.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "北京希优红包群（20）",
-        "明天上班吗他",
-        "卢子忙啥呢",
-        "20:42",
-        "20:59",
-        "21:01"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_2874",
-      "file": "image_2874.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "化妆会员享受化妆所有产品9折特价商品除外",
-        "上午8:30-晚上9:30",
-        "上午9：00-晚上9:00",
-        "送保湿喷雾再送唇膏一支，",
-        "送保湿喷雾一瓶价值38元",
-        "###计的美发沙龙"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_4775",
-      "file": "image_4775.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "FRONT EMP OYEES PROMOTERS",
-        "FORBIDDEN TO ENTER",
-        "Carrefour",
-        "前台员工及促销",
-        "员禁止进入仓库",
-        "家乐福"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_1163",
-      "file": "image_1163.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "公交车身广告 18682742683",
-        "Emergencydept.",
-        "电话：13980292702",
-        "千方百计体现医者仁术高风",
-        "#####742683",
-        "18011317267"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_7702",
-      "file": "image_7702.jpg",
-      "expected_actions": [
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "服务员：3000-400",
-        "钟点工：10-15元/小",
-        "您身边的头皮头发",
-        "真材实料的你",
-        "全面呵护您的",
-        "防脱/控油"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_513",
-      "file": "image_513.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Do not trample",
-        "世界城more",
-        "DANGER",
-        "请勿踩踏",
-        "###",
-        "危险"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_2539",
-      "file": "image_2539.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "Qiushi Road No.2",
-        "求是二路",
-        "###",
-        "严禁",
-        "违者"
-      ],
-      "category": "share_text"
-    },
-    {
-      "id": "image_5711",
-      "file": "image_5711.jpg",
-      "expected_actions": [
-        "dial_number",
-        "share"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "全球零食量贩NO：0008",
-        "027-87807777",
-        "LE STREET",
-        "95615121",
-        "youmike",
-        "水果零食"
-      ],
-      "category": "share_text"
+     "action": "share",
+     "key": "text",
+     "label": "正文"
     }
-  ]
+   ],
+   "expected_description_keywords": [
+    "FU ZHOU BRANCH POSTAL SAVINGS BANK OF CHINA",
+    "happy new year",
+    "中国邮政储蓄银行复州营业所",
+    "08:00-17:00",
+    "08:30-16:30",
+    "营业时间"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_5842",
+   "file": "image_5842.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "SIGHTSEEING BUS",
+    "GERMANY",
+    "禁止中途载人",
+    "火车行驶中"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_742",
+   "file": "image_742.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "2014年中央电视台《开门大吉》独家冠名企业",
+    "鄂A·TC667",
+    "净含量310毫升",
+    "龙虎副食商店",
+    "上海通用五菱",
+    "CCTV3"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_1740",
+   "file": "image_1740.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "不便敬请谅解",
+    "在此施工带来",
+    "注意安全"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_2042",
+   "file": "image_2042.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Beat Centurial Hotel",
+    "急招：餐厅 服务员",
+    "好百年饭店",
+    "###"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_6807",
+   "file": "image_6807.jpg",
+   "expected_actions": [
+    "dial_number",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "dial_number",
+     "key": "phone_number",
+     "label": "手机号"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "电话2666673",
+    "又一佳超市",
+    "真的不一样",
+    "一佳超市",
+    "真###",
+    "###"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_1708",
+   "file": "image_1708.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Barbecue Not Allowed",
+    "Non-barbecue Area",
+    "Wuhan East Lake",
+    "easylake",
+    "非烧烤区",
+    "严禁烧烤"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_6780",
+   "file": "image_6780.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "mountain Bike",
+    "周一至周五58元欢",
+    "满天星量贩式",
+    "福的紫菜包饭",
+    "联峰广场3楼",
+    "PIEGON"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7367",
+   "file": "image_7367.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "的顾客移步到候车室休息",
+    "NO SMOKING",
+    "因本餐厅座位有限",
+    "尊敬的顾客您好",
+    "谢谢您的合作",
+    "请勿吸烟"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_4808",
+   "file": "image_4808.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "火车",
+    "小心"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_4984",
+   "file": "image_4984.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "56666928931",
+    "本店出租",
+    "###"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_3087",
+   "file": "image_3087.jpg",
+   "expected_actions": [
+    "dial_number",
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "dial_number",
+     "key": "phone_number",
+     "label": "手机号"
+    },
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "2014年中央电视台开门大吉独家冠名企业",
+    "电话：15827056039",
+    "经营范围：烟酒副食生活用品",
+    "认准正宗王老吉",
+    "鄂ATC667",
+    "龙虎副食商店"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_2040",
+   "file": "image_2040.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "严禁携带易燃易爆物品上车",
+    "话梅味西瓜子",
+    "椒盐味南瓜子",
+    "百里挑一",
+    "一元1包",
+    "坚果世家"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_128",
+   "file": "image_128.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "全新进口钢琴",
+    "一律标准琴房",
+    "魔音琴行",
+    "乐器销售",
+    "乐器教学",
+    "琴房练习"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7874",
+   "file": "image_7874.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "afternoon tea",
+    "给对食物有态度的人",
+    "在这个夏天",
+    "下午茶套餐",
+    "仅售¥75"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_934",
+   "file": "image_934.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "禁止停车"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_4911",
+   "file": "image_4911.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "2016年02月12日",
+    "Lightness",
+    "19时10分32",
+    "雅居宾馆欢迎您",
+    "麻套房：2",
+    "宾馆式出租"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7600",
+   "file": "image_7600.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Do not leave kids",
+    "on the rail",
+    "请勿将小孩放上栏杆"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_1257",
+   "file": "image_1257.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Union Pay",
+    "Welcome",
+    "畅刷银联卡",
+    "欢迎光临",
+    "钓鱼游戏",
+    "OPEN"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7019",
+   "file": "image_7019.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "No Smoking",
+    "请您保管好随身财物",
+    "请勿吸烟",
+    "###",
+    "谢谢"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_2955",
+   "file": "image_2955.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Private sale of tokons is",
+    "Care of their property",
+    "strictly prohibited",
+    "除星期六。星期日及法定节假日外",
+    "小朋友，记得在规定的时间内玩喔",
+    "上午10:00-晚上24:00"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_1430",
+   "file": "image_1430.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "CHINA TELECOM",
+    "10:00-19:00",
+    "10:00-21:00",
+    "武汉光谷天地营业厅",
+    "周日-周四",
+    "周五、周六"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_6030",
+   "file": "image_6030.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "北京希优红包群（20）",
+    "明天上班吗他",
+    "卢子忙啥呢",
+    "20:42",
+    "20:59",
+    "21:01"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_2874",
+   "file": "image_2874.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "化妆会员享受化妆所有产品9折特价商品除外",
+    "上午8:30-晚上9:30",
+    "上午9：00-晚上9:00",
+    "送保湿喷雾再送唇膏一支，",
+    "送保湿喷雾一瓶价值38元",
+    "###计的美发沙龙"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_4775",
+   "file": "image_4775.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "FRONT EMP OYEES PROMOTERS",
+    "FORBIDDEN TO ENTER",
+    "Carrefour",
+    "前台员工及促销",
+    "员禁止进入仓库",
+    "家乐福"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_1163",
+   "file": "image_1163.jpg",
+   "expected_actions": [
+    "dial_number",
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "dial_number",
+     "key": "phone_number",
+     "label": "手机号"
+    },
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "公交车身广告 18682742683",
+    "Emergencydept.",
+    "电话：13980292702",
+    "千方百计体现医者仁术高风",
+    "#####742683",
+    "18011317267"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7702",
+   "file": "image_7702.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "服务员：3000-400",
+    "钟点工：10-15元/小",
+    "您身边的头皮头发",
+    "真材实料的你",
+    "全面呵护您的",
+    "防脱/控油"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_513",
+   "file": "image_513.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Do not trample",
+    "世界城more",
+    "DANGER",
+    "请勿踩踏",
+    "###",
+    "危险"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_2539",
+   "file": "image_2539.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "Qiushi Road No.2",
+    "求是二路",
+    "###",
+    "严禁",
+    "违者"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_5711",
+   "file": "image_5711.jpg",
+   "expected_actions": [
+    "dial_number",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "dial_number",
+     "key": "phone_number",
+     "label": "手机号"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "全球零食量贩NO：0008",
+    "027-87807777",
+    "LE STREET",
+    "95615121",
+    "youmike",
+    "水果零食"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7849",
+   "file": "image_7849.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "柑橘牛奶",
+    "西番莲",
+    "冰沙",
+    "芒果"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_2399",
+   "file": "image_2399.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "一款动荡金融时代最安心的理财利器！",
+    "让客户真正省心和认可的产品！",
+    "2016年国民理财第一险！",
+    "体验俱乐部",
+    "鑫福年年"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_7446",
+   "file": "image_7446.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "SIMPLYBASIC",
+    "99元/件",
+    "买任意两件",
+    "男士正装",
+    "减10元",
+    "免烫衬衫"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_3185",
+   "file": "image_3185.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "经济实惠",
+    "馄饨水饺",
+    "农家客饭",
+    "沙锅王",
+    "豆腐花"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_3766",
+   "file": "image_3766.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "特色小碗菜",
+    "回家过年",
+    "初八营业",
+    "火锅",
+    "炒菜"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_6530",
+   "file": "image_6530.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "薪 3000+",
+    "甲 388元",
+    "睫 88元",
+    "进巍美甲",
+    "全国连锁",
+    "免费领取"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_4862",
+   "file": "image_4862.jpg",
+   "expected_actions": [
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "浴池淋浴单间双人间",
+    "浴室"
+   ],
+   "category": "share_text"
+  },
+  {
+   "id": "image_3526",
+   "file": "image_3526.jpg",
+   "expected_actions": [
+    "share",
+    "open_in_maps"
+   ],
+   "expected_inputs": [
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    },
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    }
+   ],
+   "expected_description_keywords": [
+    "下午：13:00-17:00",
+    "上午：9：00-12:00",
+    "青羊国土办证大厅",
+    "每周一到周五",
+    "办证时间",
+    "###"
+   ],
+   "category": "share_text"
+  }
+ ]
 }
