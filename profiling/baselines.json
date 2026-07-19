@@ -5,7 +5,7 @@
     "composite_formula": "[2026-07-17 action-first, canonical] composite_v3 = 0.55*r_actions(recall) + 0.30*r_text + 0.15*r_inputs. r_actions = recall of expected_actions against the visible chip set (LLM proposals + content-rescue, share precision-gated since 2026-07-18); over_fire_rate is the companion precision signal on the `none` suite. ScorerV2/r_type retired.",
     "image_dir": "/home/oppry/RCTW-171/train_images",
     "last_updated": "2026-07-19",
-    "last_updated_commit": "3c5d3a1 (k3 re-baseline, summary_20260719_073308)",
+    "last_updated_commit": "5b55344 (none-GT full-migration curation re-baseline)",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",
       "2026-07-13+": "Local PP-OCRv4 mobile (PaddleOCR 2.7.3, on-prem) — Huawei Cloud retained as fallback only. All prior suites' numbers are reference-only; new baselines below."
@@ -13,7 +13,8 @@
     "inversion_note_v3": "**Baseline flipped 2026-07-14 (commit b7098fc)**. The v3.0 architectural refactor retired IntentVerifier (Phase E, 59c1128) and introduced ScorerV2. Each suite entry now has TWO baseline numbers: `baseline` = the NEW composite_v2 number (canonical, threshold-checked) and `baseline_legacy` = the v2.1-era legacy composite for reference only. Threshold comparisons run against `baseline` (= composite_v2). On the 14-suite regression net (2026-07-14 15:32 → 19:00, ~3.2h wall-time), composite_v2 LIFTED on phone_20 (+0.066) and phone_60 (+0.028) but DROPPED on Phase G (-0.154), shopping_promo_20 (-0.150), real_estate_rental_11 (-0.149), recruit_hiring_11 (-0.140). The OBSERVE family + PII cluster lose because the LLM, without the verifier's type→canonical rescue, is less reliable at picking share-sheet copy actions. Accept the trade-off per `feedback-investigate-before-revert` — phone inversion validates thesis, OBSERVE family needs more data; re-introducing the verifier as a 'soft hint' in the system prompt is the natural follow-up.",
     "partial_regression_note": "2026-07-13 partial run: 2/14 production suites re-measured (phone_20, pii_20) due to 1.5h wall-time. Remaining 9 suites (pii20_60, direction_arrow_20, direction_arrow_60, phaseG_15, shopping_promo_20, rctw_20_sanity, phone_60, service_institution_60) PENDING re-run. Reference suites (huawei_cloud_ref, server_cpu) excluded from regression checks per baselines.json note. 2026-07-13 follow-up: full 8-suite net completed — direction_arrow_20 0.995, shopping_promo_20 0.943, phone_60 0.918, pii20_60 0.964, direction_arrow_60 0.990, service_institution_60 0.976 (6/8 PASS, +lift on most direction_arrow + shopping_promo). phaseG_15 dropped -0.064 from 1 transient (error) fixture (image_1097 0.36; 0.97 in 2 prior runs); retry pending. rctw_20_sanity suite REMOVED — referenced image fixtures dropped by commit b294562 long ago; GT file kept for archival only.",
     "v3_baseline_flip": "2026-07-17: v3 baseline = mean of 4 runs (summary_20260716_165400, summary_20260716_193517 [pre-soft-hint], summary_20260716_231731 [post-soft-hint], summary_20260717_065053 [post-content-rescue]). Four-sample mean captures both the soft-hint lift (OBSERVE-family) and the content-rescue lift (phone/PII rescue: pii_20 +0.031, phone_60 +0.034, real_estate_rental_11 +0.031).",
-    "k3_rebaseline": "2026-07-19: baselines re-measured on kimi k3 (k3[1m] @ api.kimi.com/coding) after bigmodel glm-4.6 token expiry — prior numbers were glm-4.6 and are preserved per-suite as baseline_glm46. This run includes the two k3 fixes: MAX_TOKENS 3072->8192 (k3 mandatory thinking counts against max_tokens; empty-bubble bug) + tool_result-first user-message ordering (k3 strict validator 400s on image-first). 0/159 empty fixtures. Single-run numbers except dial_number corroborated by an independent verification run (0.793 vs 0.799, within noise). none-suite over_fire_rate 0.70 is dominated by GT under-annotation (share/maps on storefronts); see bug-audit-2026-07-18 memory."
+    "k3_rebaseline": "2026-07-19: baselines re-measured on kimi k3 (k3[1m] @ api.kimi.com/coding) after bigmodel glm-4.6 token expiry — prior numbers were glm-4.6 and are preserved per-suite as baseline_glm46. This run includes the two k3 fixes: MAX_TOKENS 3072->8192 (k3 mandatory thinking counts against max_tokens; empty-bubble bug) + tool_result-first user-message ordering (k3 strict validator 400s on image-first). 0/159 empty fixtures. Single-run numbers except dial_number corroborated by an independent verification run (0.793 vs 0.799, within noise). none-suite over_fire_rate 0.70 is dominated by GT under-annotation (share/maps on storefronts); see bug-audit-2026-07-18 memory.",
+    "gt_curation_2026_07_19": "none-GT full migration (user-approved: named places/storefronts ARE actionable): 17 fixtures moved to share(+8)/maps(+8)/dial(+1) GTs; dial GT trimmed of 2 over-annotated (7995->none, 3371 dropped). Suite sizes: share 38 / maps 38 / dial 29 / none 14. none over_fire 0.429 decomposes: 7173/1138/7931 weak-content share (true model-GT disagreement ~0.21), 682 defensible plate-redact, 5126 storefront (borderline, kept), 7995 verb-trigger (borderline, kept). redact_id/scan_to_pay unchanged from summary_20260719_073308."
   },
   "suites": [
     {
@@ -22,16 +23,17 @@
       "limit": 29,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.7989,
+      "baseline": 0.8305,
       "baseline_legacy": null,
-      "baseline_commit": "3c5d3a1 (k3: MAX_TOKENS 8192 + tool_result-first)",
-      "v3_composite": 0.7989,
-      "v3_actions": 0.7722,
-      "v3_text": 0.875,
-      "v3_inputs": 0.7444,
+      "baseline_commit": "5b55344 (GT curation) @ summary_20260719_093304",
+      "v3_composite": 0.8305,
+      "v3_actions": 0.8046,
+      "v3_text": 0.8994,
+      "v3_inputs": 0.7874,
       "note": "action-first suite — dial_number recall. Built by build_action_suites.py from RCTW-171 (30 phone-bearing fixtures).",
       "over_fire_rate": 0.0,
-      "baseline_glm46": 0.6567
+      "baseline_glm46": 0.6567,
+      "baseline_prev_k3": 0.7989
     },
     {
       "name": "open_in_maps",
@@ -39,16 +41,17 @@
       "limit": 38,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.6394,
+      "baseline": 0.7469,
       "baseline_legacy": null,
-      "baseline_commit": "3c5d3a1 (k3: MAX_TOKENS 8192 + tool_result-first)",
-      "v3_composite": 0.6394,
-      "v3_actions": 0.4611,
-      "v3_text": 0.8028,
-      "v3_inputs": 0.9667,
+      "baseline_commit": "5b55344 (GT curation) @ summary_20260719_093304",
+      "v3_composite": 0.7469,
+      "v3_actions": 0.6491,
+      "v3_text": 0.8127,
+      "v3_inputs": 0.9737,
       "note": "action-first suite — open_in_maps recall. 30 address/institution/direction fixtures.",
       "over_fire_rate": 0.0,
-      "baseline_glm46": 0.5456
+      "baseline_glm46": 0.5456,
+      "baseline_prev_k3": 0.6394
     },
     {
       "name": "share",
@@ -56,16 +59,17 @@
       "limit": 38,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.8006,
+      "baseline": 0.8255,
       "baseline_legacy": null,
-      "baseline_commit": "3c5d3a1 (k3: MAX_TOKENS 8192 + tool_result-first)",
-      "v3_composite": 0.8006,
-      "v3_actions": 0.7278,
-      "v3_text": 0.8483,
-      "v3_inputs": 0.9722,
+      "baseline_commit": "5b55344 (GT curation) @ summary_20260719_093304",
+      "v3_composite": 0.8255,
+      "v3_actions": 0.7588,
+      "v3_text": 0.8715,
+      "v3_inputs": 0.9781,
       "note": "action-first suite — share recall. 30 promo/real-estate/recruit/menu/warning/hours fixtures.",
       "over_fire_rate": 0.0,
-      "baseline_glm46": 0.7112
+      "baseline_glm46": 0.7112,
+      "baseline_prev_k3": 0.8006
     },
     {
       "name": "redact_id",
@@ -107,16 +111,17 @@
       "limit": 14,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.9623,
+      "baseline": 0.9414,
       "baseline_legacy": null,
-      "baseline_commit": "3c5d3a1 (k3: MAX_TOKENS 8192 + tool_result-first)",
-      "v3_composite": 0.9623,
+      "baseline_commit": "5b55344 (GT curation) @ summary_20260719_093304",
+      "v3_composite": 0.9414,
       "v3_actions": 1.0,
-      "v3_text": 0.8744,
+      "v3_text": 0.8048,
       "v3_inputs": 1.0,
       "note": "action-first suite — over-fire check. 30 fixtures with NO actionable content; recall is trivially 1.0, the over_fire_rate metric is the signal (lower=better).",
-      "over_fire_rate": 0.7,
-      "baseline_glm46": 0.9288
+      "over_fire_rate": 0.4286,
+      "baseline_glm46": 0.9288,
+      "baseline_prev_k3": 0.9623
     }
   ]
 }
