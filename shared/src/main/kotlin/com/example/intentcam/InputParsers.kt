@@ -212,6 +212,14 @@ object InputParsers {
      * payment QRs carry transfer/scan instructions).  The theoretical
      * WiFi-QR false-positive cost doesn't show up in the none-suite
      * over-fire data, so the loose keywords stay.
+     *
+     * 2026-07-19: + 微信支付|支付宝支付 (acceptance-sign vocabulary).
+     * The strict-payment suite curation (30 -> 6) exposed the gap:
+     * 收银台/门店 "微信支付·支付宝支付" acceptance signs carry neither
+     * 收款码/付款 nor 支付宝付款, so rescue never fired on them
+     * (1978/6063/7166 all missed).  Offline replay of the widening:
+     * 3/6 strict fixtures newly rescued, 0/16 none-suite new fires,
+     * 0 new fires on dial/share/maps runs — add-only and safe.
      */
     fun paymentQr(bubble: Bubble): String? {
         val corpus = buildString {
@@ -219,7 +227,7 @@ object InputParsers {
             append(bubble.detail).append('\n')
             bubble.details.forEach { d -> append(d.value).append('\n') }
         }
-        val payRegex = Regex("""收款码|付款码|扫一扫|转账|收款二维码|微信收款|支付宝付款""")
+        val payRegex = Regex("""收款码|付款码|扫一扫|转账|收款二维码|微信收款|支付宝付款|微信支付|支付宝支付""")
         return payRegex.find(corpus)?.value
     }
 }
