@@ -42,7 +42,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -113,6 +112,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        // Debug-only dev hook: `adb shell am start -n
+        // com.example.intentcam/.MainActivity --ez dev_label_page true`
+        // opens the view_label page with canned content so the
+        // render / full-page capture / share path can be verified on
+        // an emulator without a camera frame + LLM round.
+        if (BuildConfig.DEBUG && intent.getBooleanExtra("dev_label_page", false)) {
+            viewModel.devShowLabelPage()
+        }
     }
 }
 
@@ -158,11 +165,10 @@ private fun AppRoot(viewModel: AppViewModel) {
         when (state.phase) {
             Phase.SETTINGS -> SettingsScreen(
                 current = viewModel.config,
-                piiPermissions = viewModel.piiActionPermissions(),
+                debugEnabled = state.debugEnabled,
+                onToggleDebug = viewModel::setDebugEnabled,
                 onSave = viewModel::saveConfig,
-                onResetDefault = viewModel::resetConfigToDefault,
                 onClose = viewModel::closeSettings,
-                onTogglePii = viewModel::setPiiActionPermission,
             )
             Phase.NEED_PERMISSION -> {
                 // Landing here after a permission request means the camera is still
@@ -274,8 +280,6 @@ private fun CameraScreen(viewModel: AppViewModel, state: UiState) {
             ) {
                 TopOverlay(
                     state = state,
-                    debugEnabled = state.debugEnabled,
-                    onToggleDebug = { viewModel.setDebugEnabled(!state.debugEnabled) },
                     onSettings = viewModel::openSettings,
                 )
                 // Surface user-facing errors directly below the TopOverlay.
@@ -554,8 +558,6 @@ AndroidView(
 @Composable
 private fun TopOverlay(
     state: UiState,
-    debugEnabled: Boolean,
-    onToggleDebug: () -> Unit,
     onSettings: () -> Unit,
 ) {
     val palette = IntentCamTheme.palette
@@ -578,16 +580,6 @@ private fun TopOverlay(
                 color = Color.White,
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 2
-            )
-        }
-        // Debug toggle.  Bug icon is green when the scrolling log overlay
-        // is active (default), gray when it's muted.  Tap to flip; the
-        // preference persists across launches via SettingsStore.
-        IconButton(onClick = onToggleDebug) {
-            Icon(
-                Icons.Filled.Build,
-                contentDescription = if (debugEnabled) "关闭调试输出" else "开启调试输出",
-                tint = if (debugEnabled) palette.success else palette.onSurfaceMuted.copy(alpha = 0.6f),
             )
         }
         IconButton(onClick = onSettings) {

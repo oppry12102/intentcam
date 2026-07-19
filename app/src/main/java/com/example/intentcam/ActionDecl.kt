@@ -251,15 +251,14 @@ fun registerDefaultActions(reg: ActionRegistry) {
         accent = AccentCluster.DELEGATE,
     ))
     // Second real outbound action: dial a phone number extracted
-    //  from a `phone` bubble.  Strictly consent-gated:
+    //  from a `phone` bubble.
+    //  2026-07-19 dev phase: the consent gates were lifted
+    //  (requiresConfirmation / userPrefKey removed) so the chip is
+    //  always active; re-add both before any end-user build.
+    //  Former gate, for the record:
     //   - requiresConfirmation=true → chip-tap pops a Compose
-    //     AlertDialog before the body's ACTION_DIAL fires (handled
-    //     by AppViewModel when def.requiresConfirmation is true; the
-    //     body itself assumes consent has already been granted).
-    //   - userPrefKey="action_dial_number_enabled" →
-    //     SettingsStore backs the toggle; AppViewModel's
-    //     enabledIds() filters out this action unless the key is
-    //     true.  Default OFF — user must opt in once.
+    //     AlertDialog before the body's ACTION_DIAL fires.
+    //   - userPrefKey → SettingsStore toggle, default OFF.
     //  ACTION_DIAL is used (NOT ACTION_CALL) so the user gets one
     //  final "press call" tap inside the dialer app; avoids needing
     //  the runtime CALL_PHONE permission (Manifest entry was
@@ -274,8 +273,13 @@ fun registerDefaultActions(reg: ActionRegistry) {
             label = "手机号",
             parser = { b -> com.example.intentcam.InputParsers.phoneNumber(b) },
         )),
-        requiresConfirmation = true,
-        userPrefKey = "action_dial_number_enabled",
+        // 2026-07-19 dev phase: consent gates OFF (requiresConfirmation
+        // and userPrefKey removed) — chips are always visible and fire
+        // directly so the flow can be exercised end-to-end.  Re-add both
+        // before any end-user build: requiresConfirmation=true parks an
+        // AlertDialog, userPrefKey ships the toggle default-OFF.
+        // ACTION_DIAL itself is safe: the dialer still needs the user to
+        // press "call".
         body = { _, bubble, args ->
             // Phone extractor: pull the first plausible phone number
             // from title / detail / details[].value.  Order priority:
@@ -302,17 +306,17 @@ fun registerDefaultActions(reg: ActionRegistry) {
                 } ?: ActionOutcome.ShowUiFeedback("未发现可拨打的号码")
             outcome
         },
-        // EXECUTE cluster: dials a phone number — consent-gated side
-        //  effect.  The AlertDialog before dispatching is the "pause"
-        //  that justifies the pink accent.
+        // EXECUTE cluster: dials a phone number — a side effect the
+        //  user should pause on.  (The pink accent predates the
+        //  dev-phase consent-gate lift; the cluster still marks
+        //  "acts on the world" vs DELEGATE's OS handoff.)
         accent = AccentCluster.EXECUTE,
     ))
-    // PII-sensitive stub actions (scan_to_pay / redact_id).  Both
-    //  share the same consent + default-off gating as `dial_number`:
-    //   - requiresConfirmation=true (chip-tap parks AlertDialog)
-    //   - userPrefKey="action_<id>_enabled" (SettingsStore backs the
-    //     toggle; the Settings screen surfaces the switches)
-    //  Bodies are Toast-only guidance — the heavy lifting is the
+    // PII-sensitive stub actions (scan_to_pay / redact_id).
+    //  2026-07-19 dev phase: consent gates lifted (same as dial_number
+    //  — requiresConfirmation / userPrefKey removed); chips are always
+    //  active.  Re-add both before any end-user build.
+    //  Bodies are Toast-only guidance — the heavy lifting was the
     //  consent gate, not the side effect.
     reg.register(ActionDef(
         id = "scan_to_pay",
@@ -323,8 +327,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         // fireable, but the body itself surfaces a guidance Toast
         // instead of launching a payment app (see body comment for
         // the security rationale).
-        requiresConfirmation = true,
-        userPrefKey = "action_scan_to_pay_enabled",
+        // 2026-07-19 dev phase: consent gates OFF (see dial_number).
         body = { _, _, _ ->
             // CRITICAL: NEVER auto-launch a payment app.
             //  The QR could be presented in a screenshot / phishing
@@ -353,8 +356,7 @@ fun registerDefaultActions(reg: ActionRegistry) {
         // but the conservative-v1 body just shows a guidance Toast
         // — no real parser is wired because we never write the value
         // to a real sink yet.
-        requiresConfirmation = true,
-        userPrefKey = "action_redact_id_enabled",
+        // 2026-07-19 dev phase: consent gates OFF (see dial_number).
         body = { _, bubble, _ ->
             // Conservative v1: copy the FULL text to clipboard (so
             //  the user can re-paste into a trusted form), but mark

@@ -128,8 +128,10 @@ data class UiState(
     val selectedBubble: Bubble? = null,
     val error: String? = null,
     /** When true, the recognition process streams onto a translucent
-     *  overlay above the camera preview.  Persisted in [SettingsStore]. */
-    val debugEnabled: Boolean = true,
+     *  overlay above the camera preview.  Persisted in [SettingsStore].
+     *  Default OFF (2026-07-19 user request — was ON); toggled from
+     *  the Settings screen's 调试日志 switch. */
+    val debugEnabled: Boolean = false,
     /** Newest-last ring of [DebugLogEntry] entries.  Capped at [DEBUG_LOG_MAX];
      *  older entries are dropped when new ones arrive. */
     val debugLogs: List<DebugLogEntry> = emptyList(),

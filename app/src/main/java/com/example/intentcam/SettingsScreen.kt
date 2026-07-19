@@ -1,5 +1,6 @@
 package com.example.intentcam
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,13 +18,11 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsScreen(
     current: LlmConfig,
-    piiPermissions: List<AppViewModel.PiiPermission>,
+    debugEnabled: Boolean,
+    onToggleDebug: (Boolean) -> Unit,
     onSave: (LlmConfig) -> Unit,
-    onResetDefault: () -> Unit,
     onClose: () -> Unit,
-    onTogglePii: (key: String, enabled: Boolean) -> Unit,
 ) {
-    val palette = IntentCamTheme.palette
     // Use rememberSaveable so the user's in-progress edits survive
     // process death (e.g. OS kills the app while the user is in
     // Settings to copy a token from their password manager).
@@ -38,18 +37,50 @@ fun SettingsScreen(
     // SavedStateRegistry entry.
     var baseUrl by rememberSaveable { mutableStateOf(current.baseUrl) }
     // Token field is intentionally left blank — we never display the active
-    // token on screen so it can't be shoulder-surfed.  Leaving it blank (or
-    // hitting "恢复默认") keeps whatever is currently active in the runtime
-    // config; only an explicit non-empty edit changes it.
+    // token on screen so it can't be shoulder-surfed.  Leaving it blank
+    // keeps whatever is currently active in the runtime config; only an
+    // explicit non-empty edit changes it.
     var token by rememberSaveable { mutableStateOf("") }
     var model by rememberSaveable { mutableStateOf(current.model) }
+
+    // 2026-07-19 rework (user requests):
+    //  - 保存/恢复默认 buttons removed: leaving the page (back arrow
+    //    or system back) saves.
+    //  - ...but ONLY when the user actually touched the LLM fields.
+    //    SharedPreferences starts EMPTY of any config keys, so
+    //    SettingsStore.load() falls back to the live baked default
+    //    (BuildConfig.DEFAULT_AUTH_TOKEN — rotates with new APKs).
+    //    Persisting on a no-op visit would freeze today's baked token
+    //    into prefs and shadow every future baked rotation.  Once the
+    //    user edits any LLM field they own the whole config (blank
+    //    token field resolves to the currently-active token at that
+    //    point), per the user's rule: 不修改就一直用缺省配置，修改过
+    //    一次就自己维护 token。
+    fun persistAndClose() {
+        val dirty = baseUrl != current.baseUrl ||
+            model != current.model ||
+            token.isNotBlank()
+        if (dirty) {
+            val effectiveToken = if (token.isBlank()) current.authToken else token
+            onSave(
+                LlmConfig(
+                    baseUrl = baseUrl,
+                    authToken = effectiveToken,
+                    model = model,
+                )
+            )
+        } else {
+            onClose()
+        }
+    }
+    BackHandler { persistAndClose() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("模型设置") },
+                title = { Text("设置") },
                 navigationIcon = {
-                    IconButton(onClick = onClose) {
+                    IconButton(onClick = { persistAndClose() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 }
@@ -64,7 +95,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                "配置 Anthropic 兼容接口（默认 MiniMax / MiniMax-M3）。留空则使用内置默认值。",
+                "配置 Anthropic 兼容接口（默认 MiniMax / MiniMax-M3）。",
                 style = MaterialTheme.typography.bodySmall
             )
 
@@ -82,12 +113,6 @@ fun SettingsScreen(
                 onValueChange = { token = it },
                 label = { Text("ANTHROPIC_AUTH_TOKEN") },
                 placeholder = { Text("（留空使用内置默认）") },
-                supportingText = {
-                    Text(
-                        "留空 = 使用应用内置默认 token（来自 BuildConfig）\n" +
-                            "输入新值将覆盖当前 token",
-                    )
-                },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 maxLines = 4
@@ -101,90 +126,41 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Button(
-                onClick = {
-                    // Save only overwrites the token if the user actually
-                    // typed something; an empty field leaves the runtime token
-                    // untouched.  An empty string is still acceptable to the
-                    // [AppViewModel] (which falls back to the default).
-                    val effectiveToken = if (token.isBlank()) current.authToken else token
-                    onSave(
-                        LlmConfig(
-                            baseUrl = baseUrl,
-                            authToken = effectiveToken,
-                            model = model,
-                        )
+            // Debug-log toggle (moved here from the camera top bar,
+            // 2026-07-19; default OFF).  Independent of the LLM-config
+            // dirty-tracking above — flips persist immediately.
+            HorizontalDivider()
+            ListItem(
+                headlineContent = { Text("调试日志") },
+                supportingContent = {
+                    Text(
+                        "在相机预览上显示识别过程日志（默认关闭）",
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("保存") }
-
-            OutlinedButton(
-                onClick = {
-                    // Don't leak the default token either.  onResetDefault()
-                    // reverts the runtime config to defaults; the field is
-                    // visually cleared so the token is never on screen.
-                    onResetDefault()
-                    baseUrl = LlmConfig.DEFAULT_BASE_URL
-                    token = ""
-                    model = LlmConfig.DEFAULT_MODEL
+                trailingContent = {
+                    Switch(
+                        checked = debugEnabled,
+                        onCheckedChange = onToggleDebug,
+                    )
                 },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("恢复默认") }
-
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "提示：接口需支持图片输入（vision）。请求路径为 <BASE_URL>/v1/messages。",
-                style = MaterialTheme.typography.labelSmall
             )
 
-            // PII action opt-in section.  Mirrors the `requiresConfirmation=true`
-            // chips surfaced on `dial_number` / `scan_to_pay` /
-            // `redact_id` bubbles.  Default OFF — the Settings screen
-            // is the only entry point for opting in (a single tap on
-            // a chip grants it once via AppViewModel.confirmAction;
-            // this section is for permanent per-action consent).
+            // About / copyright (2026-07-19, user request).
             Spacer(Modifier.height(16.dp))
             HorizontalDivider()
             Text(
-                "隐私敏感动作",
+                "关于",
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                "默认关闭。开启后，每次使用仍然会弹窗确认。",
+                "开发者：HUANGTAO",
                 style = MaterialTheme.typography.bodySmall,
             )
-            // PII discoverability banner.  The previous version silently
-            // filtered out PII actions whose toggle was off — a user
-            // on a `phone` bubble would see no "拨号" chip and have
-            // no idea why.  When at least one toggle is off, surface
-            // a warning above the switch list so the user knows there
-            // are PII controls here.
-            if (piiPermissions.any { !it.enabled }) {
-                Text(
-                    "以下敏感操作当前关闭。开启后，识别结果中才会出现对应的「${piiPermissions.first { !it.enabled }.action.label}」按钮。",
-                    color = palette.warning,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-            // Stable order: by userPrefKey (which embeds the action id).
-            piiPermissions.sortedBy { it.key }.forEach { perm ->
-                ListItem(
-                    headlineContent = { Text(perm.action.label) },
-                    supportingContent = {
-                        Text(
-                            "开启后，识别到对应内容时显示「${perm.action.label}」按钮，每次仍会弹窗确认",
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = perm.enabled,
-                            onCheckedChange = { onTogglePii(perm.key, it) },
-                        )
-                    },
-                )
-            }
+            Text(
+                "© 2026 HUANGTAO. All rights reserved.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

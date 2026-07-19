@@ -30,17 +30,13 @@ class SettingsStore(context: Context) {
             .apply()
     }
 
-    fun reset() {
-        prefs.edit().clear().apply()
-    }
-
     /**
-     * Whether the on-screen debug overlay is shown.  Default ON so a
-     * fresh install immediately surfaces the per-step pipeline output;
-     * the developer can flip it off via the bug icon in the top bar.
+     * Whether the on-screen debug overlay is shown.  Default OFF
+     * (2026-07-19 user request — was ON); flipped via the 调试日志
+     * switch on the Settings screen.
      */
     fun loadDebugEnabled(): Boolean =
-        prefs.getBoolean(KEY_DEBUG_ENABLED, true)
+        prefs.getBoolean(KEY_DEBUG_ENABLED, false)
 
     fun saveDebugEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DEBUG_ENABLED, enabled).apply()

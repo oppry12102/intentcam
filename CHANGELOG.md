@@ -4,6 +4,83 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Changed — 设置页改版：调试开关迁入 + 返回即存（带脏检查） (2026-07-19)
+
+- **调试日志默认关闭**(`SettingsStore.loadDebugEnabled` +
+  `UiState.debugEnabled` 默认值 true→false);开关从相机顶栏
+  (Build 图标）移入设置页「调试日志」Switch，相机顶栏只剩设置齿轮。
+- **「模型设置」→「设置」**。
+- **保存/恢复默认按钮删除**:`SettingsScreen` 返回（返回键或系统
+  back）即持久化，但**仅当用户实际修改过 LLM 字段**
+  (baseUrl/model 变化或 token 非空）——prefs 无配置键时
+  `SettingsStore.load()` 回落到 BuildConfig 内置 token（随新 APK
+  轮换），无修改的访问不写入任何东西；一旦修改即由用户接管整个
+  配置。连带删除 `AppViewModel.resetConfigToDefault()` 与
+  `SettingsStore.reset()`(prefs 全清，已无用）。
+- 模拟器验证：顶栏无扳手图标、日志面板默认隐藏、设置页新布局
+  正确、无修改返回后 prefs 文件未创建。
+
+### Changed — 开发阶段放开隐私敏感动作限制 (2026-07-19)
+
+Dev-phase unlock (user decision): `dial_number` / `scan_to_pay` /
+`redact_id` no longer carry `requiresConfirmation` or `userPrefKey` —
+their chips are always visible when proposed/rescued and fire the body
+directly (拨号 goes straight to `ACTION_DIAL`; the dialer app itself
+still needs the final "call" tap).  The Settings screen's 隐私敏感动作
+section (per-action switches + discoverability banner) is removed, and
+so are `AppViewModel.piiActionPermissions()` /
+`setPiiActionPermission()` / `PiiPermission` (no callers left).
+The generic consent mechanism (`requiresConfirmation` →
+`PendingConfirmation` dialog flow, `userPrefKey` → `enabledIds` gate)
+stays in the codebase, dormant — re-arm per-action before any
+end-user build.  No prompt/contract change; eval unaffected.
+
+### Added — 设置页版权信息 (2026-07-19)
+
+设置（模型设置）页底部新增「关于」区：标题 关于（titleMedium）/
+开发者：HUANGTAO / © 2026 HUANGTAO. All rights reserved.。
+模拟器验证渲染正常。
+
+### Fixed — `view_label` 真机验收三问题 (2026-07-19)
+
+On-device acceptance of the first 3.6 build surfaced three issues, all
+fixed in the page/chip layer (no contract or prompt change, no eval
+impact):
+
+1. **「未识别到标签内容」误报** — the 查看标签 chip was tappable while
+   the `label_markdown` transcription was still in flight:
+   `resolveChipState` mapped an already-computed `validated == false`
+   to Ghost (tappable, per dial_number's Toast contract) even
+   mid-cycle.  Now ANY not-yet-validated chip (null OR false) renders
+   as a non-tappable Spinner while the cycle is PENDING/IN_FLIGHT;
+   Ghost is reserved for terminal cycles.  (`ChipStateMapper.kt`)
+2. **页面太小** — the label HTML had no viewport meta, so with
+   `useWideViewPort=false` the WebView laid out at PHYSICAL pixel
+   width (15px type ≈ 5dp on a 3× display).  The page now carries
+   `width=device-width, initial-scale=1` (CSS px = dp) and is
+   FULL-SCREEN: the WebView fills all space between the header and
+   the button bar; the dashed-card CSS became a clean full-bleed
+   white page.  (`LabelHtml.kt`, `LabelPageScreen.kt`)
+3. **保存按钮下线** — per user request only 分享图片 / 分享文字
+   remain; `LabelPageExporter`'s MediaStore save paths
+   (`saveImageToGallery` / `saveTextToDownloads`) are deleted.
+4. **分享图片出细长空白图** — two off-screen capture attempts
+   (fresh WebView, load-then-draw, incl. layout-before-load) shipped
+   blank PNGs: an unattached Chromium WebView never reliably
+   rasterizes into an arbitrary Canvas.  Final approach: capture the
+   ON-SCREEN WebView (the one the user already sees rendered) —
+   `WebView.enableSlowWholeDocumentDraw()` (static, before load) so
+   below-the-fold content is laid out, then temporarily resize the
+   view to full content height, `draw()` into a Bitmap with a
+   software layer, and restore the original bounds in the same
+   main-thread turn (no frame is presented stretched).  A
+   blank-pixel guard turns rasterization failure into a "截图失败"
+   Toast instead of a silent blank share.  **Verified on emulator**
+   via a debug-only hook (`am start --ez dev_label_page true` opens
+   the page with canned multi-table content): produced a 1080×3554
+   PNG with all below-fold rows, share sheet preview showed the
+   label, page restored unstretched.
+
 ### Added — `view_label` 标签识别 action：渲染标签页 + 保存/分享 (2026-07-19)
 
 New action for label-like structured text blocks (商品标签/价签/吊牌/合格证/

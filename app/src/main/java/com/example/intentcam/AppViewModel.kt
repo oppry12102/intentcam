@@ -42,14 +42,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *   1. The legacy `enabledActionIds` set (op-out list).
      *   2. Per-action `userPrefKey` toggle from SettingsStore.
      *      An action with a `userPrefKey` is enabled only when the
-     *      corresponding boolean in SharedPreferences is true —
-     *      PII actions (`dial_number`, future `read_id_card`,
-     *      `pay_*`, etc.) ship OFF by default and require an
-     *      explicit opt-in.  Universal actions (`share`,
-     *      `open_in_maps`) have `userPrefKey=null` and pass
-     *      through unchanged.  The settings UI to flip these
-     *      toggles arrives with Phase B (PII framework); for now
-     *      they stay disabled. */
+     *      corresponding boolean in SharedPreferences is true.
+     *      2026-07-19 dev phase: NO action currently sets
+     *      `userPrefKey` (dial_number / scan_to_pay / redact_id had
+     *      theirs removed so chips are always active), so this layer
+     *      is a pass-through until consent gating returns for an
+     *      end-user build. */
     private val actionResolver = ActionResolver(
         actions = actionRegistry,
         enabledIds = {
@@ -862,6 +860,41 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Debug-only dev hook: open the label page with canned content
+     *  so the render / full-page capture / share path can be
+     *  exercised without a camera frame + LLM round (emulator
+     *  verification, `am start --ez dev_label_page true`).  Gated on
+     *  BuildConfig.DEBUG at the MainActivity call site. */
+    fun devShowLabelPage() {
+        _state.value = _state.value.copy(
+            renderedLabel = RenderedLabel(
+                title = "调试标签页",
+                markdown = buildString {
+                    append("# 奥利奥 双心脆威化\n\n")
+                    append("- 净含量：87克\n- 生产日期：20151015\n")
+                    append("- 规格：6条 **独立随身装**\n- 保质期：12个月\n\n")
+                    append("---\n\n")
+                    append("| 项目 | 内容 |\n| --- | --- |\n")
+                    append("| 制造商 | 亿滋食品（苏州）有限公司 |\n")
+                    append("| 产地 | 江苏省苏州市 |\n")
+                    append("| 配料表 | 小麦粉、白砂糖、植物油、可可粉 |\n\n")
+                    append("## 营养成分表\n\n")
+                    append("| 项目 | 每100克 | NRV% |\n| --- | --- | --- |\n")
+                    append("| 能量 | 2015千焦 | 24% |\n| 蛋白质 | 5.2克 | 9% |\n")
+                    append("| 脂肪 | 22.1克 | 37% |\n| 碳水化合物 | 63.5克 | 21% |\n")
+                    append("| 钠 | 320毫克 | 16% |\n\n")
+                    // Pad past one viewport so the full-height
+                    // capture path is exercised (below-the-fold
+                    // content was exactly what broke twice).
+                    repeat(12) { i ->
+                        append("${i + 1}. 调试填充行：用于把页面撑到超过一屏，验证整页截图。\n")
+                    }
+                },
+                bubbleId = "dev-label-page",
+            )
+        )
+    }
+
     /**
      * Shared core for [runAction] + [submitActionArgs]: invoke the
      * body, catch into a Toast on throw, and dispatch the resulting
@@ -1037,69 +1070,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         settings.save(cfg)
         client.config = cfg
         closeSettings()
-    }
-
-    fun resetConfigToDefault() {
-        settings.reset()
-        client.config = settings.load()
-    }
-
-    // ───── PII action permission toggles ─────
-// See ADR docs/adr/2026-07-10-intent-action-framework.md
-
-    /**
-     * Snapshot of the current userPrefKey grants for every
-     * PII-tagged action.  Maps `ActionDef.userPrefKey` →
-     * `loadActionPermission(key)`.  Cheap: 4 SharedPreferences
-     * booleans, lives in memory only long enough to render the
-     * Settings screen.
-     *
-     *  Kept as a function instead of a property so the Settings UI
-     *  re-reads after each toggle without needing a separate
-     *  observation Flow (the screen re-renders on `MutableStateFlow`
-     *  updates already, so this is consistent with the rest of the
-     *  Settings layer's "you call me again, I re-read" pattern).
-     */
-    /** See ADR docs/adr/2026-07-10-intent-action-framework.md
-     *  — Snapshot of the current userPrefKey grants for every
-     *  PII-tagged action, paired with the [ActionDef] so the Settings
-     *  screen can render the action's user-facing label (not the
-     *  internal `userPrefKey` string) and the consent-gate explanation.
-     *
-     *  Previously returned `Map<String, Boolean>` keyed by
-     *  userPrefKey.  The Settings screen then had to reverse-look-up
-     *  each key in the actionRegistry to find the action's
-     *  human label, which it never actually did — the screen
-     *  just rendered the raw `userPrefKey` id (e.g.
-     *  "action_dial_number_enabled") as the user-facing text.
-     *  Bundling the [ActionDef] here is the same read cost
-     *  (4 SharedPreferences booleans + a single registry list())
-     *  and lets the screen render a sensible label.
-     *
-     *  Kept as a function (not a property) so the Settings UI
-     *  re-reads after each toggle without needing a separate
-     *  observation Flow.
-     */
-    data class PiiPermission(val key: String, val action: ActionDef, val enabled: Boolean)
-
-    fun piiActionPermissions(): List<PiiPermission> =
-        actionRegistry.list()
-            .filter { it.requiresConfirmation && it.userPrefKey != null }
-            .map { PiiPermission(it.userPrefKey!!, it, settings.loadActionPermission(it.userPrefKey)) }
-
-    /** Flip one PII action's permission.  Both directions write
-     *  through to [SettingsStore]; the read toggle in
-     *  [piiActionPermissions] reflects the change on the next
-     *  re-read.  Never throws on unknown keys (defensive — the
-     *  Settings UI could pass an id we subsequently removed). */
-    fun setPiiActionPermission(key: String, enabled: Boolean) {
-        val def = actionRegistry.list().firstOrNull { it.userPrefKey == key }
-        if (def == null) {
-            logDebug("PIIGATE", "set permission 未知 key $key")
-            return
-        }
-        settings.saveActionPermission(key, enabled)
-        logDebug("PIIGATE", "${def.id} -> ${if (enabled) "ON" else "OFF"}")
     }
 }
 
