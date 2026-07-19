@@ -57,6 +57,9 @@ ACTION_REQUIRED_INPUTS: dict[str, list[dict[str, str]]] = {
     # [2026-07-15] Unified share-text action (was copy_listing /
     # save_posting / copy_warning / copy_menu / copy_hours / copy_promo).
     "share":         [{"key": "text",         "label": "正文"}],
+    # [2026-07-19] Label action — the LLM transcribes the full label
+    # into emit_bubble.label_markdown; that field IS the required input.
+    "view_label":    [{"key": "label_markdown", "label": "标签内容"}],
     # Actions without requiredInputs — emit nothing.
     "scan_to_pay":   [],
     "redact_id":     [],

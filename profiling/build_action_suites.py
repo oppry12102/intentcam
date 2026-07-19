@@ -73,6 +73,13 @@ ACTION_TRIGGERS: dict[str, re.Pattern] = {
     "scan_to_pay": re.compile(
         r"扫一扫|扫码支付|收款码|付款码|支付宝|微信支付|转账"
     ),
+    # [2026-07-19] view_label — label-vocabulary triggers.  Kept tight
+    # (label-specific nouns only, no generic 规格/产地) because RCTW is
+    # street-scene: a loose pattern would tag shop banners as labels.
+    "view_label": re.compile(
+        r"标签|价签|吊牌|合格证|生产日期|保质期|净含量|配料表|执行标准"
+        r"|快递单|面单|铭牌|营养成分|条形码|制造商"
+    ),
 }
 
 # action → expected_inputs (mirrors ActionDef.requiredInputs)
@@ -82,15 +89,17 @@ ACTION_INPUTS: dict[str, list[dict]] = {
     "share":         [{"action": "share",         "key": "text",         "label": "正文"}],
     "redact_id":     [],   # Toast stub — no required input
     "scan_to_pay":   [],   # Toast stub — no required input
+    "view_label":    [{"action": "view_label",    "key": "label_markdown", "label": "标签内容"}],
 }
 
 # action → category label (metadata only)
 ACTION_CATEGORY = {
     "dial_number": "phone", "open_in_maps": "address", "share": "share_text",
     "redact_id": "id_document", "scan_to_pay": "payment_qr",
+    "view_label": "label",
 }
 
-ACTIONS = ["dial_number", "open_in_maps", "share", "redact_id", "scan_to_pay"]
+ACTIONS = ["dial_number", "open_in_maps", "share", "redact_id", "scan_to_pay", "view_label"]
 
 
 def load_rctw_keywords(gt_path: Path) -> list[str]:
@@ -131,6 +140,14 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=30)
     ap.add_argument("--seed", type=int, default=20260717)
     ap.add_argument("--index", default=str(INDEX))
+    ap.add_argument(
+        "--only", default=None, metavar="ACTION",
+        help="Write only this action's GT file (plus nothing else).  "
+             "REQUIRED when adding a new action: a full run regenerates "
+             "every suite from scratch and clobbers the hand-curated "
+             "scene lists (e.g. scan_to_pay's 30→6 strict-payment "
+             "curation) — learned the hard way on 2026-07-19.",
+    )
     args = ap.parse_args()
 
     rctw = Path(args.rctw_root)
@@ -179,6 +196,8 @@ def main() -> int:
 
     total = 0
     for a in ACTIONS + ["none"]:
+        if args.only and a != args.only:
+            continue
         n = len(buckets[a])
         total += n
         gt = {

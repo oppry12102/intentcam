@@ -4,7 +4,7 @@
     "threshold_rationale": "±0.03 typical 20-fixture LLM variance; 0.05 catches true regressions without false-positive noise. See [[feedback-529-contamination-awareness]] for variance bands.",
     "composite_formula": "[2026-07-17 action-first, canonical] composite_v3 = 0.55*r_actions(recall) + 0.30*r_text + 0.15*r_inputs. r_actions = recall of expected_actions against the visible chip set (LLM proposals + content-rescue, share precision-gated since 2026-07-18); over_fire_rate is the companion precision signal on the `none` suite. ScorerV2/r_type retired.",
     "image_dir": "/home/oppry/RCTW-171/train_images",
-    "last_updated": "2026-07-19",
+    "last_updated": "2026-07-19 (view_label added)",
     "last_updated_commit": "4754cfe (scan strict suite + acceptance rescue) + 6311f6a (redact retired)",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",
@@ -16,7 +16,9 @@
     "k3_rebaseline": "2026-07-19: baselines re-measured on kimi k3 (k3[1m] @ api.kimi.com/coding) after bigmodel glm-4.6 token expiry — prior numbers were glm-4.6 and are preserved per-suite as baseline_glm46. This run includes the two k3 fixes: MAX_TOKENS 3072->8192 (k3 mandatory thinking counts against max_tokens; empty-bubble bug) + tool_result-first user-message ordering (k3 strict validator 400s on image-first). 0/159 empty fixtures. Single-run numbers except dial_number corroborated by an independent verification run (0.793 vs 0.799, within noise). none-suite over_fire_rate 0.70 is dominated by GT under-annotation (share/maps on storefronts); see bug-audit-2026-07-18 memory.",
     "gt_curation_2026_07_19": "none-GT full migration (user-approved: named places/storefronts ARE actionable): 17 fixtures moved to share(+8)/maps(+8)/dial(+1) GTs; dial GT trimmed of 2 over-annotated (7995->none, 3371 dropped). Suite sizes: share 38 / maps 38 / dial 29 / none 14. none over_fire 0.429 decomposes: 7173/1138/7931 weak-content share (true model-GT disagreement ~0.21), 682 defensible plate-redact, 5126 storefront (borderline, kept), 7995 verb-trigger (borderline, kept). redact_id/scan_to_pay unchanged from summary_20260719_073308.",
     "maps_prompt_2026_07_19": "open_in_maps name-search/non-exclusive prompt (2c68575): maps 0.747->0.812 (actions 0.649->0.748). Decomposed: GT hygiene +0.033 (7558/1003/1623/2198 removed), prompt +0.032 (5 recall flips: 1302/2420/3625/4178/7799). Losses: 450 (弯道减速 — GT keyword noise, model correctly abstains; moved to none, baseline re-measure pending), 7397/2893 residual variance. maps baseline measured on 35 scenes; GT now 34 (450 out, expected +0.012 folds into next run). none 0.949, over_fire 0.133 = cleanest yet (682 defensible + 7173 weak-content).",
-    "scan_redact_curation_2026_07_19": "scan_to_pay strict-payment curation 30->6 (word-misfires + non-payment QRs dropped; 1696/2048/4491/5264/2584 visually verified) + paymentQr rescue widened (+微信支付|支付宝支付; offline replay 3/6 rescued, 0 none fires; live 0.808->0.844). redact_id suite RETIRED to reference-only (8/9 over-annotated, only image_170 true; 1-fixture suite can't gate). 1696 residual: model vision misses small counter QR ~50% of runs — zoom-side lever, not parser. NOTE: 2026-07-19 ~12:30 the coding endpoint dropped the k3[1m] alias — use ANTHROPIC_MODEL=k3."
+    "scan_redact_curation_2026_07_19": "scan_to_pay strict-payment curation 30->6 (word-misfires + non-payment QRs dropped; 1696/2048/4491/5264/2584 visually verified) + paymentQr rescue widened (+微信支付|支付宝支付; offline replay 3/6 rescued, 0 none fires; live 0.808->0.844). redact_id suite RETIRED to reference-only (8/9 over-annotated, only image_170 true; 1-fixture suite can't gate). 1696 residual: model vision misses small counter QR ~50% of runs — zoom-side lever, not parser. NOTE: 2026-07-19 ~12:30 the coding endpoint dropped the k3[1m] alias — use ANTHROPIC_MODEL=k3.",
+    "view_label_2026_07_19": "view_label action added (label_markdown contract + rendered page, ADR docs/adr/2026-07-19-view-label-action.md). Suite built by build_action_suites.py --only view_label (tight label-vocabulary triggers; 0/16 none-suite overlap). First baseline 0.6711 @30 on k3 (view_label_baseline_20260719_145901): actions 0.594 / text 0.808 / inputs 0.678, 0 errors, 0 empty bubbles. 8 a=0 scenes (model didn't propose view_label on genuine packaging) = prompt-tuning lever; GT spot-checked, not over-annotated.",
+    "view_label_prompt_lift_2026_07_19": "Post-view_label regression (summary_20260719_160413, k3): dial +0.074 (0.8305->0.9049), maps +0.102 (0.8123->0.9144), share +0.133 (0.8255->0.9587) — all lifts concentrated in r_actions; scan_to_pay +0.025 PASS; none -0.000 PASS with over_fire 0.4375 (same documented weak-content set, 0 view_label fires). 0 errors/529 across 123 scenes. Attribution: shared emit_bubble prompt change (view_label mapping sentence raised action_ids salience) — k3 endpoint drift not separable but environmental either way. Baselines refreshed on the three lifted suites per convention."
   },
   "suites": [
     {
@@ -25,17 +27,17 @@
       "limit": 29,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.8305,
+      "baseline": 0.9049,
       "baseline_legacy": null,
-      "baseline_commit": "5b55344 (GT curation) @ summary_20260719_093304",
-      "v3_composite": 0.8305,
-      "v3_actions": 0.8046,
-      "v3_text": 0.8994,
-      "v3_inputs": 0.7874,
+      "baseline_commit": "view_label prompt lift @ summary_20260719_160413",
+      "v3_composite": 0.9049,
+      "v3_actions": 0.9195,
+      "v3_text": 0.931,
+      "v3_inputs": 0.7989,
       "note": "action-first suite — dial_number recall. Built by build_action_suites.py from RCTW-171 (30 phone-bearing fixtures).",
       "over_fire_rate": 0.0,
       "baseline_glm46": 0.6567,
-      "baseline_prev_k3": 0.7989
+      "baseline_prev_k3": 0.8305
     },
     {
       "name": "open_in_maps",
@@ -43,17 +45,17 @@
       "limit": 34,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.8123,
+      "baseline": 0.9144,
       "baseline_legacy": null,
-      "baseline_commit": "2c68575 (maps prompt) @ summary_20260719_110702",
-      "v3_composite": 0.8123,
-      "v3_actions": 0.7476,
-      "v3_text": 0.8443,
-      "v3_inputs": 0.9857,
+      "baseline_commit": "view_label prompt lift @ summary_20260719_160413",
+      "v3_composite": 0.9144,
+      "v3_actions": 0.8971,
+      "v3_text": 0.9108,
+      "v3_inputs": 0.9853,
       "note": "action-first suite — open_in_maps recall. 30 address/institution/direction fixtures.",
       "over_fire_rate": 0.0,
       "baseline_glm46": 0.5456,
-      "baseline_prev_k3": 0.7469
+      "baseline_prev_k3": 0.8123
     },
     {
       "name": "share",
@@ -61,17 +63,17 @@
       "limit": 38,
       "resize": 3200,
       "quality": 90,
-      "baseline": 0.8255,
+      "baseline": 0.9587,
       "baseline_legacy": null,
-      "baseline_commit": "5b55344 (GT curation) @ summary_20260719_093304",
-      "v3_composite": 0.8255,
-      "v3_actions": 0.7588,
-      "v3_text": 0.8715,
-      "v3_inputs": 0.9781,
+      "baseline_commit": "view_label prompt lift @ summary_20260719_160413",
+      "v3_composite": 0.9587,
+      "v3_actions": 0.9737,
+      "v3_text": 0.9171,
+      "v3_inputs": 0.9868,
       "note": "action-first suite — share recall. 30 promo/real-estate/recruit/menu/warning/hours fixtures.",
       "over_fire_rate": 0.0,
       "baseline_glm46": 0.7112,
-      "baseline_prev_k3": 0.8006
+      "baseline_prev_k3": 0.8255
     },
     {
       "name": "redact_id",
@@ -121,10 +123,26 @@
       "v3_actions": 1.0,
       "v3_text": 0.8244,
       "v3_inputs": 1.0,
-      "note": "action-first suite — over-fire check. 16 fixtures with NO actionable content. over_fire_rate is informational ONLY (not threshold-gated): per-fixture share-propensity on the weak-content set (7173/1138/7931/1623/2198/450/2625) swings 2-9 fires across runs at identical code — interpret per-fixture, not as a point value. 2026-07-19: paymentQr acceptance-sign rescue verified SAFE (0 scan_to_pay emissions live).",
-      "over_fire_rate": 0.5625,
+      "note": "action-first suite — over-fire check. 16 fixtures with NO actionable content. over_fire_rate is informational ONLY (not threshold-gated): per-fixture share-propensity on the weak-content set (7173/1138/7931/1623/2198/450/2625) swings 2-9 fires across runs at identical code — interpret per-fixture, not as a point value. 2026-07-19: paymentQr acceptance-sign rescue verified SAFE (0 scan_to_pay emissions live). view_label prompt-lift run: over_fire 0.4375 — same 7 documented weak-content share fires (2625/1138/7173/2198/1623/450) + 682 redact, 0 view_label fires, precision intact.",
+      "over_fire_rate": 0.4375,
       "baseline_glm46": 0.9288,
       "baseline_prev_k3": 0.9414
+    },
+    {
+      "name": "view_label",
+      "gt": "profiling/ground_truth_view_label.json",
+      "limit": 30,
+      "resize": 3200,
+      "quality": 90,
+      "baseline": 0.6711,
+      "baseline_legacy": null,
+      "baseline_commit": "view_label ship @ view_label_baseline_20260719_145901",
+      "v3_composite": 0.6711,
+      "v3_actions": 0.5944,
+      "v3_text": 0.8083,
+      "v3_inputs": 0.6778,
+      "note": "action-first suite — view_label recall + label_markdown input. 30 label-vocabulary scenes (real product packaging; triggers 净含量/执行标准/合格证/价签/制造商 etc.). First measurement on k3 2026-07-19: 8 a=0 misses (model didn't propose view_label) = prompt-tuning lever; GT spot-checked. 0/16 overlap with none suite.",
+      "over_fire_rate": 0.0
     }
   ]
 }
