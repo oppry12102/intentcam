@@ -890,6 +890,35 @@
     "活一开门"
    ],
    "category": "address"
+  },
+  {
+   "id": "image_5126",
+   "file": "image_5126.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share"
+   ],
+   "expected_inputs": [
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    },
+    {
+     "action": "share",
+     "key": "text",
+     "label": "正文"
+    }
+   ],
+   "expected_description_keywords": [
+    "life Custom Furniture",
+    "抗16吨液压钳",
+    "定制衣柜",
+    "家具定制",
+    "丑莱福",
+    "好汉"
+   ],
+   "category": "address"
   }
  ]
 }

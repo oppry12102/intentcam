@@ -225,6 +225,11 @@ summary = {
     "timestamp": ts,
     "threshold": threshold,
     "baseline_file": os.path.relpath(baselines_path, project_root),
+    # Record the eval backend so future archaeology doesn't have to
+    # infer the model from the date (2026-07-19 lesson: glm/MiniMax/k3
+    # eras are indistinguishable in old summaries).
+    "model": os.environ.get("ANTHROPIC_MODEL", "MiniMax-M3 (default)"),
+    "base_url": os.environ.get("ANTHROPIC_BASE_URL", "https://api.minimaxi.com/anthropic (default)"),
     "suites": results,
 }
 with open(f"{out_dir}/summary_{ts}.json", "w") as f:

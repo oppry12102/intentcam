@@ -38,7 +38,7 @@
     {
       "name": "open_in_maps",
       "gt": "profiling/ground_truth_open_in_maps.json",
-      "limit": 38,
+      "limit": 39,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.7469,
@@ -108,7 +108,7 @@
     {
       "name": "none",
       "gt": "profiling/ground_truth_none.json",
-      "limit": 14,
+      "limit": 13,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.9414,
