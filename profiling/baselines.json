@@ -75,7 +75,7 @@
     {
       "name": "redact_id",
       "gt": "profiling/ground_truth_redact_id.json",
-      "limit": 9,
+      "limit": 1,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.6838,
@@ -85,14 +85,14 @@
       "v3_actions": 0.6019,
       "v3_text": 0.7222,
       "v3_inputs": 0.9074,
-      "note": "action-first suite — redact_id recall. Only 9 ID-bearing fixtures in RCTW-171 (18-digit ID / 身份证/营业执照 rare). limit=9 = full bucket.",
+      "note": "reference only — do NOT use for regression checks. RCTW-171 corpus lacks ID-bearing content: 8/9 fixtures were over-annotated (word-misfire on 身份证/驾驶证/执照 mentions, 8-digit phones, illegible license frames); only image_170 (actual ID card) is a true fixture. A 1-fixture suite cannot gate; redact coverage relies on the idDocument rescue (2 verified saves) + prod smoke.",
       "over_fire_rate": 0.0,
       "baseline_glm46": 0.6019
     },
     {
       "name": "scan_to_pay",
       "gt": "profiling/ground_truth_scan_to_pay.json",
-      "limit": 30,
+      "limit": 6,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.7433,
@@ -102,7 +102,7 @@
       "v3_actions": 0.65,
       "v3_text": 0.8222,
       "v3_inputs": 0.9278,
-      "note": "action-first suite — scan_to_pay recall. 30 payment-QR fixtures.",
+      "note": "action-first suite — scan_to_pay recall, STRICT payment semantics (2026-07-19 curation): 30 -> 6 true fixtures (收款码/支付牌/扫一扫转账). Dropped: 转账-word misfires (chat records, police notice, red packet), non-payment QRs (add-friend/official-account/training-promo/plant), no-QR word matches, wallet-UI screenshots. CAUTION: 1 fixture flip ≈ +0.09 composite — wider than the 0.05 gate; review FAILs per-fixture.",
       "over_fire_rate": 0.0,
       "baseline_glm46": 0.6844
     },

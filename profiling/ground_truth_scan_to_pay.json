@@ -1,636 +1,133 @@
 {
-  "version": 5,
-  "description": "action-first suite — action=scan_to_pay (built from RCTW-171 via build_action_suites.py)",
-  "rctw_root": "/home/oppry/RCTW-171",
-  "img_dir": "/home/oppry/RCTW-171/train_images",
-  "scenes": [
+ "version": 5,
+ "description": "action-first suite — action=scan_to_pay (built from RCTW-171 via build_action_suites.py)",
+ "rctw_root": "/home/oppry/RCTW-171",
+ "img_dir": "/home/oppry/RCTW-171/train_images",
+ "scenes": [
+  {
+   "id": "image_7064",
+   "file": "image_7064.jpg",
+   "expected_actions": [
+    "scan_to_pay"
+   ],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "扫一扫上面的二维码，向我付钱",
+    "下午5:45",
+    "微信安全支付",
+    "设置金额",
+    "中国移动",
+    "###"
+   ],
+   "category": "payment_qr"
+  },
+  {
+   "id": "image_7166",
+   "file": "image_7166.jpg",
+   "expected_actions": [
+    "open_in_maps",
+    "share",
+    "scan_to_pay"
+   ],
+   "expected_inputs": [
     {
-      "id": "image_6295",
-      "file": "image_6295.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "卡塔密室逃脱，开启一小时奇幻之旅！",
-        "扫一扫 便",
-        "去哪玩？",
-        "放学啦",
-        "10F",
-        "下班"
-      ],
-      "category": "payment_qr"
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
     },
     {
-      "id": "image_1919",
-      "file": "image_1919.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "你已添加了A海的声音，现在可以开始聊天",
-        "￥300.00",
-        "21:24",
-        "A海的声音",
-        "21:20",
-        "中国联通"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_2761",
-      "file": "image_2761.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "扫一扫上面的二维码图案，加我微信",
-        "看自拍视国语小片就加我吧",
-        "我亲爱的"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_2530",
-      "file": "image_2530.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "长按3秒，识别图中二维码",
-        "网络最火热的赚钱项目",
-        "微信扫一扫马上赚钱",
-        "免费培训"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_7064",
-      "file": "image_7064.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "扫一扫上面的二维码，向我付钱",
-        "下午5:45",
-        "微信安全支付",
-        "设置金额",
-        "中国移动",
-        "###"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_2048",
-      "file": "image_2048.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "Biscuits",
-        "Seafood",
-        "BESTORE",
-        "让嘴巴去旅行",
-        "就挑良品铺子",
-        "100积分当"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_2584",
-      "file": "image_2584.jpg",
-      "expected_actions": [
-        "dial_number",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        }
-      ],
-      "expected_description_keywords": [
-        "BAISHIDAJIANZHUZHUANGSHIYOUXIANGONGSI",
-        "TEL:028-2612818",
-        "专业设计：家装.工装.一体化",
-        "百事达建筑装饰有限公司",
-        "15983221319",
-        "微信扫一扫"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_4491",
-      "file": "image_4491.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "欢迎使用支付宝付款",
-        "随机立减",
-        "英雄联盟",
-        "###",
-        "瓦洛兰",
-        "涮涮锅"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_5166",
-      "file": "image_5166.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "求助查询投诉",
-        "武汉交警",
-        "二楼住宿",
-        "信号灯",
-        "扫一扫",
-        "公众号"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_5235",
-      "file": "image_5235.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "世界500强车成员企业",
-        "(000789.SZ)",
-        "扫一扫关注北新建材",
-        "汉供销建材家",
-        "汉西建材大世",
-        "DOWN"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_5264",
-      "file": "image_5264.jpg",
-      "expected_actions": [
-        "dial_number",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        }
-      ],
-      "expected_description_keywords": [
-        "全民4G福贺新年",
-        "移动光纤大降价",
-        "8210086",
-        "购vivo手机",
-        "2年800元",
-        "微信扫一扫"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_4345",
-      "file": "image_4345.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "此处为诈骗犯罪汇款",
-        "转账高发网点",
-        "东新公安分局",
-        "公安提示",
-        "南#金",
-        "###"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_7166",
-      "file": "image_7166.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "share",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "充值1000元送200元+抽红包一个",
-        "充值200元送25元+抽红包一个",
-        "充值300元送50元+抽红包一个",
-        "充值500元送90元+抽红包一个",
-        "欢迎使用微信支付",
-        "欢迎使用支付宝"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_3523",
-      "file": "image_3523.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "扫一扫惊喜多"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_5956",
-      "file": "image_5956.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "扫一扫##########",
-        "小玉蝶",
-        "###"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_4859",
-      "file": "image_4859.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "长按3秒，识别图中的二维码",
-        "微信扫一扫马上赚钱",
-        "快乐创业轻松赚钱",
-        "免费培训",
-        "一学就会"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_4820",
-      "file": "image_4820.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "POSTAL SAVING BANK OF CHINA",
-        "免年费 免小额管理费",
-        "邮储社保卡 免开户费",
-        "共同提高识骗防骗能力",
-        "中国邮政储蓄银行",
-        "中国邮政储蓄#行"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_1978",
-      "file": "image_1978.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "电话：13508045422",
-        "支付宝支付",
-        "四海大道",
-        "温馨提示",
-        "现金支付",
-        "微信支付"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_2192",
-      "file": "image_2192.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "share",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "微信安全支付",
-        "￥0.11",
-        "信用卡还款",
-        "20:46",
-        "我的钱包",
-        "腾讯服务"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_1696",
-      "file": "image_1696.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "Fried Chicken",
-        "用心做好每一片鸡排！",
-        "摇摆鸡米花",
-        "￥12/份",
-        "美式薯条",
-        "支付宝"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_57",
-      "file": "image_57.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "share",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "晚上10:59",
-        "0.00K/s",
-        "微信安全支付",
-        "信用卡还款",
-        "￥0.00",
-        "我的钱包"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_3453",
-      "file": "image_3453.jpg",
-      "expected_actions": [
-        "dial_number",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        }
-      ],
-      "expected_description_keywords": [
-        "13303835656",
-        "创新无限网卡许贺建",
-        "河南郑州电信",
-        "21:34",
-        "支付宝转账",
-        "Flyme"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_4912",
-      "file": "image_4912.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "下载“汇贝生活”客户端，可使用支付宝、微信支付、银行卡快捷支付",
-        "欢迎工商银行—汇贝生活银行卡用户消费",
-        "客服：400-607-8300",
-        "欢迎使用手机支付",
-        "中#工商银行",
-        "ICBC"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_3415",
-      "file": "image_3415.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "长按3秒，识别图中二维码",
-        "快乐创业 轻松赚钱",
-        "微信扫一扫马上赚钱",
-        "免费培训",
-        "一学就会"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_7449",
-      "file": "image_7449.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "向柄妹（**琴）转账",
-        "微信扫一扫",
-        "支付"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_6063",
-      "file": "image_6063.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "Union Pay",
-        "30 OFF",
-        "京东钱包",
-        "百度钱包",
-        "银联钱包",
-        "微信支付"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_1108",
-      "file": "image_1108.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "10108888",
-        "抢行不文明",
-        "韵湖星光",
-        "应急出口",
-        "街道口地",
-        "新世界"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_6131",
-      "file": "image_6131.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "巴氏杀菌热处理风味酸奶",
-        "HAO YI JIA",
-        "一亿张门票每周送",
-        "味可兹香蕉牛奶",
-        "BPOWIAI",
-        "205gx12"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_1964",
-      "file": "image_1964.jpg",
-      "expected_actions": [
-        "scan_to_pay"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "扫一扫上面的二维码图案，加我微信",
-        "，辽宁 阜新",
-        "赵赵"
-      ],
-      "category": "payment_qr"
-    },
-    {
-      "id": "image_4575",
-      "file": "image_4575.jpg",
-      "expected_actions": [
-        "share",
-        "scan_to_pay"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "已存入零钱，可直接转账",
-        "海绵宝宝的红包",
-        "5.21元",
-        "我爱你",
-        "若离去",
-        "后会"
-      ],
-      "category": "payment_qr"
+     "action": "share",
+     "key": "text",
+     "label": "正文"
     }
-  ]
+   ],
+   "expected_description_keywords": [
+    "充值1000元送200元+抽红包一个",
+    "充值200元送25元+抽红包一个",
+    "充值300元送50元+抽红包一个",
+    "充值500元送90元+抽红包一个",
+    "欢迎使用微信支付",
+    "欢迎使用支付宝"
+   ],
+   "category": "payment_qr"
+  },
+  {
+   "id": "image_1978",
+   "file": "image_1978.jpg",
+   "expected_actions": [
+    "dial_number",
+    "open_in_maps",
+    "scan_to_pay"
+   ],
+   "expected_inputs": [
+    {
+     "action": "dial_number",
+     "key": "phone_number",
+     "label": "手机号"
+    },
+    {
+     "action": "open_in_maps",
+     "key": "query",
+     "label": "地点或地址"
+    }
+   ],
+   "expected_description_keywords": [
+    "电话：13508045422",
+    "支付宝支付",
+    "四海大道",
+    "温馨提示",
+    "现金支付",
+    "微信支付"
+   ],
+   "category": "payment_qr"
+  },
+  {
+   "id": "image_1696",
+   "file": "image_1696.jpg",
+   "expected_actions": [
+    "scan_to_pay"
+   ],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "Fried Chicken",
+    "用心做好每一片鸡排！",
+    "摇摆鸡米花",
+    "￥12/份",
+    "美式薯条",
+    "支付宝"
+   ],
+   "category": "payment_qr"
+  },
+  {
+   "id": "image_7449",
+   "file": "image_7449.jpg",
+   "expected_actions": [
+    "scan_to_pay"
+   ],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "向柄妹（**琴）转账",
+    "微信扫一扫",
+    "支付"
+   ],
+   "category": "payment_qr"
+  },
+  {
+   "id": "image_6063",
+   "file": "image_6063.jpg",
+   "expected_actions": [
+    "scan_to_pay"
+   ],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "Union Pay",
+    "30 OFF",
+    "京东钱包",
+    "百度钱包",
+    "银联钱包",
+    "微信支付"
+   ],
+   "category": "payment_qr"
+  }
+ ]
 }

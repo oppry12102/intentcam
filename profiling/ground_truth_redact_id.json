@@ -1,220 +1,25 @@
 {
-  "version": 5,
-  "description": "action-first suite — action=redact_id (built from RCTW-171 via build_action_suites.py)",
-  "rctw_root": "/home/oppry/RCTW-171",
-  "img_dir": "/home/oppry/RCTW-171/train_images",
-  "scenes": [
-    {
-      "id": "image_6242",
-      "file": "image_6242.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "redact_id"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "景区咨询电话858530218585453985851613",
-        "篝火、牛羊、马儿、格桑花...",
-        "蓝天、白云、风筝、帐篷、"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_1980",
-      "file": "image_1980.jpg",
-      "expected_actions": [
-        "redact_id"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "By：黑团子 No。20121125000842375000",
-        "昵图网www.nipic.com",
-        "LOVE YOU",
-        "Love You",
-        "情人节快乐",
-        "浓情七夕"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_6012",
-      "file": "image_6012.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "redact_id"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "Show coffee & tea",
-        "show cof",
-        "山天河国际影城",
-        "秀玉红茶坊",
-        "BULL",
-        "身份证"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_1364",
-      "file": "image_1364.jpg",
-      "expected_actions": [
-        "dial_number",
-        "open_in_maps",
-        "share",
-        "redact_id"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "汽车违章查询，年审过户，换证补牌，保险，驾驶证年审换证",
-        "经营:烟酒副食，饮料牛奶，冰棒批发，花费充值",
-        "联系电话：15071479938",
-        "武汉市犇牛汽车服务有限公司",
-        "Wuhan City",
-        "Red Bull"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_5419",
-      "file": "image_5419.jpg",
-      "expected_actions": [
-        "share",
-        "redact_id"
-      ],
-      "expected_inputs": [
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "请您使用本人身份证上网",
-        "严禁接纳未成年人入内",
-        "NO SMOKING",
-        "充100元送100元",
-        "充200元送220元",
-        "NO SMOKIN"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_2494",
-      "file": "image_2494.jpg",
-      "expected_actions": [
-        "open_in_maps",
-        "redact_id"
-      ],
-      "expected_inputs": [
-        {
-          "action": "open_in_maps",
-          "key": "query",
-          "label": "地点或地址"
-        }
-      ],
-      "expected_description_keywords": [
-        "中部国旅WCI",
-        "中部国旅入",
-        "社交型健",
-        "创始会员",
-        "中部国旅",
-        "每天可享"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_170",
-      "file": "image_170.jpg",
-      "expected_actions": [
-        "redact_id"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "2006.07.07-2026.07.07",
-        "中华人民共和国",
-        "太湖县公安局",
-        "居民身份证",
-        "签发机关",
-        "有效期限"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_7570",
-      "file": "image_7570.jpg",
-      "expected_actions": [
-        "redact_id"
-      ],
-      "expected_inputs": [],
-      "expected_description_keywords": [
-        "请带上身份证或驾驶证等",
-        "有效证件"
-      ],
-      "category": "id_document"
-    },
-    {
-      "id": "image_7730",
-      "file": "image_7730.jpg",
-      "expected_actions": [
-        "dial_number",
-        "share",
-        "redact_id"
-      ],
-      "expected_inputs": [
-        {
-          "action": "dial_number",
-          "key": "phone_number",
-          "label": "手机号"
-        },
-        {
-          "action": "share",
-          "key": "text",
-          "label": "正文"
-        }
-      ],
-      "expected_description_keywords": [
-        "请您使用本人身份证上网",
-        "15972924879",
-        "亲近自然 统一绿茶",
-        "雅凤婚庆鲜花礼品",
-        "严禁未成年人上网",
-        "严禁未成年人入内"
-      ],
-      "category": "id_document"
-    }
-  ]
+ "version": 5,
+ "description": "action-first suite — action=redact_id (built from RCTW-171 via build_action_suites.py)",
+ "rctw_root": "/home/oppry/RCTW-171",
+ "img_dir": "/home/oppry/RCTW-171/train_images",
+ "scenes": [
+  {
+   "id": "image_170",
+   "file": "image_170.jpg",
+   "expected_actions": [
+    "redact_id"
+   ],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "2006.07.07-2026.07.07",
+    "中华人民共和国",
+    "太湖县公安局",
+    "居民身份证",
+    "签发机关",
+    "有效期限"
+   ],
+   "category": "id_document"
+  }
+ ]
 }
