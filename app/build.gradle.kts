@@ -66,8 +66,8 @@ android {
         applicationId = "com.example.intentcam"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "3.4"
+        versionCode = 9
+        versionName = "3.5"
         // Native libs: arm64-v8a only.  x86 / x86_64 are emulator-only
         // (emulator uses host CPU); armeabi-v7a (32-bit ARM) is < 1% of
         // 2024+ Play Store devices and the ML Kit OCR .so for it adds

@@ -381,6 +381,96 @@ per-PII share toggles (the OS share sheet is itself the consent gate).
   `share` via `scripts/rename_share_action.py`. Pure rename → scoring
   is recall-neutral; baselines to be re-measured.
 
+## [2026-07-19] — version 3.5 (kimi k3 migration + strict-endpoint protocol + action recall)
+
+The bigmodel glm-4.6 eval token expired 2026-07-18; the eval backend is
+now **kimi k3** (`k3` @ `https://api.kimi.com/coding`). Migrating surfaced
+two latent protocol bugs (k3's validator is strict-Anthropic where
+GLM/MiniMax were lenient) and kicked off a measurement-hygiene sweep
+across all six action-first suites. App runtime defaults are unchanged
+(MiniMax-M3 via the baked rotatable token — verified alive 2026-07-19).
+
+### Fixed
+
+- **Empty bubbles on thinking models** (`3c5d3a1`). kimi k3 always thinks
+  (`reasoning_effort=max` is the only level, cannot be disabled/budgeted)
+  and thinking tokens count against `max_tokens`. At 3072, 2-3/30 fixtures
+  per run returned completely empty bubbles (thinking burned the budget
+  before `emit_bubble` JSON started; the retry-once hit the same wall).
+  `LlmClient.MAX_TOKENS` 3072 → **8192** and `TOTAL_TIMEOUT_MS` 90s →
+  **180s** (measured k3 throughput ~45-60 tok/s). 0/159 empty fixtures
+  after the fix; deterministic-empty image_7398 now scores 1.000.
+- **`tool_result` blocks must lead continuing-round user messages**
+  (`9407ec5`). Since Phase 2a (2026-07-11) zoom_in follow-ups shipped
+  image-first user messages — tolerated by GLM/MiniMax for 8 months, a
+  hard HTTP 400 on k3 ("tool_calls did not have response messages").
+  Latent until the max_tokens bump let zoom rounds complete. Order is now
+  tool_results → images → nudge in all three continuing paths (spec-
+  compliant on every Anthropic-compatible endpoint). curl A/B proven.
+- **`open_in_maps` name-search + non-exclusive mapping** (`2c68575`).
+  The emit_bubble mapping rule already listed 店名/机构, but the
+  prompt-v2 restraint paragraph won on 海报/告示 content with no street
+  address — the model emitted share-only on ~10/38 maps fixtures. Added:
+  店名/机构名没有街道地址也要带 open_in_maps (导航可按名称搜索) +
+  share/maps 不互斥 clause. maps actions recall **0.649 → 0.748**.
+- **`paymentQr` rescue covers acceptance signs** (`4754cfe`). The regex
+  had 收款码/付款码/扫一扫/转账/收款二维码/微信收款/支付宝付款 but not
+  the acceptance-sign vocabulary 微信支付/支付宝支付 — 收银台/门店
+  payment signs were never rescued. Offline replay of the widening:
+  3/6 strict fixtures newly rescued, 0/16 none-suite new fires. Live:
+  strict scan suite 0.808 → 0.844.
+
+### Changed (eval infrastructure)
+
+- **Eval model → kimi k3**; `run_regression.sh` summaries now record
+  `model` + `base_url` (glm/MiniMax/k3 eras were indistinguishable in
+  old summaries). Note: the coding endpoint dropped the `k3[1m]` alias
+  mid-day 2026-07-19 — use `ANTHROPIC_MODEL=k3`.
+- **Suite curation** (all visually verified where ambiguous):
+  - `none` GT: full migration of 17 over-fired fixtures to
+    share(+8)/maps(+8)/dial(+1) GTs (user-approved: named places and
+    storefronts ARE actionable); 21 over-fires decomposed — zero true
+    false emissions, all GT under-annotation or defensible behavior.
+    none keeps 16 weak-content negatives.
+  - `dial_number` GT: trimmed 2 over-annotated (image_7995 鸡汤文,
+    image_3371 招牌 — no phone in frame).
+  - `open_in_maps` GT: dropped 4 unactionable (保洁工具柜, illegible
+    路牌, 游客止步/开年大戏 → none), moved 弯道减速 (道-keyword noise)
+    to none.
+  - `scan_to_pay` GT: strict-payment curation 30 → **6** (收款码/支付牌/
+    扫一扫转账 only; dropped 转账-word misfires, non-payment QRs,
+    wallet-UI screenshots). 1-fixture flip ≈ +0.09 composite — review
+    FAILs per-fixture on this suite.
+  - `redact_id` suite **retired to reference-only**: 8/9 over-annotated
+    (word-misfires, no ID data in frame); only image_170 is a true ID
+    fixture and a 1-fixture suite cannot gate. redact coverage relies
+    on the idDocument rescue + prod smoke.
+- `none` over_fire_rate is now **informational-only** (per-fixture
+  share-propensity on the weak-content set swings 2-9 fires across runs
+  at identical code); the 0.05 threshold gates composite only.
+
+### Verified
+
+Baselines (kimi k3, post-fix; `summary_20260719_*`):
+
+| suite | scenes | glm-4.6 baseline | **k3 baseline** | notes |
+|---|---:|---:|---:|---|
+| dial_number | 29 | 0.657 | **0.830** | 0 empty (was 2-3/30) |
+| share | 38 | 0.711 | **0.825** | |
+| open_in_maps | 34 | 0.546 | **0.812** | actions 0.649→0.748 |
+| scan_to_pay | 6 (strict) | 0.684 | **0.844** | acceptance rescue shipped |
+| none | 16 | 0.929 | **0.947** | over-fire informational |
+| redact_id | — | 0.602 | retired | corpus lacks ID content |
+
+Model swap + empty-bubble elimination account for most of the lift;
+per-image eval wall-time on k3 is ~21-22s (glm ~16-19s typical) with
+markedly better run-to-run stability (±3% vs ±25%).
+
+APK: debug `intentcam.apk` + release `intentcam-release.apk` at project
+root (versionCode 9). **Runtime default stays MiniMax-M3** — the kimi
+migration is eval-side only; on-device model is user-configurable in
+Settings.
+
 ## [2026-07-14g] — v3.0 baseline flip (composite_v2 = canonical)
 
 The 14-suite regression net at v3.0 (`summary_20260714_153204`,
