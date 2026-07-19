@@ -183,6 +183,19 @@
     "游客止步"
    ],
    "category": "none"
+  },
+  {
+   "id": "image_450",
+   "file": "image_450.jpg",
+   "expected_actions": [],
+   "expected_inputs": [],
+   "expected_description_keywords": [
+    "弯道减速",
+    "###",
+    "减速",
+    "弯道"
+   ],
+   "category": "none"
   }
  ]
 }

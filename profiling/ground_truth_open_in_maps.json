@@ -40,27 +40,6 @@
    "category": "address"
   },
   {
-   "id": "image_450",
-   "file": "image_450.jpg",
-   "expected_actions": [
-    "open_in_maps"
-   ],
-   "expected_inputs": [
-    {
-     "action": "open_in_maps",
-     "key": "query",
-     "label": "地点或地址"
-    }
-   ],
-   "expected_description_keywords": [
-    "弯道减速",
-    "###",
-    "减速",
-    "弯道"
-   ],
-   "category": "address"
-  },
-  {
    "id": "image_3625",
    "file": "image_3625.jpg",
    "expected_actions": [
