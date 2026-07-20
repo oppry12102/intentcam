@@ -4,6 +4,18 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Changed — 文档全面重写 (2026-07-19)
+
+`README.md` / `ARCHITECTURE.md` / `CONFIG.md` regenerated against the
+actual v3.6 state: action-first architecture (intent taxonomy +
+`IntentDecl.kt` were retired 2026-07-17 but still documented),
+ScorerV3 sole canonical (was ScorerV2-era tables), 4-tool protocol,
+7-suite regression layout with current k3 baselines, `view_label`
+feature + verified capture path, dev-phase PII unlock, settings
+dirty-check save, debug-hook docs, `--only` suite-builder warning.
+History stays in this file + `docs/adr/`; the docs now describe only
+what is live.
+
 ### Changed — 设置页改版：调试开关迁入 + 返回即存（带脏检查） (2026-07-19)
 
 - **调试日志默认关闭**(`SettingsStore.loadDebugEnabled` +

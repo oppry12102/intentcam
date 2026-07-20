@@ -1,290 +1,238 @@
-# IntentCam
+# IntentCam (意图相机)
 
-A camera-based Android app that recognises user intent from a single
-phone photo.  The image goes through an on-device pipeline (3200-px
-thumbnail + 4096-px full-res + on-device OCR hint) and a
-multi-round LLM tool-use protocol; the result is a structured
-**bubble** with intent type, free-form Chinese summary, and a set
-of tappable action chips.
+A camera-based Android app that turns a single photo into actionable
+next steps.  A frame goes through an on-device pipeline (dual JPEG +
+on-device OCR hint) and a multi-round LLM tool-use protocol; the
+result is a structured **bubble** with a free-form Chinese summary
+and a set of tappable **action chips** — open in maps, dial, share,
+view a rendered label page, and more.
 
 | | |
 |---|---|
-| **Version** | 3.0 (architectural refactor) |
-| **Min Android** | API 26 (Android 8.0) |
-| **LLM** | Anthropic-compatible streaming (configurable base URL + token) |
-| **OCR backend** | Local PP-OCRv4 mobile (cascade: local → Huawei Cloud → blind) |
-| **APK size** | 25 MB debug / 17 MB release |
-| **Eval entry point** | `./gradlew :shared:eval --args="..."` (JVM, no device) |
+| **Version** | 3.6 (versionCode 10) |
+| **Min Android** | API 26 (Android 8.0), arm64-v8a |
+| **LLM** | Anthropic-compatible streaming (default MiniMax-M3 @ `api.minimaxi.com/anthropic`; user-configurable in 设置) |
+| **OCR (device)** | Huawei HMS ML Kit, offline Chinese + Latin |
+| **OCR (eval)** | Local PP-OCRv4 mobile (cascade: local → Huawei Cloud → blind) |
+| **APK size** | ~25 MB debug / ~17 MB release |
+| **Eval entry** | `gradle :shared:eval --args="..."` (JVM, no device) |
 
 ---
 
 ## Architecture at a glance
 
 ```
-                        ┌────────────────────────────────────┐
-                        │            AppViewModel            │
-                        │                                    │
-   FrameAnalyzer ─►─────┤  captureLatestFrame()              │
-   (CameraX, 3200px     │       │                            │
-    thumb + 4096px      │       ▼                            │
-    fullRes, on-device  │  CycleManager                      │
-    OCR hint)           │   ├─ pendingQueue (FIFO, n=8)      │
-                        │   ├─ worker pool (m=2)             │
-                        │   └─ allJobs / busy (StateFlows)  │
-                        │       │                            │
-                        │       ▼                            │
-                        │  ToolUseLoop.runCycle()           │
-                        │   └─ multi-round tool-use         │
-                        │       (zoom_in / extract_text /    │
-                        │        compare_text / emit_bubble) │
-                        │       │                            │
-                        │       ▼                            │
-                        │  ActionOrchestrator                │
-                        │   (per-emit validateInputs +       │
-                        │    shouldFinalize gate)            │
-                        │       │                            │
-                        │       ▼                            │
-                        │  Bubble → ActionResolver           │
-                        │           → ActionRegistry        │
-                        │               → chips on screen   │
-                        └────────────────────────────────────┘
+  Shutter tap
+      │
+      ▼
+  FrameAnalyzer ── dual JPEG (3200px thumb + 4096px fullRes)
+      │              + on-device OCR hint (HMS ML Kit)
+      ▼
+  CycleManager ──── pending FIFO queue (n=8)
+      │              worker pool (m=2) · allJobs/busy StateFlows
+      ▼
+  ToolUseLoop ───── multi-round tool-use (max 4 rounds)
+      │              zoom_in · compare_text · extract_text · emit_bubble
+      │              (Anthropic-compatible SSE, temperature 0,
+      │               MAX_TOKENS 8192)
+      ▼
+  Bubble ────────── title + detail + details[] + confidence
+      │              + llmProposedActions + labelMarkdown?
+      ▼
+  ActionResolver ── LLM 提议 ∩ 已注册 ∩ 已启用
+      │  ActionOrchestrator ── requiredInputs 校验 + finalize gate
+      │  ActionRescue ── 内容兜底补 chip(电话/证件/收款码/标签)
+      ▼
+  Chips (ChipState: Validated / Spinner / Ghost)
+      │
+      ├─ open_in_maps → geo: Intent        ├─ dial_number → ACTION_DIAL
+      ├─ share → ACTION_SEND text          ├─ scan_to_pay / redact_id → Toast
+      └─ view_label → LabelPageScreen (WebView 渲染整页,可分享图片/文字)
 ```
 
-The **single source of truth** for "is the camera busy" is
-`CycleManager.busy: StateFlow<Boolean>` — a derived flow over the
-focused job's status (PENDING + IN_FLIGHT only).  The **single
-source of truth** for rendered bubbles is
-`CycleManager.allJobs: StateFlow<Map<String, CycleJob>>` — the
-live UI iterates this directly; no shadow list exists.
-
-See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design
-(intent↔action framework, multi-round protocol, producer/consumer
-split, OCR cascade).
-
-See **[CONFIG.md](CONFIG.md)** for every tunable constant.
+Deep dive: **[ARCHITECTURE.md](ARCHITECTURE.md)** · every tunable:
+**[CONFIG.md](CONFIG.md)** · decisions: **[docs/adr/](docs/adr/README.md)**
 
 ---
 
-## Intent↔Action framework
+## Action model (action-first, since 2026-07-17)
 
-Each `emit_bubble` carries:
+There is **no intent taxonomy** (retired 2026-07-17, `f522053`).
+The LLM picks user-facing action ids directly in
+`emit_bubble.action_ids`; the resolver whitelists them against the
+registry and intersects with the user's enabled set.  A content-based
+rescue adds chips the LLM missed (phone / ID / payment-QR patterns,
+and `view_label` whenever a `label_markdown` transcription exists).
 
-- **`type`** — one of 14 intent ids (`info` / `location` /
-  `solve` / `phone` / `payment_qr` / `id_document` /
-  `real_estate_rental` / `recruit_hiring` / `warning_safety` /
-  `menu_food` / `hours_schedule` / `route_to` /
-  `service_institution` / `shopping_promo`).  Defaults to
-  `FALLBACK_ID = "info"` if the LLM doesn't pick one.
-- **`intent`** — free-form Chinese phrase (≤30 chars, e.g.
-  "拨打联系电话", "导航去这家店").  Replaces the hardcoded type
-  enum starting in v3.0.
-- **`action_ids`** — list of user-facing action ids the model
-  recommends (`dial_number` / `open_in_maps` / `scan_to_pay` /
-  `redact_id` / `share`).  Each is rendered as a chip on the
-  bubble.
+| id | chip | 作用 | required input |
+|---|---|---|---|
+| `open_in_maps` | 在地图中打开 | `geo:` Intent + chooser(支持按名称搜索) | `query`(地点/地址) |
+| `dial_number` | 拨号 | `ACTION_DIAL`(拨号器里再按拨打) | `phone_number` |
+| `share` | 分享文本 | `ACTION_SEND text/plain` | `text` |
+| `view_label` | 查看标签 | 整页渲染标签(见下) | `label_markdown` |
+| `scan_to_pay` | 扫码支付 | 安全提示 Toast(永不自动起支付) | — |
+| `redact_id` | 遮挡证件号 | 提示 Toast | — |
 
-Adding a new intent = register in **2 lockstep sites**:
+**Dev phase (2026-07-19):** all consent gates are OFF — no default-off
+toggles, no confirmation dialogs.  The mechanism
+(`requiresConfirmation` / `userPrefKey`) stays dormant in code and is
+re-armed per-action before any end-user build.
 
-1. `app/.../IntentDecl.kt` `registerDefaultIntents()` — declare the
-   IntentDecl (id, label, family, llmHint)
-2. `app/.../ActionDecl.kt` `registerDefaultActions()` — declare any
-   actions that apply to this intent
-
-Drift across these = silent chip miss for that intent.  The eval
-pipeline auto-checks via `profiling/baselines.json`.
+Adding a new action = one `ActionDef` in
+`app/.../ActionDecl.kt#registerDefaultActions` + one mapping sentence
+in `emit_bubble`'s description + eval mirror in
+`EvalRunner.defaultActionIds`.  See ADR
+`docs/adr/2026-07-19-view-label-action.md` for a worked example.
 
 ---
 
-## Headline (Kotlin eval, prod-mirror, local PP-OCRv4)
+## `view_label` — 标签识别整页渲染
 
-OCR backend swapped 2026-07-13 from Huawei Cloud to local
-PP-OCRv4 mobile (`pp_ocrv4_mobile_engine`, 12 MB, ~2.4 s/img CPU).
-Huawei Cloud numbers retained as historical reference only.
+When the LLM recognizes a label-like structured text block
+(商品标签/价签/吊牌/合格证/快递面单/票据/铭牌), it transcribes the
+full label into `emit_bubble.label_markdown`.  The chip opens a
+full-screen page that renders the markdown (hand-rolled subset →
+HTML converter `shared/LabelHtml.kt` + WebView) and offers:
 
-| Suite | composite | n |
-|---|---:|---:|
-| `phone_20` | **0.907** | 20 |
-| `pii_20` | **0.947** | 18 |
-| `direction_arrow_20` | **0.985** | 20 |
-| `service_institution_60` | **0.976** | 67 |
-| `shopping_promo_20` | **0.943** | 20 |
-| `recruit_hiring_11` | **0.970** | 11 |
-| `real_estate_rental_11` | **0.957** | 10 |
-| `phaseG_15` | **0.959** | 15 |
+- **分享图片** — full-page PNG captured from the on-screen WebView
+  (`enableSlowWholeDocumentDraw` + resize-draw-restore), shared via
+  FileProvider.
+- **分享文字** — the markdown source as `text/plain`.
 
-The **15-suite regression net** (`scripts/run_regression.sh`)
-auto-checks Δ ≥ 0.05 absolute against current baselines; exits
-non-zero on regression.
+Zero new dependencies, zero storage permissions.
 
-The eval runs on the JVM (`shared/eval/`) against RCTW-171 train
-images.  It does **not** need an Android device — the production
-camera/ML Kit code paths are mocked; only the LLM call and the
-visual pipeline run for real.
+---
+
+## Eval (Kotlin, prod-mirror, ScorerV3)
+
+Single canonical scorer:
+
+```
+composite = 0.55 · r_actions(recall) + 0.30 · r_text + 0.15 · r_inputs
+```
+
+Current baselines (`profiling/baselines.json`, measured on **kimi k3**
+@ `api.kimi.com/coding`, 2026-07-19):
+
+| Suite | composite | n | note |
+|---|---:|---:|---|
+| `dial_number` | **0.9049** | 29 | |
+| `open_in_maps` | **0.9144** | 34 | |
+| `share` | **0.9587** | 38 | |
+| `scan_to_pay` | **0.8444** | 6 | strict-payment curation |
+| `none` | **0.9474** | 16 | over-fire check |
+| `view_label` | **0.6711** | 30 | first baseline; 8 a=0 = prompt lever |
+| `redact_id` | — | 1 | reference-only (corpus lacks IDs) |
+
+The regression net (`scripts/run_regression.sh`) flags |Δ| ≥ 0.05
+against these baselines.
+
+### Run it
+
+```bash
+export ANTHROPIC_AUTH_TOKEN=<key>            # eval-only credential
+export ANTHROPIC_BASE_URL=https://api.kimi.com/coding
+export ANTHROPIC_MODEL=k3                    # k3[1m] alias is dead
+
+# single suite (~2 min/scene with k3 thinking)
+gradle :shared:eval --args="--ground-truth profiling/ground_truth_view_label.json \
+    --img-dir /home/oppry/RCTW-171/train_images --limit 0 \
+    --resize 3200 --quality 90 --json-out /tmp/out.json"
+
+# full regression (reads profiling/baselines.json)
+./scripts/run_regression.sh
+```
+
+Gotchas: gradle's `--args` needs the `=` form; GT files use the
+`scenes` key; build `:shared:jar` first when `shared/` changed;
+`build_action_suites.py` must be run with `--only <action>` (a full
+run clobbers hand-curated suites).
 
 ---
 
 ## Quick start
 
-### Build (JDK 17 + Gradle 8.5)
+### Build (JDK 17 + local Gradle 8.5)
 
 ```bash
-JAVA_HOME=/path/to/jdk17 /path/to/gradle clean :app:assembleDebug
+export PATH=/path/to/gradle-8.5/bin:$PATH
+gradle :app:assembleDebug        # or :app:assembleRelease
 ```
 
-The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`;
-it's also copied to `./intentcam.apk` at the project root for
-easy sideloading.
+APKs land in `app/build/outputs/apk/…` and are conventionally copied
+to `./intentcam.apk` / `./intentcam-release.apk` (gitignored).  The
+baked default LLM token comes from `secrets.properties`
+(gitignored) → `BuildConfig.DEFAULT_AUTH_TOKEN`.
 
 ### Run on device
 
-1. Grant camera permission on first launch
-2. Tap the green **识别** button to capture a frame
-3. Wait ~1-2 s for round 1 (OCR + LLM) + 0-2 zoom/extract rounds
-4. Tap the resulting bubble to see the image (full-screen,
-   scrollable text below, header tap to collapse for more image)
-5. Tap **退出** to dismiss and start a new capture
+1. Grant camera permission on first launch.
+2. Tap the shutter; wait for the multi-round recognition
+   (up to 4 rounds, ~seconds each).
+3. Tap a chip to fire an action; tap the bubble card for the
+   detail view (full image + extraction table).
+4. 设置 (top-right gear): LLM endpoint config (leave untouched to
+   keep using the baked default — saves only when you actually edit),
+   调试日志 switch (default off), 关于.
 
-### Capture logs while reproducing a bug
-
-```bash
-./scripts/capture_logs.sh                # install + filtered logcat
-./scripts/capture_logs.sh --no-install   # capture only
-```
-
-Filter includes `IntentCam:V`, `AndroidRuntime:E`, `System.err:W`,
-and `DEBUG:V` (in-app overlay entries).  Output lands in
-`./intentcam.log`.
-
----
-
-## Eval
-
-### 1. One-time setup — local PP-OCRv4 OCR backend
+### Debug hook (emulator / dev)
 
 ```bash
-# Clone the PP-OCRv4 mobile engine (sibling directory, NOT imported)
-git clone https://github.com/PaddlePaddle/PaddleOCR /home/oppry/work/pp_ocrv4_mobile_engine
-cd /home/oppry/work/pp_ocrv4_mobile_engine
-pip install paddleocr==2.7.3 opencv-python-headless pillow
+adb shell am start -n com.example.intentcam/.MainActivity --ez dev_label_page true
 ```
 
-The eval invokes it via the long-lived `profiling/pp_ocrv4_runner.py`
-JSON-RPC subprocess.  **First run takes 5-30 s** for PaddleOCR to
-load weights; subsequent calls reuse the cached engine.
-
-### 2. Run a single suite
-
-```bash
-# Standard 20-fixture iteration run (~2-3 min with local OCR)
-JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval \
-    --args="--limit 20 --gt profiling/ground_truth_phone_20.json \
-            --json-out profiling/eval_phone_20.json"
-
-# Conclusive 60-fixture run (~6-10 min)
-JAVA_HOME=/path/to/jdk17 /path/to/gradle :shared:eval \
-    --args="--limit 60 --gt profiling/ground_truth_phone_60.json"
-```
-
-### 3. OCR backend cascade (3 tiers)
-
-| Tier | When | How to enable |
-|---|---|---|
-| **Local PP-OCRv4** (default, 2026-07-13+) | sibling repo at `/home/oppry/work/pp_ocrv4_mobile_engine` | auto-detected; first run loads model |
-| Huawei Cloud fallback | local install/init fails | set `HUAWEICLOUD_SDK_{AK,SK,PROJECT_ID}` env vars |
-| Blind (no OCR) | both fail | unset env vars + no sibling repo |
-
-Inspect with `--backend local|huawei|blind` to force a tier for ablation.
-
-### 4. Run the regression net (5+ suites, ~30 min)
-
-```bash
-./scripts/run_regression.sh                # all 9 suites, auto-compare
-./scripts/run_regression.sh --no-build phone_20 pii_20   # subset
-```
-
-Exits non-zero if any suite drops ≥ 0.05 absolute from its
-baseline in `profiling/baselines.json`.  See
-`profiling/README_regression.md`.
-
-JSON dumps in `profiling/eval_*.json` document the baseline chain.
-Compare two runs with `profiling/diff_eval.py`.
+opens the `view_label` page with canned content — exercises the
+render / full-page capture / share path without a camera frame or
+LLM round (DEBUG builds only).
 
 ---
 
 ## Repository layout
 
 ```
-app/src/main/java/com/example/intentcam/   — app source (Android-coupled)
-  AppViewModel.kt           state, capture orchestration, settings API
-  CycleManager.kt           producer (shutter tap) → queue (n=8) →
-                            worker pool (m=2) → allJobs / busy (StateFlows)
-  FrameAnalyzer.kt          dual-JPEG capture (3200 thumb + 4096 fullRes)
-  AndroidOcrEngine.kt       OCR backend (HMS ML Kit on device)
-  AndroidImageOps.kt        Android ImageOps impl (BitmapRegionDecoder)
-  LlmClient.kt              Anthropic-compatible streaming client
-                            + toolUseSystemPrompt() (splices action ids)
-  MainActivity.kt           Compose UI (preview, debug overlay, detail,
-                            bubble cards, action chips, dialogs)
-  Models.kt                 Bubble / Detail / UiState / CycleSnapshot /
-                            JobStatus / Phase / LlmConfig
-  IntentDecl.kt             14-id IntentDecl registry (family + LLM hint)
-  ActionDecl.kt             5-action registry (dial_number / open_in_maps
-                            / scan_to_pay / redact_id / share)
-  ActionOrchestrator.kt     per-emit input validation + finalize gate
-  ChipStateMapper.kt        chip state resolution (Validated / Ghost /
-                            Spinner / Hidden)
-  Theme.kt / Palette.kt     dark-only Material3 theme + IntentCamPalette
-  SettingsStore.kt          SharedPreferences-backed config + PII gates
-  SettingsScreen.kt         Compose settings UI
-  CycleJob.kt               one in-flight cycle's reactive surface
-  AndroidOcrEngine.kt       HMS ML Kit OCR backend install
+app/src/main/java/com/example/intentcam/     — Android app (Compose)
+  MainActivity.kt          camera preview, bubble cards, DetailScreen,
+                           dialogs, AppRoot phase routing + label overlay
+  AppViewModel.kt          state, action dispatch (ActionOutcome),
+                           settings save (dirty-check), dev hook
+  CycleManager.kt          producer/consumer cycle pipeline
+  FrameAnalyzer.kt         dual-JPEG capture + image analysis
+  ActionDecl.kt            ActionOutcome (5 variants) + ActionRegistry
+                           + 6 default actions
+  ActionOrchestrator.kt    requiredInputs validation + finalize gate
+  ChipStateMapper.kt       chip state resolution (Validated/Spinner/Ghost)
+  LabelPageScreen.kt       view_label full-screen WebView page
+  LabelPageExporter.kt     full-page PNG capture + share intents
+  AndroidOcrEngine.kt      HMS ML Kit OCR backend
+  AndroidImageOps.kt       BitmapRegionDecoder-based ImageOps
+  SettingsStore.kt         SharedPreferences (config, debug, enabled set)
+  SettingsScreen.kt        设置 (endpoint fields, 调试日志, 关于)
+  Theme.kt / Palette.kt    dark Material3 theme + accent clusters
 
-shared/src/main/kotlin/com/example/intentcam/  — :shared module (Kotlin/JVM)
-  ToolUseLoop.kt            multi-round orchestrator (auto-OCR on follow-ups)
-  LlmClient.kt              (also packaged in :app)
-  Models.kt                 (also packaged in :app)
-  CapturedFrame.kt          (thumbnail, fullRes) carrier
-  ImagePipeline.kt          ImageQuality constants (MAX_DIM, MAX_FULL_DIM)
-  ImageOps.kt               cross-platform image ops interface
-  OcrEngine.kt              strategy holder + formatHint for round-1
-  Tools.kt                  ToolDef / ToolRegistry / ToolContext
-  ToolImplementations.kt    zoom_in + compare_text + extract_text +
-                            emit_bubble bodies
-  IntentDecl.kt             (also packaged in :app)
-  ActionDecl.kt             ActionRegistry / ActionDef / ActionInputSpec /
-                            ActionOrchestrator return types
-  ActionArgs.kt             RequestArgs / PendingAction data carriers
-  CropStrategy.kt           cropJpegRegion() top-level fn (ImageOps impl)
-  FormatThrowable.kt        formatThrowable(e) cross-platform helper
+shared/src/main/kotlin/com/example/intentcam/   — pure JVM (prod+eval)
+  ToolUseLoop.kt           multi-round tool-use orchestrator
+  ToolImplementations.kt   zoom_in / compare_text / extract_text /
+                           emit_bubble (schema + label_markdown)
+  LlmClient.kt             SSE client + system prompt (action-id splice)
+  Models.kt                Bubble / UiState / CycleSnapshot / LlmConfig
+  ActionArgs.kt            RenderedLabel / PendingAction / ActionInputSpec
+  ActionRescue.kt          content-rescue + visibleActions (prod+eval)
+  InputParsers.kt          phone / location / text / id / paymentQr /
+                           labelMarkdown — single source of truth
+  LabelHtml.kt             markdown-subset → HTML label-page renderer
+  Tools.kt / OcrEngine.kt / ImagePipeline.kt / ImageOps.kt /
+  CapturedFrame.kt / CropStrategy.kt / FormatThrowable.kt
 
-shared/src/main/kotlin/com/example/intentcam/eval/  — eval pipeline
-  EvalMain.kt               CLI entry point
-  EvalRunner.kt             per-fixture runner + composite scorer +
-                            GT schema dual-read (expected_top_intent_type)
-  ScorerV2.kt               composite_v2 (0.40·r_actions_recall +
-                            0.30·r_inputs_complete + 0.15·r_rounds_efficiency +
-                            0.10·r_intent_derived + 0.05·r_text)
-  ScorerV3.kt               action-first composite (dual-run with v2)
-  JvmLocalOcrEngine.kt      local PP-OCRv4 backend for the eval
-  JvmHuaweiCloudOcrEngine.kt  Cloud OCR backend for the eval (legacy)
+shared/src/main/kotlin/com/example/intentcam/eval/   — JVM eval
+  EvalMain.kt / EvalRunner.kt / ScorerV3.kt
+  JvmLocalOcrEngine.kt (PP-OCRv4) / JvmHuaweiCloudOcrEngine.kt
 
-profiling/
-  ground_truth_*.json       100+ real-photo fixtures (RCTW-171)
-  pp_ocrv4_runner.py        subprocess helper for eval-side OCR
-  eval_*.json               measurement trail (100+ JSON dumps)
-  diff_eval.py              two-run side-by-side comparator
-  baselines.json            8+ suite baselines (regression net threshold)
-  run_regression.sh         8-suite regression runner
-  check_regression.py       post-run regression threshold checker
+profiling/                 GT suites (ground_truth_*.json), baselines.json,
+                           suite builder, OCR runner, regression dumps
+scripts/                   run_regression.sh, check_regression.py,
+                           migrate_gt_v2_to_v3.py, capture_logs.sh
 
-scripts/
-  capture_logs.sh           adb install + filtered logcat to file
-  run_regression.sh         8-suite regression net
-  check_regression.py       exit-code gating vs baselines.json
-
-CONFIG.md                   every tunable constant + rationale
-ARCHITECTURE.md             deep dive on the design
-CHANGELOG.md                release-by-release change log
+ARCHITECTURE.md / CONFIG.md / CHANGELOG.md / docs/adr/
 ```
 
 ---
