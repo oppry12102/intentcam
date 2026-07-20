@@ -4,7 +4,7 @@
     "threshold_rationale": "±0.03 typical 20-fixture LLM variance; 0.05 catches true regressions without false-positive noise. See [[feedback-529-contamination-awareness]] for variance bands.",
     "composite_formula": "[2026-07-17 action-first, canonical] composite_v3 = 0.55*r_actions(recall) + 0.30*r_text + 0.15*r_inputs. r_actions = recall of expected_actions against the visible chip set (LLM proposals + content-rescue, share precision-gated since 2026-07-18); over_fire_rate is the companion precision signal on the `none` suite. ScorerV2/r_type retired.",
     "image_dir": "/home/oppry/RCTW-171/train_images",
-    "last_updated": "2026-07-19 (view_label added)",
+    "last_updated": "2026-07-20 (view_ad added)",
     "last_updated_commit": "4754cfe (scan strict suite + acceptance rescue) + 6311f6a (redact retired)",
     "ocr_backend_history": {
       "pre_2026-07-13": "Huawei Cloud (per-call, billed)",
@@ -18,7 +18,9 @@
     "maps_prompt_2026_07_19": "open_in_maps name-search/non-exclusive prompt (2c68575): maps 0.747->0.812 (actions 0.649->0.748). Decomposed: GT hygiene +0.033 (7558/1003/1623/2198 removed), prompt +0.032 (5 recall flips: 1302/2420/3625/4178/7799). Losses: 450 (弯道减速 — GT keyword noise, model correctly abstains; moved to none, baseline re-measure pending), 7397/2893 residual variance. maps baseline measured on 35 scenes; GT now 34 (450 out, expected +0.012 folds into next run). none 0.949, over_fire 0.133 = cleanest yet (682 defensible + 7173 weak-content).",
     "scan_redact_curation_2026_07_19": "scan_to_pay strict-payment curation 30->6 (word-misfires + non-payment QRs dropped; 1696/2048/4491/5264/2584 visually verified) + paymentQr rescue widened (+微信支付|支付宝支付; offline replay 3/6 rescued, 0 none fires; live 0.808->0.844). redact_id suite RETIRED to reference-only (8/9 over-annotated, only image_170 true; 1-fixture suite can't gate). 1696 residual: model vision misses small counter QR ~50% of runs — zoom-side lever, not parser. NOTE: 2026-07-19 ~12:30 the coding endpoint dropped the k3[1m] alias — use ANTHROPIC_MODEL=k3.",
     "view_label_2026_07_19": "view_label action added (label_markdown contract + rendered page, ADR docs/adr/2026-07-19-view-label-action.md). Suite built by build_action_suites.py --only view_label (tight label-vocabulary triggers; 0/16 none-suite overlap). First baseline 0.6711 @30 on k3 (view_label_baseline_20260719_145901): actions 0.594 / text 0.808 / inputs 0.678, 0 errors, 0 empty bubbles. 8 a=0 scenes (model didn't propose view_label on genuine packaging) = prompt-tuning lever; GT spot-checked, not over-annotated.",
-    "view_label_prompt_lift_2026_07_19": "Post-view_label regression (summary_20260719_160413, k3): dial +0.074 (0.8305->0.9049), maps +0.102 (0.8123->0.9144), share +0.133 (0.8255->0.9587) — all lifts concentrated in r_actions; scan_to_pay +0.025 PASS; none -0.000 PASS with over_fire 0.4375 (same documented weak-content set, 0 view_label fires). 0 errors/529 across 123 scenes. Attribution: shared emit_bubble prompt change (view_label mapping sentence raised action_ids salience) — k3 endpoint drift not separable but environmental either way. Baselines refreshed on the three lifted suites per convention."
+    "view_label_prompt_lift_2026_07_19": "Post-view_label regression (summary_20260719_160413, k3): dial +0.074 (0.8305->0.9049), maps +0.102 (0.8123->0.9144), share +0.133 (0.8255->0.9587) — all lifts concentrated in r_actions; scan_to_pay +0.025 PASS; none -0.000 PASS with over_fire 0.4375 (same documented weak-content set, 0 view_label fires). 0 errors/529 across 123 scenes. Attribution: shared emit_bubble prompt change (view_label mapping sentence raised action_ids salience) — k3 endpoint drift not separable but environmental either way. Baselines refreshed on the three lifted suites per convention.",
+    "view_ad_2026_07_20": "view_ad action added (ad_markdown+ad_bbox contract, corrected ad image + 图文页, ADR docs/adr/2026-07-20-view-ad-action.md). Suite 30 scenes via build_action_suites.py --only view_ad (two curation passes: bare 社区/物业/宣传 pulled ~11 office-signage scenes; tightened to 社区宣/便民/招生/开业/招商 vocabulary; none-suite overlap 0). First baseline 0.6719 @30 on k3 (view_ad_baseline_20260720_150926): actions 0.597 / text 0.841 / inputs 0.608, 0 errors, 0 empty. 10 a=0 misses = prompt-tuning lever.",
+    "view_ad_regression_2026_07_20": "Post-view_ad regression (summary_20260720_155924, k3): dial +0.003 / maps -0.037 / share -0.030 / scan +0.025 / none -0.000 — all PASS, no baseline refresh. view_label run was CONTAMINATED: 28/30 empty bubbles in a ~14min endpoint storm window (fast-fail ~14s/fixture, 0 errors in other suites), composite 0.075 artifact. Verified via 3-fixture debug rerun (all fine), then full rerun (view_label_rerun_20260720): 0.694 (+0.023 vs baseline, PASS) — baseline kept at 0.6711. Substitution watch: maps lost open_in_maps on 2 scenes (3129/3965) where view_ad was emitted instead (partial, within threshold); none suite gained 1 view_ad fire (image_2100, over_fire 0.500 still in band)."
   },
   "suites": [
     {
@@ -142,6 +144,22 @@
       "v3_text": 0.8083,
       "v3_inputs": 0.6778,
       "note": "action-first suite — view_label recall + label_markdown input. 30 label-vocabulary scenes (real product packaging; triggers 净含量/执行标准/合格证/价签/制造商 etc.). First measurement on k3 2026-07-19: 8 a=0 misses (model didn't propose view_label) = prompt-tuning lever; GT spot-checked. 0/16 overlap with none suite.",
+      "over_fire_rate": 0.0
+    },
+    {
+      "name": "view_ad",
+      "gt": "profiling/ground_truth_view_ad.json",
+      "limit": 30,
+      "resize": 3200,
+      "quality": 90,
+      "baseline": 0.6719,
+      "baseline_legacy": null,
+      "baseline_commit": "view_ad ship @ view_ad_baseline_20260720_150926",
+      "v3_composite": 0.6719,
+      "v3_actions": 0.5967,
+      "v3_text": 0.8406,
+      "v3_inputs": 0.6083,
+      "note": "action-first suite — view_ad recall + ad_markdown input. 30 posted-ad scenes (招生/开业/招商/社区宣/便民; two-pass curation, 0/16 none overlap). First measurement on k3 2026-07-20; 10 a=0 misses = prompt lever.",
       "over_fire_rate": 0.0
     }
   ]

@@ -80,6 +80,20 @@ ACTION_TRIGGERS: dict[str, re.Pattern] = {
         r"标签|价签|吊牌|合格证|生产日期|保质期|净含量|配料表|执行标准"
         r"|快递单|面单|铭牌|营养成分|条形码|制造商"
     ),
+    # [2026-07-20] view_ad — posted-ad triggers (school/community/
+    # merchant posters).  Deliberately EXCLUDES the promo-only words
+    # already owned by `share` (特价/满减/秒杀/清仓) to keep the two
+    # suites' GT distinct.  Also excludes bare 社区/物业/宣传 — those
+    # matched office/shop signage (警务室/服务中心/封条) instead of
+    # posted ads (first curation pass dropped ~11/30 weak scenes).
+    "view_ad": re.compile(
+        r"招生|报名|开课|培训班|讲座|课程|辅导班|特训|晚托|幼小衔接"
+        r"|开业|店庆|周年庆|试营业|盛大"
+        r"|海报|广告位|招租广告"
+        r"|社区宣|社区公告|便民|业主委员会|居委会|倡议书|告知书|公约"
+        r"|通知：|公告："
+        r"|活动预告|邀请函|演出|义诊|义卖|相亲|联欢|文化节|招商"
+    ),
 }
 
 # action → expected_inputs (mirrors ActionDef.requiredInputs)
@@ -90,16 +104,18 @@ ACTION_INPUTS: dict[str, list[dict]] = {
     "redact_id":     [],   # Toast stub — no required input
     "scan_to_pay":   [],   # Toast stub — no required input
     "view_label":    [{"action": "view_label",    "key": "label_markdown", "label": "标签内容"}],
+    "view_ad":       [{"action": "view_ad",       "key": "ad_markdown",  "label": "广告内容"}],
 }
 
 # action → category label (metadata only)
 ACTION_CATEGORY = {
     "dial_number": "phone", "open_in_maps": "address", "share": "share_text",
     "redact_id": "id_document", "scan_to_pay": "payment_qr",
-    "view_label": "label",
+    "view_label": "label", "view_ad": "ad",
 }
 
-ACTIONS = ["dial_number", "open_in_maps", "share", "redact_id", "scan_to_pay", "view_label"]
+ACTIONS = ["dial_number", "open_in_maps", "share", "redact_id", "scan_to_pay",
+           "view_label", "view_ad"]
 
 
 def load_rctw_keywords(gt_path: Path) -> list[str]:

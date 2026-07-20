@@ -60,6 +60,9 @@ ACTION_REQUIRED_INPUTS: dict[str, list[dict[str, str]]] = {
     # [2026-07-19] Label action — the LLM transcribes the full label
     # into emit_bubble.label_markdown; that field IS the required input.
     "view_label":    [{"key": "label_markdown", "label": "标签内容"}],
+    # [2026-07-20] Ad action — emit_bubble.ad_markdown is the required
+    # input; ad_bbox (framing quad) is optional by design.
+    "view_ad":       [{"key": "ad_markdown",    "label": "广告内容"}],
     # Actions without requiredInputs — emit nothing.
     "scan_to_pay":   [],
     "redact_id":     [],

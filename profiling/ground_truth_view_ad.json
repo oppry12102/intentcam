@@ -1,0 +1,864 @@
+{
+  "version": 5,
+  "description": "action-first suite — action=view_ad (built from RCTW-171 via build_action_suites.py)",
+  "rctw_root": "/home/oppry/RCTW-171",
+  "img_dir": "/home/oppry/RCTW-171/train_images",
+  "scenes": [
+    {
+      "id": "image_6330",
+      "file": "image_6330.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "加盟热线：18273429998 送餐热线：18674744198",
+        "店于12月16日隆重开业欢迎品",
+        "董记牛肉粉",
+        "欢迎光临",
+        "耒阳店",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_5247",
+      "file": "image_5247.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "#市仙桃大道上岛咖啡城市花园B栋301（教育局正对面）",
+        "网址：www.topiq.com.cn",
+        "微信：jinkoucai201208",
+        "电话：13872987797",
+        "QQ:313733006",
+        "来访即送30天作业辅导班"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_2571",
+      "file": "image_2571.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "不乱倒乱扔废弃物",
+        "不乱停乱放车辆",
+        "不损坏公共设施",
+        "在公共场所吸烟",
+        "携手共创文明城",
+        "一言一行总关情"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_4518",
+      "file": "image_4518.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "优化人口环境",
+        "龙骨井社区宣"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_3186",
+      "file": "image_3186.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "订房电话：028-26762888",
+        "免费拨打国内长途",
+        "无线网络全覆盖",
+        "大屏幕液晶电视",
+        "##电话###",
+        "免费光纤上网"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7748",
+      "file": "image_7748.jpg",
+      "expected_actions": [
+        "dial_number",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "招生热线:027-59205337",
+        "建安"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_2270",
+      "file": "image_2270.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "10月1日盛大开业",
+        "南国灯世界江南店",
+        "未来城大酒店",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_5496",
+      "file": "image_5496.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "GERMAN AMOROUS FEELINGS STREET",
+        "德意风情街品牌升级，敬请期待！",
+        "招商咨询8780 7777",
+        "拖拉机 1355411",
+        "###",
+        "搬运"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_700",
+      "file": "image_700.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "BUSINESS HOUR",
+        "PHARMACY",
+        "JIUZHOU",
+        "九州大药房",
+        "处方#区",
+        "##开业"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_6130",
+      "file": "image_6130.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "便民快餐服务点"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_6262",
+      "file": "image_6262.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "会须君子折佩里做芬芳",
+        "日丽参差影风传轻重香",
+        "映庭含浅色凝露注浮光",
+        "春晖开紫苑淑景媚兰场",
+        "南塔街道龙骨井社区宣"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7296",
+      "file": "image_7296.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "地址：复州花园华菊园28栋二单元一楼（实验二小旁）",
+        "电话：13407228298",
+        "如家托管中心",
+        "作业辅导",
+        "周末培优",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_1583",
+      "file": "image_1583.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "share",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "地址：勉阳大道西瑞（西桥乘风电器二楼）",
+        "热线电话：0728-3200612",
+        "地址：仙桃沔阳大道西瑞全友家居",
+        "400-8800-315",
+        "电话：3201778",
+        "中国环境标志产品认证"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_3175",
+      "file": "image_3175.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "胶装扫描彩印",
+        "印欢迎您",
+        "论文装订",
+        "文件扫描",
+        "相片塑封",
+        "教材印刷"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7708",
+      "file": "image_7708.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "资阳市2015年图书馆服务宣传周",
+        "书香四川·书香资阳",
+        "盛大的开馆典礼",
+        "资阳市文化馆",
+        "资阳市图书馆",
+        "宣传专栏"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7959",
+      "file": "image_7959.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "share",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "share",
+          "key": "text",
+          "label": "正文"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "互动式小组教学●艺考文化课辅导",
+        "博青滕凹凸寻找48位辅导班",
+        "400-646-1997",
+        "027-87205010",
+        "博青滕教育旗下高端品牌",
+        "VIP一对一6小时辅导"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7267",
+      "file": "image_7267.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "#LB8600",
+        "#驾招生点",
+        "专业催乳",
+        "美容美体",
+        "紫罗兰",
+        "老邓"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_125",
+      "file": "image_125.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "电动车大",
+        "便民充电"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_2809",
+      "file": "image_2809.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "阳光慈善义卖活动",
+        "WILI",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7907",
+      "file": "image_7907.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "招商热线：02787808853",
+        "销售热线：02759101818",
+        "卓刀泉●古玩珠宝城",
+        "文化人投资",
+        "文化铺"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7665",
+      "file": "image_7665.jpg",
+      "expected_actions": [
+        "dial_number",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "年招生随到随学无需排队",
+        "15895580204",
+        "18862567656",
+        "凯达驾校",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_3203",
+      "file": "image_3203.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "湘LZZ455",
+        "优化人口环境",
+        "龙骨井社区宣"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_6207",
+      "file": "image_6207.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "李文华专业萨克斯培",
+        "萨克斯培训中心",
+        "乐器培训",
+        "金音琴行",
+        "招生热线",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_4123",
+      "file": "image_4123.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "酱香典范。红花郎",
+        "##酒中黄金大奖",
+        "沱牌贡酒",
+        "中国黄金",
+        "##集团",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_4946",
+      "file": "image_4946.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "美国名校DIY申请",
+        "经验分享公益讲座"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_3216",
+      "file": "image_3216.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "BAIHUIKANGLARGEP HARMACY",
+        "招生电话:027-596118",
+        "格、创新;规范、诚信；健康、#",
+        "牛皮藓-国内独家·震撼上市",
+        "激活耳神经 听力就提升",
+        "此物品仅限药店内部使用"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_4924",
+      "file": "image_4924.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "WELCOME TO CHENZHOU HOTEL",
+        "热烈祝贺圆明皇御苑盛大开盘",
+        "热烈祝贺国明皇御苑隆重开盘",
+        "热烈祝#国#皇#苑盛大开盘",
+        "2014年11月04日",
+        "###"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_3764",
+      "file": "image_3764.jpg",
+      "expected_actions": [
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "市保险公司开展“周末大舞台”文艺进社区",
+        "仙桃市“周末大舞台”送戏下基层文艺演出",
+        "复州花园社区代表队在体育馆参加",
+        "复州花园社区与包挂单位市商务局",
+        "仙桃市第11届太极拳剑交流赛",
+        "复州花园社区与实验二小"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_7855",
+      "file": "image_7855.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "报名咨询",
+        "办公室"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_1875",
+      "file": "image_1875.jpg",
+      "expected_actions": [
+        "dial_number",
+        "open_in_maps",
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "dial_number",
+          "key": "phone_number",
+          "label": "手机号"
+        },
+        {
+          "action": "open_in_maps",
+          "key": "query",
+          "label": "地点或地址"
+        },
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "招商热线：8780",
+        "德意风情街",
+        "7777",
+        "###"
+      ],
+      "category": "ad"
+    }
+  ]
+}
