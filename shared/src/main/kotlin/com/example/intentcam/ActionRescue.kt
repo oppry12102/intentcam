@@ -51,6 +51,9 @@ object ActionRescue {
      *     light its chip — the field's existence IS the verifiable cue,
      *     so precision risk is nil (unlike the lenient text parsers,
      *     this field only exists when the model deliberately wrote it).
+     *   - `view_ad` rescue — `InputParsers.adMarkdown(bubble) != null`
+     *     AND `view_ad` not already in `bubble.actions`.  Same
+     *     field-existence cue shape as `view_label`.
      *
      * **NOT rescued** (deliberate):
      *   - `open_in_maps` — `InputParsers.locationQuery` is too lenient
@@ -79,6 +82,9 @@ object ActionRescue {
         }
         if ("view_label" !in current && InputParsers.labelMarkdown(bubble) != null) {
             rescue += "view_label"
+        }
+        if ("view_ad" !in current && InputParsers.adMarkdown(bubble) != null) {
+            rescue += "view_ad"
         }
         return rescue
     }

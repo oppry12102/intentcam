@@ -4,6 +4,47 @@ All notable changes to IntentCam will be documented in this file.
 
 ## [unreleased]
 
+### Added — `view_ad` 广告识别 action：校正增强广告图 + 图文复现页 (2026-07-20)
+
+New action for posted advertisements (学校/社区/商家张贴的招生、促销、
+开业、告示、招商广告).  When the LLM recognizes one, it emits
+`emit_bubble.ad_markdown`(全文转录)+ `ad_bbox`(广告主体四角) — the
+`view_ad` chip(「查看广告」, DELEGATE blue)opens a 图文复现 page and
+its two shares:
+
+- **图文页**(AdPageScreen, same WebView+LabelHtml pipeline as
+  view_label):顶部是裁剪 + **透视校正** + **增强**后的广告图,下方是
+  markdown 转录图文。
+- **分享图片** — 校正增强后的广告 JPEG(FileProvider 分享)。
+- **分享图文** — 整个图文复现页整页截图(复用已验证的可见 WebView
+  截图链路)。
+- 广告上的电话/地址/促销文字仍由 `dial_number` / `open_in_maps` /
+  `share` chips 覆盖(prompt 明确不互斥)。
+
+**AdImageCorrector(零新依赖)**: `Matrix.setPolyToPoly` 四点投影校正;
+增强 = 低对比度才拉伸(保均值,绝不把白海报压灰——首版均值归一
+教训)+ 轻度饱和 + 轻量 3×3 锐化;无 bbox 时退化为整图。契约上
+`ad_markdown` 是唯一必填输入,`ad_bbox` 可选。
+
+**模拟器端到端验证**(dev 钩子 `am start --ez dev_ad_page true`,
+合成倾斜海报):页面渲染正确、校正后海报正面白底、分享图片=
+正面清晰 JPEG、分享图文=1080×1863 整页图文。
+
+**Eval**: EvalRunner/ScorerV3 对齐;新套件 30 scenes(两轮触发词
+策展:第一轮裸 社区/物业/宣传 误伤招牌 ~11 scenes,收紧为
+社区宣/便民/招生/开业/招商/公约 等;none 套件零重叠)。
+**First baseline (k3, 30 scenes): composite 0.6719 — actions 0.597 /
+text 0.841 / inputs 0.608; 0 errors, 0 empty bubbles.** 10 个 a=0
+漏报为后续 prompt 调优杠杆。
+
+**Prompt 变更回归**(summary_20260720_155924):dial +0.003 /
+maps −0.037 / share −0.030 / scan +0.025 / none −0.000 全 PASS;
+view_label 首轮遭端点瞬时风暴(28/30 空 bubble,~14 分钟窗口,
+其余套件零异常)→ 3-fixture 调试复跑正常 → 全量复跑 **0.694**
+(+0.023,PASS),基线不刷新。代换观察:2 个 maps 场景
+(3129/3965)改发 view_ad 丢了 open_in_maps(阈值内);
+none 新增 1 次 view_ad 误火(image_2100,过火 0.500 仍在带内)。
+
 ### Changed — 文档全面重写 (2026-07-19)
 
 `README.md` / `ARCHITECTURE.md` / `CONFIG.md` regenerated against the

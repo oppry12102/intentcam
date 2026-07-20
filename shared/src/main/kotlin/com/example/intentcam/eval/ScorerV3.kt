@@ -135,6 +135,8 @@ data class ScorerV3Result(
                 com.example.intentcam.InputParsers.textContent(bubble) != null
             key == "label_markdown" ->
                 com.example.intentcam.InputParsers.labelMarkdown(bubble) != null
+            key == "ad_markdown" ->
+                com.example.intentcam.InputParsers.adMarkdown(bubble) != null
             else -> false
         }
 

@@ -370,6 +370,11 @@ fun ToolRegistry.registerDefaultTools() {
                 "快递面单 / 行李牌 / 票据 / 铭牌 等**成片结构化文字块**。命中时必须同时在 **label_markdown** " +
                 "字段输出该标签完整内容的 markdown 还原（标题用 `#`，字段用 `-` 列表，键值对整齐排列，" +
                 "有表格用 markdown 表格），逐字保留原文不要概括；画面中没有明确标签时**不要**输出该字段。" +
+                "识别到**张贴广告** → **view_ad**：招生 / 招聘 / 促销海报 / 社区告示 / 商家开业 / " +
+                "活动宣传 / 打折信息 等学校、社区、商家张贴的广告。命中时必须同时在 **ad_markdown** " +
+                "输出广告全文转录（markdown，格式同 label_markdown），并在 **ad_bbox** 框出广告主体区域" +
+                "（4 角坐标，用于 app 裁剪校正广告图）；广告上的电话 / 地址 / 促销文字同时按上述规则带 " +
+                "dial_number / open_in_maps / share，不互斥。" +
                 "**例外（留空 `[]`）**：纯装饰 / 段子 / 表情包 / 单字 / 书法 / 抽象图案 / 商品 slogan 这类" +
                 "**没有可操作对象**的文字 → 留空 `[]`，**不要填 share**（share 是信息类文字，不是任何文字图的兜底）。" +
                 "一张图可同时命中多条（如店铺招牌带电话 → dial_number + open_in_maps）。" +
@@ -459,6 +464,32 @@ fun ToolRegistry.registerDefaultTools() {
                             "表格用 markdown 表格。仅当画面中存在明确标签（商品标签/价签/吊牌/合格证/" +
                             "快递面单/票据/铭牌等）且 action_ids 含 view_label 时填写；逐字保留原文。")
                     })
+                    // ad_markdown / ad_bbox — view_ad's contract pair:
+                    // the transcription is the required input; the quad
+                    // drives crop + perspective correction (optional —
+                    // missing quad falls back to the un-warped frame).
+                    put("ad_markdown", JSONObject().apply {
+                        put("type", "string")
+                        put("description", "（可选）张贴广告的全文 markdown 转录（格式同 label_markdown）。" +
+                            "仅当画面中存在学校/社区/商家张贴的广告（招生/促销/告示/开业/活动宣传等）" +
+                            "且 action_ids 含 view_ad 时填写；逐字保留原文。")
+                    })
+                    put("ad_bbox", JSONObject().apply {
+                        put("type", "array")
+                        put("description", "（可选）广告主体区域的 4 角坐标 [(x1,y1),(x2,y2),(x3,y3),(x4,y4)] " +
+                            "归一化 [0,1]，顺序: 左上→右上→右下→左下。与 view_ad 配套；" +
+                            "广告明显倾斜时也要尽量框准，app 会做透视校正。")
+                        put("items", JSONObject().apply {
+                            put("type", "array")
+                            put("minItems", 2)
+                            put("maxItems", 2)
+                            put("items", JSONObject().apply {
+                                put("type", "number"); put("minimum", 0); put("maximum", 1)
+                            })
+                        })
+                        put("minItems", 4)
+                        put("maxItems", 4)
+                    })
                 })
                 // `type` is intentionally NOT required: the system
                 // prompt + tool description both tell the model it may
@@ -529,6 +560,11 @@ fun ToolRegistry.registerDefaultTools() {
                     // treats it as missing rather than empty.
                     labelMarkdown = input.optString("label_markdown", "")
                         .trim().takeIf { it.isNotEmpty() },
+                    // view_ad pair: transcription (required input) +
+                    // optional framing quad for perspective correction.
+                    adMarkdown = input.optString("ad_markdown", "")
+                        .trim().takeIf { it.isNotEmpty() },
+                    adBbox = parseBbox(input.optJSONArray("ad_bbox")),
                 )
             },
         )

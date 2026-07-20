@@ -58,6 +58,7 @@ internal class EvalRunner(private val config: EvalConfig) {
                           //   copy_listing/save_posting/copy_warning/
                           //   copy_menu/copy_hours/copy_promo)
         "view_label",     // label → rendered markdown page (save/share)
+        "view_ad",        // ad → corrected image + 图文 page (share)
     )
     private val defaultActionIdSet = defaultActionIds.toSet()
 
@@ -93,6 +94,10 @@ internal class EvalRunner(private val config: EvalConfig) {
             "view_label"    to listOf(ActionInputSpec(
                 "label_markdown", "标签内容",
                 { b -> if (com.example.intentcam.InputParsers.labelMarkdown(b) != null) "present" else null }
+            )),
+            "view_ad"       to listOf(ActionInputSpec(
+                "ad_markdown", "广告内容",
+                { b -> if (com.example.intentcam.InputParsers.adMarkdown(b) != null) "present" else null }
             )),
             // scan_to_pay / redact_id have no requiredInputs.
         )

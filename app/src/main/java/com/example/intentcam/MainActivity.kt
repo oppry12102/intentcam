@@ -117,8 +117,13 @@ class MainActivity : ComponentActivity() {
         // opens the view_label page with canned content so the
         // render / full-page capture / share path can be verified on
         // an emulator without a camera frame + LLM round.
+        // `--ez dev_ad_page true` does the same for the view_ad page
+        // (synthesizes a tilted ad photo through AdImageCorrector).
         if (BuildConfig.DEBUG && intent.getBooleanExtra("dev_label_page", false)) {
             viewModel.devShowLabelPage()
+        }
+        if (BuildConfig.DEBUG && intent.getBooleanExtra("dev_ad_page", false)) {
+            viewModel.devShowAdPage()
         }
     }
 }
@@ -203,6 +208,13 @@ private fun AppRoot(viewModel: AppViewModel) {
             LabelPageScreen(
                 label = rendered,
                 onDismiss = viewModel::dismissRenderedLabel,
+            )
+        }
+        // view_ad's 图文复现 page — same overlay pattern.
+        state.renderedAd?.let { rendered ->
+            AdPageScreen(
+                ad = rendered,
+                onDismiss = viewModel::dismissRenderedAd,
             )
         }
     }

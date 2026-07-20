@@ -629,6 +629,10 @@ class ToolUseLoop(
                     // model recognized a label-like scene; null
                     // otherwise.  Payload for the view_label page.
                     labelMarkdown = tb.labelMarkdown,
+                    // view_ad pair: ad transcription + optional
+                    // framing quad (crop / perspective correction).
+                    adMarkdown = tb.adMarkdown,
+                    adBbox = tb.adBbox,
                 )
                 // Notify the CycleManager that
                 // this cycle has a finalized bubble.  `isTerminal =

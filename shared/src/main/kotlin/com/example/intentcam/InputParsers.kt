@@ -159,6 +159,14 @@ object InputParsers {
     fun labelMarkdown(bubble: Bubble): String? =
         bubble.labelMarkdown?.takeIf { it.isNotBlank() }
 
+    /** For the `view_ad` action — same field-read shape as
+     *  [labelMarkdown]: the LLM emits the ad transcription as
+     *  `emit_bubble.ad_markdown`; the framing quad (`adBbox`) is
+     *  optional and deliberately NOT part of the required input
+     *  (page falls back to the un-warped frame). */
+    fun adMarkdown(bubble: Bubble): String? =
+        bubble.adMarkdown?.takeIf { it.isNotBlank() }
+
     /**
      * For the `redact_id` action. Returns the first id-document-shaped
      * string found in title/detail/details[].value, or null when none.

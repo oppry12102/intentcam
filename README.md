@@ -70,6 +70,7 @@ and `view_label` whenever a `label_markdown` transcription exists).
 | `dial_number` | 拨号 | `ACTION_DIAL`(拨号器里再按拨打) | `phone_number` |
 | `share` | 分享文本 | `ACTION_SEND text/plain` | `text` |
 | `view_label` | 查看标签 | 整页渲染标签(见下) | `label_markdown` |
+| `view_ad` | 查看广告 | 广告图校正增强 + 图文复现页(见下) | `ad_markdown` |
 | `scan_to_pay` | 扫码支付 | 安全提示 Toast(永不自动起支付) | — |
 | `redact_id` | 遮挡证件号 | 提示 Toast | — |
 
@@ -101,6 +102,22 @@ HTML converter `shared/LabelHtml.kt` + WebView) and offers:
 
 Zero new dependencies, zero storage permissions.
 
+## `view_ad` — 广告图文复现(2026-07-20)
+
+For posted advertisements (招生/促销/开业/社区告示/招商) the LLM
+emits `ad_markdown`(全文转录)+ `ad_bbox`(广告主体四角).  The chip
+opens a 图文复现 page:
+
+- **校正增强广告图** — `AdImageCorrector`(pure Android, no OpenCV):
+  `Matrix.setPolyToPoly` 四点投影校正 + 低对比度才拉伸的增强(保
+  均值,白海报不压灰)+ 轻度锐化。无 bbox 时退化为整图。
+- **分享图片** — 校正增强后的广告 JPEG。
+- **分享图文** — 图文复现整页截图(与 view_label 同一已验证截图
+  链路)。
+
+广告上的电话/地址/促销由 `dial_number` / `open_in_maps` / `share`
+chips 并行覆盖(prompt 明确不互斥)。
+
 ---
 
 ## Eval (Kotlin, prod-mirror, ScorerV3)
@@ -122,6 +139,7 @@ Current baselines (`profiling/baselines.json`, measured on **kimi k3**
 | `scan_to_pay` | **0.8444** | 6 | strict-payment curation |
 | `none` | **0.9474** | 16 | over-fire check |
 | `view_label` | **0.6711** | 30 | first baseline; 8 a=0 = prompt lever |
+| `view_ad` | **0.6719** | 30 | first baseline (2026-07-20); 10 a=0 = prompt lever |
 | `redact_id` | — | 1 | reference-only (corpus lacks IDs) |
 
 The regression net (`scripts/run_regression.sh`) flags |Δ| ≥ 0.05
@@ -179,11 +197,13 @@ baked default LLM token comes from `secrets.properties`
 
 ```bash
 adb shell am start -n com.example.intentcam/.MainActivity --ez dev_label_page true
+adb shell am start -n com.example.intentcam/.MainActivity --ez dev_ad_page true
 ```
 
-opens the `view_label` page with canned content — exercises the
-render / full-page capture / share path without a camera frame or
-LLM round (DEBUG builds only).
+opens the `view_label` / `view_ad` page with canned content —
+exercises the render / full-page capture / share path (and, for
+view_ad, the crop+rectify+enhance pipeline on a synthesized tilted
+poster) without a camera frame or LLM round (DEBUG builds only).
 
 ---
 
@@ -203,6 +223,8 @@ app/src/main/java/com/example/intentcam/     — Android app (Compose)
   ChipStateMapper.kt       chip state resolution (Validated/Spinner/Ghost)
   LabelPageScreen.kt       view_label full-screen WebView page
   LabelPageExporter.kt     full-page PNG capture + share intents
+  AdPageScreen.kt          view_ad 图文复现 page (image + transcription)
+  AdImageCorrector.kt      ad crop + perspective correction + enhance
   AndroidOcrEngine.kt      HMS ML Kit OCR backend
   AndroidImageOps.kt       BitmapRegionDecoder-based ImageOps
   SettingsStore.kt         SharedPreferences (config, debug, enabled set)

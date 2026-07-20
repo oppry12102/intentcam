@@ -860,6 +860,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** User closed the rendered-ad page (view_ad). */
+    fun dismissRenderedAd() {
+        if (_state.value.renderedAd != null) {
+            _state.value = _state.value.copy(renderedAd = null)
+        }
+    }
+
     /** Debug-only dev hook: open the label page with canned content
      *  so the render / full-page capture / share path can be
      *  exercised without a camera frame + LLM round (emulator
@@ -893,6 +900,105 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 bubbleId = "dev-label-page",
             )
         )
+    }
+
+    /** Debug-only dev hook (view_ad): synthesize a "photo" of a
+     *  tilted ad poster, run it through [AdImageCorrector] with the
+     *  poster's quad, and open the ad page — end-to-end verification
+     *  of crop + perspective correction + enhancement + render +
+     *  share on an emulator (`am start --ez dev_ad_page true`). */
+    fun devShowAdPage() {
+        viewModelScope.launch {
+            val (frameJpeg, quad) = devSyntheticAdPhoto()
+            val corrected = AdImageCorrector.correctToJpeg(frameJpeg, quad)
+            _state.value = _state.value.copy(
+                renderedAd = RenderedAd(
+                    title = "查看招生广告",
+                    markdown = buildString {
+                        append("# 暑期英语特训班\n\n")
+                        append("**火热招生中**\n\n")
+                        append("- 电话：13800001111\n")
+                        append("- 地址：中山路88号 阳光大厦 3 层\n")
+                        append("- 优惠：报名立减200元\n")
+                        append("- 开课：7月25日 · 小班教学\n")
+                    },
+                    imageJpeg = corrected,
+                    bubbleId = "dev-ad-page",
+                )
+            )
+        }
+    }
+
+    /** Build a synthetic ad photo: gray wall + a white poster drawn
+     *  through a poly-to-poly matrix (simulating a shot at an angle),
+     *  then return the JPEG bytes + the poster's destination quad in
+     *  normalized [0,1] coords (TL→TR→BR→BL).  The corrector should
+     *  reproduce the poster frontal & crisp. */
+    private fun devSyntheticAdPhoto(): Pair<ByteArray, List<OcrPoint>> {
+        val W = 1600
+        val H = 1200
+        // Poster rect (source) → skewed quad on the "photo" (dest).
+        val pw = 700f
+        val ph = 900f
+        val dst = floatArrayOf(
+            420f, 180f,   // TL
+            1080f, 240f,  // TR
+            1120f, 1020f, // BR
+            380f, 960f,   // BL
+        )
+        // Draw the poster upright on its own bitmap.
+        val poster = android.graphics.Bitmap.createBitmap(
+            pw.toInt(), ph.toInt(), android.graphics.Bitmap.Config.ARGB_8888
+        )
+        val pc = android.graphics.Canvas(poster)
+        pc.drawColor(android.graphics.Color.WHITE)
+        val border = android.graphics.Paint().apply {
+            color = 0xFF1B2A4A.toInt()
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 10f
+        }
+        pc.drawRect(16f, 16f, pw - 16, ph - 16, border)
+        val tp = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFF222222.toInt()
+            textSize = 56f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+        var ty = 130f
+        pc.drawText("暑期英语特训班", 90f, ty, tp)
+        tp.textSize = 40f
+        tp.typeface = android.graphics.Typeface.DEFAULT
+        listOf(
+            "火热招生中",
+            "电话：13800001111",
+            "地址：中山路88号 阳光大厦3层",
+            "优惠：报名立减200元",
+            "开课：7月25日 · 小班教学",
+        ).forEach {
+            ty += 110f
+            pc.drawText(it, 80f, ty, tp)
+        }
+        // Compose the "photo": gray wall + poster warped into place.
+        val photo = android.graphics.Bitmap.createBitmap(W, H, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(photo)
+        canvas.drawColor(0xFF6B6F75.toInt())
+        val src = floatArrayOf(0f, 0f, pw, 0f, pw, ph, 0f, ph)
+        val m = android.graphics.Matrix()
+        m.setPolyToPoly(src, 0, dst, 0, 4)
+        val paint = android.graphics.Paint(
+            android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG
+        )
+        canvas.drawBitmap(poster, m, paint)
+        poster.recycle()
+        val out = java.io.ByteArrayOutputStream()
+        photo.compress(android.graphics.Bitmap.CompressFormat.JPEG, 92, out)
+        photo.recycle()
+        val quad = listOf(
+            OcrPoint(dst[0] / W, dst[1] / H),
+            OcrPoint(dst[2] / W, dst[3] / H),
+            OcrPoint(dst[4] / W, dst[5] / H),
+            OcrPoint(dst[6] / W, dst[7] / H),
+        )
+        return out.toByteArray() to quad
     }
 
     /**
@@ -976,6 +1082,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             "ACTION",
                             "show label page title='${outcome.label.title.take(30)}' " +
                                 "md=${outcome.label.markdown.length} chars"
+                        )
+                    }
+                    is ActionOutcome.ShowRenderedAd -> {
+                        // view_ad sibling of the branch above.
+                        _state.value = _state.value.copy(renderedAd = outcome.ad)
+                        logDebug(
+                            "ACTION",
+                            "show ad page title='${outcome.ad.title.take(30)}' " +
+                                "md=${outcome.ad.markdown.length} chars img=${outcome.ad.imageJpeg?.size ?: 0}B"
                         )
                     }
                 }

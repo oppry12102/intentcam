@@ -65,19 +65,22 @@ alias was dropped 2026-07-19).
 | Consent gates | **OFF (dev phase)** | `app/ActionDecl.kt` | `requiresConfirmation`/`userPrefKey` removed 2026-07-19; mechanism dormant, re-arm per action before end-user builds |
 | Chip states | Validated / Spinner (mid-flight, incl. computed-false) / Ghost (terminal) | `app/ChipStateMapper.kt` | Spinner = non-tappable while cycle runs |
 
-## F. `view_label` rendered page
+## F. `view_label` / `view_ad` rendered pages
 
 | Constant | Value | File | What it controls | Why |
 |---|---|---|---|---|
 | viewport meta | `width=device-width, initial-scale=1` | `shared/LabelHtml.kt` | CSS px = dp | Without it WebView lays out at physical px width (15px ≈ 5dp on 3×) |
-| `enableSlowWholeDocumentDraw` | on | `app/LabelPageScreen.kt` | Whole-document layout | Required to draw below the fold in the share capture |
+| `enableSlowWholeDocumentDraw` | on | `app/LabelPageScreen.kt`, `app/AdPageScreen.kt` | Whole-document layout | Required to draw below the fold in the share capture |
 | `MAX_CAPTURE_HEIGHT_PX` | `6000` | `app/LabelPageExporter.kt` | PNG height ceiling | Bounds transient bitmap (1080×6000 ≈ 25 MB) |
-| Capture path | on-screen WebView resize→draw→restore + blank guard | `app/LabelPageExporter.kt` | Share-as-image | Off-screen WebViews rasterize unreliably (2 blank-PNG iterations) |
-| FileProvider | `cache/label_pages` | `app/src/main/res/xml/file_paths.xml` | image/png share URI | No storage permission anywhere |
+| Capture path | on-screen WebView resize→draw→restore + blank guard | `app/LabelPageExporter.kt` | Share-as-image (label: 分享图片; ad: 分享图文) | Off-screen WebViews rasterize unreliably (2 blank-PNG iterations) |
+| `AdImageCorrector.MAX_OUT_DIM` | `2200` | `app/AdImageCorrector.kt` | Corrected ad-image long edge | Bounds convolution cost + payload size |
+| `AdImageCorrector.OUT_JPEG_QUALITY` | `92` | `app/AdImageCorrector.kt` | Corrected JPEG quality | Size vs legibility |
+| Corrector enhance | stretch iff std<35 (mean-preserving, ≤2.0) · saturation 1.12 · unsharp 0.25 | `app/AdImageCorrector.kt` | Ad-image enhancement | Never compress, never shift mean (v1 turned white posters gray) |
+| FileProvider | `cache/label_pages` | `app/src/main/res/xml/file_paths.xml` | image/png + image/jpeg share URIs | No storage permission anywhere |
 
-Debug hook: `adb shell am start -n com.example.intentcam/.MainActivity
---ez dev_label_page true` (DEBUG only) opens the page with canned
-content.
+Debug hooks: `adb shell am start -n com.example.intentcam/.MainActivity
+--ez dev_label_page true` / `--ez dev_ad_page true` (DEBUG only) open
+the pages with canned content.
 
 ## G. Eval
 

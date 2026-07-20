@@ -64,6 +64,12 @@ sealed class ActionOutcome {
      *  the page.  Distinct from [None]'s "purely UI-side effect"
      *  because the dispatcher must carry a payload. */
     data class ShowRenderedLabel(val label: RenderedLabel) : ActionOutcome()
+
+    /** view_ad's sibling of [ShowRenderedLabel]: the body has already
+     *  corrected the ad image (crop + perspective + enhance) and
+     *  packed it into [ad] alongside the transcription; AppViewModel
+     *  parks it on `UiState.renderedAd`. */
+    data class ShowRenderedAd(val ad: RenderedAd) : ActionOutcome()
 }
 
 /**
@@ -471,6 +477,55 @@ fun registerDefaultActions(reg: ActionRegistry) {
         //  no consent gate needed — the page is read-only and every
         //  outbound path from it (save / share) is separately
         //  user-initiated.
+        accent = AccentCluster.DELEGATE,
+    ))
+    // view_ad — 广告识别(2026-07-20)。  For posted ads (招生/促销/
+    // 社区告示/开业/活动宣传 …) the LLM transcribes the full ad into
+    //  `emit_bubble.ad_markdown` and frames the ad body in `ad_bbox`.
+    //  This action crops + perspective-corrects + enhances that
+    //  region (AdImageCorrector, pure-Android) and opens an
+    //  image-on-top / transcription-below page (AdPageScreen) that
+    //  shares the corrected image (分享图片) or the whole composed
+    //  page (分享图文).  Companion chips for the ad's phone/address/
+    //  promo text stay on the bubble via dial_number/open_in_maps/
+    //  share — the prompt explicitly says they're not mutually
+    //  exclusive.
+    //
+    //  requiredInputs=[ad_markdown] only: the framing quad is
+    //  optional (page falls back to the un-warped frame), so it must
+    //  not gate the chip.  No confirmation, no pref toggle (dev phase
+    //  — everything is always-on anyway).
+    reg.register(ActionDef(
+        id = "view_ad",
+        label = "查看广告",
+        iconKey = "ad",
+        requiredInputs = listOf(ActionInputSpec(
+            key = "ad_markdown",
+            label = "广告内容",
+            parser = { b -> com.example.intentcam.InputParsers.adMarkdown(b) },
+        )),
+        body = { _, bubble, args ->
+            val md = args["ad_markdown"]
+                ?: com.example.intentcam.InputParsers.adMarkdown(bubble)
+            if (md == null) {
+                ActionOutcome.ShowUiFeedback("未识别到广告内容")
+            } else {
+                // CPU-heavy correct runs on Dispatchers.Default inside
+                // the corrector; the payload carries the JPEG bytes so
+                // the page (and 分享图片) never re-derives them.
+                val jpeg = AdImageCorrector.correctToJpeg(bubble.imageBytes, bubble.adBbox)
+                ActionOutcome.ShowRenderedAd(
+                    com.example.intentcam.RenderedAd(
+                        title = bubble.title,
+                        markdown = md,
+                        imageJpeg = jpeg,
+                        bubbleId = bubble.id,
+                    )
+                )
+            }
+        },
+        // DELEGATE cluster: opens a read-only viewer page; share
+        //  targets are OS-mediated.
         accent = AccentCluster.DELEGATE,
     ))
 }

@@ -24,9 +24,22 @@ object LabelHtml {
     /** Render the full label page document: built-in CSS template +
      *  [title] header + [markdown] body.  The page is width-fluid;
      *  the hosting WebView is measured to content height. */
-    fun labelPageHtml(title: String, markdown: String): String {
+    fun labelPageHtml(title: String, markdown: String): String =
+        pageHtml(title, markdown, imageDataUri = null)
+
+    /** Render the view_ad page: like [labelPageHtml] but with the
+     *  corrected ad image ([imageDataUri], a `data:` URI) shown at
+     *  the top of the body — the 图文复现 layout (image on top,
+     *  transcription below).  Null image → text-only page. */
+    fun adPageHtml(title: String, markdown: String, imageDataUri: String?): String =
+        pageHtml(title, markdown, imageDataUri)
+
+    private fun pageHtml(title: String, markdown: String, imageDataUri: String?): String {
         val body = markdownToHtml(markdown)
         val safeTitle = escape(title)
+        val imgBlock = imageDataUri?.let {
+            """  <img class="ad-image" src="$it" alt="广告图片"/>""" + "\n"
+        } ?: ""
         return """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -44,7 +57,7 @@ $CSS
 <body>
 <div class="label-page">
   <div class="label-header">$safeTitle</div>
-  <div class="label-body">
+$imgBlock  <div class="label-body">
 $body
   </div>
 </div>
@@ -258,6 +271,14 @@ body {
   padding-bottom: 10px;
   margin-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
+}
+.ad-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 12px;
 }
 .label-body h1 { font-size: 22px; text-align: center; margin: 6px 0 12px; }
 .label-body h2 { font-size: 18px; margin: 12px 0 6px; }

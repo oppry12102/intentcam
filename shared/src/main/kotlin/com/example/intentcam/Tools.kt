@@ -136,6 +136,13 @@ data class ToolResult(
      *  required input + rendered-page payload.  Null for non-label
      *  scenes. */
     val labelMarkdown: String? = null,
+    /** `emit_bubble.ad_markdown` — full ad transcription for posted
+     *  advertisements (view_ad).  Null for non-ad scenes. */
+    val adMarkdown: String? = null,
+    /** `emit_bubble.ad_bbox` — the ad body region, 4-corner
+     *  normalized coordinates (TL→TR→BR→BL), for crop + perspective
+     *  correction.  Null when not framed. */
+    val adBbox: List<OcrPoint>? = null,
 )
 
 /**

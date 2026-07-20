@@ -112,6 +112,17 @@ data class Bubble(
      *  Drives the `view_label` action: required input + rendered-page
      *  payload.  Null for non-label scenes. */
     val labelMarkdown: String? = null,
+    /** Full ad transcription as markdown when the LLM recognized a
+     *  posted advertisement (招生/促销/社区告示/开业/活动宣传 …) and
+     *  emitted `emit_bubble.ad_markdown`.  Drives the `view_ad`
+     *  action.  Null for non-ad scenes. */
+    val adMarkdown: String? = null,
+    /** The ad's body region as 4-corner normalized [0,1] coordinates
+     *  (TL→TR→BR→BL, same shape as [Detail.bbox]).  Used by the app
+     *  to crop + perspective-correct + enhance the ad image for the
+     *  view_ad page.  Null when the model didn't frame the ad (page
+     *  then falls back to the un-warped full frame). */
+    val adBbox: List<OcrPoint>? = null,
     /** Cross-action aggregate of missing input
      *  keys (deduplicated, ordered by first appearance across
      *  [actions]).  Empty when every action's requiredInputs are
@@ -171,6 +182,9 @@ data class UiState(
      *  `AppViewModel.dismissRenderedLabel()`.  Overlays whatever phase
      *  is underneath (camera or detail screen). */
     val renderedLabel: RenderedLabel? = null,
+    /** Non-null while the `view_ad` action's rendered-ad page is on
+     *  screen (ActionOutcome.ShowRenderedLabel's sibling for ads). */
+    val renderedAd: RenderedAd? = null,
     /** Live in-flight cycles
      *  keyed by [com.example.intentcam.CycleJob.id].  Each entry's
      *  [CycleSnapshot] exposes the cycle's current bubble + status

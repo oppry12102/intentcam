@@ -23,6 +23,7 @@ context matters.
 | 2026-07-16 | [2026-07-16-producer-consumer-pipeline.md](2026-07-16-producer-consumer-pipeline.md) | CycleManager producer/consumer pipeline + busy derived flow |
 | 2026-07-16 | [2026-07-16-input-parsers-drift-risk.md](2026-07-16-input-parsers-drift-risk.md) | InputParsers drift risk (phone regex duplicated 3 places) — mitigation pending |
 | 2026-07-19 | [2026-07-19-view-label-action.md](2026-07-19-view-label-action.md) | `view_label` action: `label_markdown` contract + WebView-rendered label page |
+| 2026-07-20 | [2026-07-20-view-ad-action.md](2026-07-20-view-ad-action.md) | `view_ad` action: `ad_markdown`/`ad_bbox` contract + corrected ad-image page |
 
 ## ADR template
 

@@ -134,16 +134,31 @@ object LabelPageExporter {
         return true
     }
 
+    /** Write a ready-made JPEG (e.g. the corrected ad image carried
+     *  by `RenderedAd`) into the FileProvider-backed cache dir.
+     *  Used by view_ad's 分享图片. */
+    suspend fun writeJpegToCache(context: Context, jpeg: ByteArray, prefix: String): File? =
+        withContext(Dispatchers.IO) {
+            try {
+                val dir = File(context.cacheDir, "label_pages").apply { mkdirs() }
+                val file = File(dir, "${prefix}_${stampFormat.format(Date())}.jpg")
+                file.writeBytes(jpeg)
+                file
+            } catch (t: Throwable) {
+                null
+            }
+        }
+
     /** Fire the system share sheet with [pngFile] as an image/png
      *  stream.  The URI is FileProvider-granted; ClipData is set in
      *  addition to EXTRA_STREAM because several targets (微信 among
      *  them) read the grant from ClipData only. */
-    fun shareImage(context: Context, pngFile: File): Boolean = try {
+    fun shareImage(context: Context, pngFile: File, mimeType: String = "image/png"): Boolean = try {
         val uri = FileProvider.getUriForFile(
             context, "${context.packageName}.fileprovider", pngFile
         )
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "image/png"
+            type = mimeType
             putExtra(Intent.EXTRA_STREAM, uri)
             clipData = android.content.ClipData.newUri(
                 context.contentResolver, "label", uri
@@ -151,7 +166,7 @@ object LabelPageExporter {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(Intent.createChooser(intent, "分享标签图片"))
+        context.startActivity(Intent.createChooser(intent, "分享图片"))
         true
     } catch (t: Throwable) {
         false

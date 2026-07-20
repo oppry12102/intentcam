@@ -111,6 +111,42 @@ data class RenderedLabel(
     val bubbleId: String,
 )
 
+/** Payload for the `view_ad` action's rendered-ad page
+ *  (广告图文复现).  Same payload-as-copy rationale as
+ *  [RenderedLabel], plus the corrected ad image rides along as JPEG
+ *  bytes so the page never re-derives it from the (evictable)
+ *  source bubble. */
+data class RenderedAd(
+    /** Page title — the bubble's intent phrase (e.g. "查看招生广告"). */
+    val title: String,
+    /** Full ad transcription as markdown (`emit_bubble.ad_markdown`). */
+    val markdown: String,
+    /** The ad region after crop + perspective correction +
+     *  enhancement, JPEG-encoded.  Rendered at the top of the page
+     *  and shared as-is for 分享图片.  Null when the bubble had no
+     *  usable image (degenerate — page falls back to text-only). */
+    val imageJpeg: ByteArray?,
+    /** Source bubble id, for audit logging / correlation only. */
+    val bubbleId: String,
+) {
+    // ByteArray in a data class needs manual equals/hashCode.
+    override fun equals(other: Any?): Boolean =
+        other is RenderedAd && title == other.title && markdown == other.markdown &&
+            bubbleId == other.bubbleId &&
+            (imageJpeg === other.imageJpeg ||
+                (imageJpeg != null && other.imageJpeg != null &&
+                    imageJpeg.contentEquals(other.imageJpeg)) ||
+                (imageJpeg == null && other.imageJpeg == null))
+
+    override fun hashCode(): Int {
+        var r = title.hashCode()
+        r = 31 * r + markdown.hashCode()
+        r = 31 * r + bubbleId.hashCode()
+        r = 31 * r + (imageJpeg?.contentHashCode() ?: 0)
+        return r
+    }
+}
+
 /** Output of [com.example.intentcam.ActionOrchestrator.validateInputs].
  *  Sealed so callers (live UI, ScorerV2, prompt framing) handle both
  *  shapes exhaustively.  Lives in `:shared/` because
