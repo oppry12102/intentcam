@@ -859,6 +859,48 @@
         "###"
       ],
       "category": "ad"
+    },
+    {
+      "id": "image_2100",
+      "file": "image_2100.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "为爱专注",
+        "为家守护",
+        "999",
+        "15#",
+        "8#"
+      ],
+      "category": "ad"
+    },
+    {
+      "id": "image_2198",
+      "file": "image_2198.jpg",
+      "expected_actions": [
+        "view_ad"
+      ],
+      "expected_inputs": [
+        {
+          "action": "view_ad",
+          "key": "ad_markdown",
+          "label": "广告内容"
+        }
+      ],
+      "expected_description_keywords": [
+        "22一线大牌开年大戏",
+        "引爆一座城",
+        "###"
+      ],
+      "category": "ad"
     }
   ]
 }

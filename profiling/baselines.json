@@ -21,7 +21,8 @@
     "view_label_prompt_lift_2026_07_19": "Post-view_label regression (summary_20260719_160413, k3): dial +0.074 (0.8305->0.9049), maps +0.102 (0.8123->0.9144), share +0.133 (0.8255->0.9587) — all lifts concentrated in r_actions; scan_to_pay +0.025 PASS; none -0.000 PASS with over_fire 0.4375 (same documented weak-content set, 0 view_label fires). 0 errors/529 across 123 scenes. Attribution: shared emit_bubble prompt change (view_label mapping sentence raised action_ids salience) — k3 endpoint drift not separable but environmental either way. Baselines refreshed on the three lifted suites per convention.",
     "view_ad_2026_07_20": "view_ad action added (ad_markdown+ad_bbox contract, corrected ad image + 图文页, ADR docs/adr/2026-07-20-view-ad-action.md). Suite 30 scenes via build_action_suites.py --only view_ad (two curation passes: bare 社区/物业/宣传 pulled ~11 office-signage scenes; tightened to 社区宣/便民/招生/开业/招商 vocabulary; none-suite overlap 0). First baseline 0.6719 @30 on k3 (view_ad_baseline_20260720_150926): actions 0.597 / text 0.841 / inputs 0.608, 0 errors, 0 empty. 10 a=0 misses = prompt-tuning lever.",
     "view_ad_regression_2026_07_20": "Post-view_ad regression (summary_20260720_155924, k3): dial +0.003 / maps -0.037 / share -0.030 / scan +0.025 / none -0.000 — all PASS, no baseline refresh. view_label run was CONTAMINATED: 28/30 empty bubbles in a ~14min endpoint storm window (fast-fail ~14s/fixture, 0 errors in other suites), composite 0.075 artifact. Verified via 3-fixture debug rerun (all fine), then full rerun (view_label_rerun_20260720): 0.694 (+0.023 vs baseline, PASS) — baseline kept at 0.6711. Substitution watch: maps lost open_in_maps on 2 scenes (3129/3965) where view_ad was emitted instead (partial, within threshold); none suite gained 1 view_ad fire (image_2100, over_fire 0.500 still in band).",
-    "view_ad_prompt_lift_2026_07_21": "view_ad surface-form enumeration prompt (emit_bubble mapping sentence: 标语带落款/便民服务点招牌/店门服务·价目列表/活动展板拱门横幅/招生报名指示牌 + explicit non-mutual-exclusion). view_ad suite 0.6719->0.8513 (+0.179; actions 0.597->0.858, inputs 0.608->0.881; view_ad_20260721_144314): 8/10 a=0 flipped (4518/6130/3175/125/2809/3203/4924/7855), residual a=0 = 7267 (awning occluded) + 4123 (distant small green sign) — vision-reach, not prompt. Regression net summary_20260721_152401 (k3, 0 errors): dial -0.040 / maps -0.039 / share -0.044 (all PASS; decompose = 6 empty-abstention variance fixtures 5601/6386/6921/4178/7019/6030 + substitution 6515/2704/4984, 3965 pre-existing) / scan +0.117 (positive FAIL on 6-fixture suite, baseline kept per ±0.09/flip note) / none -0.010 PASS with over_fire 0.5625 — view_ad fires only on 2100 (elevator 999 poster) + 2198 (楼盘围挡), both GENUINE ads = GT under-annotation, same documented category as the weak-content share set; 7931 rejoined the swing set; 0 bad view_ad fires. view_label -0.012 PASS. Baselines refreshed: view_ad only."
+    "view_ad_prompt_lift_2026_07_21": "view_ad surface-form enumeration prompt (emit_bubble mapping sentence: 标语带落款/便民服务点招牌/店门服务·价目列表/活动展板拱门横幅/招生报名指示牌 + explicit non-mutual-exclusion). view_ad suite 0.6719->0.8513 (+0.179; actions 0.597->0.858, inputs 0.608->0.881; view_ad_20260721_144314): 8/10 a=0 flipped (4518/6130/3175/125/2809/3203/4924/7855), residual a=0 = 7267 (awning occluded) + 4123 (distant small green sign) — vision-reach, not prompt. Regression net summary_20260721_152401 (k3, 0 errors): dial -0.040 / maps -0.039 / share -0.044 (all PASS; decompose = 6 empty-abstention variance fixtures 5601/6386/6921/4178/7019/6030 + substitution 6515/2704/4984, 3965 pre-existing) / scan +0.117 (positive FAIL on 6-fixture suite, baseline kept per ±0.09/flip note) / none -0.010 PASS with over_fire 0.5625 — view_ad fires only on 2100 (elevator 999 poster) + 2198 (楼盘围挡), both GENUINE ads = GT under-annotation, same documented category as the weak-content share set; 7931 rejoined the swing set; 0 bad view_ad fires. view_label -0.012 PASS. Baselines refreshed: view_ad only.",
+    "gt_curation_2026_07_21": "none-GT hygiene (user-approved): image_2100 (电梯 999 品牌海报) + image_2198 (楼盘促销围挡) moved none -> view_ad with expected_actions=[view_ad] + ad_markdown input — both are genuine ads the widened view_ad definition correctly fires on (GT under-annotation, same category as the 2026-07-19 migration). Suite sizes: none 16->14, view_ad 30->32. Baselines NOT re-measured for the move alone — folded into the ad-rescue regression run that followed in the same session (see ad_rescue_2026_07_21)."
   },
   "suites": [
     {
@@ -116,7 +117,7 @@
     {
       "name": "none",
       "gt": "profiling/ground_truth_none.json",
-      "limit": 16,
+      "limit": 14,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.9474,
@@ -126,7 +127,7 @@
       "v3_actions": 1.0,
       "v3_text": 0.8244,
       "v3_inputs": 1.0,
-      "note": "action-first suite — over-fire check. 16 fixtures with NO actionable content. over_fire_rate is informational ONLY (not threshold-gated): per-fixture share-propensity on the weak-content set (7173/1138/7931/1623/2198/450/2625) swings 2-9 fires across runs at identical code — interpret per-fixture, not as a point value. 2026-07-19: paymentQr acceptance-sign rescue verified SAFE (0 scan_to_pay emissions live). view_ad prompt-lift run (2026-07-21): over_fire 0.5625 — 9 fires = documented weak-content set (2625/1138/7173/1623/450/7931 share + 682 redact) + 2 view_ad (2100 elevator poster, 2198 楼盘围挡) which are genuine ads = GT under-annotation, precision intact. Prior: view_label prompt-lift run: over_fire 0.4375 — same 7 documented weak-content share fires (2625/1138/7173/2198/1623/450) + 682 redact, 0 view_label fires, precision intact.",
+      "note": "action-first suite — over-fire check. 16 fixtures with NO actionable content. over_fire_rate is informational ONLY (not threshold-gated): per-fixture share-propensity on the weak-content set (7173/1138/7931/1623/2198/450/2625) swings 2-9 fires across runs at identical code — interpret per-fixture, not as a point value. 2026-07-19: paymentQr acceptance-sign rescue verified SAFE (0 scan_to_pay emissions live). view_ad prompt-lift run (2026-07-21): over_fire 0.5625 — 9 fires = documented weak-content set (2625/1138/7173/1623/450/7931 share + 682 redact) + 2 view_ad (2100/2198 — genuine ads, MIGRATED to view_ad GT 2026-07-21, over_fire set shrinks accordingly). Prior: view_label prompt-lift run: over_fire 0.4375 — same 7 documented weak-content share fires (2625/1138/7173/2198/1623/450) + 682 redact, 0 view_label fires, precision intact.",
       "over_fire_rate": 0.5625,
       "baseline_glm46": 0.9288,
       "baseline_prev_k3": 0.9414
@@ -150,7 +151,7 @@
     {
       "name": "view_ad",
       "gt": "profiling/ground_truth_view_ad.json",
-      "limit": 30,
+      "limit": 32,
       "resize": 3200,
       "quality": 90,
       "baseline": 0.8513,
@@ -160,7 +161,7 @@
       "v3_actions": 0.8583,
       "v3_text": 0.8239,
       "v3_inputs": 0.8806,
-      "note": "action-first suite — view_ad recall + ad_markdown input. 30 posted-ad scenes (招生/开业/招商/社区宣/便民; two-pass curation, 0/16 none overlap). 2026-07-21 surface-form enumeration prompt: 0.6719->0.8513 (8/10 a=0 flipped). Residual a=0: 7267 (招生点 awning occluded) + 4123 (distant small sign) — vision-reach, not prompt-reach. Substitution watch: when view_ad fires the model occasionally drops maps/dial (3216/2571/5496 in-run; 3965 pre-existing) — non-prompt lever = maps/dial rescue on ad content.",
+      "note": "action-first suite — view_ad recall + ad_markdown input. 32 posted-ad scenes (2100/2198 migrated from none 2026-07-21) (招生/开业/招商/社区宣/便民; two-pass curation, 0/16 none overlap). 2026-07-21 surface-form enumeration prompt: 0.6719->0.8513 (8/10 a=0 flipped). Residual a=0: 7267 (招生点 awning occluded) + 4123 (distant small sign) — vision-reach, not prompt-reach. Substitution watch: when view_ad fires the model occasionally drops maps/dial (3216/2571/5496 in-run; 3965 pre-existing) — non-prompt lever = maps/dial rescue on ad content.",
       "over_fire_rate": 0.0,
       "baseline_prev": 0.6719
     }
