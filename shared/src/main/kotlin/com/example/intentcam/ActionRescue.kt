@@ -54,9 +54,21 @@ object ActionRescue {
      *   - `view_ad` rescue — `InputParsers.adMarkdown(bubble) != null`
      *     AND `view_ad` not already in `bubble.actions`.  Same
      *     field-existence cue shape as `view_label`.
+     *   - `open_in_maps` rescue (view_ad-context ONLY, 2026-07-21) —
+     *     `view_ad` already in the visible set AND
+     *     `InputParsers.addressRow(bubble) != null` AND `open_in_maps`
+     *     not already in `bubble.actions`.  The widened view_ad
+     *     definition makes the model fire view_ad and sometimes drop
+     *     the maps chip even when the ad carries a venue/address row
+     *     (substitution: 2571/5496/2704 measured 2026-07-21).  The
+     *     gate is the STRICT details-address signal (locationQuery's
+     *     step-1), NOT the lenient title/detail fallbacks — offline
+     *     estimate over the 2026-07-21 runs: 5 GT-correct rescues,
+     *     3 recall-blind extras, 0 new none-suite fires.
      *
      * **NOT rescued** (deliberate):
-     *   - `open_in_maps` — `InputParsers.locationQuery` is too lenient
+     *   - `open_in_maps` outside the view_ad context —
+     *     `InputParsers.locationQuery` is too lenient
      *     (returns any non-blank title), false-positive rate would
      *     put `open_in_maps` on every bubble.
      *   - `share` — `InputParsers.textContent` always returns non-null
@@ -85,6 +97,15 @@ object ActionRescue {
         }
         if ("view_ad" !in current && InputParsers.adMarkdown(bubble) != null) {
             rescue += "view_ad"
+        }
+        // view_ad-context maps rescue — must come AFTER the view_ad
+        // line so an ad_markdown-only bubble (view_ad itself rescued
+        // above) still qualifies for the maps check.
+        if ("open_in_maps" !in current &&
+            ("view_ad" in current || "view_ad" in rescue) &&
+            InputParsers.addressRow(bubble) != null
+        ) {
+            rescue += "open_in_maps"
         }
         return rescue
     }

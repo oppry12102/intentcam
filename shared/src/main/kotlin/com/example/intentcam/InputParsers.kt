@@ -65,6 +65,22 @@ object InputParsers {
         return null
     }
 
+    /**
+     * Strict address signal: the first `details[]` row whose value
+     * contains an address keyword (路/街/大道/巷/弄/号/区/县/市/省/
+     * 村/镇/栋/座/层/室).  This is step (1) of [locationQuery],
+     * extracted so `ActionRescue` can gate on the STRICT signal
+     * alone — the full [locationQuery] chain falls back to any
+     * non-blank title/detail, which is far too lenient for rescue
+     * (would put a maps chip on every bubble).
+     */
+    fun addressRow(bubble: Bubble): String? {
+        val addressRegex = Regex("""\S*(路|街|大道|巷|弄|号|区|县|市|省|村|镇|栋|座|层|室)\S*""")
+        return bubble.details.firstOrNull { d ->
+            d.value.isNotBlank() && addressRegex.containsMatchIn(d.value)
+        }?.value?.trim()
+    }
+
     /** For `open_in_maps` (and any future location-aware
      *  action).  Maps app accepts free-form queries, so we
      *  don't need to validate as a strict address — anything
@@ -111,10 +127,7 @@ object InputParsers {
      *  silently drop `r_inputs_complete` credit. */
     fun locationQuery(bubble: Bubble): String? {
         // (1) details[] address-keyword scan
-        val addressRegex = Regex("""\S*(路|街|大道|巷|弄|号|区|县|市|省|村|镇|栋|座|层|室)\S*""")
-        bubble.details.firstOrNull { d ->
-            d.value.isNotBlank() && addressRegex.containsMatchIn(d.value)
-        }?.let { return it.value.trim() }
+        addressRow(bubble)?.let { return it }
 
         // (2) Simplified title — strip navigation-verb prefixes.
         //  Only multi-char unambiguous prefixes: the single-char
